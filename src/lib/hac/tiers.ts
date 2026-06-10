@@ -81,11 +81,17 @@ export function round2(n: number): number {
 
 export function tierForGpa(gpa: number): Tier {
   const g = round2(gpa);
-  let current = TIERS[0];
-  for (const t of TIERS) {
-    if (g >= t.min) current = t;
+  if (g >= 4.90) {
+    return TIERS.find((t) => t.id === "apex")!;
+  } else if (g >= 4.50 && g < 4.90) {
+    return TIERS.find((t) => t.id === "radiant")!;
+  } else if (g >= 4.00 && g < 4.50) {
+    return TIERS.find((t) => t.id === "zenith")!;
+  } else if (g >= 3.50 && g < 4.00) {
+    return TIERS.find((t) => t.id === "lucid")!;
+  } else {
+    return TIERS.find((t) => t.id === "vanguard")!;
   }
-  return current;
 }
 
 export function nextTier(tier: Tier): Tier | null {
