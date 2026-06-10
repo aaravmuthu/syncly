@@ -16,6 +16,8 @@ interface Cred {
   password: string;
 }
 
+export type CourseSubTab = "grades" | "analysis" | "whatif";
+
 interface Ctx {
   data: HacData | null;
   loading: boolean;
@@ -28,6 +30,8 @@ interface Ctx {
   logout: () => void;
   theme: Theme;
   setTheme: (t: Theme) => void;
+  courseNav: { courseId: string; sub: CourseSubTab } | null;
+  setCourseNav: (n: { courseId: string; sub: CourseSubTab } | null) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
