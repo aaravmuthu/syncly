@@ -3,14 +3,24 @@ import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
-import { SpotlightCard } from "../SpotlightCard";
 import { RecentGradesBanner } from "../RecentGradesBanner";
-import { AlertOctagon, RefreshCcw, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
+import { UtilityMenu } from "../UtilityMenu";
+import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
+
+function fullDate(): string {
+  return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
+}
 
 export function OverviewTab() {
-  const { data, refresh, loading } = useHac();
-  const [bannerOpen, setBannerOpen] = useState(true);
+  const { data } = useHac();
+  const [missingOpen, setMissingOpen] = useState(true);
   if (!data) return null;
+
   const weighted = currentYearGPA(data.courses, true);
   const cum = cumulativeGPA(data.transcript, true);
   const avgClass =
@@ -21,61 +31,56 @@ export function OverviewTab() {
   );
 
   return (
-    <div className="space-y-5 pb-32">
-      <header className="flex items-start justify-between gap-3 pt-2">
+    <div className="relative space-y-5 pb-32">
+      {/* Ambient electric-purple mesh light behind the header */}
+      <div
+        aria-hidden
+        className="absolute -top-10 left-1/2 -translate-x-1/2 w-[120%] h-64 pointer-events-none -z-10"
+        style={{
+          background:
+            "radial-gradient(45% 60% at 30% 20%, color-mix(in oklab, var(--primary) 28%, transparent), transparent 70%), radial-gradient(40% 50% at 85% 30%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%)",
+          filter: "blur(40px)",
+        }}
+      />
+
+      {/* Header */}
+      <header className="flex items-start justify-between gap-3 pt-3">
         <div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Welcome back</div>
-          <h1 className="text-2xl font-bold tracking-tight">{data.student.name}</h1>
-          <div className="text-xs text-muted-foreground mt-0.5">
-            {data.student.school ?? "—"} {data.student.grade ? `· Grade ${data.student.grade}` : ""}
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Overview</h1>
+          <div
+            className="text-xs uppercase tracking-[0.18em] mt-1"
+            style={{ color: "color-mix(in oklab, var(--primary) 28%, var(--muted-foreground))" }}
+          >
+            {fullDate()}
           </div>
         </div>
-        <motion.button
-          onClick={refresh}
-          disabled={loading}
-          whileTap={{ scale: 0.9 }}
-          className="glass h-10 w-10 grid place-items-center"
+        <div
+          className="shrink-0 h-11 w-11 rounded-full grid place-items-center font-bold text-sm"
+          style={{
+            background: "color-mix(in oklab, var(--card) 50%, transparent)",
+            border: "1px solid color-mix(in oklab, var(--primary) 45%, transparent)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            boxShadow: "0 0 22px -8px var(--primary)",
+          }}
         >
-          <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-        </motion.button>
+          {initials(data.student.name)}
+        </div>
       </header>
 
+      {/* High-priority grade drop tier */}
       <RecentGradesBanner />
 
-
-
-      <div className="grid grid-cols-2 gap-3">
-        <SpotlightCard className="p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Weighted GPA</div>
-          <div className="text-3xl font-bold tabular-nums mt-1 text-gradient"><AnimatedNumber value={weighted} decimals={2} /></div>
-        </SpotlightCard>
-        <SpotlightCard className="p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cumulative</div>
-          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={cum} decimals={2} /></div>
-        </SpotlightCard>
-        <SpotlightCard className="p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
-            <GraduationCap className="h-3 w-3" /> Courses
-          </div>
-          <div className="text-3xl font-bold tabular-nums mt-1">{data.courses.length}</div>
-        </SpotlightCard>
-        <SpotlightCard className="p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
-            <BarChart3 className="h-3 w-3" /> Avg Class
-          </div>
-          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={avgClass} decimals={1} /></div>
-        </SpotlightCard>
-      </div>
-
+      {/* Missing assignments */}
       {missing.length > 0 ? (
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Missing / Action Required</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Missing</h2>
             <button
-              onClick={() => setBannerOpen((o) => !o)}
+              onClick={() => setMissingOpen((o) => !o)}
               className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-destructive active:scale-95"
             >
-              {bannerOpen ? (
+              {missingOpen ? (
                 <>
                   Collapse <ChevronUp className="h-3.5 w-3.5" />
                 </>
@@ -87,7 +92,7 @@ export function OverviewTab() {
             </button>
           </div>
           <AnimatePresence initial={false}>
-            {bannerOpen ? (
+            {missingOpen ? (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
@@ -99,14 +104,24 @@ export function OverviewTab() {
                   {missing.slice(0, 10).map((m, i) => (
                     <div
                       key={i}
-                      className="glass p-3 flex items-center gap-3 border-l-2 border-destructive pulse-coral"
+                      className="liquid rounded-2xl p-3.5 flex items-center gap-3"
+                      style={{ border: "1px solid rgba(255,255,255,0.05)" }}
                     >
                       <AlertOctagon className="h-4 w-4 text-destructive shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{m.name}</div>
-                        <div className="text-[11px] text-muted-foreground truncate">{m.course}</div>
+                        <div className="text-sm font-semibold truncate">{m.name}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">
+                          {m.course}
+                          {m.dueDate ? <span className="opacity-70"> · {m.dueDate}</span> : null}
+                        </div>
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-destructive bg-destructive/15 px-2 py-1 rounded">
+                      <span
+                        className="shrink-0 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg text-white"
+                        style={{
+                          background: "linear-gradient(135deg, #ff6b6b, #f43f5e)",
+                          boxShadow: "0 0 18px -4px #f43f5e",
+                        }}
+                      >
                         {m.absent ? "ABS" : "MISS"}
                       </span>
                     </div>
@@ -117,41 +132,35 @@ export function OverviewTab() {
           </AnimatePresence>
         </section>
       ) : (
-        <div className="glass p-4 text-sm text-muted-foreground">No missing assignments. You're caught up.</div>
+        <div className="liquid rounded-2xl p-4 text-sm text-muted-foreground">No missing assignments. You're caught up.</div>
       )}
 
-      <section>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">Top Classes</h2>
-        <div className="space-y-2">
-          {data.courses.slice(0, 4).map((c) => {
-            const avg = c.average ?? 0;
-            const perfect = avg >= 100;
-            return (
-              <SpotlightCard key={c.id} className={`p-3 flex items-center justify-between ${perfect ? "aura-electric" : ""}`}>
-                <div className="min-w-0 mr-3">
-                  <div className="text-sm font-medium truncate">{c.name}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? ""}</div>
-                </div>
-                <div
-                  className="text-xl font-bold tabular-nums"
-                  style={{
-                    color:
-                      avg >= 90
-                        ? "var(--success)"
-                        : avg >= 80
-                          ? "var(--primary)"
-                          : avg >= 70
-                            ? "var(--warning)"
-                            : "var(--destructive)",
-                  }}
-                >
-                  {c.average !== null ? c.average.toFixed(1) : "—"}
-                </div>
-              </SpotlightCard>
-            );
-          })}
+      {/* Snapshot stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="liquid rounded-2xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Weighted GPA</div>
+          <div className="text-3xl font-bold tabular-nums mt-1 text-gradient"><AnimatedNumber value={weighted} decimals={2} /></div>
         </div>
-      </section>
+        <div className="liquid rounded-2xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cumulative</div>
+          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={cum} decimals={2} /></div>
+        </div>
+        <div className="liquid rounded-2xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
+            <GraduationCap className="h-3 w-3" /> Courses
+          </div>
+          <div className="text-3xl font-bold tabular-nums mt-1">{data.courses.length}</div>
+        </div>
+        <div className="liquid rounded-2xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
+            <BarChart3 className="h-3 w-3" /> Avg Class
+          </div>
+          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={avgClass} decimals={1} /></div>
+        </div>
+      </div>
+
+      {/* Utility navigation grid */}
+      <UtilityMenu />
     </div>
   );
 }
