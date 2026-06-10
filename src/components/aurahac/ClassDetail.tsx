@@ -5,6 +5,8 @@ import { AnimatedNumber } from "./AnimatedNumber";
 import { categoryAveragesFromAssignments } from "@/lib/hac/gpa";
 import { useHac } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
+import { courseForPeriod, scoreBadge } from "@/lib/hac/marking";
+import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown } from "lucide-react";
@@ -122,7 +124,7 @@ function perfectsNeeded(course: Course, target: number, cat: string): number | n
 
 
 export function ClassDetail({
-  course,
+  course: baseCourse,
   onClose,
   initialSub = "grades",
 }: {
@@ -130,7 +132,8 @@ export function ClassDetail({
   onClose: () => void;
   initialSub?: SubTab;
 }) {
-  const { courseCustom } = useHac();
+  const { courseCustom, activePeriod, setActivePeriod } = useHac();
+  const course = useMemo(() => courseForPeriod(baseCourse, activePeriod), [baseCourse, activePeriod]);
   const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
@@ -220,6 +223,11 @@ export function ClassDetail({
           </div>
         </header>
 
+        {/* Marking period slider */}
+        <div className="px-5 pb-2 shrink-0">
+          <MarkingPeriodSlider value={activePeriod} onChange={setActivePeriod} layoutKey="detail-mp-pill" />
+        </div>
+
         {/* Sub-tab pill container */}
         <div className="px-5 shrink-0">
           <div className="relative flex p-1 rounded-2xl bg-white/[0.04] border border-white/10">
@@ -264,22 +272,32 @@ export function ClassDetail({
 
               {/* Assignment feed */}
               <div className="space-y-2 pt-1">
-                {course.assignments.map((a, i) => (
-                  <div
-                    key={i}
-                    className="glass rounded-2xl p-3 pl-2 flex items-center gap-3"
-                    style={{ backdropFilter: "blur(12px)" }}
-                  >
-                    <span className="w-1.5 self-stretch rounded-full shrink-0" style={{ background: catColor(a.category) }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{a.name}</div>
-                      <div className="text-[11px] text-muted-foreground">{a.dueDate}</div>
+                {course.assignments.map((a, i) => {
+                  const badge = scoreBadge(a);
+                  return (
+                    <div
+                      key={i}
+                      className="glass rounded-2xl p-3 pl-2 flex items-center gap-3"
+                      style={{ backdropFilter: "blur(12px)" }}
+                    >
+                      <span className="w-1.5 self-stretch rounded-full shrink-0" style={{ background: catColor(a.category) }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{a.name}</div>
+                        <div className="text-[11px] text-muted-foreground">{a.dueDate}</div>
+                      </div>
+                      <div
+                        className="shrink-0 px-3 py-1.5 rounded-xl text-sm font-semibold tabular-nums"
+                        style={{
+                          background: `color-mix(in oklab, ${badge.color} 18%, transparent)`,
+                          color: badge.color,
+                          border: `1px solid color-mix(in oklab, ${badge.color} 40%, transparent)`,
+                        }}
+                      >
+                        {badge.text}
+                      </div>
                     </div>
-                    <div className="shrink-0 px-3 py-1.5 rounded-xl text-sm font-semibold tabular-nums bg-white/[0.08] text-foreground">
-                      {(pct(a) ?? 0).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           ) : null}

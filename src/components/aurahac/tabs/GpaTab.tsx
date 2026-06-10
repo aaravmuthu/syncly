@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA, numericToPoints } from "@/lib/hac/gpa";
+import { courseForPeriod } from "@/lib/hac/marking";
+import { MarkingPeriodSlider } from "../MarkingPeriodSlider";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { SpotlightCard } from "../SpotlightCard";
 import { RankRing } from "../RankRing";
@@ -9,15 +11,16 @@ import { tierProgress } from "@/lib/hac/tiers";
 import { EyeOff, Eye } from "lucide-react";
 
 export function GpaTab() {
-  const { data } = useHac();
+  const { data, activePeriod, setActivePeriod } = useHac();
   const [weighted, setWeighted] = useState(true);
   const [omitted, setOmitted] = useState<Set<string>>(new Set());
   const [hover, setHover] = useState<number | null>(null);
   if (!data) return null;
 
-  const included = data.courses.filter((c) => !omitted.has(c.id));
+  const periodCourses = data.courses.map((c) => courseForPeriod(c, activePeriod));
+  const included = periodCourses.filter((c) => !omitted.has(c.id));
   const cy = currentYearGPA(included, weighted);
-  const cyFull = currentYearGPA(data.courses, weighted);
+  const cyFull = currentYearGPA(periodCourses, weighted);
   const cum = cumulativeGPA(data.transcript, weighted);
   const cyW = currentYearGPA(included, true);
   const cumW = cumulativeGPA(data.transcript, true);
@@ -50,9 +53,12 @@ export function GpaTab() {
   return (
     <div className="space-y-5 pb-32">
       <header className="pt-2">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">GPA Engine</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">GPA Engine · {activePeriod}</div>
         <h1 className="text-2xl font-bold tracking-tight">Your Trajectory</h1>
       </header>
+
+      <MarkingPeriodSlider value={activePeriod} onChange={setActivePeriod} layoutKey="gpa-mp-pill" />
+
 
       <div className="glass p-1 rounded-2xl grid grid-cols-2 gap-1 text-sm font-medium relative">
         {(["Weighted", "Unweighted"] as const).map((label, i) => {
@@ -195,12 +201,12 @@ export function GpaTab() {
           ) : null}
         </div>
         <div className="space-y-2">
-          {data.courses.map((c) => {
+          {periodCourses.map((c) => {
             const isOmitted = omitted.has(c.id);
             const pts = c.average !== null ? numericToPoints(c.average, weighted) : null;
             // impact = how the current-year GPA changes if this course is removed
             const without = currentYearGPA(
-              data.courses.filter((x) => x.id !== c.id && !omitted.has(x.id)),
+              periodCourses.filter((x) => x.id !== c.id && !omitted.has(x.id)),
               weighted,
             );
             const impact = cy - without;

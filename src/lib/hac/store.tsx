@@ -4,6 +4,7 @@ import { getFallbackData } from "./mockData";
 import { defaultBellRotation } from "./customize";
 import { encryptJSON, decryptJSON } from "./secureStore";
 import { emptyStreak, recordCheckIn, type StreakState } from "./streaks";
+import type { MarkingPeriod } from "./marking";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
@@ -71,6 +72,8 @@ interface Ctx {
   streak: StreakState;
   /** Record a daily check-in; `onTrack` decides if it extends the streak. */
   recordStreak: (onTrack: boolean) => void;
+  activePeriod: MarkingPeriod;
+  setActivePeriod: (p: MarkingPeriod) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
@@ -89,6 +92,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [courseCustom, setCourseCustomState] = useState<Record<string, CourseCustom>>({});
   const [bellRotation, setBellRotationState] = useState<BellRotation>(defaultBellRotation());
   const [streak, setStreak] = useState<StreakState>(emptyStreak());
+  const [activePeriod, setActivePeriod] = useState<MarkingPeriod>("MP4");
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
@@ -383,8 +387,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setBellRotation,
       streak,
       recordStreak,
+      activePeriod,
+      setActivePeriod,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation, streak],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation, streak, activePeriod],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
