@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { ClassDetail } from "../ClassDetail";
+import { CustomizeClassModal } from "../CustomizeClassModal";
 import type { Course } from "@/lib/hac/types";
 import type { CourseSubTab } from "@/lib/hac/store";
-import { ChevronRight } from "lucide-react";
+import { courseDisplay } from "@/lib/hac/customize";
+import { ChevronRight, Palette } from "lucide-react";
 
 function pillColor(avg: number, isDominos: boolean) {
   if (isDominos) return "var(--chart-2)"; // lighter accent blue
