@@ -4,6 +4,7 @@ import { useHac } from "@/lib/hac/store";
 import { ChevronLeft, ChevronRight, Check, Plus, Clock, Trash2, Bell } from "lucide-react";
 import type { Assignment } from "@/lib/hac/types";
 import { AddEventModal } from "../AddEventModal";
+import { ShimmerBeam } from "../ShimmerBeam";
 
 /* ---------------- date helpers ---------------- */
 
