@@ -326,6 +326,18 @@ export function HacProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function recordStreak(onTrack: boolean) {
+    setStreak((prev) => {
+      const { next } = recordCheckIn(prev, onTrack);
+      try {
+        localStorage.setItem(STREAK_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
   const value = useMemo<Ctx>(
     () => ({
       data,
@@ -352,8 +364,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setCourseCustom,
       bellRotation,
       setBellRotation,
+      streak,
+      recordStreak,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation, streak],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
