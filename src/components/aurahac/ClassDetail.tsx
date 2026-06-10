@@ -230,14 +230,14 @@ export function ClassDetail({
                   key={t.id}
                   onClick={() => setSub(t.id)}
                   className={`relative flex-1 py-2 text-xs font-semibold rounded-xl transition-colors z-10 ${
-                    active ? "text-white" : "text-muted-foreground"
+                    active ? "text-[#090915]" : "text-muted-foreground"
                   }`}
                 >
                   {active ? (
                     <motion.span
                       layoutId="subtab-pill"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: "var(--primary)", boxShadow: "0 0 20px -6px var(--primary)" }}
+                      style={{ background: "var(--primary)", boxShadow: "0 0 10px -3px var(--primary)" }}
                       transition={{ type: "spring", stiffness: 500, damping: 34 }}
                     />
                   ) : null}
@@ -561,11 +561,12 @@ function GoalSeeker({
                 key={c}
                 onClick={() => setGoalCat(c)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
-                  active ? "text-white" : "text-muted-foreground"
+                  active ? "text-[#090915]" : "text-muted-foreground"
                 }`}
                 style={{
                   background: active ? "var(--primary)" : "rgba(255,255,255,0.04)",
                   border: `1px solid ${active ? "color-mix(in oklab, var(--primary) 60%, transparent)" : "rgba(255,255,255,0.1)"}`,
+                  boxShadow: active ? "0 0 8px -2px var(--primary)" : undefined,
                 }}
               >
                 {c}
