@@ -124,7 +124,7 @@ function perfectsNeeded(course: Course, target: number, cat: string): number | n
 
 
 export function ClassDetail({
-  course,
+  course: baseCourse,
   onClose,
   initialSub = "grades",
 }: {
@@ -132,7 +132,8 @@ export function ClassDetail({
   onClose: () => void;
   initialSub?: SubTab;
 }) {
-  const { courseCustom } = useHac();
+  const { courseCustom, activePeriod, setActivePeriod } = useHac();
+  const course = useMemo(() => courseForPeriod(baseCourse, activePeriod), [baseCourse, activePeriod]);
   const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
