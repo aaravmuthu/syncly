@@ -253,30 +253,46 @@ export function CalendarTab() {
         </div>
       </header>
 
-      {/* View toggle */}
-      <div className="glass p-1 flex items-center gap-1 rounded-2xl w-fit">
-        {(["month", "week"] as const).map((v) => {
-          const active = view === v;
-          return (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`relative px-4 py-1.5 text-sm font-medium rounded-xl transition-colors ${
-                active ? "text-primary-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {active ? (
-                <motion.span
-                  layoutId="cal-view-pill"
-                  className="absolute inset-0 rounded-xl"
-                  style={{ background: "var(--primary)" }}
-                  transition={{ type: "spring", stiffness: 480, damping: 34 }}
-                />
-              ) : null}
-              <span className="relative z-10">{v === "month" ? "Month View" : "Week List"}</span>
-            </button>
-          );
-        })}
+      {/* View toggle + Add */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="glass p-1 flex items-center gap-1 rounded-2xl w-fit">
+          {(["month", "week"] as const).map((v) => {
+            const active = view === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`relative px-4 py-1.5 text-sm font-medium rounded-xl transition-colors ${
+                  active ? "text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {active ? (
+                  <motion.span
+                    layoutId="cal-view-pill"
+                    className="absolute inset-0 rounded-xl"
+                    style={{ background: "var(--primary)" }}
+                    transition={{ type: "spring", stiffness: 480, damping: 34 }}
+                  />
+                ) : null}
+                <span className="relative z-10">{v === "month" ? "Month View" : "Week List"}</span>
+              </button>
+            );
+          })}
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.03 }}
+          onClick={() => setAdding(true)}
+          className="flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-bold"
+          style={{
+            background: "var(--primary)",
+            color: "var(--primary-foreground)",
+            boxShadow: "0 10px 30px -12px color-mix(in oklab, var(--primary) 80%, transparent)",
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Add
+        </motion.button>
       </div>
 
       {/* Legend */}
