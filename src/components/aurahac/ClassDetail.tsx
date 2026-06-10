@@ -9,6 +9,7 @@ import { courseForPeriod, scoreBadge } from "@/lib/hac/marking";
 import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
 import { AuraAssistMail, needsAssist } from "./AuraAssistMail";
+import { FinalExamPredictor } from "./FinalExamPredictor";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown, Mail } from "lucide-react";
 
@@ -136,6 +137,8 @@ export function ClassDetail({
   const { data, courseCustom, activePeriod, setActivePeriod } = useHac();
   const [assistFor, setAssistFor] = useState<Assignment | null>(null);
   const course = useMemo(() => courseForPeriod(baseCourse, activePeriod), [baseCourse, activePeriod]);
+  const mp3Avg = useMemo(() => courseForPeriod(baseCourse, "MP3").average, [baseCourse]);
+  const mp4Avg = useMemo(() => courseForPeriod(baseCourse, "MP4").average, [baseCourse]);
   const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
@@ -413,6 +416,9 @@ export function ClassDetail({
                 goalText={goalText}
                 setGoalText={setGoalText}
               />
+
+              <FinalExamPredictor mp3={mp3Avg} mp4={mp4Avg} />
+
 
 
 
