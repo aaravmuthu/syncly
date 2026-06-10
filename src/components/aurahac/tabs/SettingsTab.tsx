@@ -1,0 +1,103 @@
+import { useHac } from "@/lib/hac/store";
+import { DISTRICTS } from "@/lib/hac/types";
+import { LogOut, Trash2, Palette, User as UserIcon, RefreshCcw } from "lucide-react";
+
+const ACCENTS: { id: "violet" | "cyan" | "emerald"; label: string; color: string }[] = [
+  { id: "violet", label: "Violet", color: "#A020F0" },
+  { id: "cyan", label: "Cyan", color: "oklch(0.82 0.18 200)" },
+  { id: "emerald", label: "Emerald", color: "oklch(0.78 0.18 155)" },
+];
+
+export function SettingsTab() {
+  const { data, logout, refresh, loading, accent, setAccent } = useHac();
+  if (!data) return null;
+  const district = DISTRICTS.find((d) => d.id === data.districtId);
+
+  function clearCache() {
+    try {
+      localStorage.removeItem("aurahac.data.v1");
+      location.reload();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return (
+    <div className="space-y-4 pb-32">
+      <header className="pt-2">
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">System</div>
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+      </header>
+
+      <section className="glass p-4">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Profile</div>
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#A020F0] to-[oklch(0.82_0.18_200)] grid place-items-center">
+            <UserIcon className="h-5 w-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold truncate">{data.student.name}</div>
+            <div className="text-[11px] text-muted-foreground truncate">{district?.name} · @{data.username}</div>
+          </div>
+        </div>
+        <div className="text-[11px] text-muted-foreground mt-3">
+          Last synced {new Date(data.syncedAt).toLocaleString()}
+        </div>
+      </section>
+
+      <section className="glass p-4">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 inline-flex items-center gap-1">
+          <Palette className="h-3 w-3" /> Accent Color
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {ACCENTS.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => setAccent(a.id)}
+              className={`p-3 rounded-2xl flex flex-col items-center gap-2 border transition-all active:scale-95 ${
+                accent === a.id ? "border-white/30 bg-white/[0.05]" : "border-white/[0.06]"
+              }`}
+            >
+              <span
+                className="h-8 w-8 rounded-full"
+                style={{ background: a.color, boxShadow: `0 0 18px ${a.color}` }}
+              />
+              <span className="text-xs">{a.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <button
+        onClick={refresh}
+        disabled={loading}
+        className="glass w-full p-4 flex items-center justify-between active:scale-[0.98] transition-all"
+      >
+        <span className="inline-flex items-center gap-3">
+          <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          <span className="text-sm font-medium">Refresh Live Data</span>
+        </span>
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Now</span>
+      </button>
+
+      <button
+        onClick={clearCache}
+        className="glass w-full p-4 flex items-center justify-between active:scale-[0.98] transition-all"
+      >
+        <span className="inline-flex items-center gap-3">
+          <Trash2 className="h-4 w-4" />
+          <span className="text-sm font-medium">Clear Cached Data</span>
+        </span>
+        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Reset</span>
+      </button>
+
+      <button
+        onClick={logout}
+        className="w-full p-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-destructive to-[oklch(0.55_0.24_15)] shadow-[0_8px_32px_-4px_oklch(0.68_0.24_25_/_0.6)] active:scale-95 transition-all flex items-center justify-center gap-2"
+      >
+        <LogOut className="h-4 w-4" />
+        Disconnect Account
+      </button>
+    </div>
+  );
+}
