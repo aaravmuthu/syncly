@@ -106,40 +106,64 @@ function shortLabel(a: Assignment, kind: Kind): string {
 /* ---------------- component ---------------- */
 
 export function CalendarTab() {
-  const { data, completed, toggleCompleted } = useHac();
+  const { data, completed, toggleCompleted, userEvents, removeEvent } = useHac();
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [selected, setSelected] = useState<string | null>(() => ymd(new Date()));
   const [view, setView] = useState<"month" | "week">("month");
+  const [adding, setAdding] = useState(false);
 
-  // Map every dated assignment onto its YYYY-MM-DD bucket.
+  // Map every dated assignment + manual event onto its YYYY-MM-DD bucket.
   const byDate = useMemo(() => {
     const map = new Map<string, CalItem[]>();
-    if (!data) return map;
-    for (const c of data.courses) {
-      for (const a of c.assignments) {
-        const d = parseDate(a.dueDate);
-        if (!d) continue;
-        const key = ymd(d);
-        const arr = map.get(key) ?? [];
-        const kind = classify(a);
-        arr.push({
-          key: `${c.id}::${a.name}::${a.dueDate}`,
-          course: c.name,
-          courseId: c.id,
-          abbr: abbreviate(c.code, c.name),
-          label: shortLabel(a, kind),
-          name: a.name,
-          category: a.category,
-          weight: a.totalPoints,
-          score: a.score,
-          total: a.totalPoints,
-          kind,
-        });
-        map.set(key, arr);
+    if (data) {
+      for (const c of data.courses) {
+        for (const a of c.assignments) {
+          const d = parseDate(a.dueDate);
+          if (!d) continue;
+          const key = ymd(d);
+          const arr = map.get(key) ?? [];
+          const kind = classify(a);
+          arr.push({
+            key: `${c.id}::${a.name}::${a.dueDate}`,
+            course: c.name,
+            courseId: c.id,
+            abbr: abbreviate(c.code, c.name),
+            label: shortLabel(a, kind),
+            name: a.name,
+            category: a.category,
+            weight: a.totalPoints,
+            score: a.score,
+            total: a.totalPoints,
+            kind,
+          });
+          map.set(key, arr);
+        }
       }
     }
+    // Manually added homework / exams.
+    for (const e of userEvents) {
+      const arr = map.get(e.date) ?? [];
+      const kind: Kind = e.type === "exam" ? "assessment" : "progress";
+      arr.push({
+        key: e.id,
+        course: e.course ?? "Personal",
+        courseId: "user",
+        abbr: e.course ? abbreviate(null, e.course) : "MINE",
+        label: e.type === "exam" ? "Exam" : "HW",
+        name: e.title,
+        category: e.type === "exam" ? "Exam" : "Homework",
+        weight: null,
+        score: null,
+        total: null,
+        kind,
+        eventId: e.id,
+        minutes: e.minutes,
+        hasReminder: !!e.reminderAt,
+      });
+      map.set(e.date, arr);
+    }
     return map;
-  }, [data]);
+  }, [data, userEvents]);
 
   // Recommended prep windows: 2 days before any major exam-like assessment.
   const prepDays = useMemo(() => {
