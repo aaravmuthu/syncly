@@ -90,6 +90,14 @@ export function OverviewTab() {
       {/* High-priority grade drop tier */}
       <RecentGradesBanner />
 
+      {/* Academic streak */}
+      <StreakCard />
+
+      {/* Friendly, actionable grade insights */}
+      <SmartInsights />
+
+
+
       {/* Missing assignments */}
       {missing.length > 0 ? (
         <section>
