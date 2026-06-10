@@ -222,21 +222,31 @@ function DetailContent({ id }: { id: ItemId }) {
     );
   }
 
-  if (id === "bell" || id === "schedule") {
+  if (id === "bell") {
+    return <BellScheduleEditor />;
+  }
+
+  if (id === "schedule") {
     const sorted = byPeriod(courses);
     return (
       <div className="space-y-2">
-        {sorted.map((c) => (
-          <div key={c.id} className="liquid rounded-xl p-3 flex items-center gap-3">
-            <div className="shrink-0 h-9 w-9 rounded-lg grid place-items-center text-sm font-bold tabular-nums text-primary" style={{ background: "color-mix(in oklab, var(--primary) 16%, transparent)" }}>
-              {c.period ?? "–"}
+        {sorted.map((c) => {
+          const d = courseDisplay(c, courseCustom[c.id]);
+          return (
+            <div key={c.id} className="liquid rounded-xl p-3 flex items-center gap-3">
+              <div
+                className="shrink-0 h-9 w-9 rounded-lg grid place-items-center text-sm font-bold tabular-nums"
+                style={{ background: d.gradient ?? "color-mix(in oklab, var(--primary) 16%, transparent)", color: d.gradient ? "#fff" : "var(--primary)" }}
+              >
+                {d.emoji ?? c.period ?? "–"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold truncate">{d.name}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? "—"}{c.period ? ` · Period ${c.period}` : ""}</div>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate">{c.name}</div>
-              <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? "—"}{c.code ? ` · ${c.code}` : ""}</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
