@@ -186,6 +186,14 @@ export function OverviewTab() {
         </div>
       </div>
 
+      {/* Weighted-GPA trend over the semester */}
+      <section className="liquid rounded-2xl p-4">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1.5 mb-3">
+          <LineChart className="h-3 w-3" /> GPA Trend
+        </div>
+        <TrendGraph points={trend} max={trendMax} min={trendMin} />
+      </section>
+
       {/* Utility navigation grid */}
       <UtilityMenu />
     </div>
