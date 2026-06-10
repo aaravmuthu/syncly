@@ -9,7 +9,6 @@ const THEMES: { id: Theme; label: string; vibe: string; canvas: string; accent: 
   { id: "executive", label: "Executive", vibe: "Editorial gold", canvas: "#0A0A0A", accent: "#C9A24A" },
   { id: "arctic", label: "Arctic", vibe: "Light SaaS", canvas: "#FFFFFF", accent: "#4F46E5" },
   { id: "titanium", label: "Titanium", vibe: "Industrial", canvas: "#17191C", accent: "#A8B8CC" },
-  { id: "amethyst", label: "Amethyst", vibe: "Luxury violet", canvas: "#0D0820", accent: "#A78BFA" },
   { id: "phantom", label: "Phantom Jade", vibe: "Neon emerald", canvas: "#050706", accent: "#34D399" },
   { id: "genesis", label: "Cyber Genesis", vibe: "Tactical synth", canvas: "#070610", accent: "#FF2D90" },
   { id: "platinum", label: "Ghost Platinum", vibe: "Icy minimalist", canvas: "#0C0C0C", accent: "#E8ECF1" },
