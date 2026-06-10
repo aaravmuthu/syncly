@@ -4,6 +4,10 @@ import { getFallbackData } from "./mockData";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
+const THEME_KEY = "aurahac.theme.v2";
+
+export type Theme = "nebula" | "onyx" | "executive" | "arctic" | "titanium" | "amethyst";
+const THEMES: Theme[] = ["nebula", "onyx", "executive", "arctic", "titanium", "amethyst"];
 
 interface Cred {
   district: DistrictId;
