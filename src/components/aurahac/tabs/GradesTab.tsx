@@ -62,7 +62,7 @@ export function GradesTab() {
                   setInitialSub("grades");
                   setOpen(c);
                 }}
-                className="flex-1 min-w-0 px-4 py-4 flex items-center gap-3 text-left"
+                className="flex-1 min-w-0 px-4 py-5 min-h-[76px] flex items-center gap-3 text-left"
               >
                 <div
                   className="shrink-0 h-11 w-11 rounded-xl grid place-items-center text-xl"
