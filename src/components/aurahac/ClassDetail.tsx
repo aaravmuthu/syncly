@@ -49,6 +49,73 @@ function overallFrom(course: Course, assignments: Assignment[]): number | null {
   return den ? total / den : null;
 }
 
+type CatStats = { weights: Record<string, number>; byCat: Record<string, { sum: number; n: number }> };
+
+function statsByCat(course: Course): CatStats {
+  const weights: Record<string, number> = {};
+  for (const ca of course.categoryAverages) if (ca.weight) weights[ca.category] = ca.weight;
+  const byCat: Record<string, { sum: number; n: number }> = {};
+  for (const a of course.assignments) {
+    const p = pct(a);
+    if (p === null) continue;
+    byCat[a.category] ??= { sum: 0, n: 0 };
+    byCat[a.category].sum += p;
+    byCat[a.category].n += 1;
+  }
+  return { weights, byCat };
+}
+
+/** Weighted overall if category `cat` had `extra` additional scores of `value` each. */
+function overallWith(course: Course, cat: string, extra: number, value: number): number {
+  const { weights, byCat } = statsByCat(course);
+  const cats = new Set(Object.keys(byCat));
+  cats.add(cat);
+  let total = 0;
+  let den = 0;
+  for (const k of cats) {
+    const w = weights[k] ?? 1;
+    const base = byCat[k] ?? { sum: 0, n: 0 };
+    const sum = k === cat ? base.sum + extra * value : base.sum;
+    const n = k === cat ? base.n + extra : base.n;
+    if (n === 0) continue;
+    total += (sum / n) * w;
+    den += w;
+  }
+  return den ? total / den : 0;
+}
+
+/**
+ * Exact score needed on ONE more assignment in `cat` to reach `target` overall.
+ * Returns the raw number (may be <0 or >100 to signal feasibility).
+ */
+function scoreNeeded(course: Course, target: number, cat: string): number {
+  const { weights, byCat } = statsByCat(course);
+  const cats = new Set(Object.keys(byCat));
+  cats.add(cat);
+  let W = 0;
+  let otherSum = 0;
+  for (const k of cats) {
+    const w = weights[k] ?? 1;
+    W += w;
+    if (k !== cat) {
+      const b = byCat[k];
+      const avg = b ? b.sum / b.n : 0;
+      otherSum += w * avg;
+    }
+  }
+  const wc = weights[cat] ?? 1;
+  const base = byCat[cat] ?? { sum: 0, n: 0 };
+  const avgNeeded = (target * W - otherSum) / wc;
+  return avgNeeded * (base.n + 1) - base.sum;
+}
+
+/** Fewest perfect (100) scores in `cat` to reach `target`, capped at a sane max. */
+function perfectsNeeded(course: Course, target: number, cat: string): number | null {
+  for (let m = 1; m <= 20; m++) {
+    if (overallWith(course, cat, m, 100) >= target - 1e-9) return m;
+  }
+  return null;
+
 export function ClassDetail({
   course,
   onClose,
