@@ -272,22 +272,32 @@ export function ClassDetail({
 
               {/* Assignment feed */}
               <div className="space-y-2 pt-1">
-                {course.assignments.map((a, i) => (
-                  <div
-                    key={i}
-                    className="glass rounded-2xl p-3 pl-2 flex items-center gap-3"
-                    style={{ backdropFilter: "blur(12px)" }}
-                  >
-                    <span className="w-1.5 self-stretch rounded-full shrink-0" style={{ background: catColor(a.category) }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{a.name}</div>
-                      <div className="text-[11px] text-muted-foreground">{a.dueDate}</div>
+                {course.assignments.map((a, i) => {
+                  const badge = scoreBadge(a);
+                  return (
+                    <div
+                      key={i}
+                      className="glass rounded-2xl p-3 pl-2 flex items-center gap-3"
+                      style={{ backdropFilter: "blur(12px)" }}
+                    >
+                      <span className="w-1.5 self-stretch rounded-full shrink-0" style={{ background: catColor(a.category) }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{a.name}</div>
+                        <div className="text-[11px] text-muted-foreground">{a.dueDate}</div>
+                      </div>
+                      <div
+                        className="shrink-0 px-3 py-1.5 rounded-xl text-sm font-semibold tabular-nums"
+                        style={{
+                          background: `color-mix(in oklab, ${badge.color} 18%, transparent)`,
+                          color: badge.color,
+                          border: `1px solid color-mix(in oklab, ${badge.color} 40%, transparent)`,
+                        }}
+                      >
+                        {badge.text}
+                      </div>
                     </div>
-                    <div className="shrink-0 px-3 py-1.5 rounded-xl text-sm font-semibold tabular-nums bg-white/[0.08] text-foreground">
-                      {(pct(a) ?? 0).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           ) : null}
