@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { HacData, DistrictId, UserEvent } from "./types";
+import type { HacData, DistrictId, UserEvent, CourseCustom, BellRotation } from "./types";
 import { getFallbackData } from "./mockData";
+import { defaultBellRotation } from "./customize";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
@@ -8,6 +9,8 @@ const THEME_KEY = "aurahac.theme.v2";
 const DEMO_KEY = "aurahac.demo.v1";
 const DONE_KEY = "aurahac.done.v1";
 const EVENTS_KEY = "aurahac.events.v1";
+const CUSTOM_KEY = "aurahac.coursecustom.v1";
+const BELL_KEY = "aurahac.bell.v1";
 
 export type Theme = "nebula" | "onyx" | "executive" | "arctic" | "titanium" | "amethyst";
 const THEMES: Theme[] = ["nebula", "onyx", "executive", "arctic", "titanium", "amethyst"];
@@ -41,6 +44,10 @@ interface Ctx {
   removeEvent: (id: string) => void;
   notificationsEnabled: boolean;
   enableNotifications: () => Promise<boolean>;
+  courseCustom: Record<string, CourseCustom>;
+  setCourseCustom: (courseId: string, custom: CourseCustom) => void;
+  bellRotation: BellRotation;
+  setBellRotation: (b: BellRotation) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
@@ -56,6 +63,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [courseCustom, setCourseCustomState] = useState<Record<string, CourseCustom>>({});
+  const [bellRotation, setBellRotationState] = useState<BellRotation>(defaultBellRotation());
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
@@ -71,6 +80,12 @@ export function HacProvider({ children }: { children: ReactNode }) {
 
       const ev = localStorage.getItem(EVENTS_KEY);
       if (ev) setUserEvents(JSON.parse(ev));
+
+      const cc = localStorage.getItem(CUSTOM_KEY);
+      if (cc) setCourseCustomState(JSON.parse(cc));
+
+      const bell = localStorage.getItem(BELL_KEY);
+      if (bell) setBellRotationState({ ...defaultBellRotation(), ...JSON.parse(bell) });
 
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         setNotificationsEnabled(true);
@@ -268,6 +283,27 @@ export function HacProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function setCourseCustom(courseId: string, custom: CourseCustom) {
+    setCourseCustomState((prev) => {
+      const next = { ...prev, [courseId]: custom };
+      try {
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+  function setBellRotation(b: BellRotation) {
+    setBellRotationState(b);
+    try {
+      localStorage.setItem(BELL_KEY, JSON.stringify(b));
+    } catch {
+      /* ignore */
+    }
+  }
+
   const value = useMemo<Ctx>(
     () => ({
       data,
@@ -290,8 +326,12 @@ export function HacProvider({ children }: { children: ReactNode }) {
       removeEvent,
       notificationsEnabled,
       enableNotifications,
+      courseCustom,
+      setCourseCustom,
+      bellRotation,
+      setBellRotation,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;

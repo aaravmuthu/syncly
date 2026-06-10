@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
-import type { Course } from "@/lib/hac/types";
+import type { Course, BellRotation, BellPeriod } from "@/lib/hac/types";
+import { courseDisplay, defaultBellRotation, weekdayLabel } from "@/lib/hac/customize";
 import {
   CalendarCheck,
   BellRing,
@@ -12,6 +13,8 @@ import {
   ScrollText,
   ChevronRight,
   X,
+  Plus,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -198,7 +201,7 @@ function Empty({ text }: { text: string }) {
 }
 
 function DetailContent({ id }: { id: ItemId }) {
-  const { data } = useHac();
+  const { data, courseCustom } = useHac();
   if (!data) return null;
   const courses = data.courses;
 
@@ -222,21 +225,31 @@ function DetailContent({ id }: { id: ItemId }) {
     );
   }
 
-  if (id === "bell" || id === "schedule") {
+  if (id === "bell") {
+    return <BellScheduleEditor />;
+  }
+
+  if (id === "schedule") {
     const sorted = byPeriod(courses);
     return (
       <div className="space-y-2">
-        {sorted.map((c) => (
-          <div key={c.id} className="liquid rounded-xl p-3 flex items-center gap-3">
-            <div className="shrink-0 h-9 w-9 rounded-lg grid place-items-center text-sm font-bold tabular-nums text-primary" style={{ background: "color-mix(in oklab, var(--primary) 16%, transparent)" }}>
-              {c.period ?? "–"}
+        {sorted.map((c) => {
+          const d = courseDisplay(c, courseCustom[c.id]);
+          return (
+            <div key={c.id} className="liquid rounded-xl p-3 flex items-center gap-3">
+              <div
+                className="shrink-0 h-9 w-9 rounded-lg grid place-items-center text-sm font-bold tabular-nums"
+                style={{ background: d.gradient ?? "color-mix(in oklab, var(--primary) 16%, transparent)", color: d.gradient ? "#fff" : "var(--primary)" }}
+              >
+                {d.emoji ?? c.period ?? "–"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold truncate">{d.name}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? "—"}{c.period ? ` · Period ${c.period}` : ""}</div>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate">{c.name}</div>
-              <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? "—"}{c.code ? ` · ${c.code}` : ""}</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -331,6 +344,199 @@ function DetailContent({ id }: { id: ItemId }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Editor for a custom weekly bell schedule with A/B-style rotating day types. */
+function BellScheduleEditor() {
+  const { bellRotation, setBellRotation } = useHac();
+  const rot = bellRotation;
+  const [activeDay, setActiveDay] = useState<string>(rot.dayTypes[0] ?? "");
+
+  const dayType = rot.dayTypes.includes(activeDay) ? activeDay : rot.dayTypes[0] ?? "";
+
+  function update(next: BellRotation) {
+    setBellRotation(next);
+  }
+
+  function toggleEnabled() {
+    update({ ...rot, enabled: !rot.enabled });
+  }
+
+  function setWeekday(wd: number, type: string) {
+    update({ ...rot, weekMap: { ...rot.weekMap, [wd]: type } });
+  }
+
+  function addDayType() {
+    const name = `Day ${String.fromCharCode(65 + rot.dayTypes.length)}`;
+    if (rot.dayTypes.includes(name)) return;
+    update({
+      ...rot,
+      dayTypes: [...rot.dayTypes, name],
+      periods: { ...rot.periods, [name]: [] },
+    });
+    setActiveDay(name);
+  }
+
+  function removeDayType(name: string) {
+    if (rot.dayTypes.length <= 1) return;
+    const periods = { ...rot.periods };
+    delete periods[name];
+    const weekMap = { ...rot.weekMap };
+    for (const k of Object.keys(weekMap)) {
+      if (weekMap[Number(k)] === name) weekMap[Number(k)] = "";
+    }
+    const dayTypes = rot.dayTypes.filter((d) => d !== name);
+    update({ ...rot, dayTypes, periods, weekMap });
+    setActiveDay(dayTypes[0] ?? "");
+  }
+
+  function updatePeriod(idx: number, patch: Partial<BellPeriod>) {
+    const list = [...(rot.periods[dayType] ?? [])];
+    list[idx] = { ...list[idx], ...patch };
+    update({ ...rot, periods: { ...rot.periods, [dayType]: list } });
+  }
+
+  function addPeriod() {
+    const list = [...(rot.periods[dayType] ?? [])];
+    list.push({ id: crypto.randomUUID(), label: `Period ${list.length + 1}`, start: "08:00", end: "08:50" });
+    update({ ...rot, periods: { ...rot.periods, [dayType]: list } });
+  }
+
+  function removePeriod(idx: number) {
+    const list = (rot.periods[dayType] ?? []).filter((_, i) => i !== idx);
+    update({ ...rot, periods: { ...rot.periods, [dayType]: list } });
+  }
+
+  function resetToDefault() {
+    const d = defaultBellRotation();
+    update({ ...d, enabled: true });
+    setActiveDay(d.dayTypes[0]);
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Enable toggle */}
+      <div className="liquid rounded-xl p-3 flex items-center justify-between">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">Custom rotation</div>
+          <div className="text-[11px] text-muted-foreground">Supports A/B days &amp; weekly rotations.</div>
+        </div>
+        <button
+          onClick={toggleEnabled}
+          className="relative h-6 w-11 rounded-full transition shrink-0"
+          style={{ background: rot.enabled ? "var(--primary)" : "rgba(255,255,255,0.15)" }}
+          aria-label="Toggle custom rotation"
+        >
+          <span
+            className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all"
+            style={{ left: rot.enabled ? "1.5rem" : "0.125rem" }}
+          />
+        </button>
+      </div>
+
+      {!rot.enabled ? (
+        <div className="text-xs text-muted-foreground text-center py-2">
+          Turn on custom rotation to set up alternating block days, then assign each weekday a day type.
+          <div className="mt-3">
+            <button onClick={resetToDefault} className="liquid rounded-lg px-3 py-2 text-xs font-semibold">
+              Load A/B day starter
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Weekday assignment */}
+          <div>
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground mb-1.5">Week pattern</div>
+            <div className="space-y-1.5">
+              {[1, 2, 3, 4, 5].map((wd) => (
+                <div key={wd} className="flex items-center gap-2">
+                  <span className="w-10 text-xs font-semibold text-muted-foreground">{weekdayLabel(wd)}</span>
+                  <div className="flex flex-wrap gap-1.5 flex-1">
+                    <button
+                      onClick={() => setWeekday(wd, "")}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${(!rot.weekMap[wd]) ? "bg-white/15 text-white" : "liquid text-muted-foreground"}`}
+                    >
+                      Off
+                    </button>
+                    {rot.dayTypes.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setWeekday(wd, t)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${rot.weekMap[wd] === t ? "text-white" : "liquid text-muted-foreground"}`}
+                        style={rot.weekMap[wd] === t ? { background: "var(--primary)" } : undefined}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Day type tabs */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {rot.dayTypes.map((t) => (
+              <div key={t} className="flex items-center">
+                <button
+                  onClick={() => setActiveDay(t)}
+                  className={`px-3 py-1.5 rounded-l-lg text-xs font-semibold ${dayType === t ? "text-white" : "liquid text-muted-foreground"}`}
+                  style={dayType === t ? { background: "var(--primary)" } : undefined}
+                >
+                  {t}
+                </button>
+                <button
+                  onClick={() => removeDayType(t)}
+                  className="px-1.5 py-1.5 rounded-r-lg liquid text-muted-foreground hover:text-destructive"
+                  aria-label={`Remove ${t}`}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            <button onClick={addDayType} className="px-2 py-1.5 rounded-lg liquid text-primary" aria-label="Add day type">
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Periods for active day type */}
+          <div className="space-y-2">
+            {(rot.periods[dayType] ?? []).map((p, idx) => (
+              <div key={p.id} className="liquid rounded-xl p-2.5 flex items-center gap-2">
+                <input
+                  value={p.label}
+                  onChange={(e) => updatePeriod(idx, { label: e.target.value })}
+                  className="flex-1 min-w-0 bg-transparent text-sm font-semibold outline-none"
+                />
+                <input
+                  type="time"
+                  value={p.start}
+                  onChange={(e) => updatePeriod(idx, { start: e.target.value })}
+                  className="bg-white/[0.06] rounded-md px-1.5 py-1 text-[11px] tabular-nums outline-none"
+                />
+                <input
+                  type="time"
+                  value={p.end}
+                  onChange={(e) => updatePeriod(idx, { end: e.target.value })}
+                  className="bg-white/[0.06] rounded-md px-1.5 py-1 text-[11px] tabular-nums outline-none"
+                />
+                <button onClick={() => removePeriod(idx)} className="text-muted-foreground hover:text-destructive shrink-0" aria-label="Remove period">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={addPeriod}
+              className="w-full liquid rounded-xl py-2.5 text-xs font-semibold text-primary flex items-center justify-center gap-1.5"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add period to {dayType}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

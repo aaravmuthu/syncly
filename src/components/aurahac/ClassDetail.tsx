@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { GradeRing } from "./GradeRing";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { categoryAveragesFromAssignments } from "@/lib/hac/gpa";
+import { useHac } from "@/lib/hac/store";
+import { courseDisplay } from "@/lib/hac/customize";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 
@@ -127,6 +129,8 @@ export function ClassDetail({
   onClose: () => void;
   initialSub?: SubTab;
 }) {
+  const { courseCustom } = useHac();
+  const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -196,7 +200,7 @@ export function ClassDetail({
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold truncate">{course.name}</h2>
+            <h2 className="text-lg font-bold truncate">{disp.emoji ? `${disp.emoji} ` : ""}{disp.name}</h2>
             <div className="text-xs text-muted-foreground truncate">
               {course.code ?? ""} {course.teacher ? `· ${course.teacher}` : ""}
             </div>

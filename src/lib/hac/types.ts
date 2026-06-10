@@ -59,6 +59,33 @@ export interface HacData {
   username: string;
 }
 
+/** Per-course visual customization (alias, emoji, color gradient). */
+export interface CourseCustom {
+  alias?: string;
+  emoji?: string;
+  /** Gradient preset id from GRADIENT_PRESETS, or null for the default. */
+  gradient?: string | null;
+}
+
+/** A single period block within a bell-schedule day type. */
+export interface BellPeriod {
+  id: string;
+  label: string;
+  start: string; // "08:25"
+  end: string; // "09:15"
+}
+
+/** A custom weekly bell schedule with rotating day types (e.g. A/B days). */
+export interface BellRotation {
+  enabled: boolean;
+  /** Ordered list of day-type names, e.g. ["A Day", "B Day"]. */
+  dayTypes: string[];
+  /** Period blocks for each day type, keyed by day-type name. */
+  periods: Record<string, BellPeriod[]>;
+  /** Weekday (1=Mon … 5=Fri) → day-type name, or "" for none. */
+  weekMap: Record<number, string>;
+}
+
 /** A homework / exam item the student manually adds to the calendar. */
 export interface UserEvent {
   id: string;
