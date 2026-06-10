@@ -158,6 +158,18 @@ export function ClassDetail({
   const sumAvg = (dirty ? liveCats[summative?.category ?? ""] : undefined) ?? summative?.average ?? null;
   const formAvg = (dirty ? liveCats[formative?.category ?? ""] : undefined) ?? formative?.average ?? null;
 
+  // Skate a light beam across the simulated GPA card each time it recomputes.
+  const [whatIfShimmer, setWhatIfShimmer] = useState(0);
+  const firstOverall = useRef(true);
+  useEffect(() => {
+    if (firstOverall.current) {
+      firstOverall.current = false;
+      return;
+    }
+    setWhatIfShimmer((n) => n + 1);
+  }, [overall]);
+
+
   // Chart series for the Analysis view. Never empty: falls back to a safe
   // historical baseline derived from the course average so bars always plot.
   const analysisSeries = useMemo<number[]>(() => {
