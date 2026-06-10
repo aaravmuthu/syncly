@@ -297,6 +297,20 @@ export function ClassDetail({
                       >
                         {badge.text}
                       </div>
+                      {needsAssist(a) ? (
+                        <button
+                          onClick={() => setAssistFor(a)}
+                          aria-label="Draft email to teacher"
+                          className="shrink-0 h-9 w-9 grid place-items-center rounded-xl text-primary active:scale-95"
+                          style={{
+                            background: "color-mix(in oklab, var(--primary) 14%, transparent)",
+                            border: "1px solid color-mix(in oklab, var(--primary) 38%, transparent)",
+                            boxShadow: "0 0 14px -4px var(--primary)",
+                          }}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </button>
+                      ) : null}
                     </div>
                   );
                 })}
