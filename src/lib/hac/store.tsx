@@ -156,6 +156,19 @@ export function HacProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function toggleCompleted(key: string) {
+    setCompleted((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      if (!next[key]) delete next[key];
+      try {
+        localStorage.setItem(DONE_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
   const value = useMemo<Ctx>(
     () => ({
       data,
@@ -171,8 +184,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setTheme,
       courseNav,
       setCourseNav,
+      completed,
+      toggleCompleted,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
