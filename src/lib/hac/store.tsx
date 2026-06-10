@@ -36,6 +36,11 @@ interface Ctx {
   setCourseNav: (n: { courseId: string; sub: CourseSubTab } | null) => void;
   completed: Record<string, boolean>;
   toggleCompleted: (key: string) => void;
+  userEvents: UserEvent[];
+  addEvent: (e: Omit<UserEvent, "id" | "reminded">) => void;
+  removeEvent: (id: string) => void;
+  notificationsEnabled: boolean;
+  enableNotifications: () => Promise<boolean>;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
