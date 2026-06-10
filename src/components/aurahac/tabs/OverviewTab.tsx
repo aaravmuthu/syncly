@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
