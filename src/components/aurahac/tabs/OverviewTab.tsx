@@ -5,6 +5,7 @@ import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { RecentGradesBanner } from "../RecentGradesBanner";
 import { UtilityMenu } from "../UtilityMenu";
+import { RankBadge } from "../RankBadge";
 import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
 
 function fullDate(): string {
