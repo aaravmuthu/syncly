@@ -81,7 +81,20 @@ function scoreColor(v: number): string {
 export function scoreBadge(a: Assignment): { text: string; color: string } {
   if (a.absent) return { text: "ABS", color: "var(--warning)" };
   if (a.missing) return { text: "MSG", color: "var(--destructive)" };
+
+  // Prefer a clean numeric percent; fall back across every possible grade key.
   const v = assignmentPercent(a);
-  if (v === null) return { text: "—", color: "var(--muted-foreground)" };
-  return { text: v.toFixed(2), color: scoreColor(v) };
+  if (v !== null && Number.isFinite(v)) return { text: v.toFixed(2), color: scoreColor(v) };
+
+  const raw = resolveGrade(a);
+  if (raw !== null) {
+    if (typeof raw === "number") return { text: raw.toFixed(2), color: scoreColor(raw) };
+    const asNum = parseFloat(raw);
+    if (Number.isFinite(asNum)) return { text: raw, color: scoreColor(asNum) };
+    return { text: raw, color: "var(--foreground)" }; // letter grade, etc.
+  }
+
+  // Genuinely ungraded — render a highly visible lavender placeholder so the
+  // text container is always present and aligned, never blank.
+  return { text: "--", color: "#c4b5fd" };
 }
