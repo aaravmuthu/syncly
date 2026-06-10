@@ -71,6 +71,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [courseCustom, setCourseCustomState] = useState<Record<string, CourseCustom>>({});
   const [bellRotation, setBellRotationState] = useState<BellRotation>(defaultBellRotation());
+  const [streak, setStreak] = useState<StreakState>(emptyStreak());
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
