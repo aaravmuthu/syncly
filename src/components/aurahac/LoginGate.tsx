@@ -135,8 +135,9 @@ export function LoginGate() {
 
         <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
           <Lock className="h-3 w-3" />
-          End-to-end secure. Credentials are sent directly to your district's HAC.
+          Encrypted on-device · sent directly to your district's HAC · never stored externally.
         </div>
+
       </div>
     </div>
   );
