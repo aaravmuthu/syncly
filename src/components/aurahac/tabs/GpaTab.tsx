@@ -20,6 +20,9 @@ export function GpaTab() {
   const cyFull = currentYearGPA(data.courses, weighted);
   const cum = cumulativeGPA(data.transcript, weighted);
   const cyW = currentYearGPA(included, true);
+  const cumW = cumulativeGPA(data.transcript, true);
+  // Tier always reads the weighted cumulative scale (falls back to current year).
+  const tierGpa = cumW > 0 ? cumW : cyW;
 
   const mpData = useMemo(() => {
     if (data.markingPeriodGPAs.length) return data.markingPeriodGPAs;
