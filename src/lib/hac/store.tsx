@@ -152,6 +152,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
       hasCredentials: !!cred,
       isFallback,
       login,
+      loginDemo,
       refresh,
       logout,
       theme,
