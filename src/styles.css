@@ -138,6 +138,12 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   body {
     background:
       radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.70 0.22 305 / 0.18), transparent 60%),
