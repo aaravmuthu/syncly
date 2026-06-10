@@ -7,16 +7,18 @@ import { DesktopSidebar } from "./DesktopSidebar";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { GradesTab } from "./tabs/GradesTab";
 import { GpaTab } from "./tabs/GpaTab";
+import { RecordsTab } from "./tabs/RecordsTab";
 import { CalendarTab } from "./tabs/CalendarTab";
 import { SettingsTab } from "./tabs/SettingsTab";
-import { Home, BookOpen, GraduationCap, Calendar, Settings } from "lucide-react";
+import { Home, BookOpen, GraduationCap, FolderOpen, Calendar, Settings } from "lucide-react";
 
-type TabId = "overview" | "grades" | "gpa" | "calendar" | "settings";
+type TabId = "overview" | "grades" | "gpa" | "records" | "calendar" | "settings";
 
 const TABS: { id: TabId; label: string; icon: typeof Home }[] = [
   { id: "overview", label: "Overview", icon: Home },
   { id: "grades", label: "Grades", icon: BookOpen },
   { id: "gpa", label: "GPA", icon: GraduationCap },
+  { id: "records", label: "Records", icon: FolderOpen },
   { id: "calendar", label: "Calendar", icon: Calendar },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -74,6 +76,7 @@ export function AppShell() {
             <Pane active="overview" current={tab}><OverviewTab /></Pane>
             <Pane active="grades" current={tab}><GradesTab /></Pane>
             <Pane active="gpa" current={tab}><GpaTab /></Pane>
+            <Pane active="records" current={tab}><RecordsTab /></Pane>
             <Pane active="calendar" current={tab}><CalendarTab /></Pane>
             <Pane active="settings" current={tab}><SettingsTab /></Pane>
           </div>

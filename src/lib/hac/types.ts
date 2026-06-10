@@ -29,6 +29,18 @@ export interface Assignment {
   absent: boolean;
 }
 
+/** Full 4-quarter + exam matrix used by the Report Card module. */
+export interface ReportCardTerm {
+  mp1: number | null;
+  mp2: number | null;
+  mp3: number | null;
+  mp4: number | null;
+  /** Semester final exam score. */
+  exam: number | null;
+  /** Calculated final semester grade. */
+  semester: number | null;
+}
+
 export interface Course {
   id: string;
   name: string;
@@ -38,6 +50,12 @@ export interface Course {
   average: number | null;
   assignments: Assignment[];
   categoryAverages: { category: AssignmentCategory; weight: number | null; average: number | null }[];
+  /** Schedule engine: physical room location for this block. */
+  room?: string | null;
+  /** Schedule engine: teacher contact email. */
+  teacherEmail?: string | null;
+  /** Report card: explicit per-marking-period matrix (optional; derived if absent). */
+  reportCard?: ReportCardTerm;
 }
 
 export interface TranscriptCourse {
@@ -49,11 +67,31 @@ export interface TranscriptCourse {
   credits: string | null;
 }
 
+/** Attendance status codes mapped to specific calendar dates. */
+export type AttendanceCode = "ABS" | "TLY" | "EXC" | "UNX";
+
+export interface AttendanceEntry {
+  date: string; // YYYY-MM-DD
+  code: AttendanceCode;
+  course?: string | null;
+  note?: string | null;
+}
+
+export interface AttendanceLedger {
+  totalAbsences: number;
+  excusedAbsences: number;
+  unexcusedAbsences: number;
+  tardies: number;
+  log: AttendanceEntry[];
+}
+
 export interface HacData {
-  student: { name: string; grade: string | null; school: string | null };
+  student: { name: string; grade: string | null; school: string | null; studentId?: string | null };
   courses: Course[];
   transcript: TranscriptCourse[];
   markingPeriodGPAs: { mp: string; gpa: number }[];
+  /** Attendance ledger (optional; absent assignments are used as a fallback). */
+  attendance?: AttendanceLedger;
   syncedAt: string; // ISO
   districtId: DistrictId;
   username: string;
