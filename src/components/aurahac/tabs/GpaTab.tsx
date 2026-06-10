@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA, numericToPoints } from "@/lib/hac/gpa";
+import { courseForPeriod } from "@/lib/hac/marking";
+import { MarkingPeriodSlider } from "../MarkingPeriodSlider";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { SpotlightCard } from "../SpotlightCard";
 import { RankRing } from "../RankRing";
@@ -9,15 +11,16 @@ import { tierProgress } from "@/lib/hac/tiers";
 import { EyeOff, Eye } from "lucide-react";
 
 export function GpaTab() {
-  const { data } = useHac();
+  const { data, activePeriod, setActivePeriod } = useHac();
   const [weighted, setWeighted] = useState(true);
   const [omitted, setOmitted] = useState<Set<string>>(new Set());
   const [hover, setHover] = useState<number | null>(null);
   if (!data) return null;
 
-  const included = data.courses.filter((c) => !omitted.has(c.id));
+  const periodCourses = data.courses.map((c) => courseForPeriod(c, activePeriod));
+  const included = periodCourses.filter((c) => !omitted.has(c.id));
   const cy = currentYearGPA(included, weighted);
-  const cyFull = currentYearGPA(data.courses, weighted);
+  const cyFull = currentYearGPA(periodCourses, weighted);
   const cum = cumulativeGPA(data.transcript, weighted);
   const cyW = currentYearGPA(included, true);
   const cumW = cumulativeGPA(data.transcript, true);
