@@ -97,7 +97,19 @@ export function HacProvider({ children }: { children: ReactNode }) {
       if (d) {
         setData(JSON.parse(d));
         const c = localStorage.getItem(CRED_KEY);
-        if (c) setCred(JSON.parse(c));
+        if (c) {
+          // Credentials are stored AES-GCM encrypted; decrypt in memory only.
+          decryptJSON<Cred>(c)
+            .then((cred) => setCred(cred))
+            .catch(() => {
+              // Legacy/plaintext or corrupted entry — drop it.
+              try {
+                localStorage.removeItem(CRED_KEY);
+              } catch {
+                /* ignore */
+              }
+            });
+        }
         return;
       }
       if (localStorage.getItem(DEMO_KEY)) {
