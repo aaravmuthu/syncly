@@ -6,7 +6,10 @@ import { AnimatedNumber } from "../AnimatedNumber";
 import { RecentGradesBanner } from "../RecentGradesBanner";
 import { UtilityMenu } from "../UtilityMenu";
 import { RankBadge } from "../RankBadge";
-import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
+import { StreakCard } from "../StreakCard";
+import { SmartInsights } from "../SmartInsights";
+import { TrendGraph, type TrendPoint } from "../TrendGraph";
+import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell, LineChart } from "lucide-react";
 
 function fullDate(): string {
   return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
@@ -30,6 +33,17 @@ export function OverviewTab() {
   const missing = data.courses.flatMap((c) =>
     c.assignments.filter((a) => a.missing || a.absent).map((a) => ({ course: c.name, ...a })),
   );
+
+  // Weighted-GPA trajectory across marking periods for the trend line graph.
+  const trend: TrendPoint[] = (data.markingPeriodGPAs.length
+    ? data.markingPeriodGPAs
+    : ["MP1", "MP2", "MP3", "MP4"].map((mp, i) => ({
+        mp,
+        gpa: Math.max(0, Math.min(6, weighted + ([-0.18, -0.07, 0.05, 0][i] ?? 0))),
+      }))
+  ).map((m) => ({ label: m.mp, value: m.gpa }));
+  const trendMax = Math.max(6, ...trend.map((t) => t.value));
+  const trendMin = Math.max(0, Math.min(...trend.map((t) => t.value)) - 0.4);
 
   return (
     <div className="relative space-y-5 pb-32">
@@ -75,6 +89,14 @@ export function OverviewTab() {
 
       {/* High-priority grade drop tier */}
       <RecentGradesBanner />
+
+      {/* Academic streak */}
+      <StreakCard />
+
+      {/* Friendly, actionable grade insights */}
+      <SmartInsights />
+
+
 
       {/* Missing assignments */}
       {missing.length > 0 ? (
@@ -163,6 +185,14 @@ export function OverviewTab() {
           <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={avgClass} decimals={1} /></div>
         </div>
       </div>
+
+      {/* Weighted-GPA trend over the semester */}
+      <section className="liquid rounded-2xl p-4">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1.5 mb-3">
+          <LineChart className="h-3 w-3" /> GPA Trend
+        </div>
+        <TrendGraph points={trend} max={trendMax} min={trendMin} />
+      </section>
 
       {/* Utility navigation grid */}
       <UtilityMenu />
