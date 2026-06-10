@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { ClassDetail } from "../ClassDetail";
 import type { Course } from "@/lib/hac/types";
+import type { CourseSubTab } from "@/lib/hac/store";
 import { ChevronRight } from "lucide-react";
 
 function pillColor(avg: number, isDominos: boolean) {
@@ -14,8 +15,21 @@ function pillColor(avg: number, isDominos: boolean) {
 }
 
 export function GradesTab() {
-  const { data } = useHac();
+  const { data, courseNav, setCourseNav } = useHac();
   const [open, setOpen] = useState<Course | null>(null);
+  const [initialSub, setInitialSub] = useState<CourseSubTab>("grades");
+
+  useEffect(() => {
+    if (courseNav && data) {
+      const c = data.courses.find((x) => x.id === courseNav.courseId);
+      if (c) {
+        setOpen(c);
+        setInitialSub(courseNav.sub);
+      }
+      setCourseNav(null);
+    }
+  }, [courseNav, data, setCourseNav]);
+
   if (!data) return null;
 
   return (
@@ -33,7 +47,10 @@ export function GradesTab() {
           return (
             <motion.button
               key={c.id}
-              onClick={() => setOpen(c)}
+              onClick={() => {
+                setInitialSub("grades");
+                setOpen(c);
+              }}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.985 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
@@ -68,7 +85,7 @@ export function GradesTab() {
         ) : null}
       </div>
 
-      {open ? <ClassDetail course={open} onClose={() => setOpen(null)} /> : null}
+      {open ? <ClassDetail course={open} initialSub={initialSub} onClose={() => setOpen(null)} /> : null}
     </div>
   );
 }
