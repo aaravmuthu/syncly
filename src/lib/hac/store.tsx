@@ -127,13 +127,14 @@ export function HacProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       hasCredentials: !!cred,
+      isFallback,
       login,
       refresh,
       logout,
       accent,
       setAccent,
     }),
-    [data, loading, error, cred, accent],
+    [data, loading, error, cred, isFallback, accent],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
