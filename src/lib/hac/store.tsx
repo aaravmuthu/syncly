@@ -92,6 +92,20 @@ export function HacProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function loginDemo() {
+    setError(null);
+    setCred(null);
+    setData(getFallbackData());
+    setIsFallback(true);
+    try {
+      localStorage.setItem(DEMO_KEY, "1");
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(CRED_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function refresh() {
     if (!cred) return;
     setLoading(true);
@@ -108,13 +122,14 @@ export function HacProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    setData(getFallbackData());
-    setIsFallback(true);
+    setData(null);
+    setIsFallback(false);
     setCred(null);
     setError(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(CRED_KEY);
+      localStorage.removeItem(DEMO_KEY);
     } catch {
       /* ignore */
     }
