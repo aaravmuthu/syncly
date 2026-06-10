@@ -69,6 +69,14 @@ export function HacProvider({ children }: { children: ReactNode }) {
       const done = localStorage.getItem(DONE_KEY);
       if (done) setCompleted(JSON.parse(done));
 
+      const ev = localStorage.getItem(EVENTS_KEY);
+      if (ev) setUserEvents(JSON.parse(ev));
+
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        setNotificationsEnabled(true);
+      }
+
+
       const d = localStorage.getItem(STORAGE_KEY);
       if (d) {
         setData(JSON.parse(d));
