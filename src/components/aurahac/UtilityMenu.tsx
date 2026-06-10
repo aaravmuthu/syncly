@@ -198,7 +198,7 @@ function Empty({ text }: { text: string }) {
 }
 
 function DetailContent({ id }: { id: ItemId }) {
-  const { data } = useHac();
+  const { data, courseCustom } = useHac();
   if (!data) return null;
   const courses = data.courses;
 
