@@ -331,6 +331,17 @@ export function ClassDetail({
                 </div>
               </div>
 
+              <GoalSeeker
+                course={course}
+                cats={goalCats}
+                goalCat={goalCat}
+                setGoalCat={setGoalCat}
+                goalText={goalText}
+                setGoalText={setGoalText}
+              />
+
+
+
               <div className="space-y-2 pt-1">
                 {course.assignments.map((a, i) => {
                   const baseline = pct(a) ?? 0;
