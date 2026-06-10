@@ -44,6 +44,10 @@ interface Ctx {
   removeEvent: (id: string) => void;
   notificationsEnabled: boolean;
   enableNotifications: () => Promise<boolean>;
+  courseCustom: Record<string, CourseCustom>;
+  setCourseCustom: (courseId: string, custom: CourseCustom) => void;
+  bellRotation: BellRotation;
+  setBellRotation: (b: BellRotation) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
