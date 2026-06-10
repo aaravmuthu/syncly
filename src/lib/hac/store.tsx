@@ -139,7 +139,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setIsFallback(false);
       setCred(c);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
-      localStorage.setItem(CRED_KEY, JSON.stringify(c));
+      localStorage.setItem(CRED_KEY, await encryptJSON(c));
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sync failed";
       setError(msg);
