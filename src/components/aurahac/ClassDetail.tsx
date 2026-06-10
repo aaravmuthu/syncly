@@ -356,7 +356,8 @@ export function ClassDetail({
           {sub === "whatif" ? (
             <>
               <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
-                <div className="glass rounded-2xl grid place-items-center p-2">
+                <div className="relative overflow-hidden glass rounded-2xl grid place-items-center p-2">
+                  <ShimmerBeam trigger={whatIfShimmer} />
                   <GradeRing value={overall} size={140} label={dirty ? "Simulated" : "Overall"} />
                 </div>
                 <div className="space-y-2">
