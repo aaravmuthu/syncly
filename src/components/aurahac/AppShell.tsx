@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
 import { OverviewTab } from "./tabs/OverviewTab";
@@ -69,24 +70,29 @@ export function AppShell() {
             const active = tab === t.id;
             const Icon = t.icon;
             return (
-              <button
+              <motion.button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`relative h-12 w-12 rounded-xl grid place-items-center active:scale-90 transition-all duration-200 ${
+                whileTap={{ scale: 0.85 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={`relative h-12 w-12 rounded-xl grid place-items-center transition-colors duration-200 ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon className="h-5 w-5" />
                 {active ? (
-                  <span
-                    className="absolute -bottom-1 h-1 w-6 rounded-full"
+                  <motion.span
+                    layoutId="nav-capsule"
+                    className="absolute inset-0 rounded-xl"
                     style={{
-                      background: "var(--gradient-primary)",
-                      boxShadow: "0 0 14px var(--primary)",
+                      background: "color-mix(in oklab, var(--primary) 16%, transparent)",
+                      border: "1px solid color-mix(in oklab, var(--primary) 40%, transparent)",
+                      boxShadow: "0 0 20px -4px var(--primary)",
                     }}
+                    transition={{ type: "spring", stiffness: 500, damping: 34 }}
                   />
                 ) : null}
-              </button>
+                <Icon className="h-5 w-5 relative z-10" />
+              </motion.button>
             );
           })}
         </nav>

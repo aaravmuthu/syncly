@@ -1,12 +1,20 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
-import { AlertOctagon, RefreshCcw, GraduationCap, BarChart3 } from "lucide-react";
+import { AnimatedNumber } from "../AnimatedNumber";
+import { SpotlightCard } from "../SpotlightCard";
+import { AlertOctagon, RefreshCcw, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
 
 export function OverviewTab() {
   const { data, refresh, loading } = useHac();
+  const [bannerOpen, setBannerOpen] = useState(true);
   if (!data) return null;
   const weighted = currentYearGPA(data.courses, true);
   const cum = cumulativeGPA(data.transcript, true);
+  const avgClass =
+    data.courses.reduce((s, c) => s + (c.average ?? 0), 0) /
+    Math.max(1, data.courses.filter((c) => c.average !== null).length);
   const missing = data.courses.flatMap((c) =>
     c.assignments.filter((a) => a.missing || a.absent).map((a) => ({ course: c.name, ...a })),
   );
@@ -21,97 +29,122 @@ export function OverviewTab() {
             {data.student.school ?? "—"} {data.student.grade ? `· Grade ${data.student.grade}` : ""}
           </div>
         </div>
-        <button
+        <motion.button
           onClick={refresh}
           disabled={loading}
-          className="glass h-10 w-10 grid place-items-center active:scale-95 transition-all"
+          whileTap={{ scale: 0.9 }}
+          className="glass h-10 w-10 grid place-items-center"
         >
           <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-        </button>
+        </motion.button>
       </header>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="glass p-4">
+        <SpotlightCard className="p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Weighted GPA</div>
-          <div className="text-3xl font-bold tabular-nums mt-1 text-gradient">{weighted.toFixed(2)}</div>
-        </div>
-        <div className="glass p-4">
+          <div className="text-3xl font-bold tabular-nums mt-1 text-gradient"><AnimatedNumber value={weighted} decimals={2} /></div>
+        </SpotlightCard>
+        <SpotlightCard className="p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cumulative</div>
-          <div className="text-3xl font-bold tabular-nums mt-1">{cum.toFixed(2)}</div>
-        </div>
-        <div className="glass p-4">
+          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={cum} decimals={2} /></div>
+        </SpotlightCard>
+        <SpotlightCard className="p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
             <GraduationCap className="h-3 w-3" /> Courses
           </div>
           <div className="text-3xl font-bold tabular-nums mt-1">{data.courses.length}</div>
-        </div>
-        <div className="glass p-4">
+        </SpotlightCard>
+        <SpotlightCard className="p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
             <BarChart3 className="h-3 w-3" /> Avg Class
           </div>
-          <div className="text-3xl font-bold tabular-nums mt-1">
-            {(
-              data.courses.reduce((s, c) => s + (c.average ?? 0), 0) /
-              Math.max(1, data.courses.filter((c) => c.average !== null).length)
-            ).toFixed(1)}
-          </div>
-        </div>
+          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={avgClass} decimals={1} /></div>
+        </SpotlightCard>
       </div>
 
-      <section>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">High Alert</h2>
-          <span className="text-[10px] text-muted-foreground">{missing.length} items</span>
-        </div>
-        <div className="space-y-2">
-          {missing.length === 0 ? (
-            <div className="glass p-4 text-sm text-muted-foreground">No missing assignments. You're caught up.</div>
-          ) : (
-            missing.slice(0, 10).map((m, i) => (
-              <div
-                key={i}
-                className="glass p-3 flex items-center gap-3 border-l-2 border-destructive shadow-[0_0_24px_-8px_oklch(0.68_0.24_25)]"
-              >
-                <AlertOctagon className="h-4 w-4 text-destructive shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{m.name}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{m.course}</div>
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-destructive bg-destructive/15 px-2 py-1 rounded">
-                  {m.absent ? "ABS" : "MISS"}
+      {missing.length > 0 ? (
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Missing / Action Required</h2>
+            <button
+              onClick={() => setBannerOpen((o) => !o)}
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-destructive active:scale-95"
+            >
+              {bannerOpen ? (
+                <>
+                  Collapse <ChevronUp className="h-3.5 w-3.5" />
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-destructive/15 border border-destructive/30 pulse-coral">
+                  <Bell className="h-3 w-3" /> {missing.length}
                 </span>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
+              )}
+            </button>
+          </div>
+          <AnimatePresence initial={false}>
+            {bannerOpen ? (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-2">
+                  {missing.slice(0, 10).map((m, i) => (
+                    <div
+                      key={i}
+                      className="glass p-3 flex items-center gap-3 border-l-2 border-destructive pulse-coral"
+                    >
+                      <AlertOctagon className="h-4 w-4 text-destructive shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{m.name}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{m.course}</div>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-destructive bg-destructive/15 px-2 py-1 rounded">
+                        {m.absent ? "ABS" : "MISS"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </section>
+      ) : (
+        <div className="glass p-4 text-sm text-muted-foreground">No missing assignments. You're caught up.</div>
+      )}
 
       <section>
         <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-2">Top Classes</h2>
         <div className="space-y-2">
-          {data.courses.slice(0, 4).map((c) => (
-            <div key={c.id} className="glass p-3 flex items-center justify-between">
-              <div className="min-w-0 mr-3">
-                <div className="text-sm font-medium truncate">{c.name}</div>
-                <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? ""}</div>
-              </div>
-              <div
-                className="text-xl font-bold tabular-nums"
-                style={{
-                  color:
-                    (c.average ?? 0) >= 90
-                      ? "var(--success)"
-                      : (c.average ?? 0) >= 80
-                        ? "var(--primary)"
-                        : (c.average ?? 0) >= 70
-                          ? "var(--warning)"
-                          : "var(--destructive)",
-                }}
-              >
-                {c.average !== null ? c.average.toFixed(1) : "—"}
-              </div>
-            </div>
-          ))}
+          {data.courses.slice(0, 4).map((c) => {
+            const avg = c.average ?? 0;
+            const perfect = avg >= 100;
+            return (
+              <SpotlightCard key={c.id} className={`p-3 flex items-center justify-between ${perfect ? "aura-electric" : ""}`}>
+                <div className="min-w-0 mr-3">
+                  <div className="text-sm font-medium truncate">{c.name}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{c.teacher ?? ""}</div>
+                </div>
+                <div
+                  className="text-xl font-bold tabular-nums"
+                  style={{
+                    color:
+                      avg >= 90
+                        ? "var(--success)"
+                        : avg >= 80
+                          ? "var(--primary)"
+                          : avg >= 70
+                            ? "var(--warning)"
+                            : "var(--destructive)",
+                  }}
+                >
+                  {c.average !== null ? c.average.toFixed(1) : "—"}
+                </div>
+              </SpotlightCard>
+            );
+          })}
         </div>
       </section>
     </div>

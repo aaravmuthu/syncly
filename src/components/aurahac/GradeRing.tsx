@@ -1,3 +1,5 @@
+import { AnimatedNumber } from "./AnimatedNumber";
+
 interface Props {
   value: number | null;
   size?: number;
@@ -27,12 +29,12 @@ export function GradeRing({ value, size = 200, label }: Props) {
           fill="none"
           strokeDasharray={c}
           strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 600ms ease, stroke 300ms ease", filter: `drop-shadow(0 0 14px ${color})` }}
+          style={{ transition: "stroke-dashoffset 600ms cubic-bezier(0.34,1.56,0.64,1), stroke 300ms ease", filter: `drop-shadow(0 0 14px ${color})` }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-5xl font-bold tabular-nums" style={{ color }}>
-          {value !== null ? value.toFixed(1) : "—"}
+          {value !== null ? <AnimatedNumber value={value} decimals={1} /> : "—"}
         </div>
         {label ? <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">{label}</div> : null}
       </div>

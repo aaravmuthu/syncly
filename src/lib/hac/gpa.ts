@@ -89,3 +89,31 @@ export function courseAverageFromAssignments(course: Course, overrides: Record<s
   if (!totalDen) return null;
   return total / totalDen;
 }
+/** Live per-category averages given slider overrides (keyed by assignment name). */
+export function categoryAveragesFromAssignments(
+  course: Course,
+  overrides: Record<string, number>,
+): Record<string, number> {
+  const byCat: Record<string, { earned: number; count: number }> = {};
+  for (const a of course.assignments) {
+    const o = overrides[a.name];
+    const pct =
+      o !== undefined
+        ? o
+        : a.percent !== null
+          ? a.percent
+          : a.score !== null && a.totalPoints
+            ? (a.score / a.totalPoints) * 100
+            : null;
+    if (pct === null) continue;
+    if (!byCat[a.category]) byCat[a.category] = { earned: 0, count: 0 };
+    byCat[a.category].earned += pct;
+    byCat[a.category].count += 1;
+  }
+  const out: Record<string, number> = {};
+  for (const cat of Object.keys(byCat)) {
+    const { earned, count } = byCat[cat];
+    if (count) out[cat] = earned / count;
+  }
+  return out;
+}

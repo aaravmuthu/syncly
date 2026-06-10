@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { ClassDetail } from "../ClassDetail";
 import type { Course } from "@/lib/hac/types";
@@ -19,16 +20,21 @@ export function GradesTab() {
       <div className="space-y-2">
         {data.courses.map((c) => {
           const v = c.average ?? 0;
+          const perfect = v >= 100;
+          const hasMissing = c.assignments.some((a) => a.missing || a.absent);
           const color =
             v >= 90 ? "var(--success)" : v >= 80 ? "var(--primary)" : v >= 70 ? "var(--warning)" : "var(--destructive)";
           return (
-            <button
+            <motion.button
               key={c.id}
               onClick={() => setOpen(c)}
-              className="glass w-full p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-all duration-200 hover:bg-white/[0.04]"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className={`glass spotlight w-full p-4 flex items-center gap-3 text-left ${perfect ? "aura-electric" : ""}`}
             >
               <div
-                className="h-12 w-12 rounded-2xl grid place-items-center shrink-0"
+                className={`h-12 w-12 rounded-2xl grid place-items-center shrink-0 ${hasMissing ? "pulse-coral" : ""}`}
                 style={{ background: `color-mix(in oklab, ${color} 18%, transparent)`, boxShadow: `0 0 24px -6px ${color}` }}
               >
                 <span className="font-bold tabular-nums text-sm" style={{ color }}>
@@ -43,7 +49,7 @@ export function GradesTab() {
                 <div className="text-[10px] text-muted-foreground mt-0.5">{c.assignments.length} assignments</div>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
+            </motion.button>
           );
         })}
         {data.courses.length === 0 ? (
