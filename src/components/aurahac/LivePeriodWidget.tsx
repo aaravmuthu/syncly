@@ -82,7 +82,7 @@ export function LivePeriodWidget() {
   }
 
   const passing = phase.kind === "passing" || phase.kind === "before";
-  const seconds = phase.kind === "after" || phase.kind === "off" ? 0 : phase.secondsLeft;
+  const seconds = phase.secondsLeft;
   const { m, s } = fmt(seconds);
 
   // Progress ring fraction (time elapsed in the current segment).
