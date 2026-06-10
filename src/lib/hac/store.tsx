@@ -33,6 +33,8 @@ interface Ctx {
   setTheme: (t: Theme) => void;
   courseNav: { courseId: string; sub: CourseSubTab } | null;
   setCourseNav: (n: { courseId: string; sub: CourseSubTab } | null) => void;
+  completed: Record<string, boolean>;
+  toggleCompleted: (key: string) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
