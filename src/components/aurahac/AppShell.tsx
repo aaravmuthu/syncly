@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
 import { PullToRefresh } from "./PullToRefresh";
+import { DesktopSidebar } from "./DesktopSidebar";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { GradesTab } from "./tabs/GradesTab";
 import { GpaTab } from "./tabs/GpaTab";
