@@ -19,7 +19,7 @@ function pillColor(avg: number, isDominos: boolean) {
 }
 
 export function GradesTab() {
-  const { data, courseNav, setCourseNav, courseCustom } = useHac();
+  const { data, courseNav, setCourseNav, courseCustom, activePeriod, setActivePeriod } = useHac();
   const [open, setOpen] = useState<Course | null>(null);
   const [customizing, setCustomizing] = useState<Course | null>(null);
   const [initialSub, setInitialSub] = useState<CourseSubTab>("grades");
@@ -40,13 +40,16 @@ export function GradesTab() {
   return (
     <div className="space-y-4 pb-32">
       <header className="pt-2">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Marking Period 4</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">Marking Period {activePeriod.replace("MP", "")}</div>
         <h1 className="text-2xl font-bold tracking-tight">Your Classes</h1>
         <p className="text-xs text-muted-foreground mt-1">Tap the palette to rename a class or pick an emoji &amp; color.</p>
       </header>
 
+      <MarkingPeriodSlider value={activePeriod} onChange={setActivePeriod} layoutKey="grades-mp-pill" />
+
       <div className="space-y-3">
-        {data.courses.map((c) => {
+        {data.courses.map((base) => {
+          const c = courseForPeriod(base, activePeriod);
           const v = c.average ?? 0;
           const isDominos = c.id === "mth2300b-1";
           const color = pillColor(v, isDominos);
