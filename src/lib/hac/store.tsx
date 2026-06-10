@@ -43,6 +43,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
   const [theme, setThemeState] = useState<Theme>("nebula");
+  const [courseNav, setCourseNav] = useState<{ courseId: string; sub: CourseSubTab } | null>(null);
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
   // Hydrate from localStorage once. Show the login screen by default; restore a
