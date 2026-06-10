@@ -417,6 +417,9 @@ export function ClassDetail({
                 setGoalText={setGoalText}
               />
 
+              <FinalExamPredictor mp3={mp3Avg} mp4={mp4Avg} />
+
+
 
 
               <div className="space-y-2 pt-1">
