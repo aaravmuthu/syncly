@@ -1,0 +1,96 @@
+import { useState, type ReactNode } from "react";
+import { useHac } from "@/lib/hac/store";
+import { LoginGate } from "./LoginGate";
+import { OverviewTab } from "./tabs/OverviewTab";
+import { GradesTab } from "./tabs/GradesTab";
+import { GpaTab } from "./tabs/GpaTab";
+import { CalendarTab } from "./tabs/CalendarTab";
+import { SettingsTab } from "./tabs/SettingsTab";
+import { Home, BookOpen, GraduationCap, Calendar, Settings } from "lucide-react";
+
+type TabId = "overview" | "grades" | "gpa" | "calendar" | "settings";
+
+const TABS: { id: TabId; label: string; icon: typeof Home }[] = [
+  { id: "overview", label: "Overview", icon: Home },
+  { id: "grades", label: "Grades", icon: BookOpen },
+  { id: "gpa", label: "GPA", icon: GraduationCap },
+  { id: "calendar", label: "Calendar", icon: Calendar },
+  { id: "settings", label: "Settings", icon: Settings },
+];
+
+function Pane({ active, current, children }: { active: TabId; current: TabId; children: ReactNode }) {
+  return (
+    <div
+      className="absolute inset-0 overflow-y-auto px-5"
+      style={{ display: active === current ? "block" : "none" }}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function AppShell() {
+  const { data, hasCredentials } = useHac();
+  const [tab, setTab] = useState<TabId>("overview");
+
+  return (
+    <div
+      className="relative overflow-hidden"
+      style={{ width: "100vw", height: "100dvh" }}
+    >
+      {/* Animated mesh backdrop */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(60% 50% at 15% 10%, oklch(0.40 0.18 305 / 0.18), transparent 70%), radial-gradient(50% 40% at 90% 80%, oklch(0.50 0.20 230 / 0.14), transparent 70%), #05070A",
+        }}
+      />
+
+      {!data && !hasCredentials ? (
+        <LoginGate />
+      ) : (
+        <div className="absolute inset-0">
+          <Pane active="overview" current={tab}><OverviewTab /></Pane>
+          <Pane active="grades" current={tab}><GradesTab /></Pane>
+          <Pane active="gpa" current={tab}><GpaTab /></Pane>
+          <Pane active="calendar" current={tab}><CalendarTab /></Pane>
+          <Pane active="settings" current={tab}><SettingsTab /></Pane>
+        </div>
+      )}
+
+      {data ? (
+        <nav
+          className="fixed z-[9999] glass-strong rounded-3xl px-2 py-2 flex items-center gap-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
+          style={{ bottom: 20, left: "50%", transform: "translateX(-50%)" }}
+        >
+          {TABS.map((t) => {
+            const active = tab === t.id;
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`relative h-12 w-12 rounded-2xl grid place-items-center active:scale-90 transition-all duration-200 ${
+                  active ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                {active ? (
+                  <span
+                    className="absolute -bottom-1 h-1 w-6 rounded-full"
+                    style={{
+                      background: "linear-gradient(90deg, #A020F0, oklch(0.82 0.18 200))",
+                      boxShadow: "0 0 14px #A020F0, 0 0 24px oklch(0.82 0.18 200)",
+                    }}
+                  />
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+      ) : null}
+    </div>
+  );
+}

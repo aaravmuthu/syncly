@@ -10,8 +10,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { GradewayProvider } from "@/lib/gradeway/store";
-import { AppShell } from "@/components/gradeway/AppShell";
+import { HacProvider } from "@/lib/hac/store";
 
 function NotFoundComponent() {
   return (
@@ -77,11 +76,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Gradeway — Premium HAC Dashboard & GPA Calculator" },
-      { name: "description", content: "An elite, glassmorphic Home Access Center dashboard with a perfect GPA simulator and interactive transcript." },
-      { property: "og:title", content: "Gradeway — Premium HAC Dashboard" },
-      { property: "og:description", content: "Sleek HAC wrapper with a real-time GPA simulator and beautiful transcript timeline." },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#05070A" },
+      { title: "AuraHAC — Live HAC Grades, GPA & Calendar" },
+      { name: "description", content: "AuraHAC is a premium mobile dashboard for Home Access Center: live grades, GPA engine, what-if simulator, and synced assignment calendar." },
+      { property: "og:title", content: "AuraHAC — Premium HAC Dashboard" },
+      { property: "og:description", content: "Live grades, GPA simulator, and synced calendar for Frisco ISD & Prosper ISD HAC portals." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -121,9 +121,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GradewayProvider>
-        <AppShell />
-      </GradewayProvider>
+      <HacProvider>
+        <Outlet />
+      </HacProvider>
     </QueryClientProvider>
   );
 }
