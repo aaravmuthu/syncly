@@ -8,8 +8,9 @@ import { courseDisplay } from "@/lib/hac/customize";
 import { courseForPeriod, scoreBadge } from "@/lib/hac/marking";
 import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
+import { AuraAssistMail, needsAssist } from "./AuraAssistMail";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Mail } from "lucide-react";
 
 type SubTab = "grades" | "analysis" | "whatif";
 
