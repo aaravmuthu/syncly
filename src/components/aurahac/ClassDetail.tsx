@@ -131,6 +131,14 @@ export function ClassDetail({
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  const goalCats = useMemo(() => {
+    const list = course.categoryAverages.map((c) => c.category);
+    if (list.length) return list;
+    return Array.from(new Set(course.assignments.map((a) => a.category)));
+  }, [course]);
+  const [goalCat, setGoalCat] = useState<string>(goalCats[0] ?? "Assessment");
+  const [goalText, setGoalText] = useState<string>("");
+
   const liveCats = useMemo(() => categoryAveragesFromAssignments(course, overrides), [course, overrides]);
   const summative = course.categoryAverages.find((c) => c.category === "Assessment" || c.category === "Summative");
   const formative = course.categoryAverages.find((c) => c.category === "Progress Check" || c.category === "Formative");
