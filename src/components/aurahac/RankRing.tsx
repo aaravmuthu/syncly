@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { tierProgress, type TierId } from "@/lib/hac/tiers";
 
@@ -9,7 +9,8 @@ interface Props {
 
 /** Liquid-glass academic rank progression ring (Location A — GPA dashboard). */
 export function RankRing({ gpa, size = 260 }: Props) {
-  const { tier, next, fill, toNext } = tierProgress(gpa);
+  // Re-evaluate the tier whenever the (possibly simulated) GPA changes.
+  const { tier, next, fill, toNext } = useMemo(() => tierProgress(gpa), [gpa]);
   const [hover, setHover] = useState(false);
   const [pop, setPop] = useState(false);
   const prevTier = useRef<TierId | null>(null);
