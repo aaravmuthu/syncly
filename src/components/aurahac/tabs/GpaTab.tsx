@@ -23,6 +23,8 @@ export function GpaTab() {
   const cumW = cumulativeGPA(data.transcript, true);
   // Tier always reads the weighted cumulative scale (falls back to current year).
   const tierGpa = cumW > 0 ? cumW : cyW;
+  // Re-evaluate the tier whenever the GPA changes or the What-If sim adjusts scores.
+  const tier = useMemo(() => tierProgress(tierGpa), [tierGpa]);
 
   const mpData = useMemo(() => {
     if (data.markingPeriodGPAs.length) return data.markingPeriodGPAs;
