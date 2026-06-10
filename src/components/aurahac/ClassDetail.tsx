@@ -5,6 +5,8 @@ import { AnimatedNumber } from "./AnimatedNumber";
 import { categoryAveragesFromAssignments } from "@/lib/hac/gpa";
 import { useHac } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
+import { courseForPeriod, scoreBadge } from "@/lib/hac/marking";
+import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown } from "lucide-react";
