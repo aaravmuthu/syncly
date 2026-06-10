@@ -230,14 +230,14 @@ export function ClassDetail({
                   key={t.id}
                   onClick={() => setSub(t.id)}
                   className={`relative flex-1 py-2 text-xs font-semibold rounded-xl transition-colors z-10 ${
-                    active ? "text-white" : "text-muted-foreground"
+                    active ? "text-[#090915]" : "text-muted-foreground"
                   }`}
                 >
                   {active ? (
                     <motion.span
                       layoutId="subtab-pill"
                       className="absolute inset-0 rounded-xl"
-                      style={{ background: "var(--primary)", boxShadow: "0 0 20px -6px var(--primary)" }}
+                      style={{ background: "var(--primary)", boxShadow: "0 0 10px -3px var(--primary)" }}
                       transition={{ type: "spring", stiffness: 500, damping: 34 }}
                     />
                   ) : null}
