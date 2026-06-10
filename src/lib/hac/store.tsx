@@ -51,6 +51,9 @@ interface Ctx {
   setCourseCustom: (courseId: string, custom: CourseCustom) => void;
   bellRotation: BellRotation;
   setBellRotation: (b: BellRotation) => void;
+  streak: StreakState;
+  /** Record a daily check-in; `onTrack` decides if it extends the streak. */
+  recordStreak: (onTrack: boolean) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
