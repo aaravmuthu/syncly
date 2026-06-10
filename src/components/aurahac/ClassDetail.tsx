@@ -89,7 +89,7 @@ export function ClassDetail({ course, onClose }: { course: Course; onClose: () =
                     max={100}
                     value={Number.isFinite(current) ? current : 0}
                     onChange={(e) => setOverrides({ ...overrides, [a.name]: Number(e.target.value) })}
-                    className="w-full mt-2 accent-[oklch(0.70_0.22_305)]"
+                    className="w-full mt-2 accent-[var(--primary)]"
                   />
                 </div>
               );
