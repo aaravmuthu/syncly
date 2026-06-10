@@ -32,9 +32,28 @@ export function LoginGate() {
         </div>
 
         <h1 className="text-2xl font-bold mb-1">Sync Account</h1>
-        <p className="text-sm text-muted-foreground mb-5">
-          Sign in with your school portal credentials. We use them only to fetch your grades and never store them on our servers.
+        <p className="text-sm text-muted-foreground mb-4">
+          Sign in with your school portal credentials. Your password is
+          encrypted locally on this device and is never stored on any external
+          database — it's used only to pull your grades directly from your
+          district's portal.
         </p>
+
+        <div
+          className="mb-5 rounded-2xl p-3 flex items-start gap-2.5"
+          style={{
+            background: "color-mix(in oklab, var(--primary) 10%, transparent)",
+            border: "1px solid color-mix(in oklab, var(--primary) 28%, transparent)",
+          }}
+        >
+          <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+          <div className="text-[11px] leading-relaxed text-muted-foreground">
+            <span className="font-semibold text-foreground">Local-first encryption.</span>{" "}
+            Credentials are encrypted with a device-only key (AES-GCM) and stay
+            on your phone. No third-party server ever sees or stores them.
+          </div>
+        </div>
+
 
         <form onSubmit={onSubmit} className="space-y-3">
           <label className="block">
