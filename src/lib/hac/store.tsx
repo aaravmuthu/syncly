@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { HacData, DistrictId } from "./types";
+import { getFallbackData } from "./mockData";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
@@ -15,6 +16,7 @@ interface Ctx {
   loading: boolean;
   error: string | null;
   hasCredentials: boolean;
+  isFallback: boolean;
   login: (c: Cred) => Promise<void>;
   refresh: () => Promise<void>;
   logout: () => void;
@@ -29,19 +31,27 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [cred, setCred] = useState<Cred | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
   const [accent, setAccentState] = useState<"violet" | "cyan" | "emerald">("violet");
 
-  // Hydrate from localStorage once.
+  // Hydrate from localStorage once. Fall back to demo data so the app is
+  // always fully interactive even before a live sync succeeds.
   useEffect(() => {
     try {
       const d = localStorage.getItem(STORAGE_KEY);
-      if (d) setData(JSON.parse(d));
+      if (d) {
+        setData(JSON.parse(d));
+      } else {
+        setData(getFallbackData());
+        setIsFallback(true);
+      }
       const c = localStorage.getItem(CRED_KEY);
       if (c) setCred(JSON.parse(c));
       const a = localStorage.getItem("aurahac.accent");
       if (a === "violet" || a === "cyan" || a === "emerald") setAccentState(a);
     } catch {
-      /* ignore */
+      setData(getFallbackData());
+      setIsFallback(true);
     }
   }, []);
 
@@ -60,6 +70,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
     try {
       const d = await callSync(c);
       setData(d);
+      setIsFallback(false);
       setCred(c);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
       localStorage.setItem(CRED_KEY, JSON.stringify(c));
@@ -88,7 +99,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    setData(null);
+    setData(getFallbackData());
+    setIsFallback(true);
     setCred(null);
     setError(null);
     try {
@@ -115,13 +127,14 @@ export function HacProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       hasCredentials: !!cred,
+      isFallback,
       login,
       refresh,
       logout,
       accent,
       setAccent,
     }),
-    [data, loading, error, cred, accent],
+    [data, loading, error, cred, isFallback, accent],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
