@@ -110,15 +110,15 @@ export function GpaTab() {
       </SpotlightCard>
 
       <SpotlightCard className="p-4">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground mb-3">GPA by Marking Period</div>
-        <div className="flex items-end justify-between gap-2 h-40 relative">
+        <div className="text-xs uppercase tracking-widest text-purple-200 mb-4">Weighted GPA By MP</div>
+        <div className="w-full h-[200px] flex items-end justify-between gap-3 block">
           {mpData.map((m, idx) => {
-            const h = (m.gpa / max) * 100;
+            const h = Math.max(3, Math.min(100, (m.gpa / max) * 100));
             const dim = hover !== null && hover !== idx;
             return (
               <div
                 key={m.mp}
-                className="flex-1 flex flex-col items-center gap-1.5 relative cursor-pointer"
+                className="flex-1 h-full flex flex-col justify-end items-center gap-1.5 relative cursor-pointer"
                 onMouseEnter={() => setHover(idx)}
                 onMouseLeave={() => setHover(null)}
                 onTouchStart={() => setHover(idx)}
@@ -130,7 +130,7 @@ export function GpaTab() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 6, scale: 0.9 }}
                       transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                      className="absolute -top-2 z-20 -translate-y-full glass-strong rounded-xl px-3 py-2 text-center pointer-events-none whitespace-nowrap"
+                      className="absolute top-0 z-30 -translate-y-full glass-strong rounded-xl px-3 py-2 text-center pointer-events-none whitespace-nowrap"
                     >
                       <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{m.mp}</div>
                       <div className="text-lg font-bold tabular-nums text-gradient">{m.gpa.toFixed(3)}</div>
@@ -138,11 +138,15 @@ export function GpaTab() {
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
-                <div className="text-[10px] tabular-nums font-bold">{m.gpa.toFixed(2)}</div>
-                <div className="w-full bg-white/[0.03] rounded-t-lg rounded-b-sm h-full relative overflow-hidden">
+
+                {/* Fixed numeric marker layer, always above the pillar */}
+                <div className="relative z-20 text-[11px] tabular-nums font-bold text-white">{m.gpa.toFixed(2)}</div>
+
+                {/* Bar track — flex-1 guarantees a real measurable height */}
+                <div className="relative w-full flex-1 min-h-0 rounded-t-lg rounded-b-sm bg-white/[0.04] overflow-hidden">
                   <motion.div
-                    className="absolute bottom-0 left-0 right-0 rounded-t-lg"
-                    animate={{ height: `${h}%`, opacity: dim ? 0.35 : 1 }}
+                    className="absolute inset-x-0 bottom-0 rounded-t-lg"
+                    animate={{ height: `${h}%`, opacity: dim ? 0.4 : 1 }}
                     transition={{ type: "spring", stiffness: 200, damping: 26 }}
                     style={{
                       background: "linear-gradient(180deg, var(--primary-glow), var(--primary))",
@@ -150,12 +154,14 @@ export function GpaTab() {
                     }}
                   />
                 </div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{m.mp}</div>
+
+                <div className="text-[10px] text-purple-200 uppercase tracking-wider pt-0.5">{m.mp}</div>
               </div>
             );
           })}
         </div>
       </SpotlightCard>
+
 
       <section>
         <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2 flex items-center justify-between">
