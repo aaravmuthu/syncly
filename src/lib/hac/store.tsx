@@ -31,19 +31,27 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [cred, setCred] = useState<Cred | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
   const [accent, setAccentState] = useState<"violet" | "cyan" | "emerald">("violet");
 
-  // Hydrate from localStorage once.
+  // Hydrate from localStorage once. Fall back to demo data so the app is
+  // always fully interactive even before a live sync succeeds.
   useEffect(() => {
     try {
       const d = localStorage.getItem(STORAGE_KEY);
-      if (d) setData(JSON.parse(d));
+      if (d) {
+        setData(JSON.parse(d));
+      } else {
+        setData(getFallbackData());
+        setIsFallback(true);
+      }
       const c = localStorage.getItem(CRED_KEY);
       if (c) setCred(JSON.parse(c));
       const a = localStorage.getItem("aurahac.accent");
       if (a === "violet" || a === "cyan" || a === "emerald") setAccentState(a);
     } catch {
-      /* ignore */
+      setData(getFallbackData());
+      setIsFallback(true);
     }
   }, []);
 
