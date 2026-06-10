@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { GradeRing } from "./GradeRing";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { categoryAveragesFromAssignments } from "@/lib/hac/gpa";
+import { useHac } from "@/lib/hac/store";
+import { courseDisplay } from "@/lib/hac/customize";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 
