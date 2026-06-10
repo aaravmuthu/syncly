@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { tierProgress, type TierId } from "@/lib/hac/tiers";
 
@@ -9,7 +9,8 @@ interface Props {
 
 /** Liquid-glass academic rank progression ring (Location A — GPA dashboard). */
 export function RankRing({ gpa, size = 260 }: Props) {
-  const { tier, next, fill, toNext } = tierProgress(gpa);
+  // Re-evaluate the tier whenever the (possibly simulated) GPA changes.
+  const { tier, next, fill, toNext } = useMemo(() => tierProgress(gpa), [gpa]);
   const [hover, setHover] = useState(false);
   const [pop, setPop] = useState(false);
   const prevTier = useRef<TierId | null>(null);
@@ -32,7 +33,6 @@ export function RankRing({ gpa, size = 260 }: Props) {
   const c = 2 * Math.PI * r;
   const offset = c * (1 - fill);
   const isApex = tier.id === "apex";
-  const lightText = false;
 
   return (
     <div className="relative grid place-items-center select-none" style={{ minHeight: size + 20 }}>
@@ -101,7 +101,7 @@ export function RankRing({ gpa, size = 260 }: Props) {
           >
             <div
               className="text-[3.4rem] leading-none font-bold tabular-nums"
-              style={{ color: lightText ? "#0b1020" : "#ffffff", textShadow: lightText ? "none" : "0 2px 18px rgba(0,0,0,0.45)" }}
+              style={{ color: "#ffffff", textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
             >
               {gpa.toFixed(2)}
             </div>

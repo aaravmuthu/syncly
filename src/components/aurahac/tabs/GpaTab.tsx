@@ -23,6 +23,8 @@ export function GpaTab() {
   const cumW = cumulativeGPA(data.transcript, true);
   // Tier always reads the weighted cumulative scale (falls back to current year).
   const tierGpa = cumW > 0 ? cumW : cyW;
+  // Re-evaluate the tier whenever the GPA changes or the What-If sim adjusts scores.
+  const tier = useMemo(() => tierProgress(tierGpa), [tierGpa]);
 
   const mpData = useMemo(() => {
     if (data.markingPeriodGPAs.length) return data.markingPeriodGPAs;
@@ -80,20 +82,15 @@ export function GpaTab() {
       <SpotlightCard className="p-6 flex flex-col items-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-2">Academic Tier</div>
         <RankRing gpa={tierGpa} />
-        {(() => {
-          const { next, toNext } = tierProgress(tierGpa);
-          return (
-            <div className="text-[11px] text-muted-foreground mt-1 text-center">
-              {next ? (
-                <>
-                  <span className="font-bold tabular-nums" style={{ color: next.accent }}>+{toNext.toFixed(2)}</span> GPA to {next.name} Tier
-                </>
-              ) : (
-                "Peak academic tier achieved"
-              )}
-            </div>
-          );
-        })()}
+        <div className="text-[11px] text-muted-foreground mt-1 text-center">
+          {tier.next ? (
+            <>
+              <span className="font-bold tabular-nums" style={{ color: tier.next.accent }}>+{tier.toNext.toFixed(2)}</span> GPA to {tier.next.name} Tier
+            </>
+          ) : (
+            "Peak academic tier achieved"
+          )}
+        </div>
       </SpotlightCard>
 
 
