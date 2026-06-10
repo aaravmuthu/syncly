@@ -15,8 +15,27 @@ const CUSTOM_KEY = "aurahac.coursecustom.v1";
 const BELL_KEY = "aurahac.bell.v1";
 const STREAK_KEY = "aurahac.streak.v1";
 
-export type Theme = "nebula" | "onyx" | "executive" | "arctic" | "titanium" | "amethyst";
-const THEMES: Theme[] = ["nebula", "onyx", "executive", "arctic", "titanium", "amethyst"];
+export type Theme =
+  | "nebula"
+  | "onyx"
+  | "executive"
+  | "arctic"
+  | "titanium"
+  | "amethyst"
+  | "phantom"
+  | "genesis"
+  | "platinum";
+const THEMES: Theme[] = [
+  "nebula",
+  "onyx",
+  "executive",
+  "arctic",
+  "titanium",
+  "amethyst",
+  "phantom",
+  "genesis",
+  "platinum",
+];
 
 interface Cred {
   district: DistrictId;
