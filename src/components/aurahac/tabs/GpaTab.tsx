@@ -4,6 +4,8 @@ import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA, numericToPoints } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { SpotlightCard } from "../SpotlightCard";
+import { RankRing } from "../RankRing";
+import { tierProgress } from "@/lib/hac/tiers";
 import { EyeOff, Eye } from "lucide-react";
 
 export function GpaTab() {
@@ -18,6 +20,9 @@ export function GpaTab() {
   const cyFull = currentYearGPA(data.courses, weighted);
   const cum = cumulativeGPA(data.transcript, weighted);
   const cyW = currentYearGPA(included, true);
+  const cumW = cumulativeGPA(data.transcript, true);
+  // Tier always reads the weighted cumulative scale (falls back to current year).
+  const tierGpa = cumW > 0 ? cumW : cyW;
 
   const mpData = useMemo(() => {
     if (data.markingPeriodGPAs.length) return data.markingPeriodGPAs;
@@ -70,6 +75,28 @@ export function GpaTab() {
           );
         })}
       </div>
+
+      {/* Academic Tier Progression — liquid-glass rank ring */}
+      <SpotlightCard className="p-6 flex flex-col items-center">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-2">Academic Tier</div>
+        <RankRing gpa={tierGpa} />
+        {(() => {
+          const { next, toNext } = tierProgress(tierGpa);
+          return (
+            <div className="text-[11px] text-muted-foreground mt-1 text-center">
+              {next ? (
+                <>
+                  <span className="font-bold tabular-nums" style={{ color: next.accent }}>+{toNext.toFixed(2)}</span> GPA to {next.name} Tier
+                </>
+              ) : (
+                "Peak academic tier achieved"
+              )}
+            </div>
+          );
+        })()}
+      </SpotlightCard>
+
+
 
       <div className="grid grid-cols-2 gap-3">
         <SpotlightCard className="p-5">

@@ -5,6 +5,7 @@ import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { RecentGradesBanner } from "../RecentGradesBanner";
 import { UtilityMenu } from "../UtilityMenu";
+import { RankBadge } from "../RankBadge";
 import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
 
 function fullDate(): string {
@@ -54,18 +55,22 @@ export function OverviewTab() {
             {fullDate()}
           </div>
         </div>
-        <div
-          className="shrink-0 h-11 w-11 rounded-full grid place-items-center font-bold text-sm"
-          style={{
-            background: "color-mix(in oklab, var(--card) 50%, transparent)",
-            border: "1px solid color-mix(in oklab, var(--primary) 45%, transparent)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            boxShadow: "0 0 22px -8px var(--primary)",
-          }}
-        >
-          {initials(data.student.name)}
+        <div className="shrink-0 flex items-center gap-2">
+          <RankBadge gpa={cum > 0 ? cum : weighted} />
+          <div
+            className="h-11 w-11 rounded-full grid place-items-center font-bold text-sm"
+            style={{
+              background: "color-mix(in oklab, var(--card) 50%, transparent)",
+              border: "1px solid color-mix(in oklab, var(--primary) 45%, transparent)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              boxShadow: "0 0 22px -8px var(--primary)",
+            }}
+          >
+            {initials(data.student.name)}
+          </div>
         </div>
+
       </header>
 
       {/* High-priority grade drop tier */}

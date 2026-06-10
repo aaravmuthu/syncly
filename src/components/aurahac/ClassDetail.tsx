@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GradeRing } from "./GradeRing";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { categoryAveragesFromAssignments } from "@/lib/hac/gpa";
 import { useHac } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
+import { ShimmerBeam } from "./ShimmerBeam";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 
@@ -157,6 +158,18 @@ export function ClassDetail({
   const overall = dirty ? overallFrom(course, simAssignments) ?? course.average : course.average;
   const sumAvg = (dirty ? liveCats[summative?.category ?? ""] : undefined) ?? summative?.average ?? null;
   const formAvg = (dirty ? liveCats[formative?.category ?? ""] : undefined) ?? formative?.average ?? null;
+
+  // Skate a light beam across the simulated GPA card each time it recomputes.
+  const [whatIfShimmer, setWhatIfShimmer] = useState(0);
+  const firstOverall = useRef(true);
+  useEffect(() => {
+    if (firstOverall.current) {
+      firstOverall.current = false;
+      return;
+    }
+    setWhatIfShimmer((n) => n + 1);
+  }, [overall]);
+
 
   // Chart series for the Analysis view. Never empty: falls back to a safe
   // historical baseline derived from the course average so bars always plot.
@@ -343,7 +356,8 @@ export function ClassDetail({
           {sub === "whatif" ? (
             <>
               <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
-                <div className="glass rounded-2xl grid place-items-center p-2">
+                <div className="relative overflow-hidden glass rounded-2xl grid place-items-center p-2">
+                  <ShimmerBeam trigger={whatIfShimmer} />
                   <GradeRing value={overall} size={140} label={dirty ? "Simulated" : "Overall"} />
                 </div>
                 <div className="space-y-2">

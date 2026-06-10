@@ -4,6 +4,7 @@ import { useHac } from "@/lib/hac/store";
 import { ChevronLeft, ChevronRight, Check, Plus, Clock, Trash2, Bell } from "lucide-react";
 import type { Assignment } from "@/lib/hac/types";
 import { AddEventModal } from "../AddEventModal";
+import { ShimmerBeam } from "../ShimmerBeam";
 
 /* ---------------- date helpers ---------------- */
 
@@ -111,6 +112,15 @@ export function CalendarTab() {
   const [selected, setSelected] = useState<string | null>(() => ymd(new Date()));
   const [view, setView] = useState<"month" | "week">("month");
   const [adding, setAdding] = useState(false);
+  const [shimmer, setShimmer] = useState<Record<string, number>>({});
+
+  function onToggle(key: string) {
+    const becomingDone = !completed[key];
+    toggleCompleted(key);
+    if (becomingDone) {
+      setShimmer((p) => ({ ...p, [key]: (p[key] ?? 0) + 1 }));
+    }
+  }
 
   // Map every dated assignment + manual event onto its YYYY-MM-DD bucket.
   const byDate = useMemo(() => {
@@ -534,15 +544,16 @@ export function CalendarTab() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    className="flex items-center gap-3 p-3 rounded-2xl"
+                    className="relative overflow-hidden flex items-center gap-3 p-3 rounded-2xl"
                     style={{
                       background: "rgba(255,255,255,0.035)",
                       backdropFilter: "blur(10px)",
                       border: "0.5px solid rgba(255,255,255,0.08)",
                     }}
                   >
+                    <ShimmerBeam trigger={shimmer[it.key] ?? 0} />
                     <button
-                      onClick={() => toggleCompleted(it.key)}
+                      onClick={() => onToggle(it.key)}
                       className="relative h-6 w-6 shrink-0 rounded-full grid place-items-center transition-colors"
                       style={{
                         border: `2px solid ${done ? DONE_COLOR : "color-mix(in oklab, var(--primary) 50%, transparent)"}`,
