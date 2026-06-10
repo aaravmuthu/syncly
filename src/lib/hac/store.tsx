@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { HacData, DistrictId } from "./types";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import type { HacData, DistrictId, UserEvent } from "./types";
 import { getFallbackData } from "./mockData";
 
 const STORAGE_KEY = "aurahac.data.v1";
@@ -7,6 +7,7 @@ const CRED_KEY = "aurahac.cred.v1";
 const THEME_KEY = "aurahac.theme.v2";
 const DEMO_KEY = "aurahac.demo.v1";
 const DONE_KEY = "aurahac.done.v1";
+const EVENTS_KEY = "aurahac.events.v1";
 
 export type Theme = "nebula" | "onyx" | "executive" | "arctic" | "titanium" | "amethyst";
 const THEMES: Theme[] = ["nebula", "onyx", "executive", "arctic", "titanium", "amethyst"];
