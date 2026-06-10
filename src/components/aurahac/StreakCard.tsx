@@ -20,7 +20,7 @@ export function StreakCard() {
     recorded.current = true;
     const gpa = currentYearGPA(data.courses, true);
     const totalTasks = userEvents.length;
-    const doneTasks = userEvents.filter((e) => completed[`event:${e.id}`]).length;
+    const doneTasks = userEvents.filter((e) => completed[e.id]).length;
     const allTasksDone = totalTasks > 0 && doneTasks === totalTasks;
     const onTrack = gpa >= STREAK_THRESHOLD || allTasksDone;
     recordStreak(onTrack);
