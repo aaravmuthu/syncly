@@ -33,7 +33,6 @@ export function RankRing({ gpa, size = 260 }: Props) {
   const c = 2 * Math.PI * r;
   const offset = c * (1 - fill);
   const isApex = tier.id === "apex";
-  const lightText = false;
 
   return (
     <div className="relative grid place-items-center select-none" style={{ minHeight: size + 20 }}>
