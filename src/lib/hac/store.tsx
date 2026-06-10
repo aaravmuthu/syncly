@@ -36,7 +36,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
-  const [accent, setAccentState] = useState<"violet" | "cyan" | "emerald">("violet");
+  const [theme, setThemeState] = useState<Theme>("nebula");
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
   // always fully interactive even before a live sync succeeds.
