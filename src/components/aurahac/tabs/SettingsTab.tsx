@@ -35,7 +35,7 @@ export function SettingsTab() {
       <section className="glass p-4">
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Profile</div>
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#A020F0] to-[oklch(0.82_0.18_200)] grid place-items-center">
+          <div className="h-12 w-12 rounded-2xl bg-primary grid place-items-center">
             <UserIcon className="h-5 w-5 text-white" />
           </div>
           <div className="min-w-0">
