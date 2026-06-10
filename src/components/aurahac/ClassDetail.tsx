@@ -115,6 +115,8 @@ function perfectsNeeded(course: Course, target: number, cat: string): number | n
     if (overallWith(course, cat, m, 100) >= target - 1e-9) return m;
   }
   return null;
+}
+
 
 export function ClassDetail({
   course,
