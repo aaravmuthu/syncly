@@ -133,6 +133,7 @@ export function parseClasses(html: string): Course[] {
     courses.push({
       id: `c-${i}`,
       name: name || titleRaw,
+      code: null,
       teacher,
       period,
       average,
