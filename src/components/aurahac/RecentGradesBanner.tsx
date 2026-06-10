@@ -27,6 +27,8 @@ function scoreColor(v: number): string {
 export function RecentGradesBanner() {
   const { data, setCourseNav } = useHac();
   const [dismissed, setDismissed] = useState(false);
+  const [hype, setHype] = useState(false);
+  const firedRef = useRef(false);
 
   const recent = useMemo(() => {
     if (!data) return null;
@@ -38,6 +40,44 @@ export function RecentGradesBanner() {
     all.sort((x, y) => y.ts - x.ts);
     return all[0] ?? null;
   }, [data]);
+
+  // Hype trigger: high A-range (>95) or perfect 100 grade on the freshest drop.
+  useEffect(() => {
+    if (!recent || dismissed || firedRef.current) return;
+    const v = recent.a.percent ?? 0;
+    if (v < 95) return;
+    firedRef.current = true;
+    setHype(true);
+
+    const t = window.setTimeout(() => {
+      // Sophisticated electric-purple + silver burst from the top, settling behind the card.
+      const purple = ["#a855f7", "#7c3aed", "#c4b5fd"];
+      const silver = ["#e5e7eb", "#cbd5e1", "#f8fafc"];
+      const colors = [...purple, ...silver];
+      const end = Date.now() + 1100;
+      (function frame() {
+        confetti({
+          particleCount: 4,
+          startVelocity: 28,
+          ticks: 200,
+          gravity: 0.85,
+          scalar: 0.9,
+          spread: 70,
+          origin: { x: Math.random(), y: -0.1 },
+          colors,
+          zIndex: 5,
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }, 350);
+
+    const clear = window.setTimeout(() => setHype(false), 3200);
+    return () => {
+      window.clearTimeout(t);
+      window.clearTimeout(clear);
+    };
+  }, [recent, dismissed]);
+
 
   if (!data) return null;
 
