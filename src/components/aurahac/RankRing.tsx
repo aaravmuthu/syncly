@@ -45,7 +45,7 @@ export function RankRing({ gpa, size = 260 }: Props) {
           height: size * 0.92,
           background: tier.background,
           filter: "blur(2px)",
-          opacity: isRadiant ? 0.95 : 0.5,
+          opacity: 0.5,
           boxShadow: tier.glow,
         }}
       />
