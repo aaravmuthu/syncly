@@ -4,6 +4,7 @@ import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { SpotlightCard } from "../SpotlightCard";
+import { RecentGradesBanner } from "../RecentGradesBanner";
 import { AlertOctagon, RefreshCcw, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
 
 export function OverviewTab() {
