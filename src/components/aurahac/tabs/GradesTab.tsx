@@ -6,6 +6,8 @@ import { CustomizeClassModal } from "../CustomizeClassModal";
 import type { Course } from "@/lib/hac/types";
 import type { CourseSubTab } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
+import { courseForPeriod } from "@/lib/hac/marking";
+import { MarkingPeriodSlider } from "../MarkingPeriodSlider";
 import { ChevronRight, Palette } from "lucide-react";
 
 function pillColor(avg: number, isDominos: boolean) {
