@@ -1,15 +1,18 @@
-import { useHac } from "@/lib/hac/store";
+import { useHac, type Theme } from "@/lib/hac/store";
 import { DISTRICTS } from "@/lib/hac/types";
 import { LogOut, Trash2, Palette, User as UserIcon, RefreshCcw } from "lucide-react";
 
-const ACCENTS: { id: "violet" | "cyan" | "emerald"; label: string; color: string }[] = [
-  { id: "violet", label: "Violet", color: "#A020F0" },
-  { id: "cyan", label: "Cyan", color: "oklch(0.82 0.18 200)" },
-  { id: "emerald", label: "Emerald", color: "oklch(0.78 0.18 155)" },
+const THEMES: { id: Theme; label: string; vibe: string; canvas: string; accent: string }[] = [
+  { id: "nebula", label: "Nebula", vibe: "Cosmic tech", canvas: "#080D2E", accent: "#6040DC" },
+  { id: "onyx", label: "Onyx", vibe: "Monochrome", canvas: "#000000", accent: "#FFFFFF" },
+  { id: "executive", label: "Executive", vibe: "Editorial gold", canvas: "#0A0A0A", accent: "#C9A24A" },
+  { id: "arctic", label: "Arctic", vibe: "Light SaaS", canvas: "#FFFFFF", accent: "#4F46E5" },
+  { id: "titanium", label: "Titanium", vibe: "Industrial", canvas: "#17191C", accent: "#A8B8CC" },
+  { id: "amethyst", label: "Amethyst", vibe: "Luxury violet", canvas: "#0D0820", accent: "#A78BFA" },
 ];
 
 export function SettingsTab() {
-  const { data, logout, refresh, loading, accent, setAccent } = useHac();
+  const { data, logout, refresh, loading, theme, setTheme } = useHac();
   if (!data) return null;
   const district = DISTRICTS.find((d) => d.id === data.districtId);
 
