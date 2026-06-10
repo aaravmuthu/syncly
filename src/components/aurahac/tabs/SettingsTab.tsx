@@ -36,7 +36,7 @@ export function SettingsTab() {
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Profile</div>
         <div className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-2xl bg-primary grid place-items-center">
-            <UserIcon className="h-5 w-5 text-white" />
+            <UserIcon className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold truncate">{data.student.name}</div>
