@@ -613,6 +613,12 @@ export function CalendarTab() {
           )}
         </AnimatePresence>
       </motion.div>
+
+      <AnimatePresence>
+        {adding ? (
+          <AddEventModal date={selected ?? ymd(new Date())} onClose={() => setAdding(false)} />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
