@@ -25,7 +25,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
       >
         <span
           className="text-[15px] font-black"
-          style={{ color: isRadiant ? "#0b1020" : "#fff", textShadow: isRadiant ? "none" : "0 1px 6px rgba(0,0,0,0.4)" }}
+          style={{ color: "#fff", textShadow: "0 1px 6px rgba(0,0,0,0.4)" }}
         >
           {tier.name[0]}
         </span>
@@ -47,7 +47,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
                   className={`h-10 w-10 rounded-xl grid place-items-center shrink-0 ${isApex ? "tier-spin" : ""}`}
                   style={{ background: tier.background, border: tier.border, boxShadow: tier.glow }}
                 >
-                  <span className="text-sm font-black" style={{ color: isRadiant ? "#0b1020" : "#fff" }}>
+                  <span className="text-sm font-black" style={{ color: "#fff" }}>
                     {tier.name[0]}
                   </span>
                 </div>
