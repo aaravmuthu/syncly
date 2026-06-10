@@ -50,26 +50,40 @@ export function SettingsTab() {
 
       <section className="glass p-4">
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 inline-flex items-center gap-1">
-          <Palette className="h-3 w-3" /> Accent Color
+          <Palette className="h-3 w-3" /> Workspace Theme
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {ACCENTS.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setAccent(a.id)}
-              className={`p-3 rounded-2xl flex flex-col items-center gap-2 border transition-all active:scale-95 ${
-                accent === a.id ? "border-white/30 bg-white/[0.05]" : "border-white/[0.06]"
-              }`}
-            >
-              <span
-                className="h-8 w-8 rounded-full"
-                style={{ background: a.color, boxShadow: `0 0 18px ${a.color}` }}
-              />
-              <span className="text-xs">{a.label}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-2">
+          {THEMES.map((t) => {
+            const active = theme === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`p-3 rounded-xl flex items-center gap-3 border text-left transition-all active:scale-[0.97] ${
+                  active
+                    ? "border-primary/60 shadow-[var(--shadow-elegant)] bg-secondary"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <span
+                  className="h-9 w-9 rounded-lg shrink-0 grid place-items-center"
+                  style={{ background: t.canvas, border: "1px solid rgba(255,255,255,0.12)" }}
+                >
+                  <span
+                    className="h-4 w-4 rounded-full"
+                    style={{ background: t.accent, boxShadow: `0 0 12px ${t.accent}` }}
+                  />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold truncate">{t.label}</span>
+                  <span className="block text-[10px] text-muted-foreground truncate">{t.vibe}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
+
 
       <button
         onClick={refresh}
