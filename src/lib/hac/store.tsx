@@ -162,8 +162,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       logout,
       theme,
       setTheme,
+      courseNav,
+      setCourseNav,
     }),
-    [data, loading, error, cred, isFallback, theme],
+    [data, loading, error, cred, isFallback, theme, courseNav],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
