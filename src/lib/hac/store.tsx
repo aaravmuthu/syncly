@@ -22,6 +22,7 @@ interface Ctx {
   hasCredentials: boolean;
   isFallback: boolean;
   login: (c: Cred) => Promise<void>;
+  loginDemo: () => void;
   refresh: () => Promise<void>;
   logout: () => void;
   theme: Theme;
