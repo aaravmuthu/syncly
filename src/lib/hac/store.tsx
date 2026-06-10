@@ -41,23 +41,26 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("nebula");
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
-  // always fully interactive even before a live sync succeeds.
+  // Hydrate from localStorage once. Show the login screen by default; restore a
+  // live session, or a previously chosen demo session, when present.
   useEffect(() => {
     try {
+      const t = localStorage.getItem(THEME_KEY);
+      if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
+
       const d = localStorage.getItem(STORAGE_KEY);
       if (d) {
         setData(JSON.parse(d));
-      } else {
+        const c = localStorage.getItem(CRED_KEY);
+        if (c) setCred(JSON.parse(c));
+        return;
+      }
+      if (localStorage.getItem(DEMO_KEY)) {
         setData(getFallbackData());
         setIsFallback(true);
       }
-      const c = localStorage.getItem(CRED_KEY);
-      if (c) setCred(JSON.parse(c));
-      const t = localStorage.getItem(THEME_KEY);
-      if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
     } catch {
-      setData(getFallbackData());
-      setIsFallback(true);
+      /* show login screen */
     }
   }, []);
 
