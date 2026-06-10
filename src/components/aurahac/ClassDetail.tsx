@@ -49,6 +49,75 @@ function overallFrom(course: Course, assignments: Assignment[]): number | null {
   return den ? total / den : null;
 }
 
+type CatStats = { weights: Record<string, number>; byCat: Record<string, { sum: number; n: number }> };
+
+function statsByCat(course: Course): CatStats {
+  const weights: Record<string, number> = {};
+  for (const ca of course.categoryAverages) if (ca.weight) weights[ca.category] = ca.weight;
+  const byCat: Record<string, { sum: number; n: number }> = {};
+  for (const a of course.assignments) {
+    const p = pct(a);
+    if (p === null) continue;
+    byCat[a.category] ??= { sum: 0, n: 0 };
+    byCat[a.category].sum += p;
+    byCat[a.category].n += 1;
+  }
+  return { weights, byCat };
+}
+
+/** Weighted overall if category `cat` had `extra` additional scores of `value` each. */
+function overallWith(course: Course, cat: string, extra: number, value: number): number {
+  const { weights, byCat } = statsByCat(course);
+  const cats = new Set(Object.keys(byCat));
+  cats.add(cat);
+  let total = 0;
+  let den = 0;
+  for (const k of cats) {
+    const w = weights[k] ?? 1;
+    const base = byCat[k] ?? { sum: 0, n: 0 };
+    const sum = k === cat ? base.sum + extra * value : base.sum;
+    const n = k === cat ? base.n + extra : base.n;
+    if (n === 0) continue;
+    total += (sum / n) * w;
+    den += w;
+  }
+  return den ? total / den : 0;
+}
+
+/**
+ * Exact score needed on ONE more assignment in `cat` to reach `target` overall.
+ * Returns the raw number (may be <0 or >100 to signal feasibility).
+ */
+function scoreNeeded(course: Course, target: number, cat: string): number {
+  const { weights, byCat } = statsByCat(course);
+  const cats = new Set(Object.keys(byCat));
+  cats.add(cat);
+  let W = 0;
+  let otherSum = 0;
+  for (const k of cats) {
+    const w = weights[k] ?? 1;
+    W += w;
+    if (k !== cat) {
+      const b = byCat[k];
+      const avg = b ? b.sum / b.n : 0;
+      otherSum += w * avg;
+    }
+  }
+  const wc = weights[cat] ?? 1;
+  const base = byCat[cat] ?? { sum: 0, n: 0 };
+  const avgNeeded = (target * W - otherSum) / wc;
+  return avgNeeded * (base.n + 1) - base.sum;
+}
+
+/** Fewest perfect (100) scores in `cat` to reach `target`, capped at a sane max. */
+function perfectsNeeded(course: Course, target: number, cat: string): number | null {
+  for (let m = 1; m <= 20; m++) {
+    if (overallWith(course, cat, m, 100) >= target - 1e-9) return m;
+  }
+  return null;
+}
+
+
 export function ClassDetail({
   course,
   onClose,
@@ -61,6 +130,14 @@ export function ClassDetail({
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  const goalCats = useMemo(() => {
+    const list = course.categoryAverages.map((c) => c.category);
+    if (list.length) return list;
+    return Array.from(new Set(course.assignments.map((a) => a.category)));
+  }, [course]);
+  const [goalCat, setGoalCat] = useState<string>(goalCats[0] ?? "Assessment");
+  const [goalText, setGoalText] = useState<string>("");
 
   const liveCats = useMemo(() => categoryAveragesFromAssignments(course, overrides), [course, overrides]);
   const summative = course.categoryAverages.find((c) => c.category === "Assessment" || c.category === "Summative");
@@ -254,6 +331,17 @@ export function ClassDetail({
                 </div>
               </div>
 
+              <GoalSeeker
+                course={course}
+                cats={goalCats}
+                goalCat={goalCat}
+                setGoalCat={setGoalCat}
+                goalText={goalText}
+                setGoalText={setGoalText}
+              />
+
+
+
               <div className="space-y-2 pt-1">
                 {course.assignments.map((a, i) => {
                   const baseline = pct(a) ?? 0;
@@ -335,3 +423,152 @@ function MetricRow({ label, value, color }: { label: string; value: number | nul
     </div>
   );
 }
+
+function GoalSeeker({
+  course,
+  cats,
+  goalCat,
+  setGoalCat,
+  goalText,
+  setGoalText,
+}: {
+  course: Course;
+  cats: string[];
+  goalCat: string;
+  setGoalCat: (c: string) => void;
+  goalText: string;
+  setGoalText: (s: string) => void;
+}) {
+  const target = goalText.trim() === "" ? null : Number(goalText);
+  const valid = target !== null && Number.isFinite(target) && target >= 0 && target <= 100;
+
+  const result = useMemo(() => {
+    if (!valid || target === null) return null;
+    const need = scoreNeeded(course, target, goalCat);
+    const maxOverall = overallWith(course, goalCat, 1, 100);
+    return { need, maxOverall };
+  }, [valid, target, course, goalCat]);
+
+  let body: { tone: "good" | "warn" | "bad"; headline: string; sub: string } | null = null;
+  if (result && target !== null) {
+    const { need, maxOverall } = result;
+    if (need <= 0) {
+      body = {
+        tone: "good",
+        headline: "You're already there",
+        sub: `Even a 0 on your next ${goalCat} keeps you at or above ${target}.`,
+      };
+    } else if (need <= 100) {
+      body = {
+        tone: "good",
+        headline: `Score ${need.toFixed(1)}`,
+        sub: `Make at least ${need.toFixed(1)} on your next ${goalCat} to reach a ${target} overall.`,
+      };
+    } else {
+      const m = perfectsNeeded(course, target, goalCat);
+      body = {
+        tone: m ? "warn" : "bad",
+        headline: m ? `Need ${m} perfect scores` : "Not reachable soon",
+        sub: m
+          ? `One assignment can't get you there (a 100 only reaches ${maxOverall.toFixed(1)}). You'd need about ${m} straight 100s in ${goalCat}.`
+          : `Even repeated 100s in ${goalCat} won't reach ${target} this period.`,
+      };
+    }
+  }
+
+  const toneColor =
+    body?.tone === "good" ? "var(--success)" : body?.tone === "warn" ? "var(--warning)" : "var(--destructive)";
+
+  return (
+    <div
+      className="rounded-2xl p-4 space-y-3"
+      style={{
+        background: "color-mix(in oklab, var(--primary) 8%, transparent)",
+        border: "1px solid color-mix(in oklab, var(--primary) 30%, transparent)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}
+    >
+      <div>
+        <div className="text-sm font-bold">Reach a Goal</div>
+        <div className="text-[11px] text-muted-foreground">
+          Enter the overall grade you want — we'll tell you the exact score you need next.
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={100}
+            value={goalText}
+            onChange={(e) => setGoalText(e.target.value)}
+            placeholder="e.g. 95"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-3 pr-9 py-2.5 text-sm tabular-nums focus:outline-none focus:border-primary/60"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">target</span>
+        </div>
+      </div>
+
+      {cats.length > 1 ? (
+        <div className="flex flex-wrap gap-2">
+          {cats.map((c) => {
+            const active = c === goalCat;
+            return (
+              <button
+                key={c}
+                onClick={() => setGoalCat(c)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                  active ? "text-white" : "text-muted-foreground"
+                }`}
+                style={{
+                  background: active ? "var(--primary)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${active ? "color-mix(in oklab, var(--primary) 60%, transparent)" : "rgba(255,255,255,0.1)"}`,
+                }}
+              >
+                {c}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {goalText.trim() !== "" && !valid ? (
+        <div className="text-[11px] text-destructive">Enter a grade between 0 and 100.</div>
+      ) : null}
+
+      <AnimatePresence mode="wait">
+        {body ? (
+          <motion.div
+            key={body.headline}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ type: "spring", stiffness: 360, damping: 28 }}
+            className="rounded-xl p-3 flex items-center gap-3"
+            style={{
+              background: `color-mix(in oklab, ${toneColor} 14%, transparent)`,
+              border: `1px solid color-mix(in oklab, ${toneColor} 40%, transparent)`,
+            }}
+          >
+            <div
+              className="shrink-0 px-3 py-2 rounded-xl text-lg font-bold tabular-nums grid place-items-center"
+              style={{ background: `color-mix(in oklab, ${toneColor} 22%, transparent)`, color: toneColor }}
+            >
+              {result && result.need > 0 && result.need <= 100 ? result.need.toFixed(1) : "★"}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold" style={{ color: toneColor }}>
+                {body.headline}
+              </div>
+              <div className="text-[11px] text-muted-foreground">{body.sub}</div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
