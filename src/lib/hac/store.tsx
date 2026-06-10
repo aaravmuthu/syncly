@@ -24,8 +24,8 @@ interface Ctx {
   login: (c: Cred) => Promise<void>;
   refresh: () => Promise<void>;
   logout: () => void;
-  accent: "violet" | "cyan" | "emerald";
-  setAccent: (a: "violet" | "cyan" | "emerald") => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
