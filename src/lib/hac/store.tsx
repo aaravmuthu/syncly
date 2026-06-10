@@ -54,6 +54,9 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("nebula");
   const [courseNav, setCourseNav] = useState<{ courseId: string; sub: CourseSubTab } | null>(null);
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
   // Hydrate from localStorage once. Show the login screen by default; restore a
