@@ -40,6 +40,10 @@ export function OverviewTab() {
         </motion.button>
       </header>
 
+      <RecentGradesBanner />
+
+
+
       <div className="grid grid-cols-2 gap-3">
         <SpotlightCard className="p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Weighted GPA</div>
