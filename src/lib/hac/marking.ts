@@ -44,6 +44,27 @@ export function courseForPeriod(course: Course, period: MarkingPeriod): Course {
   };
 }
 
+/**
+ * Resolve a displayable grade value from any key the scraper / state model
+ * might use. Returns a number, a non-empty string, or null when truly missing.
+ */
+export function resolveGrade(a: Assignment): number | string | null {
+  const anyA = a as unknown as Record<string, unknown>;
+  const candidates = [
+    anyA.score,
+    anyA.grade,
+    anyA.numericGrade,
+    anyA.currentGrade,
+    anyA.percent,
+  ];
+  for (const c of candidates) {
+    if (c === undefined || c === null) continue;
+    if (typeof c === "number" && Number.isFinite(c)) return c;
+    if (typeof c === "string" && c.trim() !== "") return c.trim();
+  }
+  return null;
+}
+
 /** Numeric percent for an assignment, or null when not graded yet. */
 export function assignmentPercent(a: Assignment): number | null {
   return a.percent ?? (a.score !== null && a.totalPoints ? (a.score / a.totalPoints) * 100 : null);
