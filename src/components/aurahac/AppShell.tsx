@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
 import { OverviewTab } from "./tabs/OverviewTab";
