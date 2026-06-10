@@ -7,7 +7,6 @@ export function RankBadge({ gpa }: { gpa: number }) {
   const { tier, next, toNext } = tierProgress(gpa);
   const [open, setOpen] = useState(false);
   const isApex = tier.id === "apex";
-  const isRadiant = tier.id === "radiant";
 
   return (
     <div className="relative">
