@@ -47,6 +47,21 @@ interface CalItem {
   score: number | null;
   total: number | null;
   kind: Kind;
+  /** Set when this item was manually added by the student. */
+  eventId?: string;
+  /** Minutes of work/study for manual items. */
+  minutes?: number;
+  /** Whether a reminder is set on this manual item. */
+  hasReminder?: boolean;
+}
+
+function fmtMins(m: number) {
+  if (m >= 60) {
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r ? `${h}h ${r}m` : `${h}h`;
+  }
+  return `${m}m`;
 }
 
 function classify(a: Assignment): Kind {
