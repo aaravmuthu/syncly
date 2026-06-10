@@ -313,7 +313,10 @@ function startOfMonth(d: Date) {
 function AttendanceView() {
   const { data } = useHac();
   const ledger = useMemo(() => (data ? attendanceFor(data) : null), [data]);
-  const byDate = useMemo(() => (ledger ? attendanceByDate(ledger) : new Map()), [ledger]);
+  const byDate = useMemo(
+    () => (ledger ? attendanceByDate(ledger) : new Map<string, AttendanceEntry[]>()),
+    [ledger],
+  );
 
   // Anchor the calendar to the most recent incident, or today.
   const initialMonth = useMemo(() => {
