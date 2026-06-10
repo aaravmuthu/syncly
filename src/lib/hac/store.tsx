@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import type { HacData, DistrictId, UserEvent, CourseCustom, BellRotation } from "./types";
 import { getFallbackData } from "./mockData";
 import { defaultBellRotation } from "./customize";
+import { encryptJSON, decryptJSON } from "./secureStore";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
@@ -96,7 +97,19 @@ export function HacProvider({ children }: { children: ReactNode }) {
       if (d) {
         setData(JSON.parse(d));
         const c = localStorage.getItem(CRED_KEY);
-        if (c) setCred(JSON.parse(c));
+        if (c) {
+          // Credentials are stored AES-GCM encrypted; decrypt in memory only.
+          decryptJSON<Cred>(c)
+            .then((cred) => setCred(cred))
+            .catch(() => {
+              // Legacy/plaintext or corrupted entry — drop it.
+              try {
+                localStorage.removeItem(CRED_KEY);
+              } catch {
+                /* ignore */
+              }
+            });
+        }
         return;
       }
       if (localStorage.getItem(DEMO_KEY)) {
@@ -126,7 +139,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setIsFallback(false);
       setCred(c);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
-      localStorage.setItem(CRED_KEY, JSON.stringify(c));
+      localStorage.setItem(CRED_KEY, await encryptJSON(c));
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sync failed";
       setError(msg);

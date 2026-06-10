@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
+import { PullToRefresh } from "./PullToRefresh";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { GradesTab } from "./tabs/GradesTab";
 import { GpaTab } from "./tabs/GpaTab";
@@ -20,12 +21,21 @@ const TABS: { id: TabId; label: string; icon: typeof Home }[] = [
 ];
 
 function Pane({ active, current, children }: { active: TabId; current: TabId; children: ReactNode }) {
+  const { refresh, loading, hasCredentials } = useHac();
+  if (active !== current) return null;
   return (
-    <div
-      className="absolute inset-0 overflow-y-auto px-5"
-      style={{ display: active === current ? "block" : "none" }}
-    >
-      {children}
+    <div className="absolute inset-0">
+      {hasCredentials ? (
+        <PullToRefresh
+          onRefresh={() => void refresh()}
+          refreshing={loading}
+          className="overflow-y-auto px-5"
+        >
+          {children}
+        </PullToRefresh>
+      ) : (
+        <div className="absolute inset-0 overflow-y-auto px-5">{children}</div>
+      )}
     </div>
   );
 }
