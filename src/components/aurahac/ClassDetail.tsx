@@ -133,7 +133,8 @@ export function ClassDetail({
   onClose: () => void;
   initialSub?: SubTab;
 }) {
-  const { courseCustom, activePeriod, setActivePeriod } = useHac();
+  const { data, courseCustom, activePeriod, setActivePeriod } = useHac();
+  const [assistFor, setAssistFor] = useState<Assignment | null>(null);
   const course = useMemo(() => courseForPeriod(baseCourse, activePeriod), [baseCourse, activePeriod]);
   const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
