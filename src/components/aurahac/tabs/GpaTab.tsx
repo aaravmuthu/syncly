@@ -53,9 +53,12 @@ export function GpaTab() {
   return (
     <div className="space-y-5 pb-32">
       <header className="pt-2">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">GPA Engine</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">GPA Engine · {activePeriod}</div>
         <h1 className="text-2xl font-bold tracking-tight">Your Trajectory</h1>
       </header>
+
+      <MarkingPeriodSlider value={activePeriod} onChange={setActivePeriod} layoutKey="gpa-mp-pill" />
+
 
       <div className="glass p-1 rounded-2xl grid grid-cols-2 gap-1 text-sm font-medium relative">
         {(["Weighted", "Unweighted"] as const).map((label, i) => {
