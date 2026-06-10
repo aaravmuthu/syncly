@@ -65,7 +65,7 @@ export function GradesTab() {
               <button
                 onClick={() => {
                   setInitialSub("grades");
-                  setOpen(c);
+                  setOpen(base);
                 }}
                 className="flex-1 min-w-0 px-4 py-5 min-h-[76px] flex items-center gap-3 text-left"
               >
@@ -97,7 +97,7 @@ export function GradesTab() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
               </button>
               <button
-                onClick={() => setCustomizing(c)}
+                onClick={() => setCustomizing(base)}
                 aria-label="Customize class"
                 className="shrink-0 px-3 grid place-items-center text-muted-foreground hover:text-primary border-l border-white/5"
               >
