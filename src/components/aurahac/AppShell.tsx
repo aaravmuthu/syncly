@@ -35,7 +35,7 @@ function Pane({ active, current, children }: { active: TabId; current: TabId; ch
           {children}
         </PullToRefresh>
       ) : (
-        <div className="absolute inset-0 overflow-y-auto px-5">{children}</div>
+        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden px-5" style={{ overscrollBehaviorX: "none", touchAction: "pan-y" }}>{children}</div>
       )}
     </div>
   );

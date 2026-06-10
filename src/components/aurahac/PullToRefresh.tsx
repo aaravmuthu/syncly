@@ -91,6 +91,9 @@ export function PullToRefresh({
           transform: pull ? `translateY(${pull}px)` : undefined,
           transition: pull ? "none" : "transform 0.25s ease",
           height: "100%",
+          overflowX: "hidden",
+          overscrollBehaviorX: "none",
+          touchAction: "pan-y",
         }}
       >
         {children}
