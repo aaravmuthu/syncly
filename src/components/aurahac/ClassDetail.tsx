@@ -9,6 +9,7 @@ import { courseForPeriod, scoreBadge } from "@/lib/hac/marking";
 import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
 import { AuraAssistMail, needsAssist } from "./AuraAssistMail";
+import { FinalExamPredictor } from "./FinalExamPredictor";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown, Mail } from "lucide-react";
 
