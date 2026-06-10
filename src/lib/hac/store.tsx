@@ -81,6 +81,12 @@ export function HacProvider({ children }: { children: ReactNode }) {
       const ev = localStorage.getItem(EVENTS_KEY);
       if (ev) setUserEvents(JSON.parse(ev));
 
+      const cc = localStorage.getItem(CUSTOM_KEY);
+      if (cc) setCourseCustomState(JSON.parse(cc));
+
+      const bell = localStorage.getItem(BELL_KEY);
+      if (bell) setBellRotationState({ ...defaultBellRotation(), ...JSON.parse(bell) });
+
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         setNotificationsEnabled(true);
       }
