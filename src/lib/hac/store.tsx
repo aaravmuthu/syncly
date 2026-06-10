@@ -70,6 +70,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
     try {
       const d = await callSync(c);
       setData(d);
+      setIsFallback(false);
       setCred(c);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
       localStorage.setItem(CRED_KEY, JSON.stringify(c));
