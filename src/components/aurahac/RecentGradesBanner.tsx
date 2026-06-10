@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import confetti from "canvas-confetti";
 import { useHac } from "@/lib/hac/store";
 import { ChevronRight, X, Sparkles, CheckCircle2 } from "lucide-react";
 
@@ -26,6 +27,8 @@ function scoreColor(v: number): string {
 export function RecentGradesBanner() {
   const { data, setCourseNav } = useHac();
   const [dismissed, setDismissed] = useState(false);
+  const [hype, setHype] = useState(false);
+  const firedRef = useRef(false);
 
   const recent = useMemo(() => {
     if (!data) return null;
@@ -37,6 +40,44 @@ export function RecentGradesBanner() {
     all.sort((x, y) => y.ts - x.ts);
     return all[0] ?? null;
   }, [data]);
+
+  // Hype trigger: high A-range (>95) or perfect 100 grade on the freshest drop.
+  useEffect(() => {
+    if (!recent || dismissed || firedRef.current) return;
+    const v = recent.a.percent ?? 0;
+    if (v < 95) return;
+    firedRef.current = true;
+    setHype(true);
+
+    const t = window.setTimeout(() => {
+      // Sophisticated electric-purple + silver burst from the top, settling behind the card.
+      const purple = ["#a855f7", "#7c3aed", "#c4b5fd"];
+      const silver = ["#e5e7eb", "#cbd5e1", "#f8fafc"];
+      const colors = [...purple, ...silver];
+      const end = Date.now() + 1100;
+      (function frame() {
+        confetti({
+          particleCount: 4,
+          startVelocity: 28,
+          ticks: 200,
+          gravity: 0.85,
+          scalar: 0.9,
+          spread: 70,
+          origin: { x: Math.random(), y: -0.1 },
+          colors,
+          zIndex: 5,
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }, 350);
+
+    const clear = window.setTimeout(() => setHype(false), 3200);
+    return () => {
+      window.clearTimeout(t);
+      window.clearTimeout(clear);
+    };
+  }, [recent, dismissed]);
+
 
   if (!data) return null;
 
@@ -92,18 +133,31 @@ export function RecentGradesBanner() {
           onClick={() => setCourseNav({ courseId: recent.course.id, sub: "analysis" })}
           className="relative z-10 flex items-center gap-3 flex-1 min-w-0 text-left"
         >
-          {/* Score capsule */}
-          <div
+          {/* Score capsule — gets a temporary electric pulse during Hype Mode */}
+          <motion.div
             className="shrink-0 px-3 py-2 rounded-xl font-bold tabular-nums text-base grid place-items-center min-w-[58px]"
             style={{
               background: `color-mix(in oklab, ${color} 22%, transparent)`,
               color,
               border: `1px solid color-mix(in oklab, ${color} 50%, transparent)`,
-              boxShadow: `0 0 18px -6px ${color}`,
             }}
+            animate={
+              hype
+                ? {
+                    scale: [1, 1.12, 1],
+                    boxShadow: [
+                      `0 0 18px -6px ${color}`,
+                      `0 0 28px 4px var(--primary), 0 0 0 2px color-mix(in oklab, var(--primary) 80%, transparent)`,
+                      `0 0 18px -6px ${color}`,
+                    ],
+                  }
+                : { boxShadow: `0 0 18px -6px ${color}` }
+            }
+            transition={hype ? { duration: 1.1, repeat: 2, ease: "easeInOut" } : { duration: 0.3 }}
           >
             {v.toFixed(1)}
-          </div>
+          </motion.div>
+
 
           {/* Micro-data */}
           <div className="min-w-0 flex-1">
@@ -111,9 +165,18 @@ export function RecentGradesBanner() {
               <Sparkles className="h-3 w-3" /> Just Added
             </div>
             <div className="text-sm font-bold truncate">{recent.a.name}</div>
-            <div className="text-[11px] truncate" style={{ color: "color-mix(in oklab, var(--primary) 45%, var(--muted-foreground))" }}>
-              {recent.course.name} • {elapsed(recent.ts)}
+            <div className="text-[11px] truncate">
+              {hype ? (
+                <span className="font-extrabold text-white inline-flex items-center gap-1">
+                  🎉 WINNER! <span className="text-primary">· {recent.course.name}</span>
+                </span>
+              ) : (
+                <span style={{ color: "color-mix(in oklab, var(--primary) 45%, var(--muted-foreground))" }}>
+                  {recent.course.name} • {elapsed(recent.ts)}
+                </span>
+              )}
             </div>
+
           </div>
 
           <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
