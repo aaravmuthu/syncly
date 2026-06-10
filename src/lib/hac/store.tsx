@@ -94,6 +94,9 @@ export function HacProvider({ children }: { children: ReactNode }) {
       const bell = localStorage.getItem(BELL_KEY);
       if (bell) setBellRotationState({ ...defaultBellRotation(), ...JSON.parse(bell) });
 
+      const sk = localStorage.getItem(STREAK_KEY);
+      if (sk) setStreak({ ...emptyStreak(), ...JSON.parse(sk) });
+
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         setNotificationsEnabled(true);
       }
