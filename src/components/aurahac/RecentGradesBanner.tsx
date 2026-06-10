@@ -133,18 +133,31 @@ export function RecentGradesBanner() {
           onClick={() => setCourseNav({ courseId: recent.course.id, sub: "analysis" })}
           className="relative z-10 flex items-center gap-3 flex-1 min-w-0 text-left"
         >
-          {/* Score capsule */}
-          <div
+          {/* Score capsule — gets a temporary electric pulse during Hype Mode */}
+          <motion.div
             className="shrink-0 px-3 py-2 rounded-xl font-bold tabular-nums text-base grid place-items-center min-w-[58px]"
             style={{
               background: `color-mix(in oklab, ${color} 22%, transparent)`,
               color,
               border: `1px solid color-mix(in oklab, ${color} 50%, transparent)`,
-              boxShadow: `0 0 18px -6px ${color}`,
             }}
+            animate={
+              hype
+                ? {
+                    scale: [1, 1.12, 1],
+                    boxShadow: [
+                      `0 0 18px -6px ${color}`,
+                      `0 0 28px 4px var(--primary), 0 0 0 2px color-mix(in oklab, var(--primary) 80%, transparent)`,
+                      `0 0 18px -6px ${color}`,
+                    ],
+                  }
+                : { boxShadow: `0 0 18px -6px ${color}` }
+            }
+            transition={hype ? { duration: 1.1, repeat: 2, ease: "easeInOut" } : { duration: 0.3 }}
           >
             {v.toFixed(1)}
-          </div>
+          </motion.div>
+
 
           {/* Micro-data */}
           <div className="min-w-0 flex-1">
