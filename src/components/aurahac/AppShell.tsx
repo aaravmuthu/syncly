@@ -31,8 +31,13 @@ function Pane({ active, current, children }: { active: TabId; current: TabId; ch
 }
 
 export function AppShell() {
-  const { data, hasCredentials } = useHac();
+  const { data, hasCredentials, courseNav } = useHac();
   const [tab, setTab] = useState<TabId>("overview");
+
+  useEffect(() => {
+    if (courseNav) setTab("grades");
+  }, [courseNav]);
+
 
   return (
     <div
