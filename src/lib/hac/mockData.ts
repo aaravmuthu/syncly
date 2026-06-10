@@ -1,138 +1,125 @@
 import type { HacData, Course, Assignment, AssignmentCategory } from "./types";
 
-function d(offsetDays: number): string {
-  const now = new Date();
-  const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetDays);
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
-}
-
+/** Build an assignment whose grade is expressed directly as a percent. */
 function a(
   name: string,
   category: AssignmentCategory,
-  dueDate: string | null,
-  score: number | null,
-  totalPoints: number | null,
+  dueDate: string, // MM/DD/YYYY
+  percent: number,
   opts: { missing?: boolean; absent?: boolean } = {},
 ): Assignment {
-  const percent = score !== null && totalPoints ? Math.round((score / totalPoints) * 1000) / 10 : null;
   return {
     name,
     category,
     dueDate,
-    score,
-    totalPoints,
+    score: percent,
+    totalPoints: 100,
     percent,
     missing: opts.missing ?? false,
     absent: opts.absent ?? false,
   };
 }
 
+const english1: Course = {
+  id: "ela1100b-3",
+  name: "English 1 Adv S2",
+  code: "ELA1100B - 3",
+  teacher: "Ms. Harkness",
+  period: "3",
+  average: 94.83,
+  categoryAverages: [
+    { category: "Assessment", weight: 70, average: 94.83 },
+    { category: "Progress Check", weight: 30, average: 90.25 },
+  ],
+  assignments: [
+    a("R&J Reflective Assessment", "Assessment", "05/19/2026", 100.0),
+    a("PBA 4: Harkness Discussion", "Assessment", "05/15/2026", 90.0),
+    a("R&J Leveled Questions", "Assessment", "05/11/2026", 90.0),
+    a("Leveled Questions Act 4", "Progress Check", "04/29/2026", 85.0),
+    a("Harkness 1", "Assessment", "04/20/2026", 100.0),
+    a("Act 1-3 Leveled Questions", "Assessment", "04/16/2026", 99.0),
+    a("Identity & Culture Crest", "Progress Check", "04/14/2026", 96.0),
+  ],
+};
+
+/** A lighter-weight course definition for the remaining classes. */
+function simpleCourse(
+  id: string,
+  name: string,
+  code: string,
+  teacher: string,
+  period: string,
+  average: number,
+  assignments: Assignment[],
+): Course {
+  return {
+    id,
+    name,
+    code,
+    teacher,
+    period,
+    average,
+    categoryAverages: [
+      { category: "Assessment", weight: 70, average },
+      { category: "Progress Check", weight: 30, average: Math.max(70, average - 3) },
+    ],
+    assignments,
+  };
+}
+
 const courses: Course[] = [
-  {
-    id: "ap-calc-bc",
-    name: "AP Calculus BC",
-    teacher: "Ms. Whitfield",
-    period: "1",
-    average: 96.4,
-    categoryAverages: [
-      { category: "Summative", weight: 60, average: 95.0 },
-      { category: "Formative", weight: 40, average: 98.5 },
-    ],
-    assignments: [
-      a("Limits & Continuity Test", "Summative", d(-12), 94, 100),
-      a("Derivative Rules Quiz", "Formative", d(-6), 20, 20),
-      a("Related Rates Worksheet", "Formative", d(-2), 15, 15),
-      a("Integration Unit Test", "Summative", d(3), null, 100),
-      a("Series Convergence HW", "Formative", d(7), null, 20),
-    ],
-  },
-  {
-    id: "ap-physics",
-    name: "AP Physics C: Mechanics",
-    teacher: "Dr. Nguyen",
-    period: "2",
-    average: 88.1,
-    categoryAverages: [
-      { category: "Summative", weight: 70, average: 85.0 },
-      { category: "Formative", weight: 30, average: 95.2 },
-    ],
-    assignments: [
-      a("Kinematics Lab Report", "Formative", d(-10), 47, 50),
-      a("Newton's Laws Test", "Summative", d(-4), 85, 100),
-      a("Momentum Problem Set", "Formative", d(-1), null, 25, { missing: true }),
-      a("Energy Conservation Test", "Summative", d(5), null, 100),
-      a("Rotational Motion Quiz", "Formative", d(9), null, 20),
-    ],
-  },
-  {
-    id: "eng-lit",
-    name: "AP English Literature",
-    teacher: "Mr. Castillo",
-    period: "3",
-    average: 91.7,
-    categoryAverages: [
-      { category: "Summative", weight: 55, average: 90.0 },
-      { category: "Formative", weight: 45, average: 93.8 },
-    ],
-    assignments: [
-      a("Hamlet Essay", "Summative", d(-8), 88, 100),
-      a("Poetry Analysis", "Formative", d(-3), 28, 30),
-      a("Reading Journal #4", "Formative", d(1), null, 20),
-      a("Timed Writing FRQ", "Summative", d(6), null, 100),
-    ],
-  },
-  {
-    id: "us-history",
-    name: "AP US History",
-    teacher: "Mrs. Alvarado",
-    period: "5",
-    average: 84.9,
-    categoryAverages: [
-      { category: "Summative", weight: 65, average: 82.0 },
-      { category: "Formative", weight: 35, average: 90.0 },
-    ],
-    assignments: [
-      a("Gilded Age DBQ", "Summative", d(-9), 78, 100),
-      a("Progressive Era Quiz", "Formative", d(-5), 18, 20),
-      a("WWI Discussion Post", "Formative", d(0), null, 15, { absent: true }),
-      a("Unit 7 Exam", "Summative", d(4), null, 100),
-      a("Cold War Reading", "Formative", d(8), null, 20),
-    ],
-  },
-  {
-    id: "spanish-4",
-    name: "Spanish IV Pre-AP",
-    teacher: "Señora Reyes",
-    period: "6",
-    average: 93.2,
-    categoryAverages: [
-      { category: "Summative", weight: 50, average: 92.0 },
-      { category: "Formative", weight: 50, average: 94.5 },
-    ],
-    assignments: [
-      a("Subjunctive Quiz", "Formative", d(-7), 19, 20),
-      a("Oral Presentation", "Summative", d(-2), 92, 100),
-      a("Vocab Unit 5", "Formative", d(2), null, 25),
-      a("Cultural Essay", "Summative", d(10), null, 100),
-    ],
-  },
+  english1,
+  simpleCourse("mth1200b-3", "Algebra 2 Adv S2", "MTH1200B - 3", "Mr. Euler", "1", 97.67, [
+    a("Logarithms Unit Test", "Assessment", "05/18/2026", 98.0),
+    a("Exponential Models Quiz", "Progress Check", "05/06/2026", 95.0),
+    a("Polynomial Long Division", "Assessment", "04/22/2026", 100.0),
+    a("Rational Functions HW", "Progress Check", "04/12/2026", 96.0),
+  ]),
+  simpleCourse("mth2300b-1", "dominos", "MTH2300B - 1", "Mr. Pizza", "2", 81.2, [
+    a("Topping Optimization", "Assessment", "05/14/2026", 84.0),
+    a("Delivery Routes Quiz", "Progress Check", "05/01/2026", 78.0),
+    a("Crust Geometry Lab", "Assessment", "04/19/2026", 82.0),
+  ]),
+  simpleCourse("sci1200b-12", "Biology Adv S2", "SCI1200B - 12", "Dr. Mendel", "4", 97.6, [
+    a("Genetics Unit Exam", "Assessment", "05/17/2026", 98.0),
+    a("Cell Respiration Lab", "Progress Check", "05/03/2026", 96.0),
+    a("Ecology FRQ", "Assessment", "04/21/2026", 99.0),
+  ]),
+  simpleCourse("tec2100b-1", "Computer Science 1 Adv S2", "TEC2100B - 1", "Ms. Lovelace", "5", 100.0, [
+    a("Recursion Project", "Assessment", "05/16/2026", 100.0),
+    a("Arrays & Loops Quiz", "Progress Check", "05/02/2026", 100.0),
+    a("Object Oriented PBA", "Assessment", "04/18/2026", 100.0),
+  ]),
+  simpleCourse("sst1100b-9", "World Geography S2", "SST1100B - 9", "Mr. Mercator", "6", 98.67, [
+    a("Climate Regions Test", "Assessment", "05/13/2026", 99.0),
+    a("Population Maps Quiz", "Progress Check", "04/30/2026", 97.0),
+    a("Cultural Geography Essay", "Assessment", "04/17/2026", 100.0),
+  ]),
+  simpleCourse("flg1100b-1", "French 1 S2", "FLG1100B - 1", "Mme Dubois", "7", 100.0, [
+    a("Passé Composé Exam", "Assessment", "05/12/2026", 100.0),
+    a("Vocabulary Unit 6", "Progress Check", "04/28/2026", 100.0),
+    a("Oral Presentation", "Assessment", "04/15/2026", 100.0),
+  ]),
+  simpleCourse("pelf1001b-2", "Lifetime Fitness Wellness S2", "PELF1001B - 2", "Coach Reed", "8", 100.0, [
+    a("Fitness Log Submission", "Assessment", "05/10/2026", 100.0),
+    a("Nutrition Quiz", "Progress Check", "04/27/2026", 100.0),
+  ]),
 ];
 
 export function getFallbackData(): HacData {
   return {
-    student: { name: "Demo Student", grade: "11", school: "Lone Star High School" },
+    student: { name: "Demo Student", grade: "9", school: "Lone Star High School" },
     courses,
     transcript: [
-      { year: "2023-2024", grade: "10", course: "AP World History", sem1: "94", sem2: "96", credits: "1.0" },
-      { year: "2023-2024", grade: "10", course: "Pre-AP Chemistry", sem1: "91", sem2: "93", credits: "1.0" },
-      { year: "2023-2024", grade: "10", course: "Pre-AP Precalculus", sem1: "97", sem2: "98", credits: "1.0" },
-      { year: "2022-2023", grade: "9", course: "Biology", sem1: "95", sem2: "94", credits: "1.0" },
-      { year: "2022-2023", grade: "9", course: "Algebra II", sem1: "96", sem2: "97", credits: "1.0" },
+      { year: "2024-2025", grade: "8", course: "Algebra I", sem1: "96", sem2: "97", credits: "1.0" },
+      { year: "2024-2025", grade: "8", course: "English 8 Adv", sem1: "94", sem2: "95", credits: "1.0" },
+      { year: "2024-2025", grade: "8", course: "Texas History", sem1: "98", sem2: "99", credits: "1.0" },
     ],
     markingPeriodGPAs: [
-      { mp: "MP1", gpa: 4.6 },
-      { mp: "MP2", gpa: 4.7 },
-      { mp: "MP3", gpa: 4.65 },
+      { mp: "MP1", gpa: 4.55 },
+      { mp: "MP2", gpa: 4.62 },
+      { mp: "MP3", gpa: 4.7 },
+      { mp: "MP4", gpa: 4.74 },
     ],
     syncedAt: new Date().toISOString(),
     districtId: "frisco",

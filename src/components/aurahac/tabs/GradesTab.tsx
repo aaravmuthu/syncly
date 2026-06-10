@@ -5,6 +5,14 @@ import { ClassDetail } from "../ClassDetail";
 import type { Course } from "@/lib/hac/types";
 import { ChevronRight } from "lucide-react";
 
+function pillColor(avg: number, isDominos: boolean) {
+  if (isDominos) return "var(--chart-2)"; // lighter accent blue
+  if (avg >= 90) return "var(--success)";
+  if (avg >= 80) return "var(--primary)";
+  if (avg >= 70) return "var(--warning)";
+  return "var(--destructive)";
+}
+
 export function GradesTab() {
   const { data } = useHac();
   const [open, setOpen] = useState<Course | null>(null);
@@ -13,42 +21,43 @@ export function GradesTab() {
   return (
     <div className="space-y-4 pb-32">
       <header className="pt-2">
-        <div className="text-xs uppercase tracking-widest text-muted-foreground">Live Gradebook</div>
+        <div className="text-xs uppercase tracking-widest text-muted-foreground">Marking Period 4</div>
         <h1 className="text-2xl font-bold tracking-tight">Your Classes</h1>
       </header>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {data.courses.map((c) => {
           const v = c.average ?? 0;
-          const perfect = v >= 100;
-          const hasMissing = c.assignments.some((a) => a.missing || a.absent);
-          const color =
-            v >= 90 ? "var(--success)" : v >= 80 ? "var(--primary)" : v >= 70 ? "var(--warning)" : "var(--destructive)";
+          const isDominos = c.id === "mth2300b-1";
+          const color = pillColor(v, isDominos);
           return (
             <motion.button
               key={c.id}
               onClick={() => setOpen(c)}
               whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.985 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
-              className={`glass spotlight w-full p-4 flex items-center gap-3 text-left ${perfect ? "aura-electric" : ""}`}
+              className="glass spotlight w-full px-4 py-4 flex items-center gap-3 text-left rounded-2xl"
+              style={{ backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
             >
-              <div
-                className={`h-12 w-12 rounded-2xl grid place-items-center shrink-0 ${hasMissing ? "pulse-coral" : ""}`}
-                style={{ background: `color-mix(in oklab, ${color} 18%, transparent)`, boxShadow: `0 0 24px -6px ${color}` }}
-              >
-                <span className="font-bold tabular-nums text-sm" style={{ color }}>
-                  {c.average !== null ? c.average.toFixed(0) : "—"}
-                </span>
-              </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold truncate">{c.name}</div>
-                <div className="text-[11px] text-muted-foreground truncate">
-                  {c.teacher ?? ""} {c.period ? `· P${c.period}` : ""}
+                <div className="text-base font-bold truncate">{c.name}</div>
+                <div className="text-xs text-muted-foreground/80 truncate mt-0.5" style={{ color: "color-mix(in oklab, var(--primary) 45%, var(--muted-foreground))" }}>
+                  {c.code ?? c.teacher ?? ""}
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{c.assignments.length} assignments</div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <div
+                className="shrink-0 px-3.5 py-1.5 rounded-full font-bold tabular-nums text-sm"
+                style={{
+                  background: `color-mix(in oklab, ${color} 20%, transparent)`,
+                  color,
+                  border: `1px solid color-mix(in oklab, ${color} 45%, transparent)`,
+                  boxShadow: `0 0 18px -6px ${color}`,
+                }}
+              >
+                {c.average !== null ? c.average.toFixed(2) : "—"}
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
             </motion.button>
           );
         })}
