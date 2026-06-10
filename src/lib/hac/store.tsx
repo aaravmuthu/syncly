@@ -283,6 +283,27 @@ export function HacProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function setCourseCustom(courseId: string, custom: CourseCustom) {
+    setCourseCustomState((prev) => {
+      const next = { ...prev, [courseId]: custom };
+      try {
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
+
+  function setBellRotation(b: BellRotation) {
+    setBellRotationState(b);
+    try {
+      localStorage.setItem(BELL_KEY, JSON.stringify(b));
+    } catch {
+      /* ignore */
+    }
+  }
+
   const value = useMemo<Ctx>(
     () => ({
       data,
@@ -305,8 +326,12 @@ export function HacProvider({ children }: { children: ReactNode }) {
       removeEvent,
       notificationsEnabled,
       enableNotifications,
+      courseCustom,
+      setCourseCustom,
+      bellRotation,
+      setBellRotation,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
