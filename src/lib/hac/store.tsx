@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import type { HacData, DistrictId, UserEvent, CourseCustom, BellRotation } from "./types";
 import { getFallbackData } from "./mockData";
 import { defaultBellRotation } from "./customize";
+import { encryptJSON, decryptJSON } from "./secureStore";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
