@@ -4,6 +4,8 @@ import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA, numericToPoints } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { SpotlightCard } from "../SpotlightCard";
+import { RankRing } from "../RankRing";
+import { tierProgress } from "@/lib/hac/tiers";
 import { EyeOff, Eye } from "lucide-react";
 
 export function GpaTab() {
