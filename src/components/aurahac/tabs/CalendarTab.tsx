@@ -111,6 +111,15 @@ export function CalendarTab() {
   const [selected, setSelected] = useState<string | null>(() => ymd(new Date()));
   const [view, setView] = useState<"month" | "week">("month");
   const [adding, setAdding] = useState(false);
+  const [shimmer, setShimmer] = useState<Record<string, number>>({});
+
+  function onToggle(key: string) {
+    const becomingDone = !completed[key];
+    toggleCompleted(key);
+    if (becomingDone) {
+      setShimmer((p) => ({ ...p, [key]: (p[key] ?? 0) + 1 }));
+    }
+  }
 
   // Map every dated assignment + manual event onto its YYYY-MM-DD bucket.
   const byDate = useMemo(() => {
