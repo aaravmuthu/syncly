@@ -561,11 +561,12 @@ function GoalSeeker({
                 key={c}
                 onClick={() => setGoalCat(c)}
                 className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
-                  active ? "text-white" : "text-muted-foreground"
+                  active ? "text-[#090915]" : "text-muted-foreground"
                 }`}
                 style={{
                   background: active ? "var(--primary)" : "rgba(255,255,255,0.04)",
                   border: `1px solid ${active ? "color-mix(in oklab, var(--primary) 60%, transparent)" : "rgba(255,255,255,0.1)"}`,
+                  boxShadow: active ? "0 0 8px -2px var(--primary)" : undefined,
                 }}
               >
                 {c}
