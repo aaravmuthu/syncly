@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useHac } from "@/lib/hac/store";
 import { DISTRICTS, type DistrictId } from "@/lib/hac/types";
-import { Loader2, ShieldCheck, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Lock, Sparkles } from "lucide-react";
 
 export function LoginGate() {
-  const { login, loading, error } = useHac();
+  const { login, loginDemo, loading, error } = useHac();
   const [district, setDistrict] = useState<DistrictId>("frisco");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -91,6 +91,28 @@ export function LoginGate() {
             )}
           </button>
         </form>
+
+        <div className="flex items-center gap-3 my-4">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <button
+          type="button"
+          onClick={loginDemo}
+          className="w-full rounded-2xl py-3.5 font-semibold text-base text-foreground bg-white/[0.03] hover:bg-white/[0.06] active:scale-95 transition-all duration-200"
+          style={{
+            border: "1px solid rgba(160, 32, 240, 0.4)",
+            boxShadow: "0 0 18px -4px rgba(160, 32, 240, 0.45), inset 0 0 12px -8px rgba(160, 32, 240, 0.6)",
+          }}
+        >
+          <span className="inline-flex items-center gap-2 justify-center">
+            <Sparkles className="h-4 w-4" />
+            Explore with Demo Student
+          </span>
+        </button>
+
 
         <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
           <Lock className="h-3 w-3" />

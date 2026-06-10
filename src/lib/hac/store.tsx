@@ -5,6 +5,7 @@ import { getFallbackData } from "./mockData";
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
 const THEME_KEY = "aurahac.theme.v2";
+const DEMO_KEY = "aurahac.demo.v1";
 
 export type Theme = "nebula" | "onyx" | "executive" | "arctic" | "titanium" | "amethyst";
 const THEMES: Theme[] = ["nebula", "onyx", "executive", "arctic", "titanium", "amethyst"];
@@ -22,6 +23,7 @@ interface Ctx {
   hasCredentials: boolean;
   isFallback: boolean;
   login: (c: Cred) => Promise<void>;
+  loginDemo: () => void;
   refresh: () => Promise<void>;
   logout: () => void;
   theme: Theme;
@@ -39,23 +41,26 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("nebula");
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
-  // always fully interactive even before a live sync succeeds.
+  // Hydrate from localStorage once. Show the login screen by default; restore a
+  // live session, or a previously chosen demo session, when present.
   useEffect(() => {
     try {
+      const t = localStorage.getItem(THEME_KEY);
+      if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
+
       const d = localStorage.getItem(STORAGE_KEY);
       if (d) {
         setData(JSON.parse(d));
-      } else {
+        const c = localStorage.getItem(CRED_KEY);
+        if (c) setCred(JSON.parse(c));
+        return;
+      }
+      if (localStorage.getItem(DEMO_KEY)) {
         setData(getFallbackData());
         setIsFallback(true);
       }
-      const c = localStorage.getItem(CRED_KEY);
-      if (c) setCred(JSON.parse(c));
-      const t = localStorage.getItem(THEME_KEY);
-      if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
     } catch {
-      setData(getFallbackData());
-      setIsFallback(true);
+      /* show login screen */
     }
   }, []);
 
@@ -87,6 +92,20 @@ export function HacProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function loginDemo() {
+    setError(null);
+    setCred(null);
+    setData(getFallbackData());
+    setIsFallback(true);
+    try {
+      localStorage.setItem(DEMO_KEY, "1");
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(CRED_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+
   async function refresh() {
     if (!cred) return;
     setLoading(true);
@@ -103,13 +122,14 @@ export function HacProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    setData(getFallbackData());
-    setIsFallback(true);
+    setData(null);
+    setIsFallback(false);
     setCred(null);
     setError(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(CRED_KEY);
+      localStorage.removeItem(DEMO_KEY);
     } catch {
       /* ignore */
     }
@@ -132,6 +152,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
       hasCredentials: !!cred,
       isFallback,
       login,
+      loginDemo,
       refresh,
       logout,
       theme,
