@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import confetti from "canvas-confetti";
 import { useHac } from "@/lib/hac/store";
 import { ChevronRight, X, Sparkles, CheckCircle2 } from "lucide-react";
 
