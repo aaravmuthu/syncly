@@ -16,6 +16,7 @@ interface Ctx {
   loading: boolean;
   error: string | null;
   hasCredentials: boolean;
+  isFallback: boolean;
   login: (c: Cred) => Promise<void>;
   refresh: () => Promise<void>;
   logout: () => void;
