@@ -110,16 +110,15 @@ export function HacProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(CRED_KEY);
-      localStorage.removeItem("aurahac.accent");
     } catch {
       /* ignore */
     }
   }
 
-  function setAccent(a: "violet" | "cyan" | "emerald") {
-    setAccentState(a);
+  function setTheme(t: Theme) {
+    setThemeState(t);
     try {
-      localStorage.setItem("aurahac.accent", a);
+      localStorage.setItem(THEME_KEY, t);
     } catch {
       /* ignore */
     }
@@ -135,10 +134,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       login,
       refresh,
       logout,
-      accent,
-      setAccent,
+      theme,
+      setTheme,
     }),
-    [data, loading, error, cred, isFallback, accent],
+    [data, loading, error, cred, isFallback, theme],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
