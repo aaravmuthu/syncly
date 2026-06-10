@@ -76,6 +76,28 @@ export function GpaTab() {
         })}
       </div>
 
+      {/* Academic Tier Progression — liquid-glass rank ring */}
+      <SpotlightCard className="p-6 flex flex-col items-center">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-2">Academic Tier</div>
+        <RankRing gpa={tierGpa} />
+        {(() => {
+          const { next, toNext } = tierProgress(tierGpa);
+          return (
+            <div className="text-[11px] text-muted-foreground mt-1 text-center">
+              {next ? (
+                <>
+                  <span className="font-bold tabular-nums" style={{ color: next.accent }}>+{toNext.toFixed(2)}</span> GPA to {next.name} Tier
+                </>
+              ) : (
+                "Peak academic tier achieved"
+              )}
+            </div>
+          );
+        })()}
+      </SpotlightCard>
+
+
+
       <div className="grid grid-cols-2 gap-3">
         <SpotlightCard className="p-5">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cumulative</div>
