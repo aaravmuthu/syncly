@@ -49,10 +49,17 @@ export const syncHac = createServerFn({ method: "POST" })
 
     // Step 1: GET login page for verification token + cookies.
     const loginUrl = `${base}/HomeAccess/Account/LogOn`;
-    const r1 = await fetch(loginUrl, {
-      headers: { "User-Agent": ua, Accept: "text/html" },
-      redirect: "manual",
-    });
+    let r1: Response;
+    try {
+      r1 = await fetch(loginUrl, {
+        headers: { "User-Agent": ua, Accept: "text/html" },
+        redirect: "manual",
+      });
+    } catch {
+      throw new Error(
+        `Couldn't reach the ${data.district} HAC portal. The preview environment blocks outbound requests to school sites — this works on the published app.`,
+      );
+    }
     jar = mergeCookies(jar, r1.headers);
     const loginHtml = await r1.text();
     const token = pickHidden(loginHtml, "__RequestVerificationToken");
