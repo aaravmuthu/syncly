@@ -408,3 +408,58 @@
     pointer-events: none;
   }
 }
+
+/* ===== Sharp diagonal border-skating light beam (one-shot) ===== */
+@keyframes shimmer-beam {
+  0% { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
+  18% { opacity: 1; }
+  100% { transform: translateX(260%) skewX(-18deg); opacity: 0; }
+}
+
+/* Overlay span placed inside a position:relative card. Re-mount it (via key)
+ * to replay the beam exactly once. */
+@utility shimmer-beam {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 5;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 38%;
+    background: linear-gradient(
+      100deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.05) 35%,
+      rgba(255, 255, 255, 0.85) 50%,
+      rgba(255, 255, 255, 0.05) 65%,
+      transparent 100%
+    );
+    filter: blur(1px);
+    transform: translateX(-160%) skewX(-18deg);
+    animation: shimmer-beam 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+}
+
+/* Slow kinetic rotation for the Apex tier energy ring */
+@keyframes tier-spin {
+  to { transform: rotate(360deg); }
+}
+@utility tier-spin {
+  animation: tier-spin 8s linear infinite;
+}
+
+/* Diamond shimmer drift for the Radiant tier */
+@keyframes tier-diamond {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@utility tier-diamond {
+  background-size: 200% 200%;
+  animation: tier-diamond 4.5s ease-in-out infinite;
+}
