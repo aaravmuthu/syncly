@@ -4,7 +4,7 @@ import { DISTRICTS, type DistrictId } from "@/lib/hac/types";
 import { Loader2, ShieldCheck, Lock } from "lucide-react";
 
 export function LoginGate() {
-  const { login, loading, error } = useHac();
+  const { login, loginDemo, loading, error } = useHac();
   const [district, setDistrict] = useState<DistrictId>("frisco");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
