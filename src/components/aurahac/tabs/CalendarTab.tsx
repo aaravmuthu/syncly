@@ -578,17 +578,34 @@ export function CalendarTab() {
                       >
                         {it.name}
                       </div>
-                      <div className="text-[11px] text-muted-foreground truncate">
-                        {it.course} · {it.category}
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground truncate">
+                        <span className="truncate">{it.course} · {it.category}</span>
+                        {it.minutes ? (
+                          <span className="inline-flex items-center gap-1 shrink-0 text-foreground/80">
+                            <Clock className="h-3 w-3" />
+                            {fmtMins(it.minutes)}
+                          </span>
+                        ) : null}
+                        {it.hasReminder ? <Bell className="h-3 w-3 shrink-0 text-primary" /> : null}
                       </div>
                     </div>
-                    <div className="text-xs tabular-nums text-muted-foreground shrink-0">
-                      {it.score !== null && it.total
-                        ? `${it.score}/${it.total}`
-                        : it.total
-                          ? `${it.total} pts`
-                          : ""}
-                    </div>
+                    {it.eventId ? (
+                      <button
+                        onClick={() => removeEvent(it.eventId!)}
+                        className="h-7 w-7 shrink-0 grid place-items-center rounded-lg text-muted-foreground hover:text-destructive transition-colors active:scale-90"
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <div className="text-xs tabular-nums text-muted-foreground shrink-0">
+                        {it.score !== null && it.total
+                          ? `${it.score}/${it.total}`
+                          : it.total
+                            ? `${it.total} pts`
+                            : ""}
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
