@@ -223,6 +223,11 @@ export function ClassDetail({
           </div>
         </header>
 
+        {/* Marking period slider */}
+        <div className="px-5 pb-2 shrink-0">
+          <MarkingPeriodSlider value={activePeriod} onChange={setActivePeriod} layoutKey="detail-mp-pill" />
+        </div>
+
         {/* Sub-tab pill container */}
         <div className="px-5 shrink-0">
           <div className="relative flex p-1 rounded-2xl bg-white/[0.04] border border-white/10">
