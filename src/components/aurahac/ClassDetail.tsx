@@ -137,6 +137,8 @@ export function ClassDetail({
   const { data, courseCustom, activePeriod, setActivePeriod } = useHac();
   const [assistFor, setAssistFor] = useState<Assignment | null>(null);
   const course = useMemo(() => courseForPeriod(baseCourse, activePeriod), [baseCourse, activePeriod]);
+  const mp3Avg = useMemo(() => courseForPeriod(baseCourse, "MP3").average, [baseCourse]);
+  const mp4Avg = useMemo(() => courseForPeriod(baseCourse, "MP4").average, [baseCourse]);
   const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
