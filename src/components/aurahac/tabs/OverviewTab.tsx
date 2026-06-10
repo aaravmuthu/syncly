@@ -9,6 +9,7 @@ import { RankBadge } from "../RankBadge";
 import { StreakCard } from "../StreakCard";
 import { SmartInsights } from "../SmartInsights";
 import { TrendGraph, type TrendPoint } from "../TrendGraph";
+import { LivePeriodWidget } from "../LivePeriodWidget";
 import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell, LineChart } from "lucide-react";
 
 function fullDate(): string {
