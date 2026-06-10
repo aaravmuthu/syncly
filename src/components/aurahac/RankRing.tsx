@@ -101,7 +101,7 @@ export function RankRing({ gpa, size = 260 }: Props) {
           >
             <div
               className="text-[3.4rem] leading-none font-bold tabular-nums"
-              style={{ color: lightText ? "#0b1020" : "#ffffff", textShadow: lightText ? "none" : "0 2px 18px rgba(0,0,0,0.45)" }}
+              style={{ color: "#ffffff", textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
             >
               {gpa.toFixed(2)}
             </div>
