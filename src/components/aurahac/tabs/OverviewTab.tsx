@@ -87,6 +87,9 @@ export function OverviewTab() {
 
       </header>
 
+      {/* Live "Tardy Burner" passing-period countdown */}
+      <LivePeriodWidget />
+
       {/* High-priority grade drop tier */}
       <RecentGradesBanner />
 
