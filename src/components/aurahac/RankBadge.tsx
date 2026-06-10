@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { tierProgress } from "@/lib/hac/tiers";
 
 /** Miniature high-gloss rank emblem for the Overview header (Location B). */
 export function RankBadge({ gpa }: { gpa: number }) {
-  const { tier, next, toNext } = tierProgress(gpa);
+  // Subscribe to the live tier object; recompute only when the GPA changes.
+  const { tier, next, toNext } = useMemo(() => tierProgress(gpa), [gpa]);
   const [open, setOpen] = useState(false);
   const isApex = tier.id === "apex";
 
