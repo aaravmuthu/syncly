@@ -201,12 +201,12 @@ export function GpaTab() {
           ) : null}
         </div>
         <div className="space-y-2">
-          {data.courses.map((c) => {
+          {periodCourses.map((c) => {
             const isOmitted = omitted.has(c.id);
             const pts = c.average !== null ? numericToPoints(c.average, weighted) : null;
             // impact = how the current-year GPA changes if this course is removed
             const without = currentYearGPA(
-              data.courses.filter((x) => x.id !== c.id && !omitted.has(x.id)),
+              periodCourses.filter((x) => x.id !== c.id && !omitted.has(x.id)),
               weighted,
             );
             const impact = cy - without;
