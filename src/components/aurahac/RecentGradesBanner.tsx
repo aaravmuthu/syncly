@@ -165,9 +165,18 @@ export function RecentGradesBanner() {
               <Sparkles className="h-3 w-3" /> Just Added
             </div>
             <div className="text-sm font-bold truncate">{recent.a.name}</div>
-            <div className="text-[11px] truncate" style={{ color: "color-mix(in oklab, var(--primary) 45%, var(--muted-foreground))" }}>
-              {recent.course.name} • {elapsed(recent.ts)}
+            <div className="text-[11px] truncate">
+              {hype ? (
+                <span className="font-extrabold text-white inline-flex items-center gap-1">
+                  🎉 WINNER! <span className="text-primary">· {recent.course.name}</span>
+                </span>
+              ) : (
+                <span style={{ color: "color-mix(in oklab, var(--primary) 45%, var(--muted-foreground))" }}>
+                  {recent.course.name} • {elapsed(recent.ts)}
+                </span>
+              )}
             </div>
+
           </div>
 
           <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
