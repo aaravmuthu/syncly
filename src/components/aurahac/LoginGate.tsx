@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useHac } from "@/lib/hac/store";
 import { DISTRICTS, type DistrictId } from "@/lib/hac/types";
-import { Loader2, ShieldCheck, Lock } from "lucide-react";
+import { Loader2, ShieldCheck, Lock, Sparkles } from "lucide-react";
 
 export function LoginGate() {
   const { login, loginDemo, loading, error } = useHac();
