@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Plus, Clock, Trash2, Bell } from "lucide-react";
 import type { Assignment } from "@/lib/hac/types";
+import { AddEventModal } from "../AddEventModal";
 
 /* ---------------- date helpers ---------------- */
 
@@ -46,6 +47,21 @@ interface CalItem {
   score: number | null;
   total: number | null;
   kind: Kind;
+  /** Set when this item was manually added by the student. */
+  eventId?: string;
+  /** Minutes of work/study for manual items. */
+  minutes?: number;
+  /** Whether a reminder is set on this manual item. */
+  hasReminder?: boolean;
+}
+
+function fmtMins(m: number) {
+  if (m >= 60) {
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r ? `${h}h ${r}m` : `${h}h`;
+  }
+  return `${m}m`;
 }
 
 function classify(a: Assignment): Kind {
@@ -90,40 +106,64 @@ function shortLabel(a: Assignment, kind: Kind): string {
 /* ---------------- component ---------------- */
 
 export function CalendarTab() {
-  const { data, completed, toggleCompleted } = useHac();
+  const { data, completed, toggleCompleted, userEvents, removeEvent } = useHac();
   const [cursor, setCursor] = useState(() => startOfMonth(new Date()));
   const [selected, setSelected] = useState<string | null>(() => ymd(new Date()));
   const [view, setView] = useState<"month" | "week">("month");
+  const [adding, setAdding] = useState(false);
 
-  // Map every dated assignment onto its YYYY-MM-DD bucket.
+  // Map every dated assignment + manual event onto its YYYY-MM-DD bucket.
   const byDate = useMemo(() => {
     const map = new Map<string, CalItem[]>();
-    if (!data) return map;
-    for (const c of data.courses) {
-      for (const a of c.assignments) {
-        const d = parseDate(a.dueDate);
-        if (!d) continue;
-        const key = ymd(d);
-        const arr = map.get(key) ?? [];
-        const kind = classify(a);
-        arr.push({
-          key: `${c.id}::${a.name}::${a.dueDate}`,
-          course: c.name,
-          courseId: c.id,
-          abbr: abbreviate(c.code, c.name),
-          label: shortLabel(a, kind),
-          name: a.name,
-          category: a.category,
-          weight: a.totalPoints,
-          score: a.score,
-          total: a.totalPoints,
-          kind,
-        });
-        map.set(key, arr);
+    if (data) {
+      for (const c of data.courses) {
+        for (const a of c.assignments) {
+          const d = parseDate(a.dueDate);
+          if (!d) continue;
+          const key = ymd(d);
+          const arr = map.get(key) ?? [];
+          const kind = classify(a);
+          arr.push({
+            key: `${c.id}::${a.name}::${a.dueDate}`,
+            course: c.name,
+            courseId: c.id,
+            abbr: abbreviate(c.code, c.name),
+            label: shortLabel(a, kind),
+            name: a.name,
+            category: a.category,
+            weight: a.totalPoints,
+            score: a.score,
+            total: a.totalPoints,
+            kind,
+          });
+          map.set(key, arr);
+        }
       }
     }
+    // Manually added homework / exams.
+    for (const e of userEvents) {
+      const arr = map.get(e.date) ?? [];
+      const kind: Kind = e.type === "exam" ? "assessment" : "progress";
+      arr.push({
+        key: e.id,
+        course: e.course ?? "Personal",
+        courseId: "user",
+        abbr: e.course ? abbreviate(null, e.course) : "MINE",
+        label: e.type === "exam" ? "Exam" : "HW",
+        name: e.title,
+        category: e.type === "exam" ? "Exam" : "Homework",
+        weight: null,
+        score: null,
+        total: null,
+        kind,
+        eventId: e.id,
+        minutes: e.minutes,
+        hasReminder: !!e.reminderAt,
+      });
+      map.set(e.date, arr);
+    }
     return map;
-  }, [data]);
+  }, [data, userEvents]);
 
   // Recommended prep windows: 2 days before any major exam-like assessment.
   const prepDays = useMemo(() => {
@@ -213,30 +253,46 @@ export function CalendarTab() {
         </div>
       </header>
 
-      {/* View toggle */}
-      <div className="glass p-1 flex items-center gap-1 rounded-2xl w-fit">
-        {(["month", "week"] as const).map((v) => {
-          const active = view === v;
-          return (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className={`relative px-4 py-1.5 text-sm font-medium rounded-xl transition-colors ${
-                active ? "text-primary-foreground" : "text-muted-foreground"
-              }`}
-            >
-              {active ? (
-                <motion.span
-                  layoutId="cal-view-pill"
-                  className="absolute inset-0 rounded-xl"
-                  style={{ background: "var(--primary)" }}
-                  transition={{ type: "spring", stiffness: 480, damping: 34 }}
-                />
-              ) : null}
-              <span className="relative z-10">{v === "month" ? "Month View" : "Week List"}</span>
-            </button>
-          );
-        })}
+      {/* View toggle + Add */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="glass p-1 flex items-center gap-1 rounded-2xl w-fit">
+          {(["month", "week"] as const).map((v) => {
+            const active = view === v;
+            return (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`relative px-4 py-1.5 text-sm font-medium rounded-xl transition-colors ${
+                  active ? "text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {active ? (
+                  <motion.span
+                    layoutId="cal-view-pill"
+                    className="absolute inset-0 rounded-xl"
+                    style={{ background: "var(--primary)" }}
+                    transition={{ type: "spring", stiffness: 480, damping: 34 }}
+                  />
+                ) : null}
+                <span className="relative z-10">{v === "month" ? "Month View" : "Week List"}</span>
+              </button>
+            );
+          })}
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          whileHover={{ scale: 1.03 }}
+          onClick={() => setAdding(true)}
+          className="flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-sm font-bold"
+          style={{
+            background: "var(--primary)",
+            color: "var(--primary-foreground)",
+            boxShadow: "0 10px 30px -12px color-mix(in oklab, var(--primary) 80%, transparent)",
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          Add
+        </motion.button>
       </div>
 
       {/* Legend */}
@@ -522,17 +578,34 @@ export function CalendarTab() {
                       >
                         {it.name}
                       </div>
-                      <div className="text-[11px] text-muted-foreground truncate">
-                        {it.course} · {it.category}
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground truncate">
+                        <span className="truncate">{it.course} · {it.category}</span>
+                        {it.minutes ? (
+                          <span className="inline-flex items-center gap-1 shrink-0 text-foreground/80">
+                            <Clock className="h-3 w-3" />
+                            {fmtMins(it.minutes)}
+                          </span>
+                        ) : null}
+                        {it.hasReminder ? <Bell className="h-3 w-3 shrink-0 text-primary" /> : null}
                       </div>
                     </div>
-                    <div className="text-xs tabular-nums text-muted-foreground shrink-0">
-                      {it.score !== null && it.total
-                        ? `${it.score}/${it.total}`
-                        : it.total
-                          ? `${it.total} pts`
-                          : ""}
-                    </div>
+                    {it.eventId ? (
+                      <button
+                        onClick={() => removeEvent(it.eventId!)}
+                        className="h-7 w-7 shrink-0 grid place-items-center rounded-lg text-muted-foreground hover:text-destructive transition-colors active:scale-90"
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <div className="text-xs tabular-nums text-muted-foreground shrink-0">
+                        {it.score !== null && it.total
+                          ? `${it.score}/${it.total}`
+                          : it.total
+                            ? `${it.total} pts`
+                            : ""}
+                      </div>
+                    )}
                   </motion.div>
                 );
               })}
@@ -540,6 +613,12 @@ export function CalendarTab() {
           )}
         </AnimatePresence>
       </motion.div>
+
+      <AnimatePresence>
+        {adding ? (
+          <AddEventModal date={selected ?? ymd(new Date())} onClose={() => setAdding(false)} />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

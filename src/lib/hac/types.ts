@@ -58,3 +58,18 @@ export interface HacData {
   districtId: DistrictId;
   username: string;
 }
+
+/** A homework / exam item the student manually adds to the calendar. */
+export interface UserEvent {
+  id: string;
+  title: string;
+  type: "homework" | "exam";
+  course: string | null;
+  date: string; // YYYY-MM-DD
+  /** Minutes needed to finish the homework, or to study for the exam. */
+  minutes: number;
+  /** ISO datetime for the reminder, or null if no reminder. */
+  reminderAt: string | null;
+  /** Whether a reminder has already fired (so we don't re-notify). */
+  reminded?: boolean;
+}
