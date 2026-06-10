@@ -51,8 +51,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
       }
       const c = localStorage.getItem(CRED_KEY);
       if (c) setCred(JSON.parse(c));
-      const a = localStorage.getItem("aurahac.accent");
-      if (a === "violet" || a === "cyan" || a === "emerald") setAccentState(a);
+      const t = localStorage.getItem(THEME_KEY);
+      if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
     } catch {
       setData(getFallbackData());
       setIsFallback(true);
@@ -60,8 +60,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.accent = accent;
-  }, [accent]);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   async function callSync(c: Cred): Promise<HacData> {
     const { syncHac } = await import("./hac.functions");
