@@ -11,7 +11,12 @@ export const DISTRICTS: District[] = [
   { id: "prosper", name: "Prosper ISD", base: "https://hac.prosperisd.org" },
 ];
 
-export type AssignmentCategory = "Summative" | "Formative" | "Other";
+export type AssignmentCategory =
+  | "Summative"
+  | "Formative"
+  | "Assessment"
+  | "Progress Check"
+  | "Other";
 
 export interface Assignment {
   name: string;
@@ -27,6 +32,7 @@ export interface Assignment {
 export interface Course {
   id: string;
   name: string;
+  code: string | null;
   teacher: string | null;
   period: string | null;
   average: number | null;
