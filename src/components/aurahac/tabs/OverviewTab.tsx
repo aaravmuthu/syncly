@@ -89,11 +89,14 @@ export function OverviewTab() {
 
       </header>
 
+      {/* Global Aura Points mastery dashboard */}
+      <AuraProfileCard />
+
       {/* Live "Tardy Burner" passing-period countdown */}
       <LivePeriodWidget />
 
-      {/* High-priority grade drop tier */}
-      <RecentGradesBanner />
+      {/* Aura Ledger — chronological AP feed */}
+      <AuraLedger />
 
       {/* Academic streak */}
       <StreakCard />
