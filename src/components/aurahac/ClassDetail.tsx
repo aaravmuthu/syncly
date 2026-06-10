@@ -127,6 +127,8 @@ export function ClassDetail({
   onClose: () => void;
   initialSub?: SubTab;
 }) {
+  const { courseCustom } = useHac();
+  const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
