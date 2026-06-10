@@ -196,7 +196,7 @@ export function ClassDetail({
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-bold truncate">{course.name}</h2>
+            <h2 className="text-lg font-bold truncate">{disp.emoji ? `${disp.emoji} ` : ""}{disp.name}</h2>
             <div className="text-xs text-muted-foreground truncate">
               {course.code ?? ""} {course.teacher ? `· ${course.teacher}` : ""}
             </div>
