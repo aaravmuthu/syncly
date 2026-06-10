@@ -68,12 +68,15 @@ export function AppShell() {
       {!data && !hasCredentials ? (
         <LoginGate />
       ) : (
-        <div className="absolute inset-0">
-          <Pane active="overview" current={tab}><OverviewTab /></Pane>
-          <Pane active="grades" current={tab}><GradesTab /></Pane>
-          <Pane active="gpa" current={tab}><GpaTab /></Pane>
-          <Pane active="calendar" current={tab}><CalendarTab /></Pane>
-          <Pane active="settings" current={tab}><SettingsTab /></Pane>
+        <div className="absolute inset-0 flex">
+          <DesktopSidebar />
+          <div className="relative flex-1 min-w-0">
+            <Pane active="overview" current={tab}><OverviewTab /></Pane>
+            <Pane active="grades" current={tab}><GradesTab /></Pane>
+            <Pane active="gpa" current={tab}><GpaTab /></Pane>
+            <Pane active="calendar" current={tab}><CalendarTab /></Pane>
+            <Pane active="settings" current={tab}><SettingsTab /></Pane>
+          </div>
         </div>
       )}
 
