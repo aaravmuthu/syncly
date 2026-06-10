@@ -99,7 +99,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    setData(null);
+    setData(getFallbackData());
+    setIsFallback(true);
     setCred(null);
     setError(null);
     try {
