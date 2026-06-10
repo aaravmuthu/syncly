@@ -110,7 +110,7 @@ export function SettingsTab() {
 
       <button
         onClick={logout}
-        className="w-full p-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-destructive to-[oklch(0.55_0.24_15)] shadow-[0_8px_32px_-4px_oklch(0.68_0.24_25_/_0.6)] active:scale-95 transition-all flex items-center justify-center gap-2"
+        className="w-full p-4 rounded-md text-base font-semibold text-destructive-foreground bg-destructive shadow-[0_8px_32px_-4px_oklch(0.68_0.24_25_/_0.6)] active:scale-[0.97] transition-all flex items-center justify-center gap-2"
       >
         <LogOut className="h-4 w-4" />
         Disconnect Account
