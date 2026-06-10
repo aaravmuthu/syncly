@@ -7,7 +7,6 @@ export function RankBadge({ gpa }: { gpa: number }) {
   const { tier, next, toNext } = tierProgress(gpa);
   const [open, setOpen] = useState(false);
   const isApex = tier.id === "apex";
-  const isRadiant = tier.id === "radiant";
 
   return (
     <div className="relative">
@@ -17,7 +16,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
         whileHover={{ scale: 1.06 }}
         transition={{ type: "spring", stiffness: 460, damping: 20 }}
         aria-label={`${tier.name} tier`}
-        className={`h-11 w-11 grid place-items-center rounded-2xl relative overflow-hidden ${isApex ? "tier-spin" : ""} ${isRadiant ? "tier-diamond" : ""}`}
+        className={`h-11 w-11 grid place-items-center rounded-2xl relative overflow-hidden ${isApex ? "tier-spin" : ""}`}
         style={{
           background: tier.background,
           border: tier.border,
@@ -26,7 +25,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
       >
         <span
           className="text-[15px] font-black"
-          style={{ color: isRadiant ? "#0b1020" : "#fff", textShadow: isRadiant ? "none" : "0 1px 6px rgba(0,0,0,0.4)" }}
+          style={{ color: "#fff", textShadow: "0 1px 6px rgba(0,0,0,0.4)" }}
         >
           {tier.name[0]}
         </span>
@@ -48,7 +47,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
                   className={`h-10 w-10 rounded-xl grid place-items-center shrink-0 ${isApex ? "tier-spin" : ""}`}
                   style={{ background: tier.background, border: tier.border, boxShadow: tier.glow }}
                 >
-                  <span className="text-sm font-black" style={{ color: isRadiant ? "#0b1020" : "#fff" }}>
+                  <span className="text-sm font-black" style={{ color: "#fff" }}>
                     {tier.name[0]}
                   </span>
                 </div>
