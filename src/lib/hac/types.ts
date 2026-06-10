@@ -73,6 +73,8 @@ export interface BellPeriod {
   label: string;
   start: string; // "08:25"
   end: string; // "09:15"
+  /** Optional classroom/room number for the Smart Room Locator. */
+  room?: string;
 }
 
 /** A custom weekly bell schedule with rotating day types (e.g. A/B days). */

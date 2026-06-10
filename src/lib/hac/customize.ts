@@ -49,11 +49,11 @@ export function courseDisplay(course: Course, custom?: CourseCustom): CourseDisp
 /** A sensible default A/B-day rotation students can start from. */
 export function defaultBellRotation(): BellRotation {
   const blocks = (prefix: string) => [
-    { id: `${prefix}-1`, label: "1st Period", start: "08:25", end: "09:55" },
-    { id: `${prefix}-2`, label: "2nd Period", start: "10:00", end: "11:30" },
-    { id: `${prefix}-lunch`, label: "Lunch", start: "11:30", end: "12:15" },
-    { id: `${prefix}-3`, label: "3rd Period", start: "12:20", end: "13:50" },
-    { id: `${prefix}-4`, label: "4th Period", start: "13:55", end: "15:25" },
+    { id: `${prefix}-1`, label: "1st Period", start: "08:25", end: "09:55", room: "A101" },
+    { id: `${prefix}-2`, label: "2nd Period", start: "10:00", end: "11:30", room: "B204" },
+    { id: `${prefix}-lunch`, label: "Lunch", start: "11:30", end: "12:15", room: "Cafeteria" },
+    { id: `${prefix}-3`, label: "3rd Period", start: "12:20", end: "13:50", room: "C312" },
+    { id: `${prefix}-4`, label: "4th Period", start: "13:55", end: "15:25", room: "D118" },
   ];
   return {
     enabled: false,
