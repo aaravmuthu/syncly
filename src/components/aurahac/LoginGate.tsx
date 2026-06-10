@@ -68,12 +68,12 @@ export function LoginGate() {
   }
 
   const fieldClass =
-    "mt-1 w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-3 text-base transition-shadow duration-150 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-[color-mix(in_oklab,var(--primary)_55%,transparent)]";
+    "mt-1 w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-base transition-shadow duration-150 focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-[color-mix(in_oklab,var(--primary)_55%,transparent)]";
 
   const card = (
-    <div className="glass-strong w-full max-w-sm md:max-w-[420px] p-6 md:p-8 rounded-3xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-11 w-11 rounded-2xl bg-primary grid place-items-center glow-primary">
+    <div className="glass-strong w-full max-w-sm md:max-w-[540px] p-6 md:p-6 rounded-3xl">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="h-10 w-10 rounded-2xl bg-primary grid place-items-center glow-primary">
           <ShieldCheck className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
@@ -83,7 +83,7 @@ export function LoginGate() {
       </div>
 
       <h1 className="text-2xl font-bold mb-1">Sync Account</h1>
-      <p className="text-sm text-muted-foreground mb-4">
+      <p className="text-sm text-muted-foreground mb-3">
         Sign in with your school portal credentials. Your password is
         encrypted locally on this device and is never stored on any external
         database — it's used only to pull your grades directly from your
@@ -91,7 +91,7 @@ export function LoginGate() {
       </p>
 
       <div
-        className="mb-5 rounded-2xl p-3 flex items-start gap-2.5"
+        className="mb-4 rounded-2xl p-3 flex items-start gap-2.5"
         style={{
           background: "color-mix(in oklab, var(--primary) 10%, transparent)",
           border: "1px solid color-mix(in oklab, var(--primary) 28%, transparent)",
@@ -105,7 +105,7 @@ export function LoginGate() {
         </div>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-3">
+      <form onSubmit={onSubmit} className="space-y-2.5">
         <label className="block">
           <span className="text-xs uppercase tracking-wider text-muted-foreground">District</span>
           <select
@@ -149,7 +149,7 @@ export function LoginGate() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 rounded-2xl py-3.5 font-semibold text-base bg-primary text-primary-foreground shadow-[var(--shadow-elegant)] active:scale-95 transition-all duration-200 disabled:opacity-60"
+          className="w-full mt-2 rounded-2xl py-3 font-semibold text-base bg-primary text-primary-foreground shadow-[var(--shadow-elegant)] active:scale-95 transition-all duration-200 disabled:opacity-60"
         >
           {loading ? (
             <span className="inline-flex items-center gap-2 justify-center">
@@ -161,7 +161,7 @@ export function LoginGate() {
         </button>
       </form>
 
-      <div className="flex items-center gap-3 my-4">
+      <div className="flex items-center gap-3 my-3">
         <span className="h-px flex-1 bg-border" />
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or</span>
         <span className="h-px flex-1 bg-border" />
@@ -170,7 +170,7 @@ export function LoginGate() {
       <button
         type="button"
         onClick={loginDemo}
-        className="w-full rounded-2xl py-3.5 font-semibold text-base text-foreground bg-white/[0.03] hover:bg-white/[0.06] active:scale-95 transition-all duration-200"
+        className="w-full rounded-2xl py-3 font-semibold text-base text-foreground bg-white/[0.03] hover:bg-white/[0.06] active:scale-95 transition-all duration-200"
         style={{
           border: "1px solid rgba(160, 32, 240, 0.4)",
           boxShadow: "0 0 18px -4px rgba(160, 32, 240, 0.45), inset 0 0 12px -8px rgba(160, 32, 240, 0.6)",
@@ -182,7 +182,7 @@ export function LoginGate() {
         </span>
       </button>
 
-      <div className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+      <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
         <Lock className="h-3 w-3" />
         Encrypted on-device · sent directly to your district's HAC · never stored externally.
       </div>
@@ -221,7 +221,7 @@ export function LoginGate() {
       </div>
 
       {/* Right: login command deck */}
-      <div className="absolute inset-0 md:relative md:inset-auto flex items-center justify-center p-5 md:p-8 lg:p-12 overflow-y-auto">
+      <div className="absolute inset-0 md:relative md:inset-auto flex items-center justify-center p-5 md:p-6 lg:p-8 overflow-y-auto">
         {card}
       </div>
     </div>
