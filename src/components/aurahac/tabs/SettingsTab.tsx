@@ -1,15 +1,18 @@
-import { useHac } from "@/lib/hac/store";
+import { useHac, type Theme } from "@/lib/hac/store";
 import { DISTRICTS } from "@/lib/hac/types";
 import { LogOut, Trash2, Palette, User as UserIcon, RefreshCcw } from "lucide-react";
 
-const ACCENTS: { id: "violet" | "cyan" | "emerald"; label: string; color: string }[] = [
-  { id: "violet", label: "Violet", color: "#A020F0" },
-  { id: "cyan", label: "Cyan", color: "oklch(0.82 0.18 200)" },
-  { id: "emerald", label: "Emerald", color: "oklch(0.78 0.18 155)" },
+const THEMES: { id: Theme; label: string; vibe: string; canvas: string; accent: string }[] = [
+  { id: "nebula", label: "Nebula", vibe: "Cosmic tech", canvas: "#080D2E", accent: "#6040DC" },
+  { id: "onyx", label: "Onyx", vibe: "Monochrome", canvas: "#000000", accent: "#FFFFFF" },
+  { id: "executive", label: "Executive", vibe: "Editorial gold", canvas: "#0A0A0A", accent: "#C9A24A" },
+  { id: "arctic", label: "Arctic", vibe: "Light SaaS", canvas: "#FFFFFF", accent: "#4F46E5" },
+  { id: "titanium", label: "Titanium", vibe: "Industrial", canvas: "#17191C", accent: "#A8B8CC" },
+  { id: "amethyst", label: "Amethyst", vibe: "Luxury violet", canvas: "#0D0820", accent: "#A78BFA" },
 ];
 
 export function SettingsTab() {
-  const { data, logout, refresh, loading, accent, setAccent } = useHac();
+  const { data, logout, refresh, loading, theme, setTheme } = useHac();
   if (!data) return null;
   const district = DISTRICTS.find((d) => d.id === data.districtId);
 
@@ -32,8 +35,8 @@ export function SettingsTab() {
       <section className="glass p-4">
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">Profile</div>
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#A020F0] to-[oklch(0.82_0.18_200)] grid place-items-center">
-            <UserIcon className="h-5 w-5 text-white" />
+          <div className="h-12 w-12 rounded-2xl bg-primary grid place-items-center">
+            <UserIcon className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold truncate">{data.student.name}</div>
@@ -47,26 +50,40 @@ export function SettingsTab() {
 
       <section className="glass p-4">
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 inline-flex items-center gap-1">
-          <Palette className="h-3 w-3" /> Accent Color
+          <Palette className="h-3 w-3" /> Workspace Theme
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {ACCENTS.map((a) => (
-            <button
-              key={a.id}
-              onClick={() => setAccent(a.id)}
-              className={`p-3 rounded-2xl flex flex-col items-center gap-2 border transition-all active:scale-95 ${
-                accent === a.id ? "border-white/30 bg-white/[0.05]" : "border-white/[0.06]"
-              }`}
-            >
-              <span
-                className="h-8 w-8 rounded-full"
-                style={{ background: a.color, boxShadow: `0 0 18px ${a.color}` }}
-              />
-              <span className="text-xs">{a.label}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-2">
+          {THEMES.map((t) => {
+            const active = theme === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`p-3 rounded-xl flex items-center gap-3 border text-left transition-all active:scale-[0.97] ${
+                  active
+                    ? "border-primary/60 shadow-[var(--shadow-elegant)] bg-secondary"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <span
+                  className="h-9 w-9 rounded-lg shrink-0 grid place-items-center"
+                  style={{ background: t.canvas, border: "1px solid rgba(255,255,255,0.12)" }}
+                >
+                  <span
+                    className="h-4 w-4 rounded-full"
+                    style={{ background: t.accent, boxShadow: `0 0 12px ${t.accent}` }}
+                  />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold truncate">{t.label}</span>
+                  <span className="block text-[10px] text-muted-foreground truncate">{t.vibe}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
+
 
       <button
         onClick={refresh}
@@ -93,7 +110,7 @@ export function SettingsTab() {
 
       <button
         onClick={logout}
-        className="w-full p-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-destructive to-[oklch(0.55_0.24_15)] shadow-[0_8px_32px_-4px_oklch(0.68_0.24_25_/_0.6)] active:scale-95 transition-all flex items-center justify-center gap-2"
+        className="w-full p-4 rounded-md text-base font-semibold text-destructive-foreground bg-destructive shadow-[0_8px_32px_-4px_oklch(0.68_0.24_25_/_0.6)] active:scale-[0.97] transition-all flex items-center justify-center gap-2"
       >
         <LogOut className="h-4 w-4" />
         Disconnect Account

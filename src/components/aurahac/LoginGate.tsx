@@ -22,8 +22,8 @@ export function LoginGate() {
     <div className="absolute inset-0 flex items-center justify-center p-5 overflow-y-auto">
       <div className="glass-strong w-full max-w-sm p-6 rounded-3xl">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[oklch(0.70_0.22_305)] to-[oklch(0.82_0.18_200)] grid place-items-center glow-primary">
-            <ShieldCheck className="h-5 w-5 text-white" />
+          <div className="h-11 w-11 rounded-2xl bg-primary grid place-items-center glow-primary">
+            <ShieldCheck className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
             <div className="text-xl font-bold tracking-tight">AuraHAC</div>
@@ -80,7 +80,7 @@ export function LoginGate() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 rounded-2xl py-3.5 font-semibold text-base bg-gradient-to-r from-[#A020F0] to-[oklch(0.82_0.18_200)] text-white shadow-[0_8px_32px_-4px_rgba(160,32,240,0.6)] active:scale-95 transition-all duration-200 disabled:opacity-60"
+            className="w-full mt-2 rounded-2xl py-3.5 font-semibold text-base bg-primary text-primary-foreground shadow-[var(--shadow-elegant)] active:scale-95 transition-all duration-200 disabled:opacity-60"
           >
             {loading ? (
               <span className="inline-flex items-center gap-2 justify-center">

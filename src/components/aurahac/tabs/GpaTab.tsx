@@ -40,7 +40,7 @@ export function GpaTab() {
               onClick={() => setWeighted(i === 0)}
               className={`py-2.5 rounded-xl transition-all duration-200 ${
                 active
-                  ? "bg-gradient-to-r from-[#A020F0] to-[oklch(0.82_0.18_200)] text-white shadow-[0_4px_24px_-4px_rgba(160,32,240,0.6)]"
+                  ? "bg-primary text-primary-foreground shadow-[var(--shadow-elegant)]"
                   : "text-muted-foreground"
               }`}
             >
@@ -66,7 +66,7 @@ export function GpaTab() {
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Official</div>
           <div className="text-sm">Weighted GPA</div>
         </div>
-        <span className="text-base font-bold tabular-nums px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#A020F0]/30 to-[oklch(0.82_0.18_200)]/30 border border-white/10">
+        <span className="text-base font-bold tabular-nums px-3 py-1.5 rounded-xl bg-primary/20 border border-primary/30">
           {cyW.toFixed(3)}
         </span>
       </div>

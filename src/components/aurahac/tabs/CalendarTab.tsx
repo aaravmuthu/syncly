@@ -91,7 +91,7 @@ export function CalendarTab() {
                 onClick={() => setSelected(key)}
                 className={`aspect-square rounded-xl text-sm font-medium flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
                   isSelected
-                    ? "bg-gradient-to-br from-[#A020F0]/40 to-[oklch(0.82_0.18_200)]/30 border border-white/20"
+                    ? "bg-primary/30 border border-primary/40"
                     : isToday
                       ? "border border-primary/60"
                       : "hover:bg-white/[0.04]"
@@ -99,7 +99,7 @@ export function CalendarTab() {
               >
                 <span className="tabular-nums">{d.getDate()}</span>
                 <div className="flex gap-0.5 h-1">
-                  {hasSum ? <span className="h-1 w-1 rounded-full bg-[#A020F0] shadow-[0_0_6px_#A020F0]" /> : null}
+                  {hasSum ? <span className="h-1 w-1 rounded-full bg-primary shadow-[0_0_6px_var(--primary)]" /> : null}
                   {hasForm ? <span className="h-1 w-1 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8]" /> : null}
                   {hasMiss ? <span className="h-1 w-1 rounded-full bg-red-500 shadow-[0_0_6px_#ef4444]" /> : null}
                 </div>
@@ -126,7 +126,7 @@ export function CalendarTab() {
                     it.missing || it.absent
                       ? "bg-red-500 shadow-[0_0_8px_#ef4444]"
                       : it.category === "Summative"
-                        ? "bg-[#A020F0] shadow-[0_0_8px_#A020F0]"
+                        ? "bg-primary shadow-[0_0_8px_var(--primary)]"
                         : "bg-sky-400 shadow-[0_0_8px_#38bdf8]"
                   }`}
                 />

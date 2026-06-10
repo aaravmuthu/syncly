@@ -4,6 +4,10 @@ import { getFallbackData } from "./mockData";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
+const THEME_KEY = "aurahac.theme.v2";
+
+export type Theme = "nebula" | "onyx" | "executive" | "arctic" | "titanium" | "amethyst";
+const THEMES: Theme[] = ["nebula", "onyx", "executive", "arctic", "titanium", "amethyst"];
 
 interface Cred {
   district: DistrictId;
@@ -20,8 +24,8 @@ interface Ctx {
   login: (c: Cred) => Promise<void>;
   refresh: () => Promise<void>;
   logout: () => void;
-  accent: "violet" | "cyan" | "emerald";
-  setAccent: (a: "violet" | "cyan" | "emerald") => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
@@ -32,7 +36,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
-  const [accent, setAccentState] = useState<"violet" | "cyan" | "emerald">("violet");
+  const [theme, setThemeState] = useState<Theme>("nebula");
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
   // always fully interactive even before a live sync succeeds.
@@ -47,8 +51,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
       }
       const c = localStorage.getItem(CRED_KEY);
       if (c) setCred(JSON.parse(c));
-      const a = localStorage.getItem("aurahac.accent");
-      if (a === "violet" || a === "cyan" || a === "emerald") setAccentState(a);
+      const t = localStorage.getItem(THEME_KEY);
+      if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
     } catch {
       setData(getFallbackData());
       setIsFallback(true);
@@ -56,8 +60,8 @@ export function HacProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.accent = accent;
-  }, [accent]);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   async function callSync(c: Cred): Promise<HacData> {
     const { syncHac } = await import("./hac.functions");
@@ -106,16 +110,15 @@ export function HacProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(CRED_KEY);
-      localStorage.removeItem("aurahac.accent");
     } catch {
       /* ignore */
     }
   }
 
-  function setAccent(a: "violet" | "cyan" | "emerald") {
-    setAccentState(a);
+  function setTheme(t: Theme) {
+    setThemeState(t);
     try {
-      localStorage.setItem("aurahac.accent", a);
+      localStorage.setItem(THEME_KEY, t);
     } catch {
       /* ignore */
     }
@@ -131,10 +134,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       login,
       refresh,
       logout,
-      accent,
-      setAccent,
+      theme,
+      setTheme,
     }),
-    [data, loading, error, cred, isFallback, accent],
+    [data, loading, error, cred, isFallback, theme],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;

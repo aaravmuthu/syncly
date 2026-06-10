@@ -44,7 +44,7 @@ export function AppShell() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(60% 50% at 15% 10%, oklch(0.40 0.18 305 / 0.18), transparent 70%), radial-gradient(50% 40% at 90% 80%, oklch(0.50 0.20 230 / 0.14), transparent 70%), #05070A",
+            "radial-gradient(60% 50% at 15% 10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%), radial-gradient(50% 40% at 90% 80%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%), var(--background-deep, var(--background))",
         }}
       />
 
@@ -72,8 +72,8 @@ export function AppShell() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`relative h-12 w-12 rounded-2xl grid place-items-center active:scale-90 transition-all duration-200 ${
-                  active ? "text-foreground" : "text-muted-foreground"
+                className={`relative h-12 w-12 rounded-xl grid place-items-center active:scale-90 transition-all duration-200 ${
+                  active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -81,8 +81,8 @@ export function AppShell() {
                   <span
                     className="absolute -bottom-1 h-1 w-6 rounded-full"
                     style={{
-                      background: "linear-gradient(90deg, #A020F0, oklch(0.82 0.18 200))",
-                      boxShadow: "0 0 14px #A020F0, 0 0 24px oklch(0.82 0.18 200)",
+                      background: "var(--gradient-primary)",
+                      boxShadow: "0 0 14px var(--primary)",
                     }}
                   />
                 ) : null}
