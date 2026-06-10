@@ -8,8 +8,9 @@ import { courseDisplay } from "@/lib/hac/customize";
 import { courseForPeriod, scoreBadge } from "@/lib/hac/marking";
 import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
+import { AuraAssistMail, needsAssist } from "./AuraAssistMail";
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Mail } from "lucide-react";
 
 type SubTab = "grades" | "analysis" | "whatif";
 
@@ -132,7 +133,8 @@ export function ClassDetail({
   onClose: () => void;
   initialSub?: SubTab;
 }) {
-  const { courseCustom, activePeriod, setActivePeriod } = useHac();
+  const { data, courseCustom, activePeriod, setActivePeriod } = useHac();
+  const [assistFor, setAssistFor] = useState<Assignment | null>(null);
   const course = useMemo(() => courseForPeriod(baseCourse, activePeriod), [baseCourse, activePeriod]);
   const disp = courseDisplay(course, courseCustom[course.id]);
   const [sub, setSub] = useState<SubTab>(initialSub);
@@ -295,6 +297,20 @@ export function ClassDetail({
                       >
                         {badge.text}
                       </div>
+                      {needsAssist(a) ? (
+                        <button
+                          onClick={() => setAssistFor(a)}
+                          aria-label="Draft email to teacher"
+                          className="shrink-0 h-9 w-9 grid place-items-center rounded-xl text-primary active:scale-95"
+                          style={{
+                            background: "color-mix(in oklab, var(--primary) 14%, transparent)",
+                            border: "1px solid color-mix(in oklab, var(--primary) 38%, transparent)",
+                            boxShadow: "0 0 14px -4px var(--primary)",
+                          }}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </button>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -461,6 +477,15 @@ export function ClassDetail({
           ) : null}
         </div>
       </motion.div>
+
+      {assistFor ? (
+        <AuraAssistMail
+          course={course}
+          assignment={assistFor}
+          studentName={data?.student.name ?? "A student"}
+          onClose={() => setAssistFor(null)}
+        />
+      ) : null}
     </div>
   );
 }
