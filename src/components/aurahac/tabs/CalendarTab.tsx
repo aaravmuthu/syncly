@@ -38,6 +38,8 @@ interface CalItem {
   key: string; // completion key
   course: string;
   courseId: string;
+  abbr: string;
+  label: string;
   name: string;
   category: string;
   weight: number | null;
@@ -62,6 +64,29 @@ const DONE_COLOR = "oklch(0.72 0.15 155)"; // muted green
 
 const EXAM_RE = /exam|test|final|assessment|midterm|eoy|end of year|unit/i;
 
+/** Derive a compact subject code, e.g. "ELA1200B - 3" -> "ELA1". */
+function abbreviate(code: string | null, name: string): string {
+  const src = code ?? name;
+  const m = src.match(/([A-Za-z]+)\s*0*(\d)/);
+  if (m) return `${m[1].toUpperCase().slice(0, 3)}${m[2]}`;
+  return src.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 4) || "GEN";
+}
+
+/** Short type label shown in the mini capsule. */
+function shortLabel(a: Assignment, kind: Kind): string {
+  if (kind === "missing") return "ABS";
+  if (kind === "assessment") {
+    if (/final|eoy|end of year/i.test(a.name)) return "Final";
+    if (/midterm/i.test(a.name)) return "Midterm";
+    if (/quiz/i.test(a.name)) return "Quiz";
+    return "Test";
+  }
+  if (/quiz/i.test(a.name)) return "Quiz";
+  if (/lab/i.test(a.name)) return "Lab";
+  if (/log/i.test(a.name)) return "Logs";
+  return "Check";
+}
+
 /* ---------------- component ---------------- */
 
 export function CalendarTab() {
@@ -80,16 +105,19 @@ export function CalendarTab() {
         if (!d) continue;
         const key = ymd(d);
         const arr = map.get(key) ?? [];
+        const kind = classify(a);
         arr.push({
           key: `${c.id}::${a.name}::${a.dueDate}`,
           course: c.name,
           courseId: c.id,
+          abbr: abbreviate(c.code, c.name),
+          label: shortLabel(a, kind),
           name: a.name,
           category: a.category,
           weight: a.totalPoints,
           score: a.score,
           total: a.totalPoints,
-          kind: classify(a),
+          kind,
         });
         map.set(key, arr);
       }
@@ -116,12 +144,12 @@ export function CalendarTab() {
   const monthName = cursor.toLocaleString("default", { month: "long", year: "numeric" });
   const todayKey = ymd(new Date());
 
-  // Month grid cells.
-  const startDow = cursor.getDay();
-  const daysInMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-  const cells: (Date | null)[] = [];
-  for (let i = 0; i < startDow; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(cursor.getFullYear(), cursor.getMonth(), d));
+  // Full 6-week grid including leading/trailing days from neighbouring months.
+  const gridDays = useMemo(() => {
+    const first = startOfMonth(cursor);
+    const start = addDays(first, -first.getDay());
+    return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+  }, [cursor]);
 
   // Week list: dated days within the visible month that have items, sorted.
   const weekList = useMemo(() => {
@@ -147,24 +175,41 @@ export function CalendarTab() {
 
   return (
     <div className="space-y-4 pb-40">
-      <header className="flex items-center justify-between pt-2">
+      {/* Stacked header */}
+      <header className="flex items-end justify-between pt-2">
         <div>
-          <div className="text-xs uppercase tracking-widest text-muted-foreground">Academic Calendar</div>
-          <h1 className="text-2xl font-bold tracking-tight">{monthName}</h1>
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+            Synced Calendar
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight leading-tight">{monthName}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            whileHover={{ scale: 1.06 }}
             onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-            className="glass h-9 w-9 grid place-items-center active:scale-95"
+            className="h-10 w-10 grid place-items-center rounded-full"
+            style={{
+              background: "color-mix(in oklab, var(--card) 60%, transparent)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid color-mix(in oklab, var(--primary) 24%, transparent)",
+            }}
           >
             <ChevronLeft className="h-4 w-4" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            whileHover={{ scale: 1.06 }}
             onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-            className="glass h-9 w-9 grid place-items-center active:scale-95"
+            className="h-10 w-10 grid place-items-center rounded-full"
+            style={{
+              background: "color-mix(in oklab, var(--card) 60%, transparent)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid color-mix(in oklab, var(--primary) 24%, transparent)",
+            }}
           >
             <ChevronRight className="h-4 w-4" />
-          </button>
+          </motion.button>
         </div>
       </header>
 
@@ -196,8 +241,8 @@ export function CalendarTab() {
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground px-1">
-        <Legend color="var(--primary)" label="Assessment" />
-        <Legend color="var(--chart-2)" label="Progress Check" />
+        <Legend color="var(--primary)" label="Exam" />
+        <Legend color="var(--chart-2)" label="Progress" />
         <Legend color="var(--destructive)" label="Missing" pulse />
         <Legend color={DONE_COLOR} label="Done" />
       </div>
@@ -210,69 +255,122 @@ export function CalendarTab() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 360, damping: 30 }}
-            className="glass p-3"
+            className="rounded-3xl p-3"
+            style={{
+              background: "color-mix(in oklab, var(--card) 45%, transparent)",
+              backdropFilter: "blur(16px)",
+              border: "1px solid color-mix(in oklab, var(--primary) 16%, transparent)",
+              boxShadow: "0 24px 60px -34px color-mix(in oklab, var(--primary) 50%, transparent)",
+            }}
           >
-            <div className="grid grid-cols-7 text-center text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            <div className="grid grid-cols-7 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground mb-2">
               {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
                 <div key={i}>{d}</div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
-              {cells.map((d, i) => {
-                if (!d) return <div key={i} className="aspect-square" />;
+            <div className="grid grid-cols-7 gap-1.5">
+              {gridDays.map((d, i) => {
                 const key = ymd(d);
                 const items = byDate.get(key) ?? [];
+                const inMonth = d.getMonth() === cursor.getMonth();
                 const isSelected = key === selected;
                 const isToday = key === todayKey;
                 const isPrep = prepDays.has(key);
+                const showCapsules = items.length <= 2;
                 return (
                   <motion.button
                     key={key}
                     onClick={() => setSelected(key)}
                     initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: Math.min(i * 0.008, 0.2), type: "spring", stiffness: 420, damping: 30 }}
-                    whileTap={{ scale: 0.92 }}
-                    className="relative aspect-square rounded-xl p-1 flex flex-col items-stretch overflow-hidden"
+                    animate={{ opacity: 1, y: 0, scale: isSelected ? 1.05 : 1 }}
+                    transition={{
+                      delay: Math.min(i * 0.006, 0.16),
+                      type: "spring",
+                      stiffness: 420,
+                      damping: 26,
+                    }}
+                    whileTap={{ scale: 0.93 }}
+                    className="relative flex flex-col items-stretch overflow-hidden rounded-xl p-1 text-left"
                     style={{
-                      background: isSelected
-                        ? "color-mix(in oklab, var(--primary) 26%, transparent)"
-                        : isPrep
-                          ? "color-mix(in oklab, var(--primary) 12%, transparent)"
-                          : "transparent",
-                      border: isToday
-                        ? "1px solid color-mix(in oklab, var(--primary) 80%, transparent)"
+                      minHeight: 62,
+                      zIndex: isSelected ? 5 : 1,
+                      background: isToday
+                        ? "color-mix(in oklab, var(--primary) 22%, transparent)"
                         : isSelected
-                          ? "1px solid color-mix(in oklab, var(--primary) 50%, transparent)"
-                          : "1px solid transparent",
+                          ? "color-mix(in oklab, var(--primary) 16%, transparent)"
+                          : isPrep
+                            ? "color-mix(in oklab, var(--primary) 9%, transparent)"
+                            : "rgba(255,255,255,0.025)",
+                      border: isToday
+                        ? "1px solid color-mix(in oklab, var(--primary) 85%, transparent)"
+                        : isSelected
+                          ? "1px solid color-mix(in oklab, var(--primary) 55%, transparent)"
+                          : "0.5px solid rgba(255,255,255,0.06)",
                       boxShadow: isToday
-                        ? "0 0 16px -2px color-mix(in oklab, var(--primary) 70%, transparent), inset 0 0 12px -6px color-mix(in oklab, var(--primary) 80%, transparent)"
-                        : "none",
+                        ? "0 0 15px rgba(147,51,234,0.28), inset 0 0 14px -6px color-mix(in oklab, var(--primary) 80%, transparent)"
+                        : isSelected
+                          ? "0 0 12px -2px color-mix(in oklab, var(--primary) 45%, transparent)"
+                          : "none",
                     }}
                   >
-                    <span className="text-[11px] font-semibold tabular-nums self-start leading-none pt-0.5 pl-0.5">
-                      {d.getDate()}
-                    </span>
-                    {isPrep ? (
-                      <span className="absolute top-1 right-1 text-[9px] leading-none" title="Recommended Prep Window">
-                        💡
+                    <div className="flex items-start justify-between">
+                      <span
+                        className="text-[12px] font-semibold tabular-nums leading-none pt-0.5 pl-0.5"
+                        style={{
+                          color: inMonth
+                            ? isToday
+                              ? "var(--primary-foreground)"
+                              : "var(--foreground)"
+                            : "color-mix(in oklab, var(--muted-foreground) 55%, transparent)",
+                        }}
+                      >
+                        {d.getDate()}
                       </span>
-                    ) : null}
-                    <div className="mt-auto flex flex-col gap-0.5 items-stretch">
-                      {items.slice(0, 3).map((it) => {
-                        const done = !!completed[it.key];
-                        const color = done ? DONE_COLOR : kindColor(it.kind);
-                        return (
-                          <span
-                            key={it.key}
-                            className={`h-1.5 rounded-full ${it.kind === "missing" && !done ? "pulse-coral" : ""}`}
-                            style={{
-                              background: color,
-                              boxShadow: `0 0 6px ${color}`,
-                            }}
-                          />
-                        );
-                      })}
+                      {isPrep ? (
+                        <span className="text-[9px] leading-none pt-0.5 pr-0.5" title="Recommended Prep Window">
+                          💡
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-1 flex flex-col gap-0.5 items-stretch">
+                      {showCapsules ? (
+                        items.map((it) => {
+                          const done = !!completed[it.key];
+                          const color = done ? DONE_COLOR : kindColor(it.kind);
+                          return (
+                            <span
+                              key={it.key}
+                              className={`truncate rounded-[5px] px-1 py-[1px] text-[8px] font-semibold leading-tight ${
+                                it.kind === "missing" && !done ? "pulse-coral" : ""
+                              }`}
+                              style={{
+                                background: `color-mix(in oklab, ${color} 22%, transparent)`,
+                                color: color,
+                                border: `0.5px solid color-mix(in oklab, ${color} 45%, transparent)`,
+                              }}
+                            >
+                              {it.abbr} · {it.label}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <div className="flex items-center justify-center gap-1 pt-1">
+                          {items.slice(0, 4).map((it) => {
+                            const done = !!completed[it.key];
+                            const color = done ? DONE_COLOR : kindColor(it.kind);
+                            return (
+                              <span
+                                key={it.key}
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  it.kind === "missing" && !done ? "pulse-coral" : ""
+                                }`}
+                                style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </motion.button>
                 );
@@ -339,13 +437,22 @@ export function CalendarTab() {
       </AnimatePresence>
 
       {/* Day Agenda detail sheet */}
-      <motion.div layout className="glass-strong p-4 rounded-2xl" style={{ backdropFilter: "blur(12px)" }}>
+      <motion.div
+        layout
+        className="rounded-3xl p-4"
+        style={{
+          background: "color-mix(in oklab, var(--popover) 55%, transparent)",
+          backdropFilter: "blur(16px)",
+          border: "1px solid color-mix(in oklab, var(--primary) 22%, transparent)",
+          boxShadow: "0 24px 60px -30px color-mix(in oklab, var(--primary) 50%, transparent)",
+        }}
+      >
         <div className="flex items-center justify-between mb-3">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
             {selectedLabel ? `Day Agenda · ${selectedLabel}` : "Select a day"}
           </div>
           {prepDays.has(selected ?? "") ? (
-            <span className="text-[10px] font-medium text-primary">💡 Recommended Prep Window</span>
+            <span className="text-[10px] font-semibold text-primary">💡 Prep Window</span>
           ) : null}
         </div>
         <AnimatePresence mode="popLayout">
@@ -367,11 +474,16 @@ export function CalendarTab() {
                   <motion.div
                     key={it.key}
                     layout
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+                    className="flex items-center gap-3 p-3 rounded-2xl"
+                    style={{
+                      background: "rgba(255,255,255,0.035)",
+                      backdropFilter: "blur(10px)",
+                      border: "0.5px solid rgba(255,255,255,0.08)",
+                    }}
                   >
                     <button
                       onClick={() => toggleCompleted(it.key)}
@@ -403,7 +515,11 @@ export function CalendarTab() {
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className={`text-sm font-medium truncate transition-all ${done ? "line-through text-muted-foreground" : ""}`}>
+                      <div
+                        className={`text-sm font-medium truncate transition-all ${
+                          done ? "line-through text-muted-foreground" : ""
+                        }`}
+                      >
                         {it.name}
                       </div>
                       <div className="text-[11px] text-muted-foreground truncate">
@@ -411,7 +527,11 @@ export function CalendarTab() {
                       </div>
                     </div>
                     <div className="text-xs tabular-nums text-muted-foreground shrink-0">
-                      {it.score !== null && it.total ? `${it.score}/${it.total}` : it.total ? `${it.total} pts` : ""}
+                      {it.score !== null && it.total
+                        ? `${it.score}/${it.total}`
+                        : it.total
+                          ? `${it.total} pts`
+                          : ""}
                     </div>
                   </motion.div>
                 );
