@@ -16,7 +16,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
         whileHover={{ scale: 1.06 }}
         transition={{ type: "spring", stiffness: 460, damping: 20 }}
         aria-label={`${tier.name} tier`}
-        className={`h-11 w-11 grid place-items-center rounded-2xl relative overflow-hidden ${isApex ? "tier-spin" : ""} ${isRadiant ? "tier-diamond" : ""}`}
+        className={`h-11 w-11 grid place-items-center rounded-2xl relative overflow-hidden ${isApex ? "tier-spin" : ""}`}
         style={{
           background: tier.background,
           border: tier.border,
