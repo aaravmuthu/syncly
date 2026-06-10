@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
 import { PullToRefresh } from "./PullToRefresh";
+import { DesktopSidebar } from "./DesktopSidebar";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { GradesTab } from "./tabs/GradesTab";
 import { GpaTab } from "./tabs/GpaTab";
@@ -67,19 +68,21 @@ export function AppShell() {
       {!data && !hasCredentials ? (
         <LoginGate />
       ) : (
-        <div className="absolute inset-0">
-          <Pane active="overview" current={tab}><OverviewTab /></Pane>
-          <Pane active="grades" current={tab}><GradesTab /></Pane>
-          <Pane active="gpa" current={tab}><GpaTab /></Pane>
-          <Pane active="calendar" current={tab}><CalendarTab /></Pane>
-          <Pane active="settings" current={tab}><SettingsTab /></Pane>
+        <div className="absolute inset-0 flex">
+          <DesktopSidebar />
+          <div className="relative flex-1 min-w-0">
+            <Pane active="overview" current={tab}><OverviewTab /></Pane>
+            <Pane active="grades" current={tab}><GradesTab /></Pane>
+            <Pane active="gpa" current={tab}><GpaTab /></Pane>
+            <Pane active="calendar" current={tab}><CalendarTab /></Pane>
+            <Pane active="settings" current={tab}><SettingsTab /></Pane>
+          </div>
         </div>
       )}
 
       {data ? (
         <nav
-          className="fixed z-[9999] glass-strong rounded-3xl px-2 py-2 flex items-center gap-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
-          style={{ bottom: 20, left: "50%", transform: "translateX(-50%)" }}
+          className="fixed z-[9999] glass-strong rounded-3xl px-2 py-2 flex items-center gap-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] bottom-5 left-1/2 -translate-x-1/2 lg:left-[calc(50%+150px)]"
         >
           {TABS.map((t) => {
             const active = tab === t.id;
