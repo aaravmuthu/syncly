@@ -477,6 +477,15 @@ export function ClassDetail({
           ) : null}
         </div>
       </motion.div>
+
+      {assistFor ? (
+        <AuraAssistMail
+          course={course}
+          assignment={assistFor}
+          studentName={data?.student.name ?? "A student"}
+          onClose={() => setAssistFor(null)}
+        />
+      ) : null}
     </div>
   );
 }
