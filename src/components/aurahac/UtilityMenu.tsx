@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
-import type { Course } from "@/lib/hac/types";
+import type { Course, BellRotation, BellPeriod } from "@/lib/hac/types";
+import { courseDisplay, defaultBellRotation, weekdayLabel } from "@/lib/hac/customize";
 import {
   CalendarCheck,
   BellRing,
@@ -12,6 +13,8 @@ import {
   ScrollText,
   ChevronRight,
   X,
+  Plus,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 
