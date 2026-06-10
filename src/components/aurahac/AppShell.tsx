@@ -44,7 +44,7 @@ export function AppShell() {
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(60% 50% at 15% 10%, oklch(0.40 0.18 305 / 0.18), transparent 70%), radial-gradient(50% 40% at 90% 80%, oklch(0.50 0.20 230 / 0.14), transparent 70%), #05070A",
+            "radial-gradient(60% 50% at 15% 10%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%), radial-gradient(50% 40% at 90% 80%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%), var(--background-deep, var(--background))",
         }}
       />
 
