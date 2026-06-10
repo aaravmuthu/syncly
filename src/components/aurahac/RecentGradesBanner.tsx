@@ -83,9 +83,11 @@ export function RecentGradesBanner() {
 
   if (dismissed || !recent) {
     return (
-      <div className="glass rounded-2xl px-4 py-3 flex items-center gap-2 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
-        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-        Your dashboard is fully up to date.
+      <div className="liquid shimmer-sweep rounded-2xl px-4 py-3.5 flex items-center gap-2.5 text-sm">
+        <CheckCircle2 className="h-4 w-4 text-success shrink-0 relative z-10" />
+        <span className="relative z-10 font-medium tracking-tight" style={{ color: "color-mix(in oklab, var(--primary) 35%, var(--muted-foreground))" }}>
+          No New Grades Have Been Added
+        </span>
       </div>
     );
   }
