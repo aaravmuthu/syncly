@@ -50,14 +50,13 @@ export function AuraProfileCard() {
   const [levelUp, setLevelUp] = useState<{ from: string; to: string } | null>(null);
   const lastTierRef = useRef<string | null>(null);
 
-  if (!data) return null;
-
-  const ap = totalAura(data.courses);
+  const ap = data ? totalAura(data.courses) : 0;
   const prog = auraTierProgress(ap);
   const tier = prog.tier;
 
   // Detect a rank promotion across renders → trigger breakout overlay.
   useEffect(() => {
+    if (!data) return;
     const id = prog.tier.id;
     if (lastTierRef.current && lastTierRef.current !== id) {
       const fromTier = lastTierRef.current;
@@ -67,7 +66,9 @@ export function AuraProfileCard() {
       return () => window.clearTimeout(t);
     }
     lastTierRef.current = id;
-  }, [prog.tier.id, prog.tier.name]);
+  }, [data, prog.tier.id, prog.tier.name]);
+
+  if (!data) return null;
 
   // Particle shimmer fired by the counter whenever AP rises.
   function flash() {
