@@ -234,39 +234,6 @@
 }
 
 /* ============================================================
- * AMETHYST — luxury violet, midnight + violet
- * ============================================================ */
-[data-theme="amethyst"] {
-  --background: oklch(0.15 0.06 295);
-  --background-deep: oklch(0.10 0.05 295);
-  --foreground: oklch(0.98 0.01 300);
-  --card: oklch(0.20 0.07 295);
-  --card-foreground: oklch(0.98 0.01 300);
-  --popover: oklch(0.18 0.07 295);
-  --popover-foreground: oklch(0.98 0.01 300);
-  --primary: oklch(0.72 0.15 295);
-  --primary-foreground: oklch(0.15 0.04 295);
-  --primary-glow: oklch(0.78 0.15 295);
-  --secondary: oklch(0.26 0.06 295);
-  --secondary-foreground: oklch(0.98 0.01 300);
-  --muted: oklch(0.24 0.05 295);
-  --muted-foreground: oklch(0.74 0.05 295);
-  --accent: oklch(0.72 0.15 295);
-  --accent-foreground: oklch(0.15 0.04 295);
-  --border: oklch(0.72 0.12 295 / 0.30);
-  --input: oklch(0.72 0.12 295 / 0.32);
-  --ring: oklch(0.72 0.15 295);
-  --sidebar: oklch(0.18 0.07 295);
-  --sidebar-foreground: oklch(0.98 0.01 300);
-  --sidebar-primary: oklch(0.72 0.15 295);
-  --sidebar-primary-foreground: oklch(0.15 0.04 295);
-  --sidebar-accent: oklch(0.26 0.06 295);
-  --sidebar-accent-foreground: oklch(0.98 0.01 300);
-  --sidebar-border: oklch(0.72 0.12 295 / 0.28);
-  --sidebar-ring: oklch(0.72 0.15 295);
-}
-
-/* ============================================================
  * PHANTOM JADE — black-hole base, dark emerald glass, neon mint
  * ============================================================ */
 [data-theme="phantom"] {

@@ -21,7 +21,6 @@ export type Theme =
   | "executive"
   | "arctic"
   | "titanium"
-  | "amethyst"
   | "phantom"
   | "genesis"
   | "platinum";
@@ -31,7 +30,6 @@ const THEMES: Theme[] = [
   "executive",
   "arctic",
   "titanium",
-  "amethyst",
   "phantom",
   "genesis",
   "platinum",
