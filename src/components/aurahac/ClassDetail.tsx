@@ -252,33 +252,38 @@ export function ClassDetail({
 
           {sub === "analysis" ? (
             <>
-              <div className="glass rounded-2xl p-4" style={{ backdropFilter: "blur(12px)" }}>
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3">
+              <div className="glass rounded-2xl p-4 pb-4" style={{ backdropFilter: "blur(12px)" }}>
+                <div className="text-[10px] uppercase tracking-widest text-purple-200 mb-4">
                   Score Over Marking Period
                 </div>
-                <div className="flex items-end gap-2 h-40">
-                  {[...course.assignments].reverse().map((a, i) => {
-                    const p = pct(a) ?? 0;
+                <div className="w-full h-[180px] flex items-end gap-2 block">
+                  {analysisSeries.map((p, i) => {
                     const h = Math.max(4, ((Math.min(100, Math.max(70, p)) - 70) / 30) * 100);
                     return (
-                      <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1.5">
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${h}%` }}
-                          transition={{ type: "spring", stiffness: 200, damping: 24, delay: i * 0.04 }}
-                          className="w-full rounded-t-md"
-                          style={{ background: "var(--primary)", boxShadow: "0 0 14px -4px var(--primary)" }}
-                        />
+                      <div key={i} className="flex-1 h-full flex flex-col justify-end items-center gap-1">
+                        <div className="relative w-full flex-1 min-h-0 rounded-t-md bg-white/[0.03] overflow-hidden">
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${h}%` }}
+                            transition={{ type: "spring", stiffness: 200, damping: 24, delay: i * 0.04 }}
+                            className="absolute inset-x-0 bottom-0 rounded-t-md"
+                            style={{
+                              background: "linear-gradient(180deg, var(--primary-glow), var(--primary))",
+                              boxShadow: "0 0 14px -4px var(--primary)",
+                            }}
+                          />
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-                <div className="flex justify-between text-[9px] text-muted-foreground mt-2">
+                <div className="flex justify-between text-[9px] text-purple-200 mt-2 pb-1 pl-2 pr-1">
                   <span>70</span>
                   <span>Scaled 70–100</span>
                   <span>100</span>
                 </div>
               </div>
+
 
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground pt-1">Impact By Grade</div>
               <div className="space-y-2">
