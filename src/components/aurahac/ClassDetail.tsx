@@ -231,7 +231,7 @@ export function ClassDetail({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-6 pt-4 space-y-3">
+        <div key={sub} className="flex-1 overflow-y-auto px-5 pb-6 pt-4 space-y-3">
           {sub === "grades" ? (
             <>
               {/* Top metrics grid */}
