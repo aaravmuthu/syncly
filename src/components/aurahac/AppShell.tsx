@@ -76,6 +76,7 @@ export function AppShell() {
             <Pane active="overview" current={tab}><OverviewTab /></Pane>
             <Pane active="grades" current={tab}><GradesTab /></Pane>
             <Pane active="gpa" current={tab}><GpaTab /></Pane>
+            <Pane active="records" current={tab}><RecordsTab /></Pane>
             <Pane active="calendar" current={tab}><CalendarTab /></Pane>
             <Pane active="settings" current={tab}><SettingsTab /></Pane>
           </div>
