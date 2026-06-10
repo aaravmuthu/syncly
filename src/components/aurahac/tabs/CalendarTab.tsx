@@ -544,15 +544,16 @@ export function CalendarTab() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    className="flex items-center gap-3 p-3 rounded-2xl"
+                    className="relative overflow-hidden flex items-center gap-3 p-3 rounded-2xl"
                     style={{
                       background: "rgba(255,255,255,0.035)",
                       backdropFilter: "blur(10px)",
                       border: "0.5px solid rgba(255,255,255,0.08)",
                     }}
                   >
+                    <ShimmerBeam trigger={shimmer[it.key] ?? 0} />
                     <button
-                      onClick={() => toggleCompleted(it.key)}
+                      onClick={() => onToggle(it.key)}
                       className="relative h-6 w-6 shrink-0 rounded-full grid place-items-center transition-colors"
                       style={{
                         border: `2px solid ${done ? DONE_COLOR : "color-mix(in oklab, var(--primary) 50%, transparent)"}`,
