@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
@@ -6,7 +6,10 @@ import { AnimatedNumber } from "../AnimatedNumber";
 import { RecentGradesBanner } from "../RecentGradesBanner";
 import { UtilityMenu } from "../UtilityMenu";
 import { RankBadge } from "../RankBadge";
-import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell } from "lucide-react";
+import { StreakCard } from "../StreakCard";
+import { SmartInsights } from "../SmartInsights";
+import { TrendGraph, type TrendPoint } from "../TrendGraph";
+import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell, LineChart } from "lucide-react";
 
 function fullDate(): string {
   return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
