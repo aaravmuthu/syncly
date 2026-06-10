@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
-import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Plus, Clock, Trash2, Bell } from "lucide-react";
 import type { Assignment } from "@/lib/hac/types";
+import { AddEventModal } from "../AddEventModal";
 
 /* ---------------- date helpers ---------------- */
 
