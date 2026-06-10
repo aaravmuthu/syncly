@@ -186,6 +186,88 @@ export function HacProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function persistEvents(list: UserEvent[]) {
+    try {
+      localStorage.setItem(EVENTS_KEY, JSON.stringify(list));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function fireReminder(e: UserEvent) {
+    const verb = e.type === "exam" ? "Study for" : "Finish";
+    const mins = e.minutes;
+    const time = mins >= 60 ? `${Math.round((mins / 60) * 10) / 10}h` : `${mins}m`;
+    const body = `${verb} "${e.title}"${e.course ? ` (${e.course})` : ""} · plan ~${time}`;
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification(e.type === "exam" ? "📚 Exam prep reminder" : "📝 Homework reminder", {
+          body,
+        });
+      }
+    } catch {
+      /* ignore */
+    }
+    setUserEvents((prev) => {
+      const next = prev.map((x) => (x.id === e.id ? { ...x, reminded: true } : x));
+      persistEvents(next);
+      return next;
+    });
+  }
+
+  // Schedule reminder timers for all upcoming events.
+  useEffect(() => {
+    for (const t of Object.values(timers.current)) clearTimeout(t);
+    timers.current = {};
+    const now = Date.now();
+    for (const e of userEvents) {
+      if (!e.reminderAt || e.reminded) continue;
+      const at = new Date(e.reminderAt).getTime();
+      const delay = at - now;
+      if (delay <= 0) {
+        fireReminder(e);
+      } else if (delay < 2 ** 31 - 1) {
+        timers.current[e.id] = setTimeout(() => fireReminder(e), delay);
+      }
+    }
+    return () => {
+      for (const t of Object.values(timers.current)) clearTimeout(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userEvents]);
+
+  function addEvent(e: Omit<UserEvent, "id" | "reminded">) {
+    setUserEvents((prev) => {
+      const next = [...prev, { ...e, id: crypto.randomUUID(), reminded: false }];
+      persistEvents(next);
+      return next;
+    });
+  }
+
+  function removeEvent(id: string) {
+    setUserEvents((prev) => {
+      const next = prev.filter((x) => x.id !== id);
+      persistEvents(next);
+      return next;
+    });
+  }
+
+  async function enableNotifications() {
+    if (typeof Notification === "undefined") return false;
+    if (Notification.permission === "granted") {
+      setNotificationsEnabled(true);
+      return true;
+    }
+    try {
+      const res = await Notification.requestPermission();
+      const ok = res === "granted";
+      setNotificationsEnabled(ok);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+
   const value = useMemo<Ctx>(
     () => ({
       data,
@@ -203,8 +285,13 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setCourseNav,
       completed,
       toggleCompleted,
+      userEvents,
+      addEvent,
+      removeEvent,
+      notificationsEnabled,
+      enableNotifications,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav, completed],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;
