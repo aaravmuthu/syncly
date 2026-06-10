@@ -16,6 +16,8 @@ interface Cred {
   password: string;
 }
 
+export type CourseSubTab = "grades" | "analysis" | "whatif";
+
 interface Ctx {
   data: HacData | null;
   loading: boolean;
@@ -28,6 +30,8 @@ interface Ctx {
   logout: () => void;
   theme: Theme;
   setTheme: (t: Theme) => void;
+  courseNav: { courseId: string; sub: CourseSubTab } | null;
+  setCourseNav: (n: { courseId: string; sub: CourseSubTab } | null) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
@@ -39,6 +43,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [isFallback, setIsFallback] = useState(false);
   const [theme, setThemeState] = useState<Theme>("nebula");
+  const [courseNav, setCourseNav] = useState<{ courseId: string; sub: CourseSubTab } | null>(null);
 
   // Hydrate from localStorage once. Fall back to demo data so the app is
   // Hydrate from localStorage once. Show the login screen by default; restore a
@@ -157,8 +162,10 @@ export function HacProvider({ children }: { children: ReactNode }) {
       logout,
       theme,
       setTheme,
+      courseNav,
+      setCourseNav,
     }),
-    [data, loading, error, cred, isFallback, theme],
+    [data, loading, error, cred, isFallback, theme, courseNav],
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;

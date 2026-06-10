@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
@@ -31,8 +31,13 @@ function Pane({ active, current, children }: { active: TabId; current: TabId; ch
 }
 
 export function AppShell() {
-  const { data, hasCredentials } = useHac();
+  const { data, hasCredentials, courseNav } = useHac();
   const [tab, setTab] = useState<TabId>("overview");
+
+  useEffect(() => {
+    if (courseNav) setTab("grades");
+  }, [courseNav]);
+
 
   return (
     <div

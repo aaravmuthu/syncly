@@ -49,8 +49,16 @@ function overallFrom(course: Course, assignments: Assignment[]): number | null {
   return den ? total / den : null;
 }
 
-export function ClassDetail({ course, onClose }: { course: Course; onClose: () => void }) {
-  const [sub, setSub] = useState<SubTab>("grades");
+export function ClassDetail({
+  course,
+  onClose,
+  initialSub = "grades",
+}: {
+  course: Course;
+  onClose: () => void;
+  initialSub?: SubTab;
+}) {
+  const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
 
