@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GradeRing } from "./GradeRing";
 import { AnimatedNumber } from "./AnimatedNumber";
