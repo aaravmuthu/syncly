@@ -57,6 +57,9 @@ export function HacProvider({ children }: { children: ReactNode }) {
       const t = localStorage.getItem(THEME_KEY);
       if (t && (THEMES as string[]).includes(t)) setThemeState(t as Theme);
 
+      const done = localStorage.getItem(DONE_KEY);
+      if (done) setCompleted(JSON.parse(done));
+
       const d = localStorage.getItem(STORAGE_KEY);
       if (d) {
         setData(JSON.parse(d));
