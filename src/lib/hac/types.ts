@@ -101,6 +101,8 @@ export interface HacData {
   markingPeriodGPAs: { mp: string; gpa: number }[];
   /** Attendance ledger (optional; absent assignments are used as a fallback). */
   attendance?: AttendanceLedger;
+  /** Activities pulled from the HAC Home/Calendar page. */
+  calendar?: CalendarActivity[];
   syncedAt: string; // ISO
   districtId: DistrictId;
   username: string;
