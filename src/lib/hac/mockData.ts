@@ -1,4 +1,4 @@
-import type { HacData, Course, Assignment, AssignmentCategory, ReportCardTerm, AttendanceLedger } from "./types";
+import type { HacData, Course, Assignment, AssignmentCategory, ReportCardTerm, AttendanceLedger, CalendarActivity } from "./types";
 
 /** Build an assignment whose grade is expressed directly as a percent. */
 function a(
