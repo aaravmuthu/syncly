@@ -40,7 +40,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseReportCard, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseReportCard, parseCalendar, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -117,12 +117,13 @@ export const syncHac = createServerFn({ method: "POST" })
       if (!nextUrl) break;
     }
 
-    // Step 3: fetch Classwork (Assignments), Transcript, and Report Card pages.
+    // Step 3: fetch Classwork, Transcript, Report Card, and Calendar pages.
     const classworkUrl = `${base}/HomeAccess/Classes/Classwork`;
     const transcriptUrl = `${base}/HomeAccess/Grades/Transcript`;
     const reportCardUrl = `${base}/HomeAccess/Grades/ReportCard`;
+    const calendarUrl = `${base}/HomeAccess/Home/Calendar`;
 
-    const [rc, rt, rr] = await Promise.all([
+    const [rc, rt, rr, rcal] = await Promise.all([
       fetch(classworkUrl, {
         headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
       }),
@@ -132,11 +133,15 @@ export const syncHac = createServerFn({ method: "POST" })
       fetch(reportCardUrl, {
         headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
       }),
+      fetch(calendarUrl, {
+        headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
+      }),
     ]);
 
     const classworkHtml = await rc.text();
     const transcriptHtml = await rt.text();
     const reportCardHtml = await rr.text();
+    const calendarHtml = await rcal.text();
 
     if (/LogOn|login/i.test(classworkHtml) && !/AssignmentClass/i.test(classworkHtml)) {
       throw new Error("Session expired or login was not accepted. Please reconnect.");
@@ -145,6 +150,7 @@ export const syncHac = createServerFn({ method: "POST" })
     const student = parseStudent(classworkHtml);
     const courses = parseClasses(classworkHtml);
     const transcript = parseTranscript(transcriptHtml);
+    const calendar = parseCalendar(calendarHtml);
 
     // Merge the real report-card quarter grades onto each course by name.
     const rcMap = parseReportCard(reportCardHtml);
@@ -155,11 +161,11 @@ export const syncHac = createServerFn({ method: "POST" })
       }
     }
 
-
     return {
       student,
       courses,
       transcript,
+      calendar,
       markingPeriodGPAs: [],
       syncedAt: new Date().toISOString(),
       districtId: data.district,

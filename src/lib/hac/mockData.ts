@@ -1,4 +1,4 @@
-import type { HacData, Course, Assignment, AssignmentCategory, ReportCardTerm, AttendanceLedger } from "./types";
+import type { HacData, Course, Assignment, AssignmentCategory, ReportCardTerm, AttendanceLedger, CalendarActivity } from "./types";
 
 /** Build an assignment whose grade is expressed directly as a percent. */
 function a(
@@ -150,6 +150,19 @@ function mockAttendance(): AttendanceLedger {
   };
 }
 
+/** Demo activities mirroring the HAC Home/Calendar feed. */
+function mockCalendar(): CalendarActivity[] {
+  return [
+    { date: "2026-05-25", title: "Memorial Day - No School", course: null, kind: "Holiday" },
+    { date: "2026-05-14", title: "Chemistry Unit 7 Exam", course: "Chemistry Adv S2", kind: "Assessment" },
+    { date: "2026-05-11", title: "AP World History DBQ", course: "AP World History S2", kind: "Assignment" },
+    { date: "2026-05-06", title: "Geometry Quiz - Circles", course: "Geometry Adv S2", kind: "Assignment" },
+    { date: "2026-04-30", title: "Spanish 2 Oral Presentation", course: "Spanish 2 S2", kind: "Assignment" },
+    { date: "2026-04-17", title: "Early Release Day", course: null, kind: "Event" },
+  ];
+}
+
+
 export function getFallbackData(): HacData {
   return {
     student: { name: "Demo Student", grade: "10", school: "Lone Star High School", studentId: "1048372" },
@@ -178,6 +191,7 @@ export function getFallbackData(): HacData {
       { mp: "MP4", gpa: 4.36 },
     ],
     attendance: mockAttendance(),
+    calendar: mockCalendar(),
     syncedAt: new Date().toISOString(),
     districtId: "frisco",
     username: "demo",

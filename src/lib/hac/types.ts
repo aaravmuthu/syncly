@@ -85,6 +85,15 @@ export interface AttendanceLedger {
   log: AttendanceEntry[];
 }
 
+/** An event pulled directly from the HAC Home/Calendar page. */
+export interface CalendarActivity {
+  date: string; // YYYY-MM-DD
+  title: string;
+  course: string | null;
+  /** Raw category/type label from HAC, e.g. "Assignment", "Holiday". */
+  kind: string | null;
+}
+
 export interface HacData {
   student: { name: string; grade: string | null; school: string | null; studentId?: string | null };
   courses: Course[];
@@ -92,6 +101,8 @@ export interface HacData {
   markingPeriodGPAs: { mp: string; gpa: number }[];
   /** Attendance ledger (optional; absent assignments are used as a fallback). */
   attendance?: AttendanceLedger;
+  /** Activities pulled from the HAC Home/Calendar page. */
+  calendar?: CalendarActivity[];
   syncedAt: string; // ISO
   districtId: DistrictId;
   username: string;
