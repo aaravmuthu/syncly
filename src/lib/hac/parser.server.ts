@@ -104,22 +104,59 @@ export function parseClasses(html: string): Course[] {
       block.match(/<table[^>]*class="[^"]*sg-asp-table[^"]*"[\s\S]*?<\/table>/i);
     if (assignTableMatch) {
       const rows = findAll(assignTableMatch[0], /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+
+      // Locate the header row to map columns by label rather than fixed index,
+      // since the HAC assignment grid layout varies by district/course.
+      let idx = { due: -1, name: -1, cat: -1, score: -1, total: -1, pct: -1 };
+      for (const r of rows) {
+        const headers = findAll(r[1], /<th[^>]*>([\s\S]*?)<\/th>/gi).map((c) => decode(c[1]).toLowerCase());
+        if (headers.length < 3) continue;
+        const find = (...keys: string[]) =>
+          headers.findIndex((h) => keys.some((k) => h.includes(k)));
+        idx = {
+          due: find("date due", "due date", "due"),
+          name: find("assignment"),
+          cat: find("category", "type"),
+          // "Score" is the points earned; avoid matching "total".
+          score: headers.findIndex((h) => h.includes("score") && !h.includes("total")),
+          total: find("total points", "max", "possible", "total"),
+          pct: headers.findIndex((h) => h.includes("percent") || h.trim() === "%"),
+        };
+        break;
+      }
+
       for (const r of rows) {
         const cells = findAll(r[1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
         if (cells.length < 4) continue;
-        const due = parseDate(cells[0]);
-        if (!due && !/\d+\/\d+/.test(cells[0])) continue;
-        const aname = cells[2] || cells[1];
-        if (!aname || /assignment/i.test(aname) && cells.length < 5) continue;
-        const cat = cells[3] || "";
-        const score = num(cells[4]);
-        const total = num(cells[5]);
-        const pct = num(cells[6]) ?? (score !== null && total ? (score / total) * 100 : null);
-        const missing = /\bM\b|Missing/i.test(cells.join(" "));
-        const absent = /\bABS\b|Absent/i.test(cells.join(" "));
+
+        // Fall back to positional indices if no header row was found.
+        const dueCell = idx.due >= 0 ? cells[idx.due] : cells[0];
+        const nameCell = idx.name >= 0 ? cells[idx.name] : cells[2] || cells[1];
+        const catCell = idx.cat >= 0 ? cells[idx.cat] : cells[3] || "";
+        const scoreCell = idx.score >= 0 ? cells[idx.score] : cells[4];
+        const totalCell = idx.total >= 0 ? cells[idx.total] : cells[5];
+        const pctCell = idx.pct >= 0 ? cells[idx.pct] : cells[6];
+
+        const due = parseDate(dueCell || "");
+        if (!due && !/\d+\/\d+/.test(dueCell || "")) continue;
+        const aname = nameCell;
+        if (!aname || (/^assignment$/i.test(aname.trim()))) continue;
+
+        const score = num(scoreCell);
+        const total = num(totalCell);
+        const pctParsed = num(pctCell);
+        const pct =
+          pctParsed !== null
+            ? pctParsed
+            : score !== null && total
+              ? (score / total) * 100
+              : null;
+        const rowText = cells.join(" ");
+        const missing = /\bM\b|Missing/i.test(rowText);
+        const absent = /\bABS\b|Absent/i.test(rowText);
         assignments.push({
           name: aname,
-          category: categorize(cat || aname),
+          category: categorize(catCell || aname),
           dueDate: due,
           score,
           totalPoints: total,
