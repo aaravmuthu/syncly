@@ -118,7 +118,7 @@ export const syncHac = createServerFn({ method: "POST" })
     }
 
     // Step 3: fetch Classwork (Assignments) and Transcript pages.
-    const classworkUrl = `${base}/HomeAccess/Content/Student/Assignments.aspx`;
+    const classworkUrl = `${base}/HomeAccess/Classes/Classwork`;
     const transcriptUrl = `${base}/HomeAccess/Content/Student/TranscriptAll.aspx`;
 
     const [rc, rt] = await Promise.all([
