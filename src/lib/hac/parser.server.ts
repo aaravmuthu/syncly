@@ -23,6 +23,9 @@ function findAll(html: string, re: RegExp): RegExpExecArray[] {
 
 function categorize(name: string): AssignmentCategory {
   const s = name.toLowerCase();
+  if (/(progress check|pcl)/.test(s)) return "Progress Check";
+  if (/(assessment of learning|assessment|summative|test|exam|project|major)/.test(s)) return "Summative";
+  if (/(formative|homework|classwork|practice|daily|minor)/.test(s)) return "Formative";
   if (/(summative|test|exam|project|assess|major)/.test(s)) return "Summative";
   if (/(formative|quiz|hw|homework|classwork|practice|daily|minor)/.test(s)) return "Formative";
   return "Other";
@@ -45,6 +48,79 @@ function num(s: string | null | undefined): number | null {
   if (!t) return null;
   const n = Number(t);
   return Number.isFinite(n) ? n : null;
+}
+
+type ParsedGradeCell = {
+  score: number | null;
+  total: number | null;
+  percent: number | null;
+  hasFraction: boolean;
+  hasPercent: boolean;
+};
+
+function parseGradeCell(raw: string | null | undefined): ParsedGradeCell {
+  const text = (raw ?? "").trim();
+  if (!text || parseDate(text)) {
+    return { score: null, total: null, percent: null, hasFraction: false, hasPercent: false };
+  }
+
+  const normalized = text.replace(/,/g, "");
+  const fraction = normalized.match(/(-?\d+(?:\.\d+)?)\s*(?:\/|out of|of)\s*(-?\d+(?:\.\d+)?)/i);
+  if (fraction) {
+    const score = Number(fraction[1]);
+    const total = Number(fraction[2]);
+    return {
+      score: Number.isFinite(score) ? score : null,
+      total: Number.isFinite(total) ? total : null,
+      percent: Number.isFinite(score) && Number.isFinite(total) && total !== 0 ? (score / total) * 100 : null,
+      hasFraction: true,
+      hasPercent: false,
+    };
+  }
+
+  const percentMatch = normalized.match(/(-?\d+(?:\.\d+)?)\s*%/);
+  if (percentMatch) {
+    const percent = Number(percentMatch[1]);
+    return {
+      score: null,
+      total: null,
+      percent: Number.isFinite(percent) ? percent : null,
+      hasFraction: false,
+      hasPercent: true,
+    };
+  }
+
+  return {
+    score: num(normalized),
+    total: null,
+    percent: null,
+    hasFraction: false,
+    hasPercent: false,
+  };
+}
+
+function inferGradeFromRow(cells: string[], metaIdx: Set<number>) {
+  const candidates = cells
+    .map((cell, index) => ({ index, cell, parsed: parseGradeCell(cell) }))
+    .filter(({ index, cell, parsed }) => {
+      if (metaIdx.has(index)) return false;
+      if (!cell.trim()) return false;
+      if (/weight|weighted|multiplier|rubric|resource|teacher|comment|notes?/i.test(cell)) return false;
+      if (parsed.score !== null && parsed.score > 1000) return false;
+      return true;
+    });
+
+  const fraction = candidates.find(({ parsed }) => parsed.hasFraction);
+  const percent = candidates.find(({ parsed, cell }) => parsed.hasPercent || /%/.test(cell));
+  const numeric = candidates.find(
+    ({ parsed, cell }) => parsed.score !== null && parsed.score > 1 && !/[a-z]{4,}/i.test(cell) && !/\d{1,2}\/\d{1,2}/.test(cell),
+  );
+
+  return {
+    score: fraction?.parsed.score ?? numeric?.parsed.score ?? null,
+    total: fraction?.parsed.total ?? null,
+    percent: percent?.parsed.percent ?? fraction?.parsed.percent ?? null,
+  };
 }
 
 /** Parse the Assignments.aspx Classwork page. */
@@ -142,9 +218,24 @@ export function parseClasses(html: string): Course[] {
         const aname = nameCell;
         if (!aname || (/^assignment$/i.test(aname.trim()))) continue;
 
-        const score = num(scoreCell);
-        const total = num(totalCell);
-        const pctParsed = num(pctCell);
+        const metaIdx = new Set([idx.due, idx.name, idx.cat].filter((v) => v >= 0));
+        const parsedScore = parseGradeCell(scoreCell);
+        const parsedTotal = parseGradeCell(totalCell);
+        const parsedPct = parseGradeCell(pctCell);
+        const inferred = inferGradeFromRow(cells, metaIdx);
+
+        const score =
+          parsedScore.hasFraction || parsedScore.score !== null
+            ? parsedScore.score
+            : inferred.score;
+        const total =
+          parsedScore.hasFraction
+            ? parsedScore.total
+            : parsedTotal.score ?? parsedTotal.total ?? inferred.total;
+        const pctParsed =
+          parsedPct.percent ??
+          (parsedScore.hasPercent ? parsedScore.percent : null) ??
+          inferred.percent;
         const pct =
           pctParsed !== null
             ? pctParsed
