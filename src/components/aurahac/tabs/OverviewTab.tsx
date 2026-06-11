@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
 import { AnimatedNumber } from "../AnimatedNumber";
-import { AuraProfileCard } from "../AuraProfileCard";
-import { AuraLedger } from "../AuraLedger";
 import { UtilityMenu } from "../UtilityMenu";
 import { RankBadge } from "../RankBadge";
 import { StreakCard } from "../StreakCard";
@@ -89,14 +87,8 @@ export function OverviewTab() {
 
       </header>
 
-      {/* Global Aura Points mastery dashboard */}
-      <AuraProfileCard />
-
       {/* Live "Tardy Burner" passing-period countdown */}
       <LivePeriodWidget />
-
-      {/* Aura Ledger — chronological AP feed */}
-      <AuraLedger />
 
       {/* Academic streak */}
       <StreakCard />

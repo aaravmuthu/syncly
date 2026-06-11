@@ -53,7 +53,7 @@ export function RankBadge({ gpa }: { gpa: number }) {
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Aura Tier</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Academic Tier</div>
                   <div className="text-base font-bold" style={{ color: tier.accent }}>{tier.name}</div>
                 </div>
                 <div className="ml-auto text-right">
