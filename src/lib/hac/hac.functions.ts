@@ -40,7 +40,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseStudent, pickHidden } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseReportCard, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -117,21 +117,26 @@ export const syncHac = createServerFn({ method: "POST" })
       if (!nextUrl) break;
     }
 
-    // Step 3: fetch Classwork (Assignments) and Transcript pages.
+    // Step 3: fetch Classwork (Assignments), Transcript, and Report Card pages.
     const classworkUrl = `${base}/HomeAccess/Classes/Classwork`;
     const transcriptUrl = `${base}/HomeAccess/Grades/Transcript`;
+    const reportCardUrl = `${base}/HomeAccess/Grades/ReportCard`;
 
-    const [rc, rt] = await Promise.all([
+    const [rc, rt, rr] = await Promise.all([
       fetch(classworkUrl, {
         headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
       }),
       fetch(transcriptUrl, {
         headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
       }),
+      fetch(reportCardUrl, {
+        headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
+      }),
     ]);
 
     const classworkHtml = await rc.text();
     const transcriptHtml = await rt.text();
+    const reportCardHtml = await rr.text();
 
     if (/LogOn|login/i.test(classworkHtml) && !/AssignmentClass/i.test(classworkHtml)) {
       throw new Error("Session expired or login was not accepted. Please reconnect.");
@@ -140,6 +145,16 @@ export const syncHac = createServerFn({ method: "POST" })
     const student = parseStudent(classworkHtml);
     const courses = parseClasses(classworkHtml);
     const transcript = parseTranscript(transcriptHtml);
+
+    // Merge the real report-card quarter grades onto each course by name.
+    const rcMap = parseReportCard(reportCardHtml);
+    if (rcMap.size) {
+      for (const course of courses) {
+        const term = rcMap.get(normalizeName(course.name));
+        if (term) course.reportCard = term;
+      }
+    }
+
 
     return {
       student,
