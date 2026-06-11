@@ -415,3 +415,50 @@ export function pickHidden(html: string, name: string): string | null {
   const m2 = html.match(re2);
   return m2 ? m2[1] : null;
 }
+
+/**
+ * Parse the HAC Home/Calendar page into a flat list of activities.
+ * HAC renders its calendar with FullCalendar, which embeds events either as a
+ * JSON array in a script (`events: [...]`) or as `fc-event` anchor/div elements
+ * inside dated day cells. This handles both shapes.
+ */
+export function parseCalendar(html: string): CalendarActivity[] {
+  const out: CalendarActivity[] = [];
+  const seen = new Set<string>();
+
+  const push = (date: string | null, title: string, kind: string | null, course: string | null) => {
+    if (!date || !title) return;
+    const t = decode(title);
+    if (!t) return;
+    const key = `${date}::${t}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ date, title: t, course: course ? decode(course) : null, kind: kind ? decode(kind) : null });
+  };
+
+  // 1) JSON event objects embedded in scripts: {"title":"...","start":"2026-01-12",...}
+  const objs = findAll(html, /\{[^{}]*?"(?:title|Title)"\s*:\s*"[^"]*"[^{}]*?\}/g);
+  for (const o of objs) {
+    const blob = o[0];
+    const title = blob.match(/"(?:title|Title)"\s*:\s*"([^"]*)"/)?.[1];
+    const rawDate = blob.match(/"(?:start|Start|date|Date|EventDate)"\s*:\s*"([^"]*)"/)?.[1];
+    if (!title || !rawDate) continue;
+    const iso = rawDate.match(/^\d{4}-\d{2}-\d{2}/) ? rawDate.slice(0, 10) : parseDate(rawDate);
+    const kind = blob.match(/"(?:type|Type|category|Category|className)"\s*:\s*"([^"]*)"/)?.[1] ?? null;
+    push(iso, title, kind, null);
+  }
+
+  // 2) FullCalendar day cells: <td data-date="2026-01-12">…<a class="fc-event">Title</a>…
+  const cells = findAll(html, /data-date=["'](\d{4}-\d{2}-\d{2})["']([\s\S]*?)(?=data-date=|<\/tbody>|<\/table>)/gi);
+  for (const c of cells) {
+    const date = c[1];
+    const events = findAll(c[2], /<(?:a|div|span)[^>]*class=["'][^"']*fc-event[^"']*["'][^>]*>([\s\S]*?)<\/(?:a|div|span)>/gi);
+    for (const e of events) {
+      const title = decode(e[1]);
+      if (title) push(date, title, null, null);
+    }
+  }
+
+  out.sort((a, b) => a.date.localeCompare(b.date));
+  return out;
+}
