@@ -218,9 +218,24 @@ export function parseClasses(html: string): Course[] {
         const aname = nameCell;
         if (!aname || (/^assignment$/i.test(aname.trim()))) continue;
 
-        const score = num(scoreCell);
-        const total = num(totalCell);
-        const pctParsed = num(pctCell);
+        const metaIdx = new Set([idx.due, idx.name, idx.cat].filter((v) => v >= 0));
+        const parsedScore = parseGradeCell(scoreCell);
+        const parsedTotal = parseGradeCell(totalCell);
+        const parsedPct = parseGradeCell(pctCell);
+        const inferred = inferGradeFromRow(cells, metaIdx);
+
+        const score =
+          parsedScore.hasFraction || parsedScore.score !== null
+            ? parsedScore.score
+            : inferred.score;
+        const total =
+          parsedScore.hasFraction
+            ? parsedScore.total
+            : parsedTotal.score ?? parsedTotal.total ?? inferred.total;
+        const pctParsed =
+          parsedPct.percent ??
+          (parsedScore.hasPercent ? parsedScore.percent : null) ??
+          inferred.percent;
         const pct =
           pctParsed !== null
             ? pctParsed
