@@ -178,6 +178,7 @@ export function getFallbackData(): HacData {
       { mp: "MP4", gpa: 4.36 },
     ],
     attendance: mockAttendance(),
+    calendar: mockCalendar(),
     syncedAt: new Date().toISOString(),
     districtId: "frisco",
     username: "demo",
