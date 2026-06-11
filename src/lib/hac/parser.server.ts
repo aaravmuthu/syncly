@@ -1,5 +1,5 @@
 // Server-only HTML parsing helpers for HAC pages.
-import type { Assignment, AssignmentCategory, Course, ReportCardTerm, TranscriptCourse } from "./types";
+import type { Assignment, AssignmentCategory, CalendarActivity, Course, ReportCardTerm, TranscriptCourse } from "./types";
 
 const decode = (s: string) =>
   s
