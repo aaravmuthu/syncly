@@ -149,6 +149,28 @@ export function CalendarTab() {
           map.set(key, arr);
         }
       }
+      // Activities pulled straight from the HAC Home/Calendar page.
+      for (const ev of data.calendar ?? []) {
+        const d = parseDate(ev.date);
+        if (!d) continue;
+        const key = ymd(d);
+        const arr = map.get(key) ?? [];
+        const isExam = EXAM_RE.test(ev.title) || /exam|test|assessment/i.test(ev.kind ?? "");
+        arr.push({
+          key: `hac-cal::${ev.date}::${ev.title}`,
+          course: ev.course ?? "School",
+          courseId: "hac-cal",
+          abbr: ev.course ? abbreviate(null, ev.course) : "HAC",
+          label: isExam ? "Test" : ev.kind?.slice(0, 6) || "Event",
+          name: ev.title,
+          category: ev.kind ?? "Calendar",
+          weight: null,
+          score: null,
+          total: null,
+          kind: isExam ? "assessment" : "progress",
+        });
+        map.set(key, arr);
+      }
     }
     // Manually added homework / exams.
     for (const e of userEvents) {
