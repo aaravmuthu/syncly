@@ -176,8 +176,15 @@ export function parseClasses(html: string): Course[] {
 
     // Assignments table
     const assignments: Assignment[] = [];
-    const assignTableMatch = block.match(/AssignmentsGridView[\s\S]*?<\/table>/i) ||
-      block.match(/<table[^>]*class="[^"]*sg-asp-table[^"]*"[\s\S]*?<\/table>/i);
+    // A course block can contain several tables (Category Averages summary +
+    // the actual assignments grid). Pick the table whose header row mentions
+    // "Date Due"/"Assignment" so we never mistake the categories table for it.
+    const allTables = findAll(block, /<table[^>]*>[\s\S]*?<\/table>/gi).map((t) => t[0]);
+    const assignTable =
+      allTables.find((t) => /dgCourseAssignments|AssignmentsGridView/i.test(t)) ||
+      allTables.find((t) => /<th/i.test(t) && /date\s*due|assignment/i.test(t)) ||
+      allTables.find((t) => /date\s*due/i.test(t));
+    const assignTableMatch = assignTable ? [assignTable] : null;
     if (assignTableMatch) {
       const rows = findAll(assignTableMatch[0], /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
 
