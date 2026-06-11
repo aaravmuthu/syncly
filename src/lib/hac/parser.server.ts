@@ -295,6 +295,96 @@ export function parseTranscript(html: string): TranscriptCourse[] {
   return out;
 }
 
+/**
+ * Parse the Report Card page into per-course 4-quarter matrices.
+ * Returns a map keyed by a normalized course name.
+ * Handles Frisco's `sg-asp-table` report-card grid where each row is a course
+ * and grade columns correspond to marking periods (Q1–Q4 + exam/semester).
+ */
+export function parseReportCard(html: string): Map<string, ReportCardTerm> {
+  const out = new Map<string, ReportCardTerm>();
+
+  // Isolate the report card table(s).
+  const tables = findAll(html, /<table[^>]*>[\s\S]*?<\/table>/gi)
+    .map((t) => t[0])
+    .filter((t) => /report\s*card|sg-asp-table|MarkingPeriod|Course/i.test(t));
+  const blob = tables.join("\n") || html;
+
+  const rows = findAll(blob, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  if (!rows.length) return out;
+
+  // Locate header row + column indices for each marking period.
+  const colIdx = { name: -1, mp1: -1, mp2: -1, mp3: -1, mp4: -1, exam: -1, sem: -1 };
+  for (const r of rows) {
+    const ths = findAll(r[1], /<th[^>]*>([\s\S]*?)<\/th>/gi).map((c) => decode(c[1]).toLowerCase());
+    if (ths.length < 2) continue;
+    ths.forEach((h, i) => {
+      if (colIdx.name < 0 && /(course|description|class)/.test(h)) colIdx.name = i;
+      if (/(^|[^0-9])(1st|q1|mp1|first|nine.*1|six.*1|\b1\b)/.test(h) && colIdx.mp1 < 0) colIdx.mp1 = i;
+      if (/(^|[^0-9])(2nd|q2|mp2|second|nine.*2|six.*2|\b2\b)/.test(h) && colIdx.mp2 < 0) colIdx.mp2 = i;
+      if (/(^|[^0-9])(3rd|q3|mp3|third|nine.*3|six.*3|\b3\b)/.test(h) && colIdx.mp3 < 0) colIdx.mp3 = i;
+      if (/(^|[^0-9])(4th|q4|mp4|fourth|nine.*4|six.*4|\b4\b)/.test(h) && colIdx.mp4 < 0) colIdx.mp4 = i;
+      if (/exam|final/.test(h) && colIdx.exam < 0) colIdx.exam = i;
+      if (/(sem|average|avg)/.test(h) && colIdx.sem < 0) colIdx.sem = i;
+    });
+    if (colIdx.mp1 >= 0 || colIdx.mp2 >= 0) break;
+  }
+
+  for (const r of rows) {
+    const cells = findAll(r[1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
+    if (cells.length < 2) continue;
+    if (cells.every((c) => !c)) continue;
+
+    // Course name: header-mapped column, else first text-bearing non-numeric cell.
+    let name = colIdx.name >= 0 ? cells[colIdx.name] : "";
+    if (!name) name = cells.find((c) => c && !/^\s*[\d.]+\s*$/.test(c) && c.length > 3) || "";
+    if (!name || /^(course|description|class)$/i.test(name.trim())) continue;
+
+    let term: ReportCardTerm;
+    if (colIdx.mp1 >= 0 || colIdx.mp2 >= 0 || colIdx.mp3 >= 0 || colIdx.mp4 >= 0) {
+      term = {
+        mp1: colIdx.mp1 >= 0 ? num(cells[colIdx.mp1]) : null,
+        mp2: colIdx.mp2 >= 0 ? num(cells[colIdx.mp2]) : null,
+        mp3: colIdx.mp3 >= 0 ? num(cells[colIdx.mp3]) : null,
+        mp4: colIdx.mp4 >= 0 ? num(cells[colIdx.mp4]) : null,
+        exam: colIdx.exam >= 0 ? num(cells[colIdx.exam]) : null,
+        semester: colIdx.sem >= 0 ? num(cells[colIdx.sem]) : null,
+      };
+    } else {
+      // No usable header: take numeric grade-like cells (1–100) in order.
+      const grades = cells
+        .map((c) => num(c))
+        .filter((n): n is number => n !== null && n > 0 && n <= 100);
+      if (grades.length < 1) continue;
+      term = {
+        mp1: grades[0] ?? null,
+        mp2: grades[1] ?? null,
+        mp3: grades[2] ?? null,
+        mp4: grades[3] ?? null,
+        exam: grades[4] ?? null,
+        semester: grades[5] ?? null,
+      };
+    }
+
+    if (term.mp1 === null && term.mp2 === null && term.mp3 === null && term.mp4 === null) continue;
+    out.set(normalizeName(name), term);
+  }
+
+  return out;
+}
+
+/** Normalize a course name for cross-page matching (lowercase, strip codes/punctuation). */
+export function normalizeName(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/\(.*?\)/g, " ")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
+
 /** Extract student name + school from any HAC page (header). */
 export function parseStudent(html: string): { name: string; grade: string | null; school: string | null } {
   const nameMatch =
