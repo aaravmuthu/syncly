@@ -1,4 +1,4 @@
-// Academic Tier Progression ("Aura Tiers") — maps a cumulative weighted GPA
+// Academic Tier Progression — maps a cumulative weighted GPA
 // to a curated high-end rank. Pure logic + presentation tokens, no React.
 
 export type TierId = "vanguard" | "lucid" | "zenith" | "radiant" | "apex";

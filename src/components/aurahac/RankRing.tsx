@@ -36,7 +36,7 @@ export function RankRing({ gpa, size = 260 }: Props) {
 
   return (
     <div className="relative grid place-items-center select-none" style={{ minHeight: size + 20 }}>
-      {/* Tier-tinted ambient aura behind the ring */}
+      {/* Tier-tinted ambient glow behind the ring */}
       <div
         aria-hidden
         className="absolute rounded-full pointer-events-none"
