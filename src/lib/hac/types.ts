@@ -85,6 +85,15 @@ export interface AttendanceLedger {
   log: AttendanceEntry[];
 }
 
+/** An event pulled directly from the HAC Home/Calendar page. */
+export interface CalendarActivity {
+  date: string; // YYYY-MM-DD
+  title: string;
+  course: string | null;
+  /** Raw category/type label from HAC, e.g. "Assignment", "Holiday". */
+  kind: string | null;
+}
+
 export interface HacData {
   student: { name: string; grade: string | null; school: string | null; studentId?: string | null };
   courses: Course[];
