@@ -157,10 +157,6 @@ function courseId(name: string, period: string | null, index = 0): string {
   return `c-${key || index}`;
 }
 
-function latestTermAverage(term: ReportCardTerm): number | null {
-  return term.mp4 ?? term.mp3 ?? term.mp2 ?? term.mp1 ?? term.semester ?? term.exam ?? null;
-}
-
 export function extractReportCardEntries(html: string): { name: string; term: ReportCardTerm }[] {
   const out: { name: string; term: ReportCardTerm }[] = [];
   const tables = findAll(html, /<table[^>]*>[\s\S]*?<\/table>/gi)
@@ -264,11 +260,11 @@ function parseAssignmentRows(tableHtml: string, courseNameIndex: number): Map<st
     const pctCell = idx.pct >= 0 ? cells[idx.pct] : cells[6];
     const average = idx.avg >= 0 ? num(cells[idx.avg]) : null;
 
-    if (!courseName || /^course|class|subject$/i.test(courseName)) continue;
+    if (!courseName || /^(course|class|subject)$/i.test(courseName)) continue;
     const due = parseDate(dueCell || "");
     if (!due && !/\d+\/\d+/.test(dueCell || "")) continue;
     const aname = nameCell?.trim();
-    if (!aname || /^assignment|description$/i.test(aname)) continue;
+    if (!aname || /^(assignment|description)$/i.test(aname)) continue;
 
     const metaIdx = new Set([idx.course, idx.due, idx.name, idx.cat].filter((v) => v >= 0));
     const parsedScore = parseGradeCell(scoreCell);
