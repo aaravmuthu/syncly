@@ -160,8 +160,7 @@ function courseId(name: string, period: string | null, index = 0): string {
 export function extractReportCardEntries(html: string): { name: string; term: ReportCardTerm }[] {
   const out: { name: string; term: ReportCardTerm }[] = [];
   const tables = findAll(html, /<table[^>]*>[\s\S]*?<\/table>/gi)
-    .map((t) => t[0])
-    .filter((t) => /report\s*card|sg-asp-table|MarkingPeriod|Course/i.test(t));
+    .map((t) => t[0]);
   const blob = tables.join("\n") || html;
 
   const rows = findAll(blob, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
@@ -169,16 +168,16 @@ export function extractReportCardEntries(html: string): { name: string; term: Re
 
   const colIdx = { name: -1, mp1: -1, mp2: -1, mp3: -1, mp4: -1, exam: -1, sem: -1 };
   for (const r of rows) {
-    const ths = findAll(r[1], /<th[^>]*>([\s\S]*?)<\/th>/gi).map((c) => decode(c[1]).toLowerCase());
-    if (ths.length < 2) continue;
-    ths.forEach((h, i) => {
+    const headers = findAll(r[1], /<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi).map((c) => decode(c[1]).toLowerCase());
+    if (headers.length < 2) continue;
+    headers.forEach((h, i) => {
       if (colIdx.name < 0 && /(course|description|class)/.test(h)) colIdx.name = i;
-      if (/(^|[^0-9])(1st|q1|mp1|first|nine.*1|six.*1|\b1\b)/.test(h) && colIdx.mp1 < 0) colIdx.mp1 = i;
-      if (/(^|[^0-9])(2nd|q2|mp2|second|nine.*2|six.*2|\b2\b)/.test(h) && colIdx.mp2 < 0) colIdx.mp2 = i;
-      if (/(^|[^0-9])(3rd|q3|mp3|third|nine.*3|six.*3|\b3\b)/.test(h) && colIdx.mp3 < 0) colIdx.mp3 = i;
-      if (/(^|[^0-9])(4th|q4|mp4|fourth|nine.*4|six.*4|\b4\b)/.test(h) && colIdx.mp4 < 0) colIdx.mp4 = i;
+      if (/(^|[^0-9])(1st|q1|mp1|m1|p1|first|nine.*1|six.*1|term\s*1|quarter\s*1|\b1\b)/.test(h) && colIdx.mp1 < 0) colIdx.mp1 = i;
+      if (/(^|[^0-9])(2nd|q2|mp2|m2|p2|second|nine.*2|six.*2|term\s*2|quarter\s*2|\b2\b)/.test(h) && colIdx.mp2 < 0) colIdx.mp2 = i;
+      if (/(^|[^0-9])(3rd|q3|mp3|m3|p3|third|nine.*3|six.*3|term\s*3|quarter\s*3|\b3\b)/.test(h) && colIdx.mp3 < 0) colIdx.mp3 = i;
+      if (/(^|[^0-9])(4th|q4|mp4|m4|p4|fourth|nine.*4|six.*4|term\s*4|quarter\s*4|\b4\b)/.test(h) && colIdx.mp4 < 0) colIdx.mp4 = i;
       if (/exam|final/.test(h) && colIdx.exam < 0) colIdx.exam = i;
-      if (/(sem|average|avg)/.test(h) && colIdx.sem < 0) colIdx.sem = i;
+      if (/(sem|semester|average|avg)/.test(h) && colIdx.sem < 0) colIdx.sem = i;
     });
     if (colIdx.mp1 >= 0 || colIdx.mp2 >= 0 || colIdx.mp3 >= 0 || colIdx.mp4 >= 0) break;
   }
@@ -205,7 +204,7 @@ export function extractReportCardEntries(html: string): { name: string; term: Re
       const grades = cells
         .map((c) => num(c))
         .filter((n): n is number => n !== null && n >= 40 && n <= 100);
-      if (!grades.length) continue;
+      if (grades.length < 2) continue;
       term = {
         mp1: grades[0] ?? null,
         mp2: grades[1] ?? null,
@@ -221,6 +220,41 @@ export function extractReportCardEntries(html: string): { name: string; term: Re
   }
 
   return out;
+}
+
+function parseCourseSummaries(html: string): Course[] {
+  const out = new Map<string, Course>();
+  const headers = findAll(
+    html,
+    /<(?:a|span)[^>]*class=["'][^"']*sg-header-heading(?![^"']*sg-right)[^"']*["'][^>]*>([\s\S]*?)<\/(?:a|span)>/gi,
+  );
+
+  for (const match of headers) {
+    const start = match.index ?? 0;
+    const segment = html.slice(start, start + 900);
+    const rawName = decode(match[1]);
+    if (!rawName || /student grades|average|classwork/i.test(rawName)) continue;
+
+    const avgMatch = segment.match(/sg-header-heading[^>]*sg-right[^>]*>([\s\S]*?)<\/span>/i);
+    const subMatch = segment.match(/sg-header-sub-heading[^>]*>([\s\S]*?)<\/span>/i);
+    const average = avgMatch ? num(decode(avgMatch[1])) : null;
+    const { name, period, teacher } = parseCourseLabel(rawName, rawName);
+    const key = normalizeName(name);
+    if (!key || out.has(key)) continue;
+
+    out.set(key, {
+      id: courseId(name, period, out.size),
+      name,
+      code: null,
+      teacher: teacher ?? (subMatch ? decode(subMatch[1]) : null),
+      period,
+      average,
+      assignments: [],
+      categoryAverages: [],
+    });
+  }
+
+  return Array.from(out.values());
 }
 
 function parseAssignmentRows(tableHtml: string, courseNameIndex: number): Map<string, Course> {
@@ -515,7 +549,12 @@ export function parseClasses(html: string): Course[] {
     });
   }
 
-  return courses.length ? courses : parseFallbackClasswork(html);
+  if (courses.length) return courses;
+
+  const fallback = parseFallbackClasswork(html);
+  if (fallback.length) return fallback;
+
+  return parseCourseSummaries(html);
 }
 
 /** Parse transcript table (rows of historical courses). */
