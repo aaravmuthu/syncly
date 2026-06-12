@@ -15,7 +15,7 @@ const TIERS = [
 function TierCarousel() {
   const [i, setI] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setI((p) => (p + 1) % TIERS.length), 2800);
+    const t = setInterval(() => setI((p) => (p + 1) % TIERS.length), 5000);
     return () => clearInterval(t);
   }, []);
   const tier = TIERS[i];
