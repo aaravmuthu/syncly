@@ -161,6 +161,72 @@ function latestTermAverage(term: ReportCardTerm): number | null {
   return term.mp4 ?? term.mp3 ?? term.mp2 ?? term.mp1 ?? term.semester ?? term.exam ?? null;
 }
 
+function extractReportCardEntries(html: string): { name: string; term: ReportCardTerm }[] {
+  const out: { name: string; term: ReportCardTerm }[] = [];
+  const tables = findAll(html, /<table[^>]*>[\s\S]*?<\/table>/gi)
+    .map((t) => t[0])
+    .filter((t) => /report\s*card|sg-asp-table|MarkingPeriod|Course/i.test(t));
+  const blob = tables.join("\n") || html;
+
+  const rows = findAll(blob, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  if (!rows.length) return out;
+
+  const colIdx = { name: -1, mp1: -1, mp2: -1, mp3: -1, mp4: -1, exam: -1, sem: -1 };
+  for (const r of rows) {
+    const ths = findAll(r[1], /<th[^>]*>([\s\S]*?)<\/th>/gi).map((c) => decode(c[1]).toLowerCase());
+    if (ths.length < 2) continue;
+    ths.forEach((h, i) => {
+      if (colIdx.name < 0 && /(course|description|class)/.test(h)) colIdx.name = i;
+      if (/(^|[^0-9])(1st|q1|mp1|first|nine.*1|six.*1|\b1\b)/.test(h) && colIdx.mp1 < 0) colIdx.mp1 = i;
+      if (/(^|[^0-9])(2nd|q2|mp2|second|nine.*2|six.*2|\b2\b)/.test(h) && colIdx.mp2 < 0) colIdx.mp2 = i;
+      if (/(^|[^0-9])(3rd|q3|mp3|third|nine.*3|six.*3|\b3\b)/.test(h) && colIdx.mp3 < 0) colIdx.mp3 = i;
+      if (/(^|[^0-9])(4th|q4|mp4|fourth|nine.*4|six.*4|\b4\b)/.test(h) && colIdx.mp4 < 0) colIdx.mp4 = i;
+      if (/exam|final/.test(h) && colIdx.exam < 0) colIdx.exam = i;
+      if (/(sem|average|avg)/.test(h) && colIdx.sem < 0) colIdx.sem = i;
+    });
+    if (colIdx.mp1 >= 0 || colIdx.mp2 >= 0 || colIdx.mp3 >= 0 || colIdx.mp4 >= 0) break;
+  }
+
+  for (const r of rows) {
+    const cells = findAll(r[1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
+    if (cells.length < 2 || cells.every((c) => !c)) continue;
+
+    let name = colIdx.name >= 0 ? cells[colIdx.name] : "";
+    if (!name) name = cells.find((c) => c && !/^\s*[\d.]+\s*$/.test(c) && c.length > 3) || "";
+    if (!name || /^(course|description|class)$/i.test(name.trim())) continue;
+
+    let term: ReportCardTerm;
+    if (colIdx.mp1 >= 0 || colIdx.mp2 >= 0 || colIdx.mp3 >= 0 || colIdx.mp4 >= 0) {
+      term = {
+        mp1: colIdx.mp1 >= 0 ? num(cells[colIdx.mp1]) : null,
+        mp2: colIdx.mp2 >= 0 ? num(cells[colIdx.mp2]) : null,
+        mp3: colIdx.mp3 >= 0 ? num(cells[colIdx.mp3]) : null,
+        mp4: colIdx.mp4 >= 0 ? num(cells[colIdx.mp4]) : null,
+        exam: colIdx.exam >= 0 ? num(cells[colIdx.exam]) : null,
+        semester: colIdx.sem >= 0 ? num(cells[colIdx.sem]) : null,
+      };
+    } else {
+      const grades = cells
+        .map((c) => num(c))
+        .filter((n): n is number => n !== null && n >= 40 && n <= 100);
+      if (!grades.length) continue;
+      term = {
+        mp1: grades[0] ?? null,
+        mp2: grades[1] ?? null,
+        mp3: grades[2] ?? null,
+        mp4: grades[3] ?? null,
+        exam: grades[4] ?? null,
+        semester: grades[5] ?? null,
+      };
+    }
+
+    if (term.mp1 === null && term.mp2 === null && term.mp3 === null && term.mp4 === null) continue;
+    out.push({ name, term });
+  }
+
+  return out;
+}
+
 function parseAssignmentRows(tableHtml: string, courseNameIndex: number): Map<string, Course> {
   const courseMap = new Map<string, Course>();
   const rows = findAll(tableHtml, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
@@ -443,7 +509,7 @@ export function parseClasses(html: string): Course[] {
 
     courses.push({
       id: courseId(name || `Course ${i + 1}`, period, i),
-      name: name || titleRaw,
+      name: name || `Course ${i + 1}`,
       code: null,
       teacher,
       period,
