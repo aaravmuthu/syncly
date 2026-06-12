@@ -40,7 +40,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, parseCalendar, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -148,13 +148,26 @@ export const syncHac = createServerFn({ method: "POST" })
     }
 
     const student = parseStudent(classworkHtml);
-    const courses = parseClasses(classworkHtml);
+    let courses = parseClasses(classworkHtml);
     const transcript = parseTranscript(transcriptHtml);
     const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
 
     // Merge the real report-card quarter grades onto each course by name.
     const rcMap = parseReportCard(reportCardHtml);
+    if (!courses.length && rcMap.size) {
+      courses = extractReportCardEntries(reportCardHtml).map((entry, index) => ({
+        id: `c-rc-${normalizeName(entry.name) || index}`,
+        name: entry.name,
+        code: null,
+        teacher: null,
+        period: null,
+        average: entry.term.mp4 ?? entry.term.mp3 ?? entry.term.mp2 ?? entry.term.mp1 ?? entry.term.semester ?? entry.term.exam ?? null,
+        assignments: [],
+        categoryAverages: [],
+        reportCard: entry.term,
+      }));
+    }
     if (rcMap.size) {
       for (const course of courses) {
         const term = rcMap.get(normalizeName(course.name));
