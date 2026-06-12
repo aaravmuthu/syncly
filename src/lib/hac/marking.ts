@@ -6,13 +6,29 @@ export const MARKING_PERIODS: MarkingPeriod[] = ["MP1", "MP2", "MP3", "MP4"];
 
 /** Returns the closest real HAC-backed course view for the requested marking period. */
 export function courseForPeriod(course: Course, period: MarkingPeriod): Course {
-  if (period === "MP4") return course;
+  // Prefer real per-marking-period classwork pulled straight from HAC.
+  const pd = course.periodData?.[period];
+  if (pd) {
+    return {
+      ...course,
+      average: pd.average,
+      assignments: pd.assignments,
+      categoryAverages: pd.categoryAverages,
+    };
+  }
+
+  // Fall back to report-card quarter averages (no assignment-level data available).
   const reportAverage =
     period === "MP1"
       ? course.reportCard?.mp1 ?? null
       : period === "MP2"
         ? course.reportCard?.mp2 ?? null
-        : course.reportCard?.mp3 ?? null;
+        : period === "MP3"
+          ? course.reportCard?.mp3 ?? null
+          : course.reportCard?.mp4 ?? null;
+
+  // MP4 with no period data: keep the live classwork already on the course.
+  if (period === "MP4" && reportAverage === null) return course;
 
   return {
     ...course,
