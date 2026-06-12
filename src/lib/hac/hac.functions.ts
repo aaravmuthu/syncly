@@ -32,6 +32,8 @@ const PAGE_CANDIDATES = {
   ],
 } as const;
 
+const LOGIN_PATH = "/HomeAccess/Account/LogOn?ReturnUrl=%2fHomeAccess%2f";
+
 function looksLikeLoginPage(html: string): boolean {
   return /forgot my user name or password|register for hac|verificationoption|logondetails\.username|sign in/i.test(html);
 }
@@ -58,11 +60,7 @@ async function fetchBestPage(
   let fallbackHtml = "";
 
   for (const path of candidates) {
-    const response = await fetch(`${base}${path}`, {
-      headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
-    });
-
-    const html = await response.text();
+    const { response, html } = await fetchHtmlWithRedirects(`${base}${path}`, jar, ua);
     if (!response.ok) continue;
     if (looksLikeLoginPage(html)) {
       fallbackHtml = html;
@@ -73,6 +71,63 @@ async function fetchBestPage(
   }
 
   return fallbackHtml;
+}
+
+function extractHtmlRedirectTarget(html: string): string | null {
+  const meta = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i)?.[1];
+  if (meta) return meta.trim();
+
+  const js =
+    html.match(/(?:window|document)\.location(?:\.href)?\s*=\s*["']([^"']+)["']/i)?.[1] ??
+    html.match(/location\.replace\(["']([^"']+)["']\)/i)?.[1];
+  return js?.trim() ?? null;
+}
+
+async function fetchHtmlWithRedirects(
+  url: string,
+  jar: Record<string, string>,
+  ua: string,
+  referer?: string,
+): Promise<{ response: Response; html: string; url: string }> {
+  let currentUrl = url;
+  let currentReferer = referer;
+
+  for (let hop = 0; hop < 8; hop++) {
+    const response = await fetch(currentUrl, {
+      headers: {
+        "User-Agent": ua,
+        Accept: "text/html",
+        Cookie: cookieHeader(jar),
+        ...(currentReferer ? { Referer: currentReferer } : {}),
+      },
+      redirect: "manual",
+    });
+    Object.assign(jar, mergeCookies(jar, response.headers));
+
+    const location = response.headers.get("location");
+    if (location && response.status >= 300 && response.status < 400) {
+      currentReferer = currentUrl;
+      currentUrl = location.startsWith("http") ? location : new URL(location, currentUrl).toString();
+      continue;
+    }
+
+    const html = await response.text();
+    const htmlRedirect = extractHtmlRedirectTarget(html);
+    if (htmlRedirect && !looksLikeLoginPage(html) && htmlRedirect !== currentUrl) {
+      currentReferer = currentUrl;
+      currentUrl = htmlRedirect.startsWith("http") ? htmlRedirect : new URL(htmlRedirect, currentUrl).toString();
+      continue;
+    }
+
+    return { response, html, url: currentUrl };
+  }
+
+  const response = await fetch(currentUrl, {
+    headers: { "User-Agent": ua, Accept: "text/html", Cookie: cookieHeader(jar) },
+    redirect: "manual",
+  });
+  Object.assign(jar, mergeCookies(jar, response.headers));
+  return { response, html: await response.text(), url: currentUrl };
 }
 
 function parseSetCookie(headers: Headers): Record<string, string> {
@@ -110,7 +165,7 @@ export const syncHac = createServerFn({ method: "POST" })
     let jar: Record<string, string> = {};
 
     // Step 1: GET login page for verification token + cookies.
-    const loginUrl = `${base}/HomeAccess/Account/LogOn`;
+    const loginUrl = `${base}${LOGIN_PATH}`;
     let r1: Response;
     try {
       r1 = await fetch(loginUrl, {
@@ -147,6 +202,8 @@ export const syncHac = createServerFn({ method: "POST" })
         "User-Agent": ua,
         "Content-Type": "application/x-www-form-urlencoded",
         Accept: "text/html",
+        "X-Requested-With": "XMLHttpRequest",
+        __RequestVerificationToken: token,
         Cookie: cookieHeader(jar),
         Referer: loginUrl,
         Origin: base,
