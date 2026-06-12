@@ -40,7 +40,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseReportCard, parseCalendar, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, parseCalendar, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -150,6 +150,7 @@ export const syncHac = createServerFn({ method: "POST" })
     const student = parseStudent(classworkHtml);
     const courses = parseClasses(classworkHtml);
     const transcript = parseTranscript(transcriptHtml);
+    const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
 
     // Merge the real report-card quarter grades onto each course by name.
@@ -166,6 +167,7 @@ export const syncHac = createServerFn({ method: "POST" })
       courses,
       transcript,
       calendar,
+      officialGpa,
       markingPeriodGPAs: [],
       syncedAt: new Date().toISOString(),
       districtId: data.district,

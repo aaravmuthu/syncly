@@ -303,6 +303,40 @@ export function parseTranscript(html: string): TranscriptCourse[] {
 }
 
 /**
+ * Extract the official GPA + class rank from the HAC transcript page.
+ * HAC renders these in a summary table/labels at the bottom of the transcript,
+ * e.g. "Weighted GPA: 5.1234", "Un-weighted GPA: 3.8900", "Rank: 42 / 510".
+ */
+export function parseTranscriptGpa(html: string): {
+  weighted: number | null;
+  unweighted: number | null;
+  rank: number | null;
+  classSize: number | null;
+} {
+  const text = decode(html);
+  const grab = (re: RegExp): number | null => {
+    const m = text.match(re);
+    return m ? num(m[1]) : null;
+  };
+
+  const weighted = grab(/weighted\s*gpa[^0-9]*([0-9]+(?:\.[0-9]+)?)/i);
+  const unweighted =
+    grab(/un\s*-?\s*weighted\s*gpa[^0-9]*([0-9]+(?:\.[0-9]+)?)/i) ??
+    grab(/simple\s*gpa[^0-9]*([0-9]+(?:\.[0-9]+)?)/i);
+
+  // Rank shows as "Rank: 42 / 510" or "Rank 42 of 510".
+  let rank: number | null = null;
+  let classSize: number | null = null;
+  const rankMatch = text.match(/rank[^0-9]*([0-9]+)\s*(?:\/|of|out of)\s*([0-9]+)/i);
+  if (rankMatch) {
+    rank = num(rankMatch[1]);
+    classSize = num(rankMatch[2]);
+  }
+
+  return { weighted, unweighted, rank, classSize };
+}
+
+/**
  * Parse the Report Card page into per-course 4-quarter matrices.
  * Returns a map keyed by a normalized course name.
  * Handles Frisco's `sg-asp-table` report-card grid where each row is a course
