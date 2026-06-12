@@ -13,6 +13,68 @@ const BASES: Record<DistrictId, string> = {
   prosper: "https://hac.prosperisd.org",
 };
 
+const PAGE_CANDIDATES = {
+  classwork: [
+    "/HomeAccess/Content/Student/Assignments.aspx",
+    "/HomeAccess/Classes/Classwork",
+  ],
+  transcript: [
+    "/HomeAccess/Content/Student/Transcript.aspx",
+    "/HomeAccess/Grades/Transcript",
+  ],
+  reportCard: [
+    "/HomeAccess/Content/Student/ReportCards.aspx",
+    "/HomeAccess/Grades/ReportCard",
+  ],
+  calendar: [
+    "/HomeAccess/Home/WeekView",
+    "/HomeAccess/Home/Calendar",
+  ],
+} as const;
+
+function looksLikeLoginPage(html: string): boolean {
+  return /forgot my user name or password|register for hac|verificationoption|logondetails\.username|sign in/i.test(html);
+}
+
+function looksLikeClassworkPage(html: string): boolean {
+  return /assignmentclass|date due|full view|quick view|print classwork|classwork/i.test(html);
+}
+
+function looksLikeTranscriptPage(html: string): boolean {
+  return /sg-transcript-group|transcript|gpa|class rank|credits/i.test(html);
+}
+
+function looksLikeReportCardPage(html: string): boolean {
+  return /report cards?|report card run|sg-asp-table|marking period|comments/i.test(html);
+}
+
+async function fetchBestPage(
+  base: string,
+  jar: Record<string, string>,
+  ua: string,
+  candidates: readonly string[],
+  isMatch: (html: string) => boolean,
+): Promise<string> {
+  let fallbackHtml = "";
+
+  for (const path of candidates) {
+    const response = await fetch(`${base}${path}`, {
+      headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
+    });
+
+    const html = await response.text();
+    if (!response.ok) continue;
+    if (looksLikeLoginPage(html)) {
+      fallbackHtml = html;
+      continue;
+    }
+    if (isMatch(html)) return html;
+    if (!fallbackHtml) fallbackHtml = html;
+  }
+
+  return fallbackHtml;
+}
+
 function parseSetCookie(headers: Headers): Record<string, string> {
   const jar: Record<string, string> = {};
   // Cloudflare Workers' Headers exposes getSetCookie()
@@ -118,32 +180,16 @@ export const syncHac = createServerFn({ method: "POST" })
     }
 
     // Step 3: fetch Classwork, Transcript, Report Card, and Calendar pages.
-    const classworkUrl = `${base}/HomeAccess/Classes/Classwork`;
-    const transcriptUrl = `${base}/HomeAccess/Grades/Transcript`;
-    const reportCardUrl = `${base}/HomeAccess/Grades/ReportCard`;
-    const calendarUrl = `${base}/HomeAccess/Home/Calendar`;
-
-    const [rc, rt, rr, rcal] = await Promise.all([
-      fetch(classworkUrl, {
-        headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
-      }),
-      fetch(transcriptUrl, {
-        headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
-      }),
-      fetch(reportCardUrl, {
-        headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
-      }),
-      fetch(calendarUrl, {
-        headers: { "User-Agent": ua, Cookie: cookieHeader(jar), Accept: "text/html" },
-      }),
+    // HAC route shapes vary by district/version, so try the classic Content/Student
+    // pages first, then the newer Classes/Grades routes.
+    const [classworkHtml, transcriptHtml, reportCardHtml, calendarHtml] = await Promise.all([
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.transcript, looksLikeTranscriptPage),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.reportCard, looksLikeReportCardPage),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.calendar, (html) => /calendar|week view|fc-event|data-date=/i.test(html)),
     ]);
 
-    const classworkHtml = await rc.text();
-    const transcriptHtml = await rt.text();
-    const reportCardHtml = await rr.text();
-    const calendarHtml = await rcal.text();
-
-    if (/LogOn|login/i.test(classworkHtml) && !/AssignmentClass/i.test(classworkHtml)) {
+    if (looksLikeLoginPage(classworkHtml) || !looksLikeClassworkPage(classworkHtml)) {
       throw new Error("Session expired or login was not accepted. Please reconnect.");
     }
 
