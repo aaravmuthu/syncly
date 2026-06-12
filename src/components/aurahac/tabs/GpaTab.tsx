@@ -34,11 +34,15 @@ export function GpaTab() {
 
   const mpData = useMemo(() => {
     if (data.markingPeriodGPAs.length) return data.markingPeriodGPAs;
-    return ["MP1", "MP2", "MP3", "MP4"].map((mp, i) => {
-      const base = currentYearGPA(included, weighted);
-      const noise = [0.05, -0.03, 0.02, 0][i] ?? 0;
-      return { mp, gpa: Math.max(0, Math.min(weighted ? 6 : 4, base + noise)) };
-    });
+    const reportCardPeriods = ["MP1", "MP2", "MP3", "MP4"] as const;
+    const derived = reportCardPeriods
+      .map((mp) => {
+        const periodCourses = data.courses.map((c) => courseForPeriod(c, mp)).filter((c) => c.average !== null);
+        if (!periodCourses.length) return null;
+        return { mp, gpa: currentYearGPA(periodCourses, weighted) };
+      })
+      .filter((entry): entry is { mp: string; gpa: number } => entry !== null);
+    return derived;
   }, [included, data.markingPeriodGPAs, weighted]);
 
   const max = weighted ? 6 : 4;
