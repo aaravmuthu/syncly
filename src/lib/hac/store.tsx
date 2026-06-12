@@ -8,6 +8,7 @@ import type { MarkingPeriod } from "./marking";
 
 const STORAGE_KEY = "aurahac.data.v1";
 const CRED_KEY = "aurahac.cred.v1";
+const DATA_VERSION_KEY = "aurahac.data.version.v1";
 const THEME_KEY = "aurahac.theme.v2";
 const DEMO_KEY = "aurahac.demo.v1";
 const DONE_KEY = "aurahac.done.v1";
@@ -15,6 +16,7 @@ const EVENTS_KEY = "aurahac.events.v1";
 const CUSTOM_KEY = "aurahac.coursecustom.v1";
 const BELL_KEY = "aurahac.bell.v1";
 const STREAK_KEY = "aurahac.streak.v1";
+const DATA_SCHEMA_VERSION = 2;
 
 export type Theme =
   | "nebula"
@@ -95,7 +97,6 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [activePeriod, setActivePeriod] = useState<MarkingPeriod>("MP4");
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  // Hydrate from localStorage once. Fall back to demo data so the app is
   // Hydrate from localStorage once. Show the login screen by default; restore a
   // live session, or a previously chosen demo session, when present.
   useEffect(() => {
@@ -121,26 +122,27 @@ export function HacProvider({ children }: { children: ReactNode }) {
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         setNotificationsEnabled(true);
       }
-
-
+      const version = Number(localStorage.getItem(DATA_VERSION_KEY) ?? "0");
       const d = localStorage.getItem(STORAGE_KEY);
-      if (d) {
+      const c = localStorage.getItem(CRED_KEY);
+      if (c) {
+        // Credentials are stored AES-GCM encrypted; decrypt in memory only.
+        decryptJSON<Cred>(c)
+          .then((cred) => setCred(cred))
+          .catch(() => {
+            try {
+              localStorage.removeItem(CRED_KEY);
+            } catch {
+              /* ignore */
+            }
+          });
+      }
+      if (d && version === DATA_SCHEMA_VERSION) {
         setData(JSON.parse(d));
-        const c = localStorage.getItem(CRED_KEY);
-        if (c) {
-          // Credentials are stored AES-GCM encrypted; decrypt in memory only.
-          decryptJSON<Cred>(c)
-            .then((cred) => setCred(cred))
-            .catch(() => {
-              // Legacy/plaintext or corrupted entry — drop it.
-              try {
-                localStorage.removeItem(CRED_KEY);
-              } catch {
-                /* ignore */
-              }
-            });
-        }
         return;
+      }
+      if (d && version !== DATA_SCHEMA_VERSION) {
+        localStorage.removeItem(STORAGE_KEY);
       }
       if (localStorage.getItem(DEMO_KEY)) {
         setData(getFallbackData());
@@ -169,6 +171,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setIsFallback(false);
       setCred(c);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+      localStorage.setItem(DATA_VERSION_KEY, String(DATA_SCHEMA_VERSION));
       localStorage.setItem(CRED_KEY, await encryptJSON(c));
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sync failed";
@@ -187,6 +190,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(DEMO_KEY, "1");
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(DATA_VERSION_KEY);
       localStorage.removeItem(CRED_KEY);
     } catch {
       /* ignore */
@@ -201,6 +205,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
       const d = await callSync(cred);
       setData(d);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+      localStorage.setItem(DATA_VERSION_KEY, String(DATA_SCHEMA_VERSION));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
     } finally {
@@ -215,6 +220,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(DATA_VERSION_KEY);
       localStorage.removeItem(CRED_KEY);
       localStorage.removeItem(DEMO_KEY);
     } catch {
