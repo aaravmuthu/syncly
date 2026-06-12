@@ -157,6 +157,16 @@ export function HacProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // If credentials were restored but cached data is missing (e.g. cleared by a
+  // schema-version bump), auto-resync so the user never lands on a blank shell.
+  const didAutoSync = useRef(false);
+  useEffect(() => {
+    if (cred && !data && !loading && !didAutoSync.current) {
+      didAutoSync.current = true;
+      void refresh();
+    }
+  }, [cred, data, loading]);
+
   async function callSync(c: Cred): Promise<HacData> {
     const { syncHac } = await import("./hac.functions");
     return await syncHac({ data: c });
