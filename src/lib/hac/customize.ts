@@ -36,11 +36,41 @@ export interface CourseDisplay {
   from: string | null; // base color
 }
 
+/** Subject keyword → emoji rules, checked in order (most specific first). */
+const SUBJECT_EMOJI: { test: RegExp; emoji: string }[] = [
+  { test: /pre.?cal|calc/i, emoji: "📈" },
+  { test: /algebra|geometry|stat|math|trig/i, emoji: "📐" },
+  { test: /biolog/i, emoji: "🧬" },
+  { test: /chem/i, emoji: "🧪" },
+  { test: /physic/i, emoji: "🔭" },
+  { test: /anatomy|health|medic/i, emoji: "🩺" },
+  { test: /environ|ecolog|earth|geolog/i, emoji: "🌍" },
+  { test: /science/i, emoji: "🔬" },
+  { test: /english|ela|literature|lang arts|reading|writing/i, emoji: "📖" },
+  { test: /spanish|french|german|latin|chinese|japanese|language/i, emoji: "🗣️" },
+  { test: /history|gov|civics|geograph|econ|social/i, emoji: "🏛️" },
+  { test: /art|draw|paint|ceramic|design/i, emoji: "🎨" },
+  { test: /band|orchestra|choir|music|theor/i, emoji: "🎵" },
+  { test: /theat|drama|act/i, emoji: "🎭" },
+  { test: /comput|coding|program|software|cyber|tech|robot/i, emoji: "💻" },
+  { test: /engineer/i, emoji: "⚙️" },
+  { test: /business|account|market|finance/i, emoji: "💼" },
+  { test: /\bp\.?e\.?\b|physical ed|athletic|sport|fitness|gym/i, emoji: "🏃" },
+  { test: /psych|sociolog/i, emoji: "🧠" },
+  { test: /culinary|food|cook/i, emoji: "🍳" },
+];
+
+/** Guess a relevant emoji from a course name; falls back to 🎓. */
+export function guessCourseEmoji(name: string): string {
+  for (const r of SUBJECT_EMOJI) if (r.test.test(name)) return r.emoji;
+  return "🎓";
+}
+
 export function courseDisplay(course: Course, custom?: CourseCustom): CourseDisplay {
   const alias = custom?.alias?.trim();
   return {
     name: alias && alias.length ? alias : course.name,
-    emoji: custom?.emoji ?? null,
+    emoji: custom?.emoji ?? guessCourseEmoji(course.name),
     gradient: gradientCss(custom?.gradient),
     from: gradientFrom(custom?.gradient),
   };
