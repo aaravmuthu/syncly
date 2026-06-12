@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import type { Course } from "@/lib/hac/types";
-import { GRADIENT_PRESETS, EMOJI_CHOICES, courseDisplay } from "@/lib/hac/customize";
+import { GRADIENT_PRESETS, EMOJI_CHOICES, courseDisplay, guessCourseEmoji } from "@/lib/hac/customize";
 import { X, Check } from "lucide-react";
 
 export function CustomizeClassModal({ course, onClose }: { course: Course; onClose: () => void }) {
