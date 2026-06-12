@@ -24,6 +24,9 @@ export function GpaTab() {
   const cum = cumulativeGPA(data.transcript, weighted);
   const cyW = currentYearGPA(included, true);
   const cumW = cumulativeGPA(data.transcript, true);
+  // Official GPA + rank pulled straight from HAC's transcript page (if present).
+  const official = data.officialGpa;
+  const officialGpaValue = (weighted ? official?.weighted : official?.unweighted) ?? null;
   // Tier always reads the weighted cumulative scale (falls back to current year).
   const tierGpa = cumW > 0 ? cumW : cyW;
   // Re-evaluate the tier whenever the GPA changes or the What-If sim adjusts scores.
