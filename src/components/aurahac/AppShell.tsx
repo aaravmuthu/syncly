@@ -67,7 +67,7 @@ export function AppShell() {
         }}
       />
 
-      {!data && !hasCredentials ? (
+      {!data ? (
         <LoginGate />
       ) : (
         <div className="absolute inset-0 flex">
