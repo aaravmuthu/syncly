@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import type { Course } from "@/lib/hac/types";
-import { GRADIENT_PRESETS, EMOJI_CHOICES, courseDisplay } from "@/lib/hac/customize";
+import { GRADIENT_PRESETS, EMOJI_CHOICES, courseDisplay, guessCourseEmoji } from "@/lib/hac/customize";
 import { X, Check } from "lucide-react";
 
 export function CustomizeClassModal({ course, onClose }: { course: Course; onClose: () => void }) {
@@ -59,7 +59,7 @@ export function CustomizeClassModal({ course, onClose }: { course: Course; onClo
             style={{ background: preview.gradient ?? "color-mix(in oklab, var(--primary) 14%, transparent)" }}
           >
             <div className="h-11 w-11 rounded-xl grid place-items-center text-2xl bg-white/15">
-              {preview.emoji ?? "🎓"}
+              {preview.emoji ?? guessCourseEmoji(course.name)}
             </div>
             <div className="min-w-0">
               <div className="text-base font-bold truncate text-white">{preview.name}</div>
