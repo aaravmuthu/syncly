@@ -167,6 +167,7 @@ export const syncHac = createServerFn({ method: "POST" })
       courses,
       transcript,
       calendar,
+      officialGpa,
       markingPeriodGPAs: [],
       syncedAt: new Date().toISOString(),
       districtId: data.district,
