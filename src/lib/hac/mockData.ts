@@ -190,6 +190,7 @@ export function getFallbackData(): HacData {
       { mp: "MP3", gpa: 4.31 },
       { mp: "MP4", gpa: 4.36 },
     ],
+    officialGpa: { weighted: 5.0238, unweighted: 3.9421, rank: 38, classSize: 612 },
     attendance: mockAttendance(),
     calendar: mockCalendar(),
     syncedAt: new Date().toISOString(),
