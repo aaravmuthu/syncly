@@ -143,6 +143,7 @@ export function ClassDetail({
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
+  const hasLiveAssignments = course.assignments.length > 0;
 
   const goalCats = useMemo(() => {
     const list = course.categoryAverages.map((c) => c.category);
@@ -162,10 +163,10 @@ export function ClassDetail({
     () => course.assignments.map((a) => (overrides[a.name] !== undefined ? { ...a, percent: overrides[a.name] } : a)),
     [course.assignments, overrides],
   );
-  const dirty = Object.keys(overrides).length > 0;
+  const dirty = hasLiveAssignments && Object.keys(overrides).length > 0;
   const overall = dirty ? overallFrom(course, simAssignments) ?? course.average : course.average;
-  const sumAvg = (dirty ? liveCats[summative?.category ?? ""] : undefined) ?? summative?.average ?? null;
-  const formAvg = (dirty ? liveCats[formative?.category ?? ""] : undefined) ?? formative?.average ?? null;
+  const sumAvg = hasLiveAssignments ? ((dirty ? liveCats[summative?.category ?? ""] : undefined) ?? summative?.average ?? null) : null;
+  const formAvg = hasLiveAssignments ? ((dirty ? liveCats[formative?.category ?? ""] : undefined) ?? formative?.average ?? null) : null;
 
   // Skate a light beam across the simulated GPA card each time it recomputes.
   const [whatIfShimmer, setWhatIfShimmer] = useState(0);
@@ -182,6 +183,10 @@ export function ClassDetail({
   // Chart series for the Analysis view. Never empty: falls back to a safe
   // historical baseline derived from the course average so bars always plot.
   const analysisSeries = useMemo<number[]>(() => {
+    if (!hasLiveAssignments) {
+      const base = course.average ?? 85;
+      return [base, base, base, base, base].map((v) => Math.max(0, Math.min(100, v)));
+    }
     const pts = [...course.assignments]
       .reverse()
       .map((a) => pct(a))
@@ -193,11 +198,12 @@ export function ClassDetail({
     return [...baseline.slice(0, Math.max(0, 5 - seed.length)), ...seed].map((v) =>
       Math.max(0, Math.min(100, v)),
     );
-  }, [course]);
+  }, [course, hasLiveAssignments]);
 
 
   // Impact analysis: how much each assignment moves the overall grade.
   const impacts = useMemo(() => {
+    if (!hasLiveAssignments) return [];
     const base = overallFrom(course, course.assignments);
     return course.assignments.map((a) => {
       const without = course.assignments.filter((x) => x.name !== a.name);
@@ -205,7 +211,7 @@ export function ClassDetail({
       const delta = base !== null && wo !== null ? base - wo : 0;
       return { a, delta };
     });
-  }, [course]);
+  }, [course, hasLiveAssignments]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
