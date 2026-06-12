@@ -133,6 +133,170 @@ function isLikelyWeightOrMultiplierCell(raw: string | null | undefined): boolean
   return value >= 0 && value <= 5 && /^-?\d+(?:\.\d{1,2})?$/.test(text);
 }
 
+function parseCourseLabel(raw: string, fallback: string): { name: string; period: string | null; teacher: string | null } {
+  const titleRaw = decode(raw) || fallback;
+  const parts = titleRaw.split(/\s+-\s+/).map((p) => p.trim()).filter(Boolean);
+  let period: string | null = null;
+  let name = titleRaw;
+  let teacher: string | null = null;
+
+  if (parts.length >= 3) {
+    period = parts[0];
+    name = parts.slice(1, parts.length - 1).join(" - ");
+    teacher = parts[parts.length - 1];
+  } else if (parts.length === 2) {
+    name = parts[0];
+    teacher = parts[1];
+  }
+
+  return { name: name || titleRaw, period, teacher };
+}
+
+function courseId(name: string, period: string | null, index = 0): string {
+  const key = normalizeName(`${period ?? ""} ${name}`);
+  return `c-${key || index}`;
+}
+
+function latestTermAverage(term: ReportCardTerm): number | null {
+  return term.mp4 ?? term.mp3 ?? term.mp2 ?? term.mp1 ?? term.semester ?? term.exam ?? null;
+}
+
+function parseAssignmentRows(tableHtml: string, courseNameIndex: number): Map<string, Course> {
+  const courseMap = new Map<string, Course>();
+  const rows = findAll(tableHtml, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  if (!rows.length) return courseMap;
+
+  let idx = { course: courseNameIndex, due: -1, name: -1, cat: -1, score: -1, total: -1, pct: -1, avg: -1 };
+  for (const r of rows) {
+    const headers = findAll(r[1], /<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi).map((c) => decode(c[1]).toLowerCase());
+    if (headers.length < 3) continue;
+    const find = (...keys: string[]) => headers.findIndex((h) => keys.some((k) => h.includes(k)));
+    idx = {
+      course: courseNameIndex >= 0 ? courseNameIndex : headers.findIndex((h) => /course|class|subject/.test(h) && !/assignment|description/.test(h)),
+      due: find("date due", "due date", "due"),
+      name: headers.findIndex((h) => /assignment|description/.test(h)),
+      cat: find("category", "type"),
+      score: headers.findIndex((h) => /score|points earned|earned|grade/.test(h) && !/total|possible|percent|average/.test(h)),
+      total: find("total points", "points possible", "possible", "max", "total"),
+      pct: headers.findIndex((h) => h.includes("percent") || h.includes("average") || h.trim() === "%"),
+      avg: headers.findIndex((h) => /average|current grade|student grade/.test(h)),
+    };
+    break;
+  }
+
+  for (const r of rows) {
+    const cells = findAll(r[1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
+    if (cells.length < 3) continue;
+
+    const rawCourseName = idx.course >= 0 ? cells[idx.course] : null;
+    const courseName = rawCourseName?.trim();
+    const dueCell = idx.due >= 0 ? cells[idx.due] : cells[0];
+    const nameCell = idx.name >= 0 ? cells[idx.name] : cells[1];
+    const catCell = idx.cat >= 0 ? cells[idx.cat] : "";
+    const scoreCell = idx.score >= 0 ? cells[idx.score] : cells[4];
+    const totalCell = idx.total >= 0 ? cells[idx.total] : cells[5];
+    const pctCell = idx.pct >= 0 ? cells[idx.pct] : cells[6];
+    const average = idx.avg >= 0 ? num(cells[idx.avg]) : null;
+
+    if (!courseName || /^course|class|subject$/i.test(courseName)) continue;
+    const due = parseDate(dueCell || "");
+    if (!due && !/\d+\/\d+/.test(dueCell || "")) continue;
+    const aname = nameCell?.trim();
+    if (!aname || /^assignment|description$/i.test(aname)) continue;
+
+    const metaIdx = new Set([idx.course, idx.due, idx.name, idx.cat].filter((v) => v >= 0));
+    const parsedScore = parseGradeCell(scoreCell);
+    const parsedTotal = parseGradeCell(totalCell);
+    const parsedPct = parseGradeCell(pctCell);
+    const inferred = inferGradeFromRow(cells, metaIdx);
+
+    const explicitScoreLooksWrong =
+      !parsedScore.hasFraction &&
+      !parsedScore.hasPercent &&
+      parsedScore.score !== null &&
+      isLikelyWeightOrMultiplierCell(scoreCell) &&
+      (inferred.percent !== null || inferred.score !== null);
+    const explicitTotalLooksWrong =
+      !parsedTotal.hasFraction &&
+      !parsedTotal.hasPercent &&
+      parsedTotal.score !== null &&
+      isLikelyWeightOrMultiplierCell(totalCell) &&
+      inferred.total !== null;
+
+    const score =
+      parsedScore.hasFraction || (parsedScore.score !== null && !explicitScoreLooksWrong)
+        ? parsedScore.score
+        : inferred.score;
+    const total =
+      parsedScore.hasFraction
+        ? parsedScore.total
+        : explicitTotalLooksWrong
+          ? inferred.total
+          : parsedTotal.score ?? parsedTotal.total ?? inferred.total;
+    const pctParsed =
+      parsedPct.percent ??
+      (parsedScore.hasPercent && !explicitScoreLooksWrong ? parsedScore.percent : null) ??
+      inferred.percent;
+    const percent = pctParsed !== null ? pctParsed : score !== null && total ? (score / total) * 100 : null;
+
+    const key = normalizeName(courseName);
+    const existing = courseMap.get(key) ?? {
+      id: courseId(courseName, null, courseMap.size),
+      name: courseName,
+      code: null,
+      teacher: null,
+      period: null,
+      average,
+      assignments: [],
+      categoryAverages: [],
+    };
+    if (existing.average === null && average !== null) existing.average = average;
+
+    const rowText = cells.join(" ");
+    existing.assignments.push({
+      name: aname,
+      category: categorize(catCell || aname),
+      dueDate: due,
+      score,
+      totalPoints: total,
+      percent,
+      missing: /\bM\b|Missing/i.test(rowText),
+      absent: /\bABS\b|Absent/i.test(rowText),
+    });
+    courseMap.set(key, existing);
+  }
+
+  return courseMap;
+}
+
+function parseFallbackClasswork(html: string): Course[] {
+  const merged = new Map<string, Course>();
+  const tables = findAll(html, /<table[^>]*>[\s\S]*?<\/table>/gi).map((t) => t[0]);
+
+  for (const table of tables) {
+    const firstRow = table.match(/<tr[^>]*>([\s\S]*?)<\/tr>/i)?.[1] ?? "";
+    const headers = findAll(firstRow, /<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi).map((c) => decode(c[1]).toLowerCase());
+    if (headers.length < 3) continue;
+
+    const looksLikeAssignments = headers.some((h) => /assignment|description/.test(h)) && headers.some((h) => /due|date/.test(h));
+    if (!looksLikeAssignments) continue;
+
+    const courseCol = headers.findIndex((h) => /course|class|subject/.test(h) && !/assignment|description/.test(h));
+    const parsed = parseAssignmentRows(table, courseCol);
+    for (const [key, course] of parsed) {
+      const existing = merged.get(key);
+      if (!existing) {
+        merged.set(key, course);
+        continue;
+      }
+      if (existing.average === null && course.average !== null) existing.average = course.average;
+      existing.assignments.push(...course.assignments);
+    }
+  }
+
+  return Array.from(merged.values());
+}
+
 /** Parse the Assignments.aspx Classwork page. */
 export function parseClasses(html: string): Course[] {
   // Each class block lives inside a div with class containing "AssignmentClass".
@@ -144,20 +308,7 @@ export function parseClasses(html: string): Course[] {
     const headerMatch = block.match(/sg-header-heading[^>]*>([\s\S]*?)<\/a>/i) ||
       block.match(/AssignmentClassName[^>]*>([\s\S]*?)<\/span>/i) ||
       block.match(/<span[^>]*>([^<]*(?:Marking Period|Period|Mrk Per)[^<]*)<\/span>/i);
-    const titleRaw = headerMatch ? decode(headerMatch[1]) : `Course ${i + 1}`;
-    // Title pattern often: "1101 - 1 ENG 1 GT - Smith, John"
-    const parts = titleRaw.split(/\s+-\s+/);
-    let period: string | null = null;
-    let name = titleRaw;
-    let teacher: string | null = null;
-    if (parts.length >= 3) {
-      period = parts[0];
-      name = parts.slice(1, parts.length - 1).join(" - ");
-      teacher = parts[parts.length - 1];
-    } else if (parts.length === 2) {
-      name = parts[0];
-      teacher = parts[1];
-    }
+    const { name, period, teacher } = parseCourseLabel(headerMatch?.[1] ?? "", `Course ${i + 1}`);
 
     const avgMatch =
       block.match(/sg-header-heading[^>]*sg-right[^>]*>([\s\S]*?)<\/span>/i) ||
@@ -291,7 +442,7 @@ export function parseClasses(html: string): Course[] {
     }
 
     courses.push({
-      id: `c-${i}`,
+      id: courseId(name || `Course ${i + 1}`, period, i),
       name: name || titleRaw,
       code: null,
       teacher,
@@ -302,7 +453,7 @@ export function parseClasses(html: string): Course[] {
     });
   }
 
-  return courses;
+  return courses.length ? courses : parseFallbackClasswork(html);
 }
 
 /** Parse transcript table (rows of historical courses). */
