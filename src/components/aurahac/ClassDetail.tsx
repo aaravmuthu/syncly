@@ -276,13 +276,24 @@ export function ClassDetail({
                   <GradeRing value={overall} size={150} label="Overall" />
                 </div>
                 <div className="flex flex-col gap-3">
-                  <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
-                  <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                  {hasLiveAssignments ? (
+                    <>
+                      <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
+                      <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                    </>
+                  ) : (
+                    <MetricRow label="Report Card" value={course.average} color={catColor("Assessment")} />
+                  )}
                 </div>
               </div>
 
               {/* Assignment feed */}
               <div className="space-y-2 pt-1">
+                {!hasLiveAssignments ? (
+                  <div className="glass rounded-2xl p-4 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
+                    HAC only publishes live assignment details for the current marking period. This earlier period is showing the real report-card grade from HAC.
+                  </div>
+                ) : null}
                 {course.assignments.map((a, i) => {
                   const badge = scoreBadge(a);
                   return (
@@ -363,6 +374,11 @@ export function ClassDetail({
 
 
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground pt-1">Impact By Grade</div>
+              {!hasLiveAssignments ? (
+                <div className="glass rounded-2xl p-4 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
+                  Impact analysis is only available when HAC publishes assignment-level scores for the selected marking period.
+                </div>
+              ) : null}
               <div className="space-y-2">
                 {impacts.map(({ a, delta }, i) => {
                   const positive = delta >= 0;
@@ -404,8 +420,14 @@ export function ClassDetail({
                   <GradeRing value={overall} size={140} label={dirty ? "Simulated" : "Overall"} />
                 </div>
                 <div className="space-y-2">
-                  <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
-                  <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                  {hasLiveAssignments ? (
+                    <>
+                      <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
+                      <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                    </>
+                  ) : (
+                    <MetricRow label="Report Card" value={course.average} color={catColor("Assessment")} />
+                  )}
                   {dirty ? (
                     <button onClick={() => setOverrides({})} className="text-primary uppercase text-[10px] tracking-widest">
                       Reset simulation
@@ -414,14 +436,20 @@ export function ClassDetail({
                 </div>
               </div>
 
-              <GoalSeeker
-                course={course}
-                cats={goalCats}
-                goalCat={goalCat}
-                setGoalCat={setGoalCat}
-                goalText={goalText}
-                setGoalText={setGoalText}
-              />
+              {hasLiveAssignments ? (
+                <GoalSeeker
+                  course={course}
+                  cats={goalCats}
+                  goalCat={goalCat}
+                  setGoalCat={setGoalCat}
+                  goalText={goalText}
+                  setGoalText={setGoalText}
+                />
+              ) : (
+                <div className="glass rounded-2xl p-4 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
+                  What-if simulation is only available for marking periods where HAC publishes assignment-level grades.
+                </div>
+              )}
 
               <FinalExamPredictor mp3={mp3Avg} mp4={mp4Avg} />
 
