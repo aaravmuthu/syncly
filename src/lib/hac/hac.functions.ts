@@ -277,12 +277,17 @@ export const syncHac = createServerFn({ method: "POST" })
     // Step 3: fetch Classwork, Transcript, Report Card, and Calendar pages.
     // HAC route shapes vary by district/version, so try the classic Content/Student
     // pages first, then the newer Classes/Grades routes.
-    const [classworkHtml, transcriptHtml, reportCardHtml, calendarHtml] = await Promise.all([
+    const [classwork, transcriptPage, reportCardPage, calendarPage] = await Promise.all([
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.transcript, looksLikeTranscriptPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.reportCard, looksLikeReportCardPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.calendar, (html) => /calendar|week view|fc-event|data-date=/i.test(html)),
     ]);
+
+    const classworkHtml = classwork.html;
+    const transcriptHtml = transcriptPage.html;
+    const reportCardHtml = reportCardPage.html;
+    const calendarHtml = calendarPage.html;
 
     if (looksLikeLoginPage(classworkHtml) || !looksLikeClassworkPage(classworkHtml)) {
       throw new Error("Session expired or login was not accepted. Please reconnect.");
@@ -293,6 +298,39 @@ export const syncHac = createServerFn({ method: "POST" })
     const transcript = parseTranscript(transcriptHtml);
     const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
+
+    // Step 4: pull real per-marking-period classwork by re-posting the report-card
+    // run dropdown for each quarter (the Assignments page only shows one MP at a time).
+    const runs = parseReportCardRuns(classworkHtml);
+    if (runs && runs.options.length) {
+      // Track which MP the initially-loaded page represents so we don't refetch it.
+      const periodHtml = new Map<string, string>();
+      for (const opt of runs.options) {
+        if (periodHtml.has(opt.mp)) continue;
+        try {
+          const hidden = extractHiddenFields(classworkHtml);
+          const html = await postBackRun(classwork.url, jar, ua, base, hidden, runs.name, opt.value);
+          if (html && looksLikeClassworkPage(html)) periodHtml.set(opt.mp, html);
+        } catch {
+          // ignore a failed run; other quarters can still load
+        }
+      }
+
+      for (const [mp, html] of periodHtml) {
+        const mpCourses = parseClasses(html);
+        const byName = new Map(mpCourses.map((c) => [normalizeName(c.name), c]));
+        for (const course of courses) {
+          const m = byName.get(normalizeName(course.name));
+          if (!m) continue;
+          course.periodData = course.periodData ?? {};
+          course.periodData[mp] = {
+            average: m.average,
+            assignments: m.assignments,
+            categoryAverages: m.categoryAverages,
+          };
+        }
+      }
+    }
 
     // Merge the real report-card quarter grades onto each course by name.
     const rcMap = parseReportCard(reportCardHtml);
