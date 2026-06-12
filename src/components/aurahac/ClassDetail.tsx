@@ -143,6 +143,7 @@ export function ClassDetail({
   const [sub, setSub] = useState<SubTab>(initialSub);
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
+  const hasLiveAssignments = course.assignments.length > 0;
 
   const goalCats = useMemo(() => {
     const list = course.categoryAverages.map((c) => c.category);
@@ -162,10 +163,10 @@ export function ClassDetail({
     () => course.assignments.map((a) => (overrides[a.name] !== undefined ? { ...a, percent: overrides[a.name] } : a)),
     [course.assignments, overrides],
   );
-  const dirty = Object.keys(overrides).length > 0;
+  const dirty = hasLiveAssignments && Object.keys(overrides).length > 0;
   const overall = dirty ? overallFrom(course, simAssignments) ?? course.average : course.average;
-  const sumAvg = (dirty ? liveCats[summative?.category ?? ""] : undefined) ?? summative?.average ?? null;
-  const formAvg = (dirty ? liveCats[formative?.category ?? ""] : undefined) ?? formative?.average ?? null;
+  const sumAvg = hasLiveAssignments ? ((dirty ? liveCats[summative?.category ?? ""] : undefined) ?? summative?.average ?? null) : null;
+  const formAvg = hasLiveAssignments ? ((dirty ? liveCats[formative?.category ?? ""] : undefined) ?? formative?.average ?? null) : null;
 
   // Skate a light beam across the simulated GPA card each time it recomputes.
   const [whatIfShimmer, setWhatIfShimmer] = useState(0);
@@ -182,6 +183,10 @@ export function ClassDetail({
   // Chart series for the Analysis view. Never empty: falls back to a safe
   // historical baseline derived from the course average so bars always plot.
   const analysisSeries = useMemo<number[]>(() => {
+    if (!hasLiveAssignments) {
+      const base = course.average ?? 85;
+      return [base, base, base, base, base].map((v) => Math.max(0, Math.min(100, v)));
+    }
     const pts = [...course.assignments]
       .reverse()
       .map((a) => pct(a))
@@ -193,11 +198,12 @@ export function ClassDetail({
     return [...baseline.slice(0, Math.max(0, 5 - seed.length)), ...seed].map((v) =>
       Math.max(0, Math.min(100, v)),
     );
-  }, [course]);
+  }, [course, hasLiveAssignments]);
 
 
   // Impact analysis: how much each assignment moves the overall grade.
   const impacts = useMemo(() => {
+    if (!hasLiveAssignments) return [];
     const base = overallFrom(course, course.assignments);
     return course.assignments.map((a) => {
       const without = course.assignments.filter((x) => x.name !== a.name);
@@ -205,7 +211,7 @@ export function ClassDetail({
       const delta = base !== null && wo !== null ? base - wo : 0;
       return { a, delta };
     });
-  }, [course]);
+  }, [course, hasLiveAssignments]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
@@ -270,13 +276,24 @@ export function ClassDetail({
                   <GradeRing value={overall} size={150} label="Overall" />
                 </div>
                 <div className="flex flex-col gap-3">
-                  <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
-                  <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                  {hasLiveAssignments ? (
+                    <>
+                      <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
+                      <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                    </>
+                  ) : (
+                    <MetricRow label="Report Card" value={course.average} color={catColor("Assessment")} />
+                  )}
                 </div>
               </div>
 
               {/* Assignment feed */}
               <div className="space-y-2 pt-1">
+                {!hasLiveAssignments ? (
+                  <div className="glass rounded-2xl p-4 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
+                    HAC only publishes live assignment details for the current marking period. This earlier period is showing the real report-card grade from HAC.
+                  </div>
+                ) : null}
                 {course.assignments.map((a, i) => {
                   const badge = scoreBadge(a);
                   return (
@@ -357,6 +374,11 @@ export function ClassDetail({
 
 
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground pt-1">Impact By Grade</div>
+              {!hasLiveAssignments ? (
+                <div className="glass rounded-2xl p-4 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
+                  Impact analysis is only available when HAC publishes assignment-level scores for the selected marking period.
+                </div>
+              ) : null}
               <div className="space-y-2">
                 {impacts.map(({ a, delta }, i) => {
                   const positive = delta >= 0;
@@ -398,8 +420,14 @@ export function ClassDetail({
                   <GradeRing value={overall} size={140} label={dirty ? "Simulated" : "Overall"} />
                 </div>
                 <div className="space-y-2">
-                  <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
-                  <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                  {hasLiveAssignments ? (
+                    <>
+                      <MetricRow label={sumLabel} value={sumAvg} color={catColor("Assessment")} />
+                      <MetricRow label={formLabel} value={formAvg} color={catColor("Progress Check")} />
+                    </>
+                  ) : (
+                    <MetricRow label="Report Card" value={course.average} color={catColor("Assessment")} />
+                  )}
                   {dirty ? (
                     <button onClick={() => setOverrides({})} className="text-primary uppercase text-[10px] tracking-widest">
                       Reset simulation
@@ -408,14 +436,20 @@ export function ClassDetail({
                 </div>
               </div>
 
-              <GoalSeeker
-                course={course}
-                cats={goalCats}
-                goalCat={goalCat}
-                setGoalCat={setGoalCat}
-                goalText={goalText}
-                setGoalText={setGoalText}
-              />
+              {hasLiveAssignments ? (
+                <GoalSeeker
+                  course={course}
+                  cats={goalCats}
+                  goalCat={goalCat}
+                  setGoalCat={setGoalCat}
+                  goalText={goalText}
+                  setGoalText={setGoalText}
+                />
+              ) : (
+                <div className="glass rounded-2xl p-4 text-sm text-muted-foreground" style={{ backdropFilter: "blur(12px)" }}>
+                  What-if simulation is only available for marking periods where HAC publishes assignment-level grades.
+                </div>
+              )}
 
               <FinalExamPredictor mp3={mp3Avg} mp4={mp4Avg} />
 

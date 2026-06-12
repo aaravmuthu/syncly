@@ -4,43 +4,21 @@ export type MarkingPeriod = "MP1" | "MP2" | "MP3" | "MP4";
 
 export const MARKING_PERIODS: MarkingPeriod[] = ["MP1", "MP2", "MP3", "MP4"];
 
-/**
- * Per-marking-period offset relative to the live MP4 data. The portal only
- * exposes the current period's raw assignments, so earlier periods are derived
- * deterministically to give the slider real, visible movement.
- */
-const PERIOD_DELTA: Record<MarkingPeriod, number> = {
-  MP1: -5,
-  MP2: -3,
-  MP3: -1.5,
-  MP4: 0,
-};
-
-function clamp(v: number): number {
-  return Math.max(0, Math.min(100, v));
-}
-
-function round2(v: number): number {
-  return Math.round(v * 100) / 100;
-}
-
-/** Returns a course view adjusted to the requested marking period. */
+/** Returns the closest real HAC-backed course view for the requested marking period. */
 export function courseForPeriod(course: Course, period: MarkingPeriod): Course {
-  const d = PERIOD_DELTA[period];
-  if (d === 0) return course;
-  const adj = (v: number | null) => (v !== null ? round2(clamp(v + d)) : null);
+  if (period === "MP4") return course;
+  const reportAverage =
+    period === "MP1"
+      ? course.reportCard?.mp1 ?? null
+      : period === "MP2"
+        ? course.reportCard?.mp2 ?? null
+        : course.reportCard?.mp3 ?? null;
+
   return {
     ...course,
-    average: adj(course.average),
-    assignments: course.assignments.map<Assignment>((a) => ({
-      ...a,
-      percent: a.percent !== null ? round2(clamp(a.percent + d)) : null,
-      score: a.score !== null ? round2(clamp(a.score + d)) : null,
-    })),
-    categoryAverages: course.categoryAverages.map((ca) => ({
-      ...ca,
-      average: adj(ca.average),
-    })),
+    average: reportAverage,
+    assignments: [],
+    categoryAverages: [],
   };
 }
 

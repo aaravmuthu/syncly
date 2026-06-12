@@ -113,7 +113,7 @@ function inferGradeFromRow(cells: string[], metaIdx: Set<number>) {
   const fraction = candidates.find(({ parsed }) => parsed.hasFraction);
   const percent = candidates.find(({ parsed, cell }) => parsed.hasPercent || /%/.test(cell));
   const numeric = candidates.find(
-    ({ parsed, cell }) => parsed.score !== null && parsed.score > 1 && !/[a-z]{4,}/i.test(cell) && !/\d{1,2}\/\d{1,2}/.test(cell),
+    ({ parsed, cell }) => parsed.score !== null && parsed.score > 5 && !/[a-z]{4,}/i.test(cell) && !/\d{1,2}\/\d{1,2}/.test(cell),
   );
 
   return {
@@ -121,6 +121,16 @@ function inferGradeFromRow(cells: string[], metaIdx: Set<number>) {
     total: fraction?.parsed.total ?? null,
     percent: percent?.parsed.percent ?? fraction?.parsed.percent ?? null,
   };
+}
+
+function isLikelyWeightOrMultiplierCell(raw: string | null | undefined): boolean {
+  const text = (raw ?? "").trim();
+  if (!text) return false;
+  if (/%|\/|out of|of/i.test(text)) return false;
+  if (/weight|weighted|multiplier/i.test(text)) return true;
+  const value = num(text);
+  if (value === null) return false;
+  return value >= 0 && value <= 5 && /^-?\d+(?:\.\d{1,2})?$/.test(text);
 }
 
 /** Parse the Assignments.aspx Classwork page. */
@@ -201,9 +211,9 @@ export function parseClasses(html: string): Course[] {
           name: find("assignment"),
           cat: find("category", "type"),
           // "Score" is the points earned; avoid matching "total".
-          score: headers.findIndex((h) => h.includes("score") && !h.includes("total")),
-          total: find("total points", "max", "possible", "total"),
-          pct: headers.findIndex((h) => h.includes("percent") || h.trim() === "%"),
+          score: headers.findIndex((h) => /score|points earned|earned|grade/.test(h) && !/total|possible|percent|average/.test(h)),
+          total: find("total points", "points possible", "possible", "max", "total"),
+          pct: headers.findIndex((h) => h.includes("percent") || h.includes("average") || h.trim() === "%"),
         };
         break;
       }
@@ -231,17 +241,32 @@ export function parseClasses(html: string): Course[] {
         const parsedPct = parseGradeCell(pctCell);
         const inferred = inferGradeFromRow(cells, metaIdx);
 
+        const explicitScoreLooksWrong =
+          !parsedScore.hasFraction &&
+          !parsedScore.hasPercent &&
+          parsedScore.score !== null &&
+          isLikelyWeightOrMultiplierCell(scoreCell) &&
+          (inferred.percent !== null || inferred.score !== null);
+        const explicitTotalLooksWrong =
+          !parsedTotal.hasFraction &&
+          !parsedTotal.hasPercent &&
+          parsedTotal.score !== null &&
+          isLikelyWeightOrMultiplierCell(totalCell) &&
+          inferred.total !== null;
+
         const score =
-          parsedScore.hasFraction || parsedScore.score !== null
+          parsedScore.hasFraction || (parsedScore.score !== null && !explicitScoreLooksWrong)
             ? parsedScore.score
             : inferred.score;
         const total =
           parsedScore.hasFraction
             ? parsedScore.total
-            : parsedTotal.score ?? parsedTotal.total ?? inferred.total;
+            : explicitTotalLooksWrong
+              ? inferred.total
+              : parsedTotal.score ?? parsedTotal.total ?? inferred.total;
         const pctParsed =
           parsedPct.percent ??
-          (parsedScore.hasPercent ? parsedScore.percent : null) ??
+          (parsedScore.hasPercent && !explicitScoreLooksWrong ? parsedScore.percent : null) ??
           inferred.percent;
         const pct =
           pctParsed !== null
@@ -395,7 +420,7 @@ export function parseReportCard(html: string): Map<string, ReportCardTerm> {
       // No usable header: take numeric grade-like cells (1–100) in order.
       const grades = cells
         .map((c) => num(c))
-        .filter((n): n is number => n !== null && n > 0 && n <= 100);
+        .filter((n): n is number => n !== null && n >= 40 && n <= 100);
       if (grades.length < 1) continue;
       term = {
         mp1: grades[0] ?? null,
@@ -419,6 +444,9 @@ export function normalizeName(s: string): string {
   return s
     .toLowerCase()
     .replace(/\(.*?\)/g, " ")
+    .replace(/^\d+\s+/g, " ")
+    .replace(/^[a-z]{2,}\d+[a-z0-9-]*\s+/g, " ")
+    .replace(/\b(?:s(?:em)?\s*[12]|semester\s*[12]|mp\s*[1-4]|marking\s+period\s*[1-4])\b/g, " ")
     .replace(/[^a-z0-9 ]/g, " ")
     .replace(/\s+/g, " ")
     .trim();

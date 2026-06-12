@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { cumulativeGPA, currentYearGPA } from "@/lib/hac/gpa";
+import { courseForPeriod } from "@/lib/hac/marking";
 import { AnimatedNumber } from "../AnimatedNumber";
 import { UtilityMenu } from "../UtilityMenu";
 import { RankBadge } from "../RankBadge";
@@ -37,10 +38,13 @@ export function OverviewTab() {
   // Weighted-GPA trajectory across marking periods for the trend line graph.
   const trend: TrendPoint[] = (data.markingPeriodGPAs.length
     ? data.markingPeriodGPAs
-    : ["MP1", "MP2", "MP3", "MP4"].map((mp, i) => ({
-        mp,
-        gpa: Math.max(0, Math.min(6, weighted + ([-0.18, -0.07, 0.05, 0][i] ?? 0))),
-      }))
+    : (["MP1", "MP2", "MP3", "MP4"] as const)
+        .map((mp) => {
+          const periodCourses = data.courses.map((c) => courseForPeriod(c, mp)).filter((c) => c.average !== null);
+          if (!periodCourses.length) return null;
+          return { mp, gpa: currentYearGPA(periodCourses, true) };
+        })
+        .filter((m): m is { mp: "MP1" | "MP2" | "MP3" | "MP4"; gpa: number } => m !== null)
   ).map((m) => ({ label: m.mp, value: m.gpa }));
   const trendMax = Math.max(6, ...trend.map((t) => t.value));
   const trendMin = Math.max(0, Math.min(...trend.map((t) => t.value)) - 0.4);
