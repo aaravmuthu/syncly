@@ -642,6 +642,63 @@ export function normalizeName(s: string): string {
 }
 
 
+/** Collect every hidden input on the page (name → value) for ASP.NET postbacks. */
+export function extractHiddenFields(html: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const m of findAll(html, /<input[^>]*type=["']hidden["'][^>]*>/gi)) {
+    const tag = m[0];
+    const name = tag.match(/name=["']([^"']+)["']/i)?.[1];
+    if (!name) continue;
+    const value = tag.match(/value=["']([^"']*)["']/i)?.[1] ?? "";
+    out[name] = decode(value);
+  }
+  return out;
+}
+
+/**
+ * Find the "report card run" / marking-period dropdown on the Assignments page.
+ * Returns the control's form name and each selectable option mapped to MP1–MP4.
+ */
+export function parseReportCardRuns(html: string): {
+  name: string;
+  options: { value: string; label: string; mp: string }[];
+} | null {
+  // Locate a <select> whose name/id mentions report card run, marking period, or cycle.
+  const selects = findAll(html, /<select[^>]*>[\s\S]*?<\/select>/gi);
+  for (const s of selects) {
+    const tag = s[0];
+    const name = tag.match(/name=["']([^"']+)["']/i)?.[1];
+    if (!name) continue;
+    if (!/run|markingperiod|marking_period|reportcard|cycle|period/i.test(tag)) continue;
+
+    const options: { value: string; label: string; mp: string }[] = [];
+    for (const o of findAll(tag, /<option[^>]*value=["']([^"']*)["'][^>]*>([\s\S]*?)<\/option>/gi)) {
+      const value = decode(o[1]);
+      const label = decode(o[2]).trim();
+      if (!value && !label) continue;
+      const mp = labelToMarkingPeriod(label, value);
+      if (!mp) continue;
+      options.push({ value, label, mp });
+    }
+    if (options.length) return { name, options };
+  }
+  return null;
+}
+
+/** Map a HAC run label/value (e.g. "1st Six Weeks", "Quarter 3") to "MP1".."MP4". */
+function labelToMarkingPeriod(label: string, value: string): string | null {
+  const text = `${label} ${value}`.toLowerCase();
+  // Frisco uses four quarters; some districts list six-week cycles — bucket 1-2→MP1 etc not reliable,
+  // so prefer an explicit quarter/marking-period number, then fall back to a leading digit.
+  const q = text.match(/(?:quarter|q|marking\s*period|mp|nine\s*weeks?|cycle|run)\s*0*([1-4])\b/);
+  if (q) return `MP${q[1]}`;
+  const ord = text.match(/\b([1-4])(?:st|nd|rd|th)\b/);
+  if (ord) return `MP${ord[1]}`;
+  const lead = text.match(/\b([1-4])\b/);
+  if (lead) return `MP${lead[1]}`;
+  return null;
+}
+
 
 /** Extract student name + school from any HAC page (header). */
 export function parseStudent(html: string): { name: string; grade: string | null; school: string | null } {

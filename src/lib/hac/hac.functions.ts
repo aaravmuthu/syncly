@@ -56,22 +56,60 @@ async function fetchBestPage(
   ua: string,
   candidates: readonly string[],
   isMatch: (html: string) => boolean,
-): Promise<string> {
-  let fallbackHtml = "";
+): Promise<{ html: string; url: string }> {
+  let fallback = { html: "", url: `${base}${candidates[0]}` };
 
   for (const path of candidates) {
-    const { response, html } = await fetchHtmlWithRedirects(`${base}${path}`, jar, ua);
+    const { response, html, url } = await fetchHtmlWithRedirects(`${base}${path}`, jar, ua);
     if (!response.ok) continue;
     if (looksLikeLoginPage(html)) {
-      fallbackHtml = html;
+      if (!fallback.html) fallback = { html, url };
       continue;
     }
-    if (isMatch(html)) return html;
-    if (!fallbackHtml) fallbackHtml = html;
+    if (isMatch(html)) return { html, url };
+    if (!fallback.html) fallback = { html, url };
   }
 
-  return fallbackHtml;
+  return fallback;
 }
+
+/**
+ * Re-fetch the Assignments page for a specific marking-period run via an ASP.NET
+ * __doPostBack on the report-card-run dropdown. Returns the resulting HTML.
+ */
+async function postBackRun(
+  url: string,
+  jar: Record<string, string>,
+  ua: string,
+  base: string,
+  hidden: Record<string, string>,
+  controlName: string,
+  runValue: string,
+): Promise<string> {
+  const form = new URLSearchParams();
+  for (const [k, v] of Object.entries(hidden)) form.set(k, v);
+  form.set("__EVENTTARGET", controlName);
+  form.set("__EVENTARGUMENT", "");
+  form.set(controlName, runValue);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "User-Agent": ua,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "text/html",
+      Cookie: cookieHeader(jar),
+      Referer: url,
+      Origin: base,
+    },
+    body: form.toString(),
+    redirect: "manual",
+  });
+  Object.assign(jar, mergeCookies(jar, res.headers));
+  return res.text();
+}
+
+
 
 function extractHtmlRedirectTarget(html: string): string | null {
   const meta = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i)?.[1];
@@ -157,7 +195,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, extractHiddenFields, parseReportCardRuns } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -239,12 +277,17 @@ export const syncHac = createServerFn({ method: "POST" })
     // Step 3: fetch Classwork, Transcript, Report Card, and Calendar pages.
     // HAC route shapes vary by district/version, so try the classic Content/Student
     // pages first, then the newer Classes/Grades routes.
-    const [classworkHtml, transcriptHtml, reportCardHtml, calendarHtml] = await Promise.all([
+    const [classwork, transcriptPage, reportCardPage, calendarPage] = await Promise.all([
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.transcript, looksLikeTranscriptPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.reportCard, looksLikeReportCardPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.calendar, (html) => /calendar|week view|fc-event|data-date=/i.test(html)),
     ]);
+
+    const classworkHtml = classwork.html;
+    const transcriptHtml = transcriptPage.html;
+    const reportCardHtml = reportCardPage.html;
+    const calendarHtml = calendarPage.html;
 
     if (looksLikeLoginPage(classworkHtml) || !looksLikeClassworkPage(classworkHtml)) {
       throw new Error("Session expired or login was not accepted. Please reconnect.");
@@ -255,6 +298,39 @@ export const syncHac = createServerFn({ method: "POST" })
     const transcript = parseTranscript(transcriptHtml);
     const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
+
+    // Step 4: pull real per-marking-period classwork by re-posting the report-card
+    // run dropdown for each quarter (the Assignments page only shows one MP at a time).
+    const runs = parseReportCardRuns(classworkHtml);
+    if (runs && runs.options.length) {
+      // Track which MP the initially-loaded page represents so we don't refetch it.
+      const periodHtml = new Map<string, string>();
+      for (const opt of runs.options) {
+        if (periodHtml.has(opt.mp)) continue;
+        try {
+          const hidden = extractHiddenFields(classworkHtml);
+          const html = await postBackRun(classwork.url, jar, ua, base, hidden, runs.name, opt.value);
+          if (html && looksLikeClassworkPage(html)) periodHtml.set(opt.mp, html);
+        } catch {
+          // ignore a failed run; other quarters can still load
+        }
+      }
+
+      for (const [mp, html] of periodHtml) {
+        const mpCourses = parseClasses(html);
+        const byName = new Map(mpCourses.map((c) => [normalizeName(c.name), c]));
+        for (const course of courses) {
+          const m = byName.get(normalizeName(course.name));
+          if (!m) continue;
+          course.periodData = course.periodData ?? {};
+          course.periodData[mp] = {
+            average: m.average,
+            assignments: m.assignments,
+            categoryAverages: m.categoryAverages,
+          };
+        }
+      }
+    }
 
     // Merge the real report-card quarter grades onto each course by name.
     const rcMap = parseReportCard(reportCardHtml);
