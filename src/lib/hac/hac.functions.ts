@@ -56,22 +56,60 @@ async function fetchBestPage(
   ua: string,
   candidates: readonly string[],
   isMatch: (html: string) => boolean,
-): Promise<string> {
-  let fallbackHtml = "";
+): Promise<{ html: string; url: string }> {
+  let fallback = { html: "", url: `${base}${candidates[0]}` };
 
   for (const path of candidates) {
-    const { response, html } = await fetchHtmlWithRedirects(`${base}${path}`, jar, ua);
+    const { response, html, url } = await fetchHtmlWithRedirects(`${base}${path}`, jar, ua);
     if (!response.ok) continue;
     if (looksLikeLoginPage(html)) {
-      fallbackHtml = html;
+      if (!fallback.html) fallback = { html, url };
       continue;
     }
-    if (isMatch(html)) return html;
-    if (!fallbackHtml) fallbackHtml = html;
+    if (isMatch(html)) return { html, url };
+    if (!fallback.html) fallback = { html, url };
   }
 
-  return fallbackHtml;
+  return fallback;
 }
+
+/**
+ * Re-fetch the Assignments page for a specific marking-period run via an ASP.NET
+ * __doPostBack on the report-card-run dropdown. Returns the resulting HTML.
+ */
+async function postBackRun(
+  url: string,
+  jar: Record<string, string>,
+  ua: string,
+  base: string,
+  hidden: Record<string, string>,
+  controlName: string,
+  runValue: string,
+): Promise<string> {
+  const form = new URLSearchParams();
+  for (const [k, v] of Object.entries(hidden)) form.set(k, v);
+  form.set("__EVENTTARGET", controlName);
+  form.set("__EVENTARGUMENT", "");
+  form.set(controlName, runValue);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "User-Agent": ua,
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "text/html",
+      Cookie: cookieHeader(jar),
+      Referer: url,
+      Origin: base,
+    },
+    body: form.toString(),
+    redirect: "manual",
+  });
+  Object.assign(jar, mergeCookies(jar, res.headers));
+  return res.text();
+}
+
+
 
 function extractHtmlRedirectTarget(html: string): string | null {
   const meta = html.match(/<meta[^>]+http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"'>]+)["']/i)?.[1];
