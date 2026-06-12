@@ -94,11 +94,21 @@ export interface CalendarActivity {
   kind: string | null;
 }
 
+/** Official GPA/rank figures pulled directly from the HAC transcript page. */
+export interface OfficialGpa {
+  weighted: number | null;
+  unweighted: number | null;
+  rank: number | null;
+  classSize: number | null;
+}
+
 export interface HacData {
   student: { name: string; grade: string | null; school: string | null; studentId?: string | null };
   courses: Course[];
   transcript: TranscriptCourse[];
   markingPeriodGPAs: { mp: string; gpa: number }[];
+  /** Official GPA + class rank straight from HAC's transcript page. */
+  officialGpa?: OfficialGpa;
   /** Attendance ledger (optional; absent assignments are used as a fallback). */
   attendance?: AttendanceLedger;
   /** Activities pulled from the HAC Home/Calendar page. */
