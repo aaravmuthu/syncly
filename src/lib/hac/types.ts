@@ -56,6 +56,8 @@ export interface Course {
   teacherEmail?: string | null;
   /** Report card: explicit per-marking-period matrix (optional; derived if absent). */
   reportCard?: ReportCardTerm;
+  /** Real per-marking-period classwork pulled directly from HAC (keyed "MP1".."MP4"). */
+  periodData?: Record<string, { average: number | null; assignments: Assignment[]; categoryAverages: Course["categoryAverages"] }>;
 }
 
 export interface TranscriptCourse {
