@@ -134,13 +134,21 @@ export function GpaTab() {
 
       <SpotlightCard className="p-4 flex items-center justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Official</div>
-          <div className="text-sm">Weighted GPA</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            {officialGpaValue !== null ? "Official · from HAC" : "Official"}
+          </div>
+          <div className="text-sm">{weighted ? "Weighted" : "Unweighted"} GPA</div>
+          {official?.rank ? (
+            <div className="text-[11px] text-muted-foreground mt-1">
+              Rank {official.rank}{official.classSize ? ` / ${official.classSize}` : ""}
+            </div>
+          ) : null}
         </div>
         <span className="text-base font-bold tabular-nums px-3 py-1.5 rounded-xl bg-primary/20 border border-primary/30">
-          <AnimatedNumber value={cyW} decimals={3} />
+          <AnimatedNumber value={officialGpaValue ?? (weighted ? cyW : cy)} decimals={3} />
         </span>
       </SpotlightCard>
+
 
       <SpotlightCard className="p-4">
         <div className="text-xs uppercase tracking-widest text-purple-200 mb-4">Weighted GPA By MP</div>
