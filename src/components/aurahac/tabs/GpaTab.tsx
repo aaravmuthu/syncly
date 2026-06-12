@@ -41,7 +41,7 @@ export function GpaTab() {
         if (!periodCourses.length) return null;
         return { mp, gpa: currentYearGPA(periodCourses, weighted) };
       })
-      .filter((entry): entry is { mp: string; gpa: number } => entry !== null);
+      .filter((entry): entry is { mp: (typeof reportCardPeriods)[number]; gpa: number } => entry !== null);
     return derived;
   }, [included, data.markingPeriodGPAs, weighted]);
 
