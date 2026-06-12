@@ -549,7 +549,12 @@ export function parseClasses(html: string): Course[] {
     });
   }
 
-  return courses.length ? courses : parseFallbackClasswork(html);
+  if (courses.length) return courses;
+
+  const fallback = parseFallbackClasswork(html);
+  if (fallback.length) return fallback;
+
+  return parseCourseSummaries(html);
 }
 
 /** Parse transcript table (rows of historical courses). */
