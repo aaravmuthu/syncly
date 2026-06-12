@@ -150,6 +150,7 @@ export const syncHac = createServerFn({ method: "POST" })
     const student = parseStudent(classworkHtml);
     const courses = parseClasses(classworkHtml);
     const transcript = parseTranscript(transcriptHtml);
+    const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
 
     // Merge the real report-card quarter grades onto each course by name.
