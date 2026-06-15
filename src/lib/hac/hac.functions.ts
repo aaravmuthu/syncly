@@ -301,7 +301,11 @@ export const syncHac = createServerFn({ method: "POST" })
 
     // Step 4: pull real per-marking-period classwork by re-posting the report-card
     // run dropdown for each quarter (the Assignments page only shows one MP at a time).
+    const debug: Record<string, string | number | boolean | null> = {};
     const runs = parseReportCardRuns(classworkHtml);
+    debug.runsDetected = runs ? runs.options.length : 0;
+    debug.runsControl = runs?.name ?? null;
+    debug.runsOptions = runs ? runs.options.map((o) => `${o.mp}=${o.value}|${o.label}`).join(" ;; ") : null;
     if (runs && runs.options.length) {
       // Track which MP the initially-loaded page represents so we don't refetch it.
       const periodHtml = new Map<string, string>();
@@ -310,18 +314,25 @@ export const syncHac = createServerFn({ method: "POST" })
         try {
           const hidden = extractHiddenFields(classworkHtml);
           const html = await postBackRun(classwork.url, jar, ua, base, hidden, runs.name, opt.value);
-          if (html && looksLikeClassworkPage(html)) periodHtml.set(opt.mp, html);
-        } catch {
-          // ignore a failed run; other quarters can still load
+          const isCw = !!html && looksLikeClassworkPage(html);
+          debug[`pb_${opt.mp}_len`] = html ? html.length : 0;
+          debug[`pb_${opt.mp}_isClasswork`] = isCw;
+          debug[`pb_${opt.mp}_isLogin`] = !!html && looksLikeLoginPage(html);
+          if (isCw) periodHtml.set(opt.mp, html);
+        } catch (e) {
+          debug[`pb_${opt.mp}_error`] = e instanceof Error ? e.message : String(e);
         }
       }
 
       for (const [mp, html] of periodHtml) {
         const mpCourses = parseClasses(html);
+        debug[`parsed_${mp}_courses`] = mpCourses.length;
+        let matched = 0;
         const byName = new Map(mpCourses.map((c) => [normalizeName(c.name), c]));
         for (const course of courses) {
           const m = byName.get(normalizeName(course.name));
           if (!m) continue;
+          matched++;
           course.periodData = course.periodData ?? {};
           course.periodData[mp] = {
             average: m.average,
@@ -329,11 +340,16 @@ export const syncHac = createServerFn({ method: "POST" })
             categoryAverages: m.categoryAverages,
           };
         }
+        debug[`matched_${mp}`] = matched;
       }
     }
 
     // Merge the real report-card quarter grades onto each course by name.
     const rcMap = parseReportCard(reportCardHtml);
+    debug.reportCardSize = rcMap.size;
+    debug.reportCardLooksRight = looksLikeReportCardPage(reportCardHtml);
+    debug.reportCardNames = Array.from(rcMap.keys()).slice(0, 8).join(" ;; ") || null;
+    debug.courseNames = courses.map((c) => normalizeName(c.name)).slice(0, 8).join(" ;; ") || null;
     if (!courses.length && rcMap.size) {
       courses = extractReportCardEntries(reportCardHtml).map((entry, index) => ({
         id: `c-rc-${normalizeName(entry.name) || index}`,
@@ -353,6 +369,9 @@ export const syncHac = createServerFn({ method: "POST" })
         if (term) course.reportCard = term;
       }
     }
+    debug.coursesWithReportCard = courses.filter((c) => c.reportCard).length;
+    debug.coursesWithPeriodData = courses.filter((c) => c.periodData && Object.keys(c.periodData).length).length;
+    console.log("[HAC SYNC DEBUG]", JSON.stringify(debug));
 
     return {
       student,
