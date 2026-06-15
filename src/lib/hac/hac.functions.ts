@@ -250,7 +250,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, extractHiddenFields, parseReportCardRuns } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -369,8 +369,7 @@ export const syncHac = createServerFn({ method: "POST" })
       for (const opt of runs.options) {
         if (periodHtml.has(opt.mp)) continue;
         try {
-          const hidden = extractHiddenFields(classworkHtml);
-          const html = await postBackRun(classwork.url, jar, ua, base, hidden, runs.name, opt.value);
+          const html = await postBackRun(classwork.url, jar, ua, base, classworkHtml, runs.name, opt.value);
           const isCw = !!html && looksLikeClassworkPage(html);
           debug[`pb_${opt.mp}_len`] = html ? html.length : 0;
           debug[`pb_${opt.mp}_isClasswork`] = isCw;
