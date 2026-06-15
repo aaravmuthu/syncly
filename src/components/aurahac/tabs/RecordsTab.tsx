@@ -18,8 +18,6 @@ import { MarkingPeriodSlider } from "../MarkingPeriodSlider";
 import type { MarkingPeriod } from "@/lib/hac/marking";
 import type { AttendanceEntry } from "@/lib/hac/types";
 import {
-  ChevronDown,
-  GraduationCap,
   ScrollText,
   ClipboardList,
   CalendarX2,
