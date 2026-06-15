@@ -82,15 +82,18 @@ async function postBackRun(
   jar: Record<string, string>,
   ua: string,
   base: string,
-  hidden: Record<string, string>,
+  pageHtml: string,
   controlName: string,
   runValue: string,
 ): Promise<string> {
+  const fields = extractFormFields(pageHtml);
+  const refresh = findRefreshControl(pageHtml);
   const form = new URLSearchParams();
-  for (const [k, v] of Object.entries(hidden)) form.set(k, v);
-  form.set("__EVENTTARGET", controlName);
+  for (const [k, v] of Object.entries(fields)) form.set(k, v);
+  form.set("__EVENTTARGET", refresh ? "" : controlName);
   form.set("__EVENTARGUMENT", "");
   form.set(controlName, runValue);
+  if (refresh) form.set(refresh.name, refresh.value || "Refresh View");
 
   const res = await fetch(url, {
     method: "POST",
@@ -107,6 +110,58 @@ async function postBackRun(
   });
   Object.assign(jar, mergeCookies(jar, res.headers));
   return res.text();
+}
+
+function decodeAttr(s: string): string {
+  return s
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function extractFormFields(html: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const attr = (tag: string, name: string) => tag.match(new RegExp(`${name}=["']([^"']*)["']`, "i"))?.[1] ?? null;
+
+  for (const m of html.matchAll(/<input[^>]*>/gi)) {
+    const tag = m[0];
+    const name = attr(tag, "name");
+    if (!name) continue;
+    const type = (attr(tag, "type") ?? "text").toLowerCase();
+    if (/^(submit|button|image|reset|file)$/i.test(type)) continue;
+    if (/^(checkbox|radio)$/i.test(type) && !/\bchecked\b/i.test(tag)) continue;
+    out[decodeAttr(name)] = decodeAttr(attr(tag, "value") ?? "");
+  }
+
+  for (const m of html.matchAll(/<select[^>]*>[\s\S]*?<\/select>/gi)) {
+    const tag = m[0];
+    const name = attr(tag, "name");
+    if (!name) continue;
+    const selected = tag.match(/<option[^>]*\bselected\b[^>]*value=["']([^"']*)["'][^>]*>/i) ??
+      tag.match(/<option[^>]*value=["']([^"']*)["'][^>]*\bselected\b[^>]*>/i) ??
+      tag.match(/<option[^>]*value=["']([^"']*)["'][^>]*>/i);
+    out[decodeAttr(name)] = decodeAttr(selected?.[1] ?? "");
+  }
+
+  for (const m of html.matchAll(/<textarea[^>]*name=["']([^"']+)["'][^>]*>([\s\S]*?)<\/textarea>/gi)) {
+    out[decodeAttr(m[1])] = decodeAttr(m[2]);
+  }
+
+  return out;
+}
+
+function findRefreshControl(html: string): { name: string; value: string } | null {
+  const attr = (tag: string, name: string) => tag.match(new RegExp(`${name}=["']([^"']*)["']`, "i"))?.[1] ?? "";
+  for (const m of html.matchAll(/<input[^>]*>/gi)) {
+    const tag = m[0];
+    const type = attr(tag, "type").toLowerCase();
+    const value = decodeAttr(attr(tag, "value"));
+    const name = decodeAttr(attr(tag, "name"));
+    if (name && /^(submit|button)$/i.test(type) && /refresh\s*view/i.test(value)) return { name, value };
+  }
+  return null;
 }
 
 
@@ -195,7 +250,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 export const syncHac = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
   .handler(async ({ data }): Promise<HacData> => {
-    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, extractHiddenFields, parseReportCardRuns } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -314,8 +369,7 @@ export const syncHac = createServerFn({ method: "POST" })
       for (const opt of runs.options) {
         if (periodHtml.has(opt.mp)) continue;
         try {
-          const hidden = extractHiddenFields(classworkHtml);
-          const html = await postBackRun(classwork.url, jar, ua, base, hidden, runs.name, opt.value);
+          const html = await postBackRun(classwork.url, jar, ua, base, classworkHtml, runs.name, opt.value);
           const isCw = !!html && looksLikeClassworkPage(html);
           debug[`pb_${opt.mp}_len`] = html ? html.length : 0;
           debug[`pb_${opt.mp}_isClasswork`] = isCw;
