@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import type { Course, BellRotation, BellPeriod } from "@/lib/hac/types";
 import { courseDisplay, defaultBellRotation, weekdayLabel } from "@/lib/hac/customize";
+import { transcriptByYear } from "@/lib/hac/records";
+import { cumulativeGPA } from "@/lib/hac/gpa";
 import {
   CalendarCheck,
   BellRing,
@@ -330,22 +332,93 @@ function DetailContent({ id }: { id: ItemId }) {
 
   // transcript
   if (!data.transcript.length) return <Empty text="No transcript records available yet." />;
+  return <TranscriptDetail />;
+}
+
+function TranscriptDetail() {
+  const { data } = useHac();
+  const years = useMemo(() => (data ? transcriptByYear(data.transcript) : []), [data]);
+  const cumW = useMemo(() => (data ? cumulativeGPA(data.transcript, true) : 0), [data]);
+  const cumU = useMemo(() => (data ? cumulativeGPA(data.transcript, false) : 0), [data]);
+  if (!data) return null;
+
+  const official = data.officialGpa;
+  const weighted = official?.weighted ?? cumW;
+  const unweighted = official?.unweighted ?? cumU;
+
   return (
-    <div className="space-y-2">
-      {data.transcript.map((t, i) => (
-        <div key={i} className="liquid rounded-xl p-3 flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate">{t.course}</div>
-            <div className="text-[11px] text-muted-foreground truncate">{t.year}{t.grade ? ` · Grade ${t.grade}` : ""}{t.credits ? ` · ${t.credits} cr` : ""}</div>
+    <div className="space-y-4">
+      {years.map((y) => (
+        <div key={`${y.year}-${y.building}`} className="liquid rounded-2xl overflow-hidden">
+          <div className="p-4 pb-3 border-b border-white/10">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-bold">Year: {y.year}</div>
+              <div className="text-sm font-bold">Grade: {y.grade}</div>
+            </div>
+            {y.building ? <div className="text-xs text-muted-foreground mt-0.5">{y.building}</div> : null}
           </div>
-          <div className="flex items-center gap-1.5 shrink-0 text-sm font-bold tabular-nums">
-            {t.sem1 ? <span className="px-2 py-0.5 rounded bg-white/[0.06]">{t.sem1}</span> : null}
-            {t.sem2 ? <span className="px-2 py-0.5 rounded bg-white/[0.06]">{t.sem2}</span> : null}
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <th className="text-left font-semibold px-4 py-2">Course</th>
+                  <th className="text-left font-semibold px-2 py-2">Description</th>
+                  <th className="text-center font-semibold px-2 py-2">SEM1</th>
+                  <th className="text-center font-semibold px-2 py-2">SEM2</th>
+                  <th className="text-center font-semibold px-2 py-2">FIN</th>
+                  <th className="text-right font-semibold px-4 py-2">Credit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {y.courses.map((c, i) => (
+                  <tr key={`${c.course}-${i}`} className="border-t border-white/[0.05]">
+                    <td className="px-4 py-2 whitespace-nowrap text-muted-foreground tabular-nums">{c.course || "—"}</td>
+                    <td className="px-2 py-2 font-medium">{c.description || "—"}</td>
+                    <td className="px-2 py-2 text-center"><TxMark value={c.sem1} /></td>
+                    <td className="px-2 py-2 text-center"><TxMark value={c.sem2} /></td>
+                    <td className="px-2 py-2 text-center"><TxMark value={c.fin ?? null} /></td>
+                    <td className="px-4 py-2 text-right tabular-nums">{c.credits || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="px-4 py-3 border-t border-white/10 text-right text-sm font-bold">
+            Total Credit: {y.credits.toFixed(4)}
           </div>
         </div>
       ))}
+
+      {/* GPA and Rank */}
+      <div className="liquid rounded-2xl p-4">
+        <h3 className="text-sm font-bold mb-3">GPA and Rank</h3>
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 text-[11px] uppercase tracking-widest text-muted-foreground pb-2 border-b border-white/10">
+          <span>GPA Type</span>
+          <span className="text-right">GPA</span>
+          <span className="text-right">Rank</span>
+        </div>
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 py-2 text-sm border-b border-white/[0.06]">
+          <span className="font-medium">Weighted GPA</span>
+          <span className="text-right tabular-nums">{weighted != null && Number.isFinite(weighted) ? weighted.toFixed(4) : "—"}</span>
+          <span className="text-right tabular-nums text-muted-foreground">
+            {official?.rank != null ? (official.classSize != null ? `${official.rank} / ${official.classSize}` : `${official.rank}`) : ""}
+          </span>
+        </div>
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 py-2 text-sm">
+          <span className="font-medium">4.0 College GPA</span>
+          <span className="text-right tabular-nums">{unweighted != null && Number.isFinite(unweighted) ? unweighted.toFixed(4) : "—"}</span>
+          <span></span>
+        </div>
+      </div>
     </div>
   );
+}
+
+function TxMark({ value }: { value: string | null }) {
+  const display = value && value.trim() !== "" ? value.trim() : "—";
+  return <span className="font-semibold tabular-nums">{display}</span>;
 }
 
 /** Editor for a custom weekly bell schedule with A/B-style rotating day types. */
