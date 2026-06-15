@@ -72,6 +72,7 @@ export function termGrade(term: ReportCardTerm, period: MarkingPeriod): number |
 export interface TranscriptYear {
   year: string;
   grade: string;
+  building: string | null;
   courses: TranscriptCourse[];
   credits: number;
 }
@@ -80,10 +81,16 @@ export interface TranscriptYear {
 export function transcriptByYear(transcript: TranscriptCourse[]): TranscriptYear[] {
   const map = new Map<string, TranscriptYear>();
   for (const row of transcript) {
-    const key = row.year || "Unknown";
+    const key = `${row.year || "Unknown"}|${row.building || ""}`;
     let block = map.get(key);
     if (!block) {
-      block = { year: key, grade: row.grade || SAFE, courses: [], credits: 0 };
+      block = {
+        year: row.year || "Unknown",
+        grade: row.grade || SAFE,
+        building: row.building || null,
+        courses: [],
+        credits: 0,
+      };
       map.set(key, block);
     }
     block.courses.push(row);
