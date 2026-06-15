@@ -383,5 +383,6 @@ export const syncHac = createServerFn({ method: "POST" })
       syncedAt: new Date().toISOString(),
       districtId: data.district,
       username: data.username,
+      debug,
     };
   });
