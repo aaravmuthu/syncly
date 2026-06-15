@@ -63,9 +63,16 @@ export interface Course {
 export interface TranscriptCourse {
   year: string;
   grade: string;
+  /** School / building name for this year group (HAC "Building"). */
+  building?: string | null;
+  /** Course code, e.g. "03010200 - 1". */
   course: string;
+  /** Human-readable course description, e.g. "BIO". */
+  description?: string | null;
   sem1: string | null;
   sem2: string | null;
+  /** Final grade column (HAC "FIN"). */
+  fin?: string | null;
   credits: string | null;
 }
 
