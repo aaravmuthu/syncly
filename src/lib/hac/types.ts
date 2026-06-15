@@ -119,7 +119,7 @@ export interface HacData {
   districtId: DistrictId;
   username: string;
   /** Diagnostics from the last sync (per-marking-period scraping). */
-  debug?: Record<string, unknown>;
+  debug?: Record<string, string | number | boolean | null>;
 }
 
 /** Per-course visual customization (alias, emoji, color gradient). */
