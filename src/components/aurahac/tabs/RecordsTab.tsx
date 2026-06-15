@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import {
   transcriptByYear,
-  totalCredits,
+  
   reportCardFor,
   termGrade,
   attendanceFor,
