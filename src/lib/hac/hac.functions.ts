@@ -309,6 +309,8 @@ export const syncHac = createServerFn({ method: "POST" })
     if (runs && runs.options.length) {
       // Track which MP the initially-loaded page represents so we don't refetch it.
       const periodHtml = new Map<string, string>();
+      debug.classworkLen = classworkHtml.length;
+      debug.classworkAcCount = (classworkHtml.match(/AssignmentClass/gi) || []).length;
       for (const opt of runs.options) {
         if (periodHtml.has(opt.mp)) continue;
         try {
@@ -318,6 +320,8 @@ export const syncHac = createServerFn({ method: "POST" })
           debug[`pb_${opt.mp}_len`] = html ? html.length : 0;
           debug[`pb_${opt.mp}_isClasswork`] = isCw;
           debug[`pb_${opt.mp}_isLogin`] = !!html && looksLikeLoginPage(html);
+          debug[`pb_${opt.mp}_acCount`] = (html.match(/AssignmentClass/gi) || []).length;
+          if (opt.mp === "MP1") debug.pb_MP1_head = html.slice(0, 1500);
           if (isCw) periodHtml.set(opt.mp, html);
         } catch (e) {
           debug[`pb_${opt.mp}_error`] = e instanceof Error ? e.message : String(e);
