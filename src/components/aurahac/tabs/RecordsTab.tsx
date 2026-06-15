@@ -101,108 +101,143 @@ export function RecordsTab() {
 
 function TranscriptView() {
   const { data } = useHac();
-  const [open, setOpen] = useState<string | null>(null);
   const years = useMemo(() => (data ? transcriptByYear(data.transcript) : []), [data]);
-  const credits = useMemo(() => (data ? totalCredits(data.transcript) : 0), [data]);
   const cumW = useMemo(() => (data ? cumulativeGPA(data.transcript, true) : 0), [data]);
   const cumU = useMemo(() => (data ? cumulativeGPA(data.transcript, false) : 0), [data]);
 
-  // Auto-open the most recent year on first paint.
-  const activeYear = open ?? years[0]?.year ?? null;
-
-  if (years.length === 0) {
+  if (!data || years.length === 0) {
     return <EmptyCard text="No transcript records found yet." />;
   }
 
+  const official = data.officialGpa;
+  const weighted = official?.weighted ?? cumW;
+  const unweighted = official?.unweighted ?? cumU;
+
   return (
-    <div className="space-y-3">
-      {/* GPA + credit summary */}
-      <div className="grid grid-cols-3 gap-2">
-        <SummaryStat label="Cum · Wtd" value={cumW.toFixed(3)} icon={Award} />
-        <SummaryStat label="Cum · Unwtd" value={cumU.toFixed(3)} />
-        <SummaryStat label="Credits" value={credits.toFixed(1)} icon={GraduationCap} />
+    <div className="grid gap-3 lg:grid-cols-[1fr_340px] items-start">
+      {/* Year groups */}
+      <div className="space-y-3 min-w-0">
+        {years.map((y) => (
+          <TranscriptYearCard key={`${y.year}-${y.building}`} year={y} />
+        ))}
       </div>
 
-      {years.map((y) => {
-        const isOpen = activeYear === y.year;
-        return (
-          <div
-            key={y.year}
-            className="glass rounded-2xl overflow-hidden"
-            style={{ backdropFilter: "blur(12px)" }}
-          >
-            <button
-              onClick={() => setOpen(isOpen ? "__none__" : y.year)}
-              className="w-full flex items-center gap-3 p-4 text-left"
-            >
-              <div
-                className="h-10 w-10 rounded-xl grid place-items-center shrink-0 font-bold text-sm"
-                style={{
-                  background: "color-mix(in oklab, var(--primary) 16%, transparent)",
-                  color: "var(--primary)",
-                  border: "1px solid color-mix(in oklab, var(--primary) 36%, transparent)",
-                }}
-              >
-                {txt(y.grade)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold">{txt(y.year)}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  Grade {txt(y.grade)} · {y.courses.length} courses · {y.credits.toFixed(1)} credits
-                </div>
-              </div>
-              <motion.span animate={{ rotate: isOpen ? 180 : 0 }} transition={{ type: "spring", stiffness: 400, damping: 26 }}>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </motion.span>
-            </button>
-
-            <AnimatePresence initial={false}>
-              {isOpen ? (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 320, damping: 32 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-3 pb-3 space-y-1.5">
-                    {y.courses.map((c, i) => (
-                      <div
-                        key={`${c.course}-${i}`}
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 bg-white/[0.03]"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{txt(c.course)}</div>
-                          <div className="text-[11px] text-muted-foreground">{txt(c.credits, "0.0")} credits</div>
-                        </div>
-                        <Mark label="S1" value={c.sem1} />
-                        <Mark label="S2" value={c.sem2} />
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-        );
-      })}
+      {/* GPA and Rank panel */}
+      <div
+        className="glass rounded-2xl p-4 lg:sticky lg:top-2"
+        style={{ backdropFilter: "blur(12px)" }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <Award className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-bold">GPA and Rank</h2>
+        </div>
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 text-[11px] uppercase tracking-widest text-muted-foreground pb-2 border-b border-white/10">
+          <span>GPA Type</span>
+          <span className="text-right">GPA</span>
+          <span className="text-right">Rank</span>
+        </div>
+        <GpaRow
+          label="Weighted GPA"
+          gpa={weighted}
+          rank={official?.rank}
+          classSize={official?.classSize}
+        />
+        <GpaRow label="4.0 College GPA" gpa={unweighted} />
+      </div>
     </div>
   );
 }
 
-function Mark({ label, value }: { label: string; value: string | null }) {
-  const n = value !== null ? parseFloat(value) : NaN;
+function GpaRow({
+  label,
+  gpa,
+  rank,
+  classSize,
+}: {
+  label: string;
+  gpa: number | null | undefined;
+  rank?: number | null;
+  classSize?: number | null;
+}) {
+  return (
+    <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 py-2 text-sm border-b border-white/[0.06] last:border-0">
+      <span className="font-medium">{label}</span>
+      <span className="text-right tabular-nums">
+        {gpa != null && Number.isFinite(gpa) ? gpa.toFixed(4) : "—"}
+      </span>
+      <span className="text-right tabular-nums text-muted-foreground">
+        {rank != null ? (classSize != null ? `${rank} / ${classSize}` : `${rank}`) : ""}
+      </span>
+    </div>
+  );
+}
+
+function TranscriptYearCard({ year }: { year: ReturnType<typeof transcriptByYear>[number] }) {
+  return (
+    <div className="glass rounded-2xl overflow-hidden" style={{ backdropFilter: "blur(12px)" }}>
+      <div className="p-4 pb-3 border-b border-white/10">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-bold">Year: {txt(year.year)}</div>
+          <div className="text-sm font-bold">Grade: {txt(year.grade)}</div>
+        </div>
+        {year.building ? (
+          <div className="text-xs text-muted-foreground mt-0.5">{year.building}</div>
+        ) : null}
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-[11px] uppercase tracking-wider text-muted-foreground">
+              <th className="text-left font-semibold px-4 py-2">Course</th>
+              <th className="text-left font-semibold px-2 py-2">Description</th>
+              <th className="text-center font-semibold px-2 py-2">SEM1</th>
+              <th className="text-center font-semibold px-2 py-2">SEM2</th>
+              <th className="text-center font-semibold px-2 py-2">FIN</th>
+              <th className="text-right font-semibold px-4 py-2">Credit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {year.courses.map((c, i) => (
+              <tr key={`${c.course}-${i}`} className="border-t border-white/[0.05]">
+                <td className="px-4 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                  {txt(c.course)}
+                </td>
+                <td className="px-2 py-2 font-medium">{txt(c.description, "—")}</td>
+                <td className="px-2 py-2 text-center">
+                  <MarkCell value={c.sem1} />
+                </td>
+                <td className="px-2 py-2 text-center">
+                  <MarkCell value={c.sem2} />
+                </td>
+                <td className="px-2 py-2 text-center">
+                  <MarkCell value={c.fin ?? null} />
+                </td>
+                <td className="px-4 py-2 text-right tabular-nums">{txt(c.credits, "—")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="px-4 py-3 border-t border-white/10 text-right text-sm font-bold">
+        Total Credit: {year.credits.toFixed(4)}
+      </div>
+    </div>
+  );
+}
+
+function MarkCell({ value }: { value: string | null }) {
+  const display = value && value.trim() !== "" ? value.trim() : "—";
+  const n = parseFloat(display);
   const color = Number.isFinite(n) ? gradeColor(n) : "var(--muted-foreground)";
-  const display = value && value.trim() !== "" ? value : "—";
   return (
-    <div className="shrink-0 text-center w-12">
-      <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="text-sm font-bold tabular-nums" style={{ color }}>
-        {display}
-      </div>
-    </div>
+    <span className="font-semibold tabular-nums" style={{ color }}>
+      {display}
+    </span>
   );
 }
+
 
 /* ----------------------- Report card ----------------------- */
 
