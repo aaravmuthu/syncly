@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import type { Course, BellRotation, BellPeriod } from "@/lib/hac/types";
 import { courseDisplay, defaultBellRotation, weekdayLabel } from "@/lib/hac/customize";
+import { transcriptByYear } from "@/lib/hac/records";
+import { cumulativeGPA } from "@/lib/hac/gpa";
 import {
   CalendarCheck,
   BellRing,
