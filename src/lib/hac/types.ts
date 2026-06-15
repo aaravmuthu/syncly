@@ -118,6 +118,8 @@ export interface HacData {
   syncedAt: string; // ISO
   districtId: DistrictId;
   username: string;
+  /** Diagnostics from the last sync (per-marking-period scraping). */
+  debug?: Record<string, unknown>;
 }
 
 /** Per-course visual customization (alias, emoji, color gradient). */
