@@ -557,11 +557,79 @@ export function parseClasses(html: string): Course[] {
   return parseCourseSummaries(html);
 }
 
-/** Parse transcript table (rows of historical courses). */
+/** Parse the HAC transcript page into per-year course rows.
+ *  Captures year, grade level, building/school, course code, description,
+ *  SEM1, SEM2, FIN and credit for each course, matching HAC's layout. */
 export function parseTranscript(html: string): TranscriptCourse[] {
   const out: TranscriptCourse[] = [];
-  const tables = findAll(html, /<table[^>]*Transcript[\s\S]*?<\/table>/gi);
-  const blob = tables.map((t) => t[0]).join("\n") || html;
+
+  const lastMatch = (text: string, re: RegExp): string => {
+    const ms = findAll(text, re);
+    return ms.length ? ms[ms.length - 1][1].trim() : "";
+  };
+
+  const tables = findAll(html, /<table[\s\S]*?<\/table>/gi);
+  for (const t of tables) {
+    const tableHtml = t[0];
+    const rows = findAll(tableHtml, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+
+    // Locate the column header row (must contain Course + Credit).
+    let headerIdx = -1;
+    let cols: string[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      const cells = findAll(rows[i][1], /<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi).map((c) =>
+        decode(c[1]).toLowerCase(),
+      );
+      if (cells.some((c) => c === "course") && cells.some((c) => c.startsWith("credit"))) {
+        headerIdx = i;
+        cols = cells;
+        break;
+      }
+    }
+    if (headerIdx === -1) continue; // not a transcript course table
+
+    // Column indices (tolerant of spacing/labels).
+    const norm = (c: string) => c.replace(/\s+/g, "");
+    const ci = cols.findIndex((c) => c === "course");
+    const di = cols.findIndex((c) => c.startsWith("desc"));
+    const s1 = cols.findIndex((c) => norm(c) === "sem1");
+    const s2 = cols.findIndex((c) => norm(c) === "sem2");
+    const fi = cols.findIndex((c) => c === "fin");
+    const cr = cols.findIndex((c) => c.startsWith("credit"));
+
+    // Group context comes from the labels rendered just before the table.
+    const ctx = decode(html.slice(0, t.index).slice(-1500));
+    const year = lastMatch(ctx, /Year\s*:?\s*([0-9]{4}\s*-\s*[0-9]{4})/gi).replace(/\s+/g, "");
+    const grade = lastMatch(ctx, /Grade\s*:?\s*([0-9A-Za-z]+)/gi);
+    const buildingRaw = lastMatch(ctx, /Building\s*:?\s*(.+?)\s*$/gi);
+    const building = buildingRaw || null;
+
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const cells = findAll(rows[i][1], /<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi).map((c) => decode(c[1]));
+      if (cells.length < 2) continue;
+      const joined = cells.join(" ");
+      if (/total\s*credit/i.test(joined)) continue; // footer row
+      const course = (ci >= 0 ? cells[ci] : cells[0]) || "";
+      if (!course) continue;
+      out.push({
+        year,
+        grade,
+        building,
+        course,
+        description: di >= 0 ? cells[di] || null : null,
+        sem1: s1 >= 0 ? cells[s1] || null : null,
+        sem2: s2 >= 0 ? cells[s2] || null : null,
+        fin: fi >= 0 ? cells[fi] || null : null,
+        credits: cr >= 0 ? cells[cr] || null : null,
+      });
+    }
+  }
+
+  if (out.length) return out;
+
+  // Fallback: legacy flat-row parsing for non-standard transcript markup.
+  const tablesFallback = findAll(html, /<table[^>]*Transcript[\s\S]*?<\/table>/gi);
+  const blob = tablesFallback.map((tbl) => tbl[0]).join("\n") || html;
   const rows = findAll(blob, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
   for (const r of rows) {
     const cells = findAll(r[1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
