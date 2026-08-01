@@ -128,7 +128,7 @@ function parseCourseLine(cells: string[], year: string, level: number | null): G
 
   // Name = longest alphabetic cell that isn't a grade/credit token.
   const nameCandidates = cells.filter(
-    (c) => /[a-z]{3}/i.test(c) && !isGradeCell(c) && !/^\d/.test(c) && !/^(y|n)$/i.test(c),
+    (c) => /[a-z]{2}/i.test(c) && !isGradeCell(c) && !/^\d/.test(c) && !/^(y|n)$/i.test(c),
   );
   if (!nameCandidates.length) return null;
   const name = nameCandidates.sort((a, b) => b.length - a.length)[0];
