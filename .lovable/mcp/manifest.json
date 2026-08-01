@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://vpaiqsanmtllcqxsgflv.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "aurahac",
+      "version": "0.1.0",
+      "title": "AuraHAC"
+    },
+    "tools": [
+      {
+        "name": "list_districts",
+        "title": "List supported districts",
+        "description": "List the school districts AuraHAC can sync Home Access Center data from, with their portal URLs.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "calculate_gpa",
+        "title": "Calculate GPA",
+        "description": "Calculate a GPA from a list of course averages using the AuraHAC scale. Set weighted to true for the weighted (5.0-style) scale.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "averages": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "description": "Numeric course averages on a 0-100 scale, one per course."
+            },
+            "weighted": {
+              "type": "boolean",
+              "description": "Use the weighted scale instead of the 4.0 scale."
+            }
+          },
+          "required": [
+            "averages",
+            "weighted"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "grade_needed",
+        "title": "Grade needed on remaining work",
+        "description": "Given a current average, a target average, and how much of the grade the remaining work is worth, compute the score needed on that remaining work.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "currentAverage": {
+              "type": "number",
+              "description": "Current course average, 0-100."
+            },
+            "targetAverage": {
+              "type": "number",
+              "description": "Desired final average, 0-100."
+            },
+            "remainingWeightPercent": {
+              "type": "number",
+              "description": "Percent of the final grade the remaining work is worth, 0-100."
+            }
+          },
+          "required": [
+            "currentAverage",
+            "targetAverage",
+            "remainingWeightPercent"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "category_average",
+        "title": "Weighted category average",
+        "description": "Compute a course average from weighted assignment categories (e.g. Summative 60%, Formative 40%).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "categories": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Category name."
+                  },
+                  "average": {
+                    "type": "number",
+                    "description": "Category average, 0-100."
+                  },
+                  "weightPercent": {
+                    "type": "number",
+                    "description": "Category weight in percent."
+                  }
+                },
+                "required": [
+                  "name",
+                  "average",
+                  "weightPercent"
+                ],
+                "additionalProperties": false
+              },
+              "description": "The weighted grading categories for one course."
+            }
+          },
+          "required": [
+            "categories"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
