@@ -12,13 +12,9 @@ export default defineTool({
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "Not authenticated" }], isError: true };
     }
-    const list = Object.entries(DISTRICTS).map(([id, d]) => ({
-      id,
-      ...(d as Record<string, unknown>),
-    }));
     return {
-      content: [{ type: "text", text: JSON.stringify(list, null, 2) }],
-      structuredContent: { districts: list },
+      content: [{ type: "text", text: JSON.stringify(DISTRICTS, null, 2) }],
+      structuredContent: { districts: DISTRICTS },
     };
   },
 });
