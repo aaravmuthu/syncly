@@ -2,11 +2,33 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import type { HacData, DistrictId, UserEvent, CourseCustom, BellRotation } from "./types";
 import { getFallbackData } from "./mockData";
 import { bellRotationFromHac, defaultBellRotation } from "./customize";
-import { encryptJSON, decryptJSON } from "./secureStore";
+import {
+  encryptJSON,
+  decryptJSON,
+  encryptForExport,
+  decryptFromImport,
+  hasPin as vaultHasPin,
+  isUnlocked as vaultUnlocked,
+  setPin as vaultSetPin,
+  removePin as vaultRemovePin,
+  unlockWithPin as vaultUnlock,
+  lockVault,
+} from "./secureStore";
 import { emptyStreak, recordCheckIn, type StreakState } from "./streaks";
 import type { MarkingPeriod } from "./marking";
+import {
+  academicYearLabel,
+  emptyLedger,
+  lockThrough,
+  mergeSync,
+  type GradeLedger,
+} from "./history";
+import { emptyProfile, type StudentProfile } from "./profile";
 
-const STORAGE_KEY = "aurahac.data.v1";
+const STORAGE_KEY = "aurahac.data.v2";
+const LEGACY_STORAGE_KEY = "aurahac.data.v1";
+const LEDGER_KEY = "aurahac.ledger.v1";
+const PROFILE_KEY = "aurahac.profile.v1";
 const CRED_KEY = "aurahac.cred.v1";
 const DATA_VERSION_KEY = "aurahac.data.version.v1";
 const THEME_KEY = "aurahac.theme.v2";
@@ -16,7 +38,10 @@ const EVENTS_KEY = "aurahac.events.v1";
 const CUSTOM_KEY = "aurahac.coursecustom.v1";
 const BELL_KEY = "aurahac.bell.v1";
 const STREAK_KEY = "aurahac.streak.v1";
-const DATA_SCHEMA_VERSION = 7;
+const DATA_SCHEMA_VERSION = 8;
+
+export type SaveState = "idle" | "saving" | "saved";
+
 
 export type Theme =
   | "nebula"
@@ -76,6 +101,25 @@ interface Ctx {
   recordStreak: (onTrack: boolean) => void;
   activePeriod: MarkingPeriod;
   setActivePeriod: (p: MarkingPeriod) => void;
+
+  /* --- Encrypted vault --- */
+  /** True when a Master PIN is configured but the vault has not been unlocked. */
+  locked: boolean;
+  hasPin: boolean;
+  unlock: (pin: string) => Promise<void>;
+  setPin: (pin: string) => Promise<void>;
+  clearPin: (pin: string) => Promise<void>;
+  saveState: SaveState;
+  exportBackup: (passphrase: string) => Promise<void>;
+  importBackup: (file: File, passphrase: string) => Promise<void>;
+
+  /* --- Marking-period ledger --- */
+  ledger: GradeLedger;
+  academicYear: string;
+
+  /* --- Student profile --- */
+  profile: StudentProfile;
+  setProfile: (p: StudentProfile) => void;
 }
 
 const HacCtx = createContext<Ctx | null>(null);
@@ -94,11 +138,50 @@ export function HacProvider({ children }: { children: ReactNode }) {
   const [courseCustom, setCourseCustomState] = useState<Record<string, CourseCustom>>({});
   const [bellRotation, setBellRotationState] = useState<BellRotation>(defaultBellRotation());
   const [streak, setStreak] = useState<StreakState>(emptyStreak());
-  const [activePeriod, setActivePeriod] = useState<MarkingPeriod>("MP4");
+  const [activePeriod, setActivePeriodState] = useState<MarkingPeriod>("MP4");
+  const [locked, setLocked] = useState(false);
+  const [hasPinState, setHasPinState] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [ledger, setLedger] = useState<GradeLedger>(emptyLedger());
+  const [profile, setProfileState] = useState<StudentProfile>(emptyProfile());
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Hydrate from localStorage once. Show the login screen by default; restore a
-  // live session, or a previously chosen demo session, when present.
+  /** Flash the "Data Encrypted & Saved" indicator. */
+  function flashSaved() {
+    setSaveState("saving");
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      setSaveState("saved");
+      saveTimer.current = setTimeout(() => setSaveState("idle"), 2200);
+    }, 260);
+  }
+
+  /** Persist grade data + ledger AES-256-GCM encrypted. */
+  async function persistSecure(d: HacData | null, l: GradeLedger) {
+    try {
+      if (d) {
+        localStorage.setItem(STORAGE_KEY, await encryptJSON(d));
+        localStorage.setItem(DATA_VERSION_KEY, String(DATA_SCHEMA_VERSION));
+      }
+      localStorage.setItem(LEDGER_KEY, await encryptJSON(l));
+      flashSaved();
+    } catch {
+      /* storage unavailable */
+    }
+  }
+
+  /** Fold a fresh sync into the persistent marking-period ledger. */
+  function absorb(d: HacData): GradeLedger {
+    const next = mergeSync(ledger, d, activePeriod);
+    setLedger(next);
+    return next;
+  }
+
+
+  // Hydrate from localStorage once. Non-sensitive preferences load synchronously;
+  // grade data + credentials live in the AES-256-GCM vault and load after it is
+  // unlocked (immediately when no Master PIN is set).
   useEffect(() => {
     try {
       const t = localStorage.getItem(THEME_KEY);
@@ -119,39 +202,63 @@ export function HacProvider({ children }: { children: ReactNode }) {
       const sk = localStorage.getItem(STREAK_KEY);
       if (sk) setStreak({ ...emptyStreak(), ...JSON.parse(sk) });
 
+      const pf = localStorage.getItem(PROFILE_KEY);
+      if (pf) setProfileState({ ...emptyProfile(), ...JSON.parse(pf) });
+
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         setNotificationsEnabled(true);
       }
-      const version = Number(localStorage.getItem(DATA_VERSION_KEY) ?? "0");
-      const d = localStorage.getItem(STORAGE_KEY);
-      const c = localStorage.getItem(CRED_KEY);
-      if (c) {
-        // Credentials are stored AES-GCM encrypted; decrypt in memory only.
-        decryptJSON<Cred>(c)
-          .then((cred) => setCred(cred))
-          .catch(() => {
-            try {
-              localStorage.removeItem(CRED_KEY);
-            } catch {
-              /* ignore */
-            }
-          });
-      }
-      if (d && version === DATA_SCHEMA_VERSION) {
-        setData(JSON.parse(d));
+
+      // Legacy plaintext cache from before the vault — drop it.
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+
+      const pinned = vaultHasPin();
+      setHasPinState(pinned);
+      if (pinned && !vaultUnlocked()) {
+        setLocked(true);
         return;
       }
-      if (d && version !== DATA_SCHEMA_VERSION) {
-        localStorage.removeItem(STORAGE_KEY);
+      void loadVault();
+    } catch {
+      /* show login screen */
+    }
+  }, []);
+
+  /** Read the encrypted grade ledger + credentials out of local storage. */
+  async function loadVault() {
+    try {
+      const lg = localStorage.getItem(LEDGER_KEY);
+      if (lg) setLedger({ ...emptyLedger(), ...(await decryptJSON<GradeLedger>(lg)) });
+    } catch {
+      /* corrupt ledger — start fresh */
+    }
+    try {
+      const c = localStorage.getItem(CRED_KEY);
+      if (c) setCred(await decryptJSON<Cred>(c));
+    } catch {
+      try {
+        localStorage.removeItem(CRED_KEY);
+      } catch {
+        /* ignore */
       }
+    }
+    try {
+      const version = Number(localStorage.getItem(DATA_VERSION_KEY) ?? "0");
+      const d = localStorage.getItem(STORAGE_KEY);
+      if (d && version === DATA_SCHEMA_VERSION) {
+        setData(await decryptJSON<HacData>(d));
+        return;
+      }
+      if (d) localStorage.removeItem(STORAGE_KEY);
       if (localStorage.getItem(DEMO_KEY)) {
         setData(getFallbackData());
         setIsFallback(true);
       }
     } catch {
-      /* show login screen */
+      /* fall through to login */
     }
-  }, []);
+  }
+
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -185,9 +292,9 @@ export function HacProvider({ children }: { children: ReactNode }) {
         setBellRotationState(hacBell);
         localStorage.setItem(BELL_KEY, JSON.stringify(hacBell));
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
-      localStorage.setItem(DATA_VERSION_KEY, String(DATA_SCHEMA_VERSION));
       localStorage.setItem(CRED_KEY, await encryptJSON(c));
+      await persistSecure(d, absorb(d));
+
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sync failed";
       setError(msg);
@@ -219,8 +326,7 @@ export function HacProvider({ children }: { children: ReactNode }) {
     try {
       const d = await callSync(cred);
       setData(d);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
-      localStorage.setItem(DATA_VERSION_KEY, String(DATA_SCHEMA_VERSION));
+      await persistSecure(d, absorb(d));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
     } finally {
@@ -242,6 +348,111 @@ export function HacProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
   }
+
+  /* ---------------- Vault: PIN, lock, backups ---------------- */
+
+  async function unlock(pin: string) {
+    await vaultUnlock(pin);
+    if (!vaultUnlocked()) throw new Error("Incorrect PIN");
+    await loadVault();
+    setLocked(false);
+  }
+
+  async function setPin(pin: string) {
+    await vaultSetPin(pin);
+    setHasPinState(true);
+    await persistSecure(data, ledger);
+  }
+
+  async function clearPin(pin: string) {
+    await vaultRemovePin(pin);
+    setHasPinState(false);
+  }
+
+  async function exportBackup(passphrase: string) {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      schema: DATA_SCHEMA_VERSION,
+      data,
+      ledger,
+      profile,
+      userEvents,
+      courseCustom,
+      bellRotation,
+      streak,
+      completed,
+    };
+    const blob = new Blob([await encryptForExport(payload, passphrase)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `aurahac-backup-${new Date().toISOString().slice(0, 10)}.aurahac`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importBackup(file: File, passphrase: string) {
+    const text = await file.text();
+    const payload = await decryptFromImport<{
+      data: HacData | null;
+      ledger: GradeLedger;
+      profile: StudentProfile;
+      userEvents: UserEvent[];
+      courseCustom: Record<string, CourseCustom>;
+      bellRotation: BellRotation;
+      streak: StreakState;
+      completed: Record<string, boolean>;
+    }>(text, passphrase);
+
+    if (payload.data) {
+      setData(payload.data);
+      setIsFallback(false);
+    }
+    const nextLedger = { ...emptyLedger(), ...(payload.ledger ?? {}) };
+    setLedger(nextLedger);
+    if (payload.profile) setProfile({ ...emptyProfile(), ...payload.profile });
+    if (payload.userEvents) {
+      setUserEvents(payload.userEvents);
+      persistEvents(payload.userEvents);
+    }
+    if (payload.courseCustom) {
+      setCourseCustomState(payload.courseCustom);
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(payload.courseCustom));
+    }
+    if (payload.bellRotation) setBellRotation(payload.bellRotation);
+    if (payload.streak) {
+      setStreak(payload.streak);
+      localStorage.setItem(STREAK_KEY, JSON.stringify(payload.streak));
+    }
+    if (payload.completed) {
+      setCompleted(payload.completed);
+      localStorage.setItem(DONE_KEY, JSON.stringify(payload.completed));
+    }
+    await persistSecure(payload.data ?? data, nextLedger);
+  }
+
+  /** Switching the active marking period locks everything before it. */
+  function setActivePeriod(p: MarkingPeriod) {
+    setActivePeriodState(p);
+    setLedger((prev) => {
+      const next = lockThrough(prev, p);
+      void persistSecure(null, next);
+      return next;
+    });
+  }
+
+  function setProfile(p: StudentProfile) {
+    setProfileState(p);
+    try {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+    } catch {
+      /* ignore */
+    }
+    flashSaved();
+  }
+
 
   function setTheme(t: Theme) {
     setThemeState(t);
@@ -410,8 +621,21 @@ export function HacProvider({ children }: { children: ReactNode }) {
       recordStreak,
       activePeriod,
       setActivePeriod,
+      locked,
+      hasPin: hasPinState,
+      unlock,
+      setPin,
+      clearPin,
+      saveState,
+      exportBackup,
+      importBackup,
+      ledger,
+      academicYear: academicYearLabel(data?.syncedAt),
+      profile,
+      setProfile,
     }),
-    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation, streak, activePeriod],
+    [data, loading, error, cred, isFallback, theme, courseNav, completed, userEvents, notificationsEnabled, courseCustom, bellRotation, streak, activePeriod, locked, hasPinState, saveState, ledger, profile],
+
   );
 
   return <HacCtx.Provider value={value}>{children}</HacCtx.Provider>;

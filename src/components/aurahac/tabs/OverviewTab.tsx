@@ -10,21 +10,20 @@ import { StreakCard } from "../StreakCard";
 import { SmartInsights } from "../SmartInsights";
 import { TrendGraph, type TrendPoint } from "../TrendGraph";
 import { LivePeriodWidget } from "../LivePeriodWidget";
+import { AuraAvatar } from "../AuraAvatar";
+import { ProfileDrawer } from "../ProfileDrawer";
 import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell, LineChart } from "lucide-react";
 
 function fullDate(): string {
   return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
-}
-
 export function OverviewTab() {
-  const { data } = useHac();
+  const { data, profile } = useHac();
   const [missingOpen, setMissingOpen] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
   if (!data) return null;
+
 
   const weighted = currentYearGPA(data.courses, true);
   const cum = cumulativeGPA(data.transcript, true);
@@ -76,24 +75,45 @@ export function OverviewTab() {
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <RankBadge gpa={cum > 0 ? cum : weighted} />
-          <div
-            className="h-11 w-11 rounded-full grid place-items-center font-bold text-sm"
-            style={{
-              background: "color-mix(in oklab, var(--card) 50%, transparent)",
-              border: "1px solid color-mix(in oklab, var(--primary) 45%, transparent)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 0 22px -8px var(--primary)",
-            }}
+          <button
+            onClick={() => setProfileOpen(true)}
+            aria-label="Open student profile"
+            className="active:scale-95 transition-transform"
           >
-            {initials(data.student.name)}
-          </div>
+            <AuraAvatar profile={profile} fallbackName={data.student.name} size={46} />
+          </button>
         </div>
+
 
       </header>
 
+      <ProfileDrawer open={profileOpen} onClose={() => setProfileOpen(false)} />
+
+      {/* Student profile card */}
+      <button
+        onClick={() => setProfileOpen(true)}
+        className="w-full liquid rounded-2xl p-4 flex items-center gap-4 text-left active:scale-[0.99] transition-transform"
+      >
+        <AuraAvatar profile={profile} fallbackName={data.student.name} size={60} />
+        <div className="min-w-0 flex-1">
+          <div className="text-base font-bold truncate">
+            {profile.displayName || data.student.name}
+          </div>
+          <div className="text-xs text-muted-foreground truncate">
+            {profile.schoolName || data.student.school || "—"}
+            {data.student.grade ? ` · Grade ${data.student.grade}` : ""}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1 flex gap-2">
+            {profile.gradYear ? <span>Class of {profile.gradYear}</span> : null}
+            {profile.badgeId ? <span className="font-mono">#{profile.badgeId}</span> : null}
+            <span className="text-primary">Customize →</span>
+          </div>
+        </div>
+      </button>
+
       {/* Live "Tardy Burner" passing-period countdown */}
       <LivePeriodWidget />
+
 
       {/* Academic streak */}
       <StreakCard />

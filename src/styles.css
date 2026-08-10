@@ -543,3 +543,39 @@
   background-size: 200% 200%;
   animation: tier-diamond 4.5s ease-in-out infinite;
 }
+
+/* ---- Animated profile avatars & aura border effects ---- */
+@keyframes aura-rotate { to { transform: rotate(360deg); } }
+@utility aura-ring {
+  animation: aura-rotate 6s linear infinite;
+}
+@keyframes avatar-drift {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.15) translate(-6%, 6%); }
+}
+@utility avatar-drift { animation: avatar-drift 5s ease-in-out infinite; }
+
+@keyframes avatar-spin { to { transform: rotate(360deg); } }
+@utility avatar-spin { animation: avatar-spin 4s linear infinite; }
+
+@keyframes avatar-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+@utility avatar-pulse { animation: avatar-pulse 2.4s ease-in-out infinite; }
+
+@keyframes avatar-wave {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@utility avatar-wave { animation: avatar-wave 6s ease-in-out infinite; }
+
+@keyframes avatar-hue { to { filter: hue-rotate(360deg); } }
+@utility avatar-hue { animation: avatar-hue 8s linear infinite; }
+
+/* Encrypted autosave indicator */
+@keyframes save-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 45%, transparent); }
+  50% { box-shadow: 0 0 18px 2px color-mix(in oklab, var(--success) 45%, transparent); }
+}
+@utility save-glow { animation: save-glow 1.6s ease-in-out infinite; }

@@ -4,6 +4,8 @@ import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
 import { PullToRefresh } from "./PullToRefresh";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { PinLock } from "./PinLock";
+import { SaveIndicator } from "./SaveIndicator";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { GradesTab } from "./tabs/GradesTab";
 import { GpaTab } from "./tabs/GpaTab";
@@ -11,6 +13,7 @@ import { RecordsTab } from "./tabs/RecordsTab";
 import { CalendarTab } from "./tabs/CalendarTab";
 import { SettingsTab } from "./tabs/SettingsTab";
 import { Home, BookOpen, GraduationCap, FolderOpen, Calendar, Settings } from "lucide-react";
+
 
 type TabId = "overview" | "grades" | "gpa" | "records" | "calendar" | "settings";
 
@@ -44,7 +47,7 @@ function Pane({ active, current, children }: { active: TabId; current: TabId; ch
 }
 
 export function AppShell() {
-  const { data, courseNav } = useHac();
+  const { data, courseNav, locked } = useHac();
   const [tab, setTab] = useState<TabId>("overview");
 
   useEffect(() => {
@@ -67,9 +70,12 @@ export function AppShell() {
         }}
       />
 
-      {!data ? (
+      {locked ? (
+        <PinLock />
+      ) : !data ? (
         <LoginGate />
       ) : (
+
         <div className="absolute inset-0 flex">
           <DesktopSidebar />
           <div className="relative flex-1 min-w-0">
@@ -82,6 +88,10 @@ export function AppShell() {
           </div>
         </div>
       )}
+
+      {data && !locked ? <SaveIndicator /> : null}
+
+
 
       {data ? (
         <nav

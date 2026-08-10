@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useHac, type Theme } from "@/lib/hac/store";
 import { DISTRICTS } from "@/lib/hac/types";
+import { AuraAvatar } from "../AuraAvatar";
+import { ProfileDrawer } from "../ProfileDrawer";
 import { LogOut, Trash2, Palette, User as UserIcon, RefreshCcw, Pencil, Check } from "lucide-react";
+
 
 const THEMES: { id: Theme; label: string; vibe: string; canvas: string; accent: string }[] = [
   { id: "nebula", label: "Nebula", vibe: "Cosmic tech", canvas: "#080D2E", accent: "#6040DC" },
@@ -24,7 +27,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function SettingsTab() {
-  const { data, logout, refresh, loading, theme, setTheme } = useHac();
+  const { data, logout, refresh, loading, theme, setTheme, profile } = useHac();
+  const [profileOpen, setProfileOpen] = useState(false);
+
   const [editing, setEditing] = useState(false);
   if (!data) return null;
   const district = DISTRICTS.find((d) => d.id === data.districtId);
@@ -44,6 +49,30 @@ export function SettingsTab() {
         <div className="text-xs uppercase tracking-widest text-muted-foreground">System</div>
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
       </header>
+
+      <ProfileDrawer open={profileOpen} onClose={() => setProfileOpen(false)} />
+
+      <SectionLabel>Personalization & Security</SectionLabel>
+      <section className="glass p-4 flex items-center gap-3">
+        <AuraAvatar profile={profile} fallbackName={data.student.name} size={52} />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold truncate">
+            {profile.displayName || data.student.name}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            Animated avatar, aura effects, Master PIN & encrypted backups
+          </div>
+        </div>
+        <button
+          onClick={() => setProfileOpen(true)}
+          className="rounded-xl px-3 py-2 text-xs font-semibold shrink-0"
+          style={{ background: "var(--primary)", color: "#090915" }}
+        >
+          Customize
+        </button>
+      </section>
+
+
 
       {/* ===== Profile card — consolidated, pencil-on-avatar edit ===== */}
       <section className="glass p-4">
