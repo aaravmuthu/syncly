@@ -461,8 +461,44 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
         if (term) course.reportCard = term;
       }
     }
+    // Merge the real schedule (room / period / teacher) onto each course, and
+    // add any scheduled class that has no classwork yet so the roster is complete.
+    if (schedule.length) {
+      const byName = new Map(schedule.map((s) => [normalizeName(s.description), s]));
+      for (const course of courses) {
+        const s = byName.get(normalizeName(course.name));
+        if (!s) continue;
+        course.room = s.room ?? course.room ?? null;
+        course.period = course.period ?? s.period;
+        course.teacher = course.teacher ?? s.teacher;
+        course.code = course.code ?? (s.course || null);
+      }
+      const known = new Set(courses.map((c) => normalizeName(c.name)));
+      for (const s of schedule) {
+        const key = normalizeName(s.description);
+        if (!key || known.has(key)) continue;
+        known.add(key);
+        courses.push({
+          id: `c-sch-${key}`,
+          name: s.description,
+          code: s.course || null,
+          teacher: s.teacher,
+          period: s.period,
+          average: null,
+          assignments: [],
+          categoryAverages: [],
+          room: s.room,
+          reportCard: rcMap.get(key),
+        });
+      }
+    }
+
     debug.coursesWithReportCard = courses.filter((c) => c.reportCard).length;
     debug.coursesWithPeriodData = courses.filter((c) => c.periodData && Object.keys(c.periodData).length).length;
+    debug.scheduleRows = schedule.length;
+    debug.attendanceEntries = attendance ? attendance.log.length : 0;
+    debug.transcriptRows = transcript.length;
+    debug.calendarEvents = calendar.length;
     console.log("[HAC SYNC DEBUG]", JSON.stringify(debug));
 
     return {
@@ -470,6 +506,8 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
       courses,
       transcript,
       calendar,
+      schedule,
+      ...(attendance ? { attendance } : {}),
       officialGpa,
       markingPeriodGPAs: [],
       syncedAt: new Date().toISOString(),
