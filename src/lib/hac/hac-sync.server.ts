@@ -29,7 +29,17 @@ const PAGE_CANDIDATES = {
     "/HomeAccess/Home/WeekView",
     "/HomeAccess/Home/Calendar",
   ],
+  schedule: [
+    "/HomeAccess/Content/Student/Classes.aspx",
+    "/HomeAccess/Classes/Schedule",
+  ],
+  attendance: [
+    "/HomeAccess/Content/Attendance/MonthlyView.aspx",
+    "/HomeAccess/Home/Attendance",
+    "/HomeAccess/Attendance/MonthlyView",
+  ],
 } as const;
+
 
 const LOGIN_PATH = "/HomeAccess/Account/LogOn?ReturnUrl=%2fHomeAccess%2f";
 
