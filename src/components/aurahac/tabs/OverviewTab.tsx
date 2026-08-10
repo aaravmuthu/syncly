@@ -76,19 +76,15 @@ export function OverviewTab() {
         </div>
         <div className="shrink-0 flex items-center gap-2">
           <RankBadge gpa={cum > 0 ? cum : weighted} />
-          <div
-            className="h-11 w-11 rounded-full grid place-items-center font-bold text-sm"
-            style={{
-              background: "color-mix(in oklab, var(--card) 50%, transparent)",
-              border: "1px solid color-mix(in oklab, var(--primary) 45%, transparent)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 0 22px -8px var(--primary)",
-            }}
+          <button
+            onClick={() => setProfileOpen(true)}
+            aria-label="Open student profile"
+            className="active:scale-95 transition-transform"
           >
-            {initials(data.student.name)}
-          </div>
+            <AuraAvatar profile={profile} fallbackName={data.student.name} size={46} />
+          </button>
         </div>
+
 
       </header>
 
