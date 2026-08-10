@@ -27,7 +27,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function SettingsTab() {
-  const { data, logout, refresh, loading, theme, setTheme } = useHac();
+  const { data, logout, refresh, loading, theme, setTheme, profile } = useHac();
+  const [profileOpen, setProfileOpen] = useState(false);
+
   const [editing, setEditing] = useState(false);
   if (!data) return null;
   const district = DISTRICTS.find((d) => d.id === data.districtId);
