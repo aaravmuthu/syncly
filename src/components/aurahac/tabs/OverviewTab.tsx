@@ -87,8 +87,33 @@ export function OverviewTab() {
 
       </header>
 
+      <ProfileDrawer open={profileOpen} onClose={() => setProfileOpen(false)} />
+
+      {/* Student profile card */}
+      <button
+        onClick={() => setProfileOpen(true)}
+        className="w-full liquid rounded-2xl p-4 flex items-center gap-4 text-left active:scale-[0.99] transition-transform"
+      >
+        <AuraAvatar profile={profile} fallbackName={data.student.name} size={60} />
+        <div className="min-w-0 flex-1">
+          <div className="text-base font-bold truncate">
+            {profile.displayName || data.student.name}
+          </div>
+          <div className="text-xs text-muted-foreground truncate">
+            {profile.schoolName || data.student.school || "—"}
+            {data.student.grade ? ` · Grade ${data.student.grade}` : ""}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1 flex gap-2">
+            {profile.gradYear ? <span>Class of {profile.gradYear}</span> : null}
+            {profile.badgeId ? <span className="font-mono">#{profile.badgeId}</span> : null}
+            <span className="text-primary">Customize →</span>
+          </div>
+        </div>
+      </button>
+
       {/* Live "Tardy Burner" passing-period countdown */}
       <LivePeriodWidget />
+
 
       {/* Academic streak */}
       <StreakCard />
