@@ -47,7 +47,7 @@ function Pane({ active, current, children }: { active: TabId; current: TabId; ch
 }
 
 export function AppShell() {
-  const { data, courseNav } = useHac();
+  const { data, courseNav, locked } = useHac();
   const [tab, setTab] = useState<TabId>("overview");
 
   useEffect(() => {
