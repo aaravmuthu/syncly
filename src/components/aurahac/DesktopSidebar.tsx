@@ -1,3 +1,4 @@
+import logoAsset from "@/assets/aurahac-logo.png.asset.json";
 import { useMemo } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";

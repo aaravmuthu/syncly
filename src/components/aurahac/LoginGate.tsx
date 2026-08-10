@@ -1,3 +1,4 @@
+import logoAsset from "@/assets/aurahac-logo.png.asset.json";
 import { useEffect, useState } from "react";
 import { useHac } from "@/lib/hac/store";
 import { DISTRICTS, type DistrictId } from "@/lib/hac/types";
