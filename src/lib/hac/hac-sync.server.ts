@@ -301,9 +301,7 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
       headers: {
         "User-Agent": ua,
         "Content-Type": "application/x-www-form-urlencoded",
-        Accept: "text/html",
-        "X-Requested-With": "XMLHttpRequest",
-        __RequestVerificationToken: token,
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         Cookie: cookieHeader(jar),
         Referer: loginUrl,
         Origin: base,
@@ -343,8 +341,11 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
     // Step 3: fetch Classwork, Transcript, Report Card, and Calendar pages.
     // HAC route shapes vary by district/version, so try the classic Content/Student
     // pages first, then the newer Classes/Grades routes.
-    const [classwork, transcriptPage, reportCardPage, calendarPage] = await Promise.all([
-      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage),
+    // Establish one protected request before issuing any concurrent reads. HAC
+    // finalizes per-session student context on the first authenticated page and
+    // can race when several pages arrive immediately after sign-in.
+    const classwork = await fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage);
+    const [transcriptPage, reportCardPage, calendarPage] = await Promise.all([
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.transcript, looksLikeTranscriptPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.reportCard, looksLikeReportCardPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.calendar, (html) => /calendar|week view|fc-event|data-date=/i.test(html)),
