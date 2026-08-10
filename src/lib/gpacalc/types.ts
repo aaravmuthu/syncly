@@ -27,7 +27,15 @@ export interface GpaCourse {
   exempt: boolean;
 }
 
-export type ScaleId = "unweighted4" | "weighted5" | "tiered6" | "custom";
+export type ScaleId =
+  | "unweighted4"
+  | "weighted5"
+  | "tiered6banded"
+  | "tiered6continuous"
+  | "raw100"
+  | "custom"
+  /** @deprecated legacy alias for the continuous Texas 6.0 scale. */
+  | "tiered6";
 
 export type ConversionMode = "discrete" | "continuous";
 
@@ -55,7 +63,7 @@ export const DEFAULT_CUSTOM: CustomScale = {
 };
 
 export const DEFAULT_SETTINGS: GpaSettings = {
-  scale: "tiered6",
+  scale: "tiered6continuous",
   custom: DEFAULT_CUSTOM,
   display: "points",
   activeYear: "",
