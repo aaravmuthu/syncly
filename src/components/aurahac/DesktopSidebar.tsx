@@ -1,8 +1,9 @@
+import logoAsset from "@/assets/aurahac-logo.png.asset.json";
 import { useMemo } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
-import { Sparkles, CalendarClock, ChevronRight, GraduationCap, FileText, FlaskConical } from "lucide-react";
+import { Sparkles, CalendarClock, ChevronRight, FileText, FlaskConical } from "lucide-react";
 
 function parseSlash(s: string | null): number | null {
   if (!s) return null;
@@ -71,16 +72,15 @@ export function DesktopSidebar() {
     <aside className="hidden lg:flex flex-col w-[300px] shrink-0 h-full border-r border-white/10 overflow-y-auto px-4 py-6 gap-6">
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-1">
-        <div
-          className="h-9 w-9 rounded-xl grid place-items-center"
+        <img
+          src={logoAsset.url}
+          alt="AuraHAC logo"
+          className="h-9 w-9 rounded-xl object-cover"
           style={{
-            background: "color-mix(in oklab, var(--primary) 18%, transparent)",
             border: "1px solid color-mix(in oklab, var(--primary) 40%, transparent)",
             boxShadow: "0 0 18px -6px var(--primary)",
           }}
-        >
-          <GraduationCap className="h-5 w-5 text-primary" />
-        </div>
+        />
         <div className="min-w-0">
           <div className="text-sm font-bold tracking-tight truncate">{data.student.name}</div>
           <div className="text-[11px] text-muted-foreground truncate">{data.student.school ?? "AuraHAC"}</div>

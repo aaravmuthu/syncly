@@ -1,3 +1,4 @@
+import logoAsset from "@/assets/aurahac-logo.png.asset.json";
 import { useEffect, useState } from "react";
 import { useHac } from "@/lib/hac/store";
 import { DISTRICTS, type DistrictId } from "@/lib/hac/types";
@@ -73,9 +74,11 @@ export function LoginGate() {
   const card = (
     <div className="glass-strong w-full max-w-sm md:max-w-[540px] p-6 md:p-6 rounded-3xl">
       <div className="flex items-center gap-3 mb-5">
-        <div className="h-10 w-10 rounded-2xl bg-primary grid place-items-center glow-primary">
-          <ShieldCheck className="h-5 w-5 text-primary-foreground" />
-        </div>
+        <img
+          src={logoAsset.url}
+          alt="AuraHAC logo"
+          className="h-10 w-10 rounded-2xl object-cover glow-primary"
+        />
         <div>
           <div className="text-xl font-bold tracking-tight">AuraHAC</div>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Secure HAC Sync</div>
