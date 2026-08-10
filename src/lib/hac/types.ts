@@ -103,6 +103,18 @@ export interface CalendarActivity {
   kind: string | null;
 }
 
+/** A row from the HAC "Classes → Schedule" page. */
+export interface ScheduleEntry {
+  course: string;
+  description: string;
+  period: string | null;
+  teacher: string | null;
+  room: string | null;
+  days: string | null;
+  term: string | null;
+  building: string | null;
+}
+
 /** Official GPA/rank figures pulled directly from the HAC transcript page. */
 export interface OfficialGpa {
   weighted: number | null;
@@ -110,6 +122,7 @@ export interface OfficialGpa {
   rank: number | null;
   classSize: number | null;
 }
+
 
 export interface HacData {
   student: { name: string; grade: string | null; school: string | null; studentId?: string | null };
