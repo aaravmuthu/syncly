@@ -227,7 +227,12 @@ function parseSetCookie(headers: Headers): Record<string, string> {
   const jar: Record<string, string> = {};
   // Cloudflare Workers' Headers exposes getSetCookie()
   const raw: string[] = (headers as unknown as { getSetCookie?: () => string[] }).getSetCookie?.() ?? [];
-  const list = raw.length ? raw : [headers.get("set-cookie") ?? ""].filter(Boolean);
+  const combined = headers.get("set-cookie") ?? "";
+  // Some Worker runtimes combine Set-Cookie values into one header. Split only
+  // at a comma that begins another cookie, not the comma inside Expires=.
+  const list = raw.length
+    ? raw
+    : combined.split(/,(?=\s*[^;,=\s]+=[^;,]*)/).map((value) => value.trim()).filter(Boolean);
   for (const c of list) {
     const first = c.split(";")[0];
     const eq = first.indexOf("=");
@@ -305,17 +310,21 @@ export const syncHac = createServerFn({ method: "POST" })
       redirect: "manual",
     });
     jar = mergeCookies(jar, r2.headers);
-
-    if (!jar[".ASPXAUTH"] && r2.status !== 302) {
-      const body = await r2.text();
-      if (/invalid|incorrect|locked/i.test(body)) {
-        throw new Error("Invalid username or password.");
-      }
-      throw new Error(`HAC login failed (status ${r2.status}). Check credentials or try again.`);
+    const loginResponseHtml = await r2.text();
+    if (/invalid|incorrect|locked|unable to log on/i.test(loginResponseHtml)) {
+      throw new Error("HAC rejected that username or password.");
     }
 
     // Follow redirect chain (HAC bounces through HomeAccess/Home).
-    let nextUrl = r2.headers.get("location");
+    let nextUrl = r2.headers.get("location") ?? extractHtmlRedirectTarget(loginResponseHtml);
+    if (!nextUrl && loginResponseHtml.trim().startsWith("{")) {
+      try {
+        const result = JSON.parse(loginResponseHtml) as { returnUrl?: string; redirectUrl?: string; url?: string };
+        nextUrl = result.returnUrl ?? result.redirectUrl ?? result.url ?? null;
+      } catch {
+        // The protected-page check below is the source of truth.
+      }
+    }
     let hops = 0;
     while (nextUrl && hops < 5) {
       const u = nextUrl.startsWith("http") ? nextUrl : `${base}${nextUrl}`;
