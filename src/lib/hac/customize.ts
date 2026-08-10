@@ -130,7 +130,7 @@ export function bellRotationFromHac(data: HacData): BellRotation {
         label: name,
         start: slot?.start ?? "08:00",
         end: slot?.end ?? "08:50",
-        room: data.courses.find((course) => course.name.trim() === name)?.room ?? undefined,
+        room: roomByName.get(name) ?? undefined,
       };
     });
     if (lunch) periods[day].splice(Math.min(2, periods[day].length), 0, { ...lunch, id: `${dayIndex ? "b" : "a"}-lunch` });
