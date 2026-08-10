@@ -89,6 +89,10 @@ export function AppShell() {
         </div>
       )}
 
+      {data && !locked ? <SaveIndicator /> : null}
+
+
+
       {data ? (
         <nav
           className="fixed z-[9999] glass-strong rounded-3xl px-2 py-2 flex items-center gap-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] bottom-5 left-1/2 -translate-x-1/2 lg:left-[calc(50%+150px)]"
