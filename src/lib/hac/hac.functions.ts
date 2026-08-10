@@ -35,7 +35,9 @@ const PAGE_CANDIDATES = {
 const LOGIN_PATH = "/HomeAccess/Account/LogOn?ReturnUrl=%2fHomeAccess%2f";
 
 function looksLikeLoginPage(html: string): boolean {
-  return /forgot my user name or password|register for hac|verificationoption|logondetails\.username|sign in/i.test(html);
+  // Do not key this off generic text such as "Sign in". HAC includes that text
+  // in shared navigation/footer markup on some authenticated pages.
+  return /logondetails\.username|name=["']verificationoption["']|action=["'][^"']*\/account\/logon/i.test(html);
 }
 
 function looksLikeClassworkPage(html: string): boolean {
@@ -283,7 +285,9 @@ export const syncHac = createServerFn({ method: "POST" })
     }
 
     // Step 2: POST login form.
-    const form = new URLSearchParams();
+    // Preserve every hidden field HAC supplied. District deployments sometimes
+    // add fields beyond the anti-forgery token and reject a handcrafted subset.
+    const form = new URLSearchParams(extractFormFields(loginHtml));
     form.set("__RequestVerificationToken", token);
     form.set("SCKTY00328510CustomEnabled", "False");
     form.set("SCKTY00436568CustomEnabled", "False");
@@ -353,7 +357,12 @@ export const syncHac = createServerFn({ method: "POST" })
     const reportCardHtml = reportCardPage.html;
     const calendarHtml = calendarPage.html;
 
-    if (looksLikeLoginPage(classworkHtml) || !looksLikeClassworkPage(classworkHtml)) {
+    // Authentication and classwork-layout detection are separate concerns. A
+    // valid session may have no current classwork (summer, schedule changes) or
+    // use a layout our parser does not recognize; report-card/transcript data can
+    // still seed the app in that case.
+    const protectedPages = [classworkHtml, transcriptHtml, reportCardHtml];
+    if (protectedPages.every((html) => !html || looksLikeLoginPage(html))) {
       throw new Error("Session expired or login was not accepted. Please reconnect.");
     }
 
