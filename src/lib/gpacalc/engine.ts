@@ -29,12 +29,23 @@ const LETTER_NUMERIC: Record<string, number> = {
   F: 50,
 };
 
+/**
+ * Non-GPA marks. Pass/fail, credit-only, incomplete, withdrawn and exempt
+ * grades never contribute quality points or GPA credits.
+ */
+const NON_GPA_MARK = /^(P|PASS|F\/P|CR|NC|NG|I|INC|W|WD|EX|EXEMPT|AUD|N\/A|--|-)$/;
+
+export function isNonGpaMark(raw: string | null | undefined): boolean {
+  if (raw == null) return false;
+  return NON_GPA_MARK.test(String(raw).trim().toUpperCase());
+}
+
 /** Parse a grade cell into a 0-100 numeric value. Returns null when unusable. */
 export function toNumericGrade(raw: string | null | undefined): number | null {
   if (raw == null) return null;
   const s = String(raw).trim().toUpperCase();
   if (!s) return null;
-  if (/^(P|PASS|CR|NG|I|W|EX)$/.test(s)) return null;
+  if (NON_GPA_MARK.test(s)) return null;
   const n = Number(s.replace("%", ""));
   if (Number.isFinite(n) && n >= 0 && n <= 120) return Math.min(100, n);
   const letter = s.replace(/\s+/g, "");
@@ -42,7 +53,7 @@ export function toNumericGrade(raw: string | null | undefined): number | null {
   return null;
 }
 
-/** Letter bucket used for the distribution chart and discrete conversion. */
+/** Letter bucket used for the distribution chart and banded conversion. */
 export function letterFor(numeric: number): "A" | "B" | "C" | "D" | "F" {
   if (numeric >= 90) return "A";
   if (numeric >= 80) return "B";
@@ -58,54 +69,120 @@ export function letterFor(numeric: number): "A" | "B" | "C" | "D" | "F" {
 export interface ResolvedScale {
   id: ScaleId;
   label: string;
-  mode: ConversionMode;
-  boosts: Record<TierId, number>;
+  /**
+   * banded     — 90-100 = top, 80-89 = top-1, 70-79 = top-2, below 70 = 0
+   * continuous — top - 0.1 per point below 100, floor at 70, below 70 = 0
+   * raw        — raw 100-point average plus a difficulty boost
+   */
+  mode: ScaleMode;
+  /** Points awarded for a 90-100 in that tier (banded / continuous). */
   tops: Record<TierId, number>;
+  /** Points added on top of the raw average (raw mode) or the 4.0 base (custom discrete). */
+  boosts: Record<TierId, number>;
   maxPoints: number;
+}
+
+export type ScaleMode = "banded" | "continuous" | "raw";
+
+const TIERS: TierId[] = ["ap", "dual", "honors", "regular"];
+
+function tops(ap: number, honors: number, regular: number): Record<TierId, number> {
+  return { ap, dual: ap, honors, regular };
+}
+
+function boostsFromTops(t: Record<TierId, number>): Record<TierId, number> {
+  const base = t.regular;
+  return {
+    ap: round3(t.ap - base),
+    dual: round3(t.dual - base),
+    honors: round3(t.honors - base),
+    regular: 0,
+  };
 }
 
 export function resolveScale(scale: ScaleId, custom: CustomScale): ResolvedScale {
   switch (scale) {
-    case "unweighted4":
+    case "unweighted4": {
+      const t = tops(4, 4, 4);
       return {
         id: scale,
         label: "Standard 4.0 (Unweighted)",
-        mode: "discrete",
-        boosts: { ap: 0, dual: 0, honors: 0, regular: 0 },
-        tops: { ap: 4, dual: 4, honors: 4, regular: 4 },
+        mode: "banded",
+        tops: t,
+        boosts: boostsFromTops(t),
         maxPoints: 4,
       };
-    case "weighted5":
+    }
+    case "weighted5": {
+      const t = tops(5, 4.5, 4);
       return {
         id: scale,
-        label: "Standard 5.0 (Weighted)",
-        mode: "discrete",
-        boosts: { ap: 1, dual: 1, honors: 0.5, regular: 0 },
-        tops: { ap: 5, dual: 5, honors: 4.5, regular: 4 },
+        label: "Weighted 5.0",
+        mode: "banded",
+        tops: t,
+        boosts: boostsFromTops(t),
         maxPoints: 5,
       };
-    case "tiered6":
+    }
+    case "tiered6banded": {
+      const t = tops(6, 5.5, 5);
       return {
         id: scale,
-        label: "Tiered 6.0 (Texas, 100-point)",
-        mode: "continuous",
-        boosts: { ap: 1, dual: 1, honors: 0.5, regular: 0 },
-        tops: { ap: 6, dual: 6, honors: 5.5, regular: 5 },
+        label: "Texas 6.0 Tiered (Banded)",
+        mode: "banded",
+        tops: t,
+        boosts: boostsFromTops(t),
         maxPoints: 6,
       };
+    }
+    case "tiered6":
+    case "tiered6continuous": {
+      const t = tops(6, 5.5, 5);
+      return {
+        id: "tiered6continuous",
+        label: "Texas 6.0 Continuous",
+        mode: "continuous",
+        tops: t,
+        boosts: boostsFromTops(t),
+        maxPoints: 6,
+      };
+    }
+    case "raw100": {
+      const b: Record<TierId, number> = { ap: 10, dual: 10, honors: 5, regular: 0 };
+      return {
+        id: scale,
+        label: "Raw 100-Point Weighted",
+        mode: "raw",
+        tops: tops(100, 100, 100),
+        boosts: b,
+        maxPoints: 110,
+      };
+    }
     default: {
       const c = custom ?? DEFAULT_CUSTOM;
-      const maxPoints =
-        c.mode === "discrete"
-          ? 4 + Math.max(...Object.values(c.boosts))
-          : Math.max(...Object.values(c.tops));
+      if (c.mode === "continuous") {
+        return {
+          id: "custom",
+          label: "Custom scale",
+          mode: "continuous",
+          tops: c.tops,
+          boosts: boostsFromTops(c.tops),
+          maxPoints: Math.max(...TIERS.map((t) => c.tops[t] ?? 0)),
+        };
+      }
+      const t: Record<TierId, number> = {
+        ap: 4 + (c.boosts.ap ?? 0),
+        dual: 4 + (c.boosts.dual ?? 0),
+        honors: 4 + (c.boosts.honors ?? 0),
+        regular: 4 + (c.boosts.regular ?? 0),
+      };
       return {
         id: "custom",
         label: "Custom scale",
-        mode: c.mode,
+        mode: "banded",
+        tops: t,
         boosts: c.boosts,
-        tops: c.tops,
-        maxPoints,
+        maxPoints: Math.max(...TIERS.map((k) => t[k])),
       };
     }
   }
@@ -113,30 +190,30 @@ export function resolveScale(scale: ScaleId, custom: CustomScale): ResolvedScale
 
 /**
  * Grade points for a numeric grade under a resolved scale.
- * Discrete: A=4, B=3, C=2, F=0, plus the tier boost (never boosts a failure).
- * Continuous: linear 0.1 point per percentage point, anchored so 100 = tier top
- * and 70 = tier top - 3. Anything under 70 is a 0.
+ * Banded:     90-100 = top, 80-89 = top-1, 70-79 = top-2, below 70 = 0.
+ * Continuous: top - 0.1 per point below 100, down to 70; below 70 = 0.
+ * Raw:        the numeric average plus the tier's difficulty boost.
  */
 export function gradePoints(numeric: number, tier: TierId, scale: ResolvedScale): number {
-  if (scale.mode === "continuous") {
-    if (numeric < 70) return 0;
-    const top = scale.tops[tier] ?? scale.tops.regular;
-    return round3(top - (100 - Math.min(100, numeric)) * 0.1);
+  const g = Math.min(100, numeric);
+  if (scale.mode === "raw") {
+    return round3(g + (scale.boosts[tier] ?? 0));
   }
-  const letter = letterFor(numeric);
-  const base = letter === "A" ? 4 : letter === "B" ? 3 : letter === "C" ? 2 : 0;
-  if (base === 0) return 0;
-  return round3(base + (scale.boosts[tier] ?? 0));
+  if (g < 70) return 0;
+  const top = scale.tops[tier] ?? scale.tops.regular;
+  if (scale.mode === "continuous") return round3(Math.max(0, top - (100 - g) * 0.1));
+  if (g >= 90) return round3(top);
+  if (g >= 80) return round3(Math.max(0, top - 1));
+  return round3(Math.max(0, top - 2));
 }
 
-/** Unweighted points, always on the plain 4.0 base of the active conversion mode. */
-export function unweightedPoints(numeric: number, scale: ResolvedScale): number {
-  if (scale.mode === "continuous") {
-    if (numeric < 70) return 0;
-    return round3(4 - (100 - Math.min(100, numeric)) * 0.1);
-  }
-  const letter = letterFor(numeric);
-  return letter === "A" ? 4 : letter === "B" ? 3 : letter === "C" ? 2 : 0;
+/** Unweighted points: always the plain 4.0 band (90/80/70 cutoffs). */
+export function unweightedPoints(numeric: number, _scale?: ResolvedScale): number {
+  const g = Math.min(100, numeric);
+  if (g >= 90) return 4;
+  if (g >= 80) return 3;
+  if (g >= 70) return 2;
+  return 0;
 }
 
 export function round3(n: number): number {
@@ -165,6 +242,8 @@ export interface GradedEntry {
  * Split a course into credit-bearing graded entries.
  * Both semesters present -> each carries half the course credit.
  * Only a final (or a single semester) -> it carries the whole credit.
+ * Exempt / pass-fail / non-GPA courses produce no entries at all, so they
+ * never touch quality points or GPA credits.
  */
 export function entriesForCourse(course: GpaCourse): GradedEntry[] {
   if (course.exempt) return [];
@@ -194,13 +273,15 @@ export function entriesForCourse(course: GpaCourse): GradedEntry[] {
 }
 
 /* ------------------------------------------------------------------ */
-/* Aggregation                                                         */
+/* Aggregation — total quality points / total GPA credits              */
 /* ------------------------------------------------------------------ */
 
 export interface GpaResult {
   weighted: number;
   unweighted: number;
   percent: number;
+  /** Total quality points on the active weighted scale. */
+  qualityPoints: number;
   credits: number;
   entries: number;
 }
@@ -209,10 +290,16 @@ export const EMPTY_RESULT: GpaResult = {
   weighted: 0,
   unweighted: 0,
   percent: 0,
+  qualityPoints: 0,
   credits: 0,
   entries: 0,
 };
 
+/**
+ * Cumulative GPA = sum(grade points * credits) / sum(credits).
+ * Never an average of averages — works identically for a single term,
+ * a full year, or every year on record.
+ */
 export function computeGpa(courses: GpaCourse[], scale: ResolvedScale): GpaResult {
   let wSum = 0;
   let uSum = 0;
@@ -223,7 +310,7 @@ export function computeGpa(courses: GpaCourse[], scale: ResolvedScale): GpaResul
   for (const course of courses) {
     for (const e of entriesForCourse(course)) {
       wSum += gradePoints(e.numeric, e.tier, scale) * e.credits;
-      uSum += unweightedPoints(e.numeric, scale) * e.credits;
+      uSum += unweightedPoints(e.numeric) * e.credits;
       pSum += e.numeric * e.credits;
       credits += e.credits;
       count += 1;
@@ -235,6 +322,7 @@ export function computeGpa(courses: GpaCourse[], scale: ResolvedScale): GpaResul
     weighted: round3(wSum / credits),
     unweighted: round3(uSum / credits),
     percent: round3(pSum / credits),
+    qualityPoints: round3(wSum),
     credits: round3(credits),
     entries: count,
   };
@@ -311,16 +399,19 @@ export function requiredPoints(input: TargetInput, maxPoints: number): TargetRes
 /** Invert grade points back to the minimum numeric grade that achieves them. */
 export function pointsToGrade(points: number, tier: TierId, scale: ResolvedScale): number | null {
   if (points <= 0) return 0;
+  if (scale.mode === "raw") {
+    const g = points - (scale.boosts[tier] ?? 0);
+    if (g > 100.0001) return null;
+    return round2(Math.max(0, g));
+  }
+  const top = scale.tops[tier] ?? scale.tops.regular;
   if (scale.mode === "continuous") {
-    const top = scale.tops[tier] ?? scale.tops.regular;
     const g = 100 - (top - points) / 0.1;
     if (g > 100.0001) return null;
     return round2(Math.max(70, g));
   }
-  const boost = scale.boosts[tier] ?? 0;
-  const base = points - boost;
-  if (base <= 2 + 1e-9) return 70;
-  if (base <= 3 + 1e-9) return 80;
-  if (base <= 4 + 1e-9) return 90;
+  if (points <= top - 2 + 1e-9) return 70;
+  if (points <= top - 1 + 1e-9) return 80;
+  if (points <= top + 1e-9) return 90;
   return null;
 }
