@@ -28,6 +28,7 @@ export function OverviewTab() {
 
   const weighted = currentYearGPA(data.courses, true);
   const cum = cumulativeGPA(data.transcript, true);
+  const cumUnweighted = cumulativeGPA(data.transcript, false);
   const avgClass =
     data.courses.reduce((s, c) => s + (c.average ?? 0), 0) /
     Math.max(1, data.courses.filter((c) => c.average !== null).length);
