@@ -10,6 +10,8 @@ import { MarkingPeriodSlider } from "./MarkingPeriodSlider";
 import { ShimmerBeam } from "./ShimmerBeam";
 import { AuraAssistMail, needsAssist } from "./AuraAssistMail";
 import { FinalExamPredictor } from "./FinalExamPredictor";
+import { MpComparisonChart } from "./MpComparisonChart";
+
 import type { Course, Assignment, AssignmentCategory } from "@/lib/hac/types";
 import { ArrowLeft, ChevronDown, Mail } from "lucide-react";
 
@@ -340,6 +342,8 @@ export function ClassDetail({
 
           {sub === "analysis" ? (
             <>
+              <MpComparisonChart course={course} />
+
               <div className="glass rounded-2xl p-4 pb-4" style={{ backdropFilter: "blur(12px)" }}>
                 <div className="text-[10px] uppercase tracking-widest text-purple-200 mb-4">
                   Score Over Marking Period
