@@ -173,8 +173,14 @@ export function OverviewTab() {
           <div className="text-3xl font-bold tabular-nums mt-1 text-gradient"><AnimatedNumber value={weighted} decimals={2} /></div>
         </div>
         <div className="liquid rounded-2xl p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cumulative</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cum. Weighted</div>
           <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={cum} decimals={2} /></div>
+          <div className="text-[10px] text-muted-foreground mt-1">all years on record</div>
+        </div>
+        <div className="liquid rounded-2xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Cum. Unweighted</div>
+          <div className="text-3xl font-bold tabular-nums mt-1"><AnimatedNumber value={cumUnweighted} decimals={2} /></div>
+          <div className="text-[10px] text-muted-foreground mt-1">4.0 scale · all years</div>
         </div>
         <div className="liquid rounded-2xl p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1">
