@@ -135,6 +135,9 @@ export interface HacData {
   attendance?: AttendanceLedger;
   /** Activities pulled from the HAC Home/Calendar page. */
   calendar?: CalendarActivity[];
+  /** The student's real class schedule from the HAC Schedule page. */
+  schedule?: ScheduleEntry[];
+
   syncedAt: string; // ISO
   districtId: DistrictId;
   username: string;
