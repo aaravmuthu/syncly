@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
-import { Sparkles, CalendarClock, ChevronRight, GraduationCap, FileText, FlaskConical } from "lucide-react";
+import { Sparkles, CalendarClock, ChevronRight, FileText, FlaskConical } from "lucide-react";
 
 function parseSlash(s: string | null): number | null {
   if (!s) return null;
