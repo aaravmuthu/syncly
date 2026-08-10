@@ -10,21 +10,20 @@ import { StreakCard } from "../StreakCard";
 import { SmartInsights } from "../SmartInsights";
 import { TrendGraph, type TrendPoint } from "../TrendGraph";
 import { LivePeriodWidget } from "../LivePeriodWidget";
+import { AuraAvatar } from "../AuraAvatar";
+import { ProfileDrawer } from "../ProfileDrawer";
 import { AlertOctagon, GraduationCap, BarChart3, ChevronUp, Bell, LineChart } from "lucide-react";
 
 function fullDate(): string {
   return new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || "?";
-}
-
 export function OverviewTab() {
-  const { data } = useHac();
+  const { data, profile } = useHac();
   const [missingOpen, setMissingOpen] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
   if (!data) return null;
+
 
   const weighted = currentYearGPA(data.courses, true);
   const cum = cumulativeGPA(data.transcript, true);
