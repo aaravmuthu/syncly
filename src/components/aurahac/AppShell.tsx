@@ -70,9 +70,12 @@ export function AppShell() {
         }}
       />
 
-      {!data ? (
+      {locked ? (
+        <PinLock />
+      ) : !data ? (
         <LoginGate />
       ) : (
+
         <div className="absolute inset-0 flex">
           <DesktopSidebar />
           <div className="relative flex-1 min-w-0">
