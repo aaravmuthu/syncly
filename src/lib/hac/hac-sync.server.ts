@@ -355,16 +355,20 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
     // finalizes per-session student context on the first authenticated page and
     // can race when several pages arrive immediately after sign-in.
     const classwork = await fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage);
-    const [transcriptPage, reportCardPage, calendarPage] = await Promise.all([
+    const [transcriptPage, reportCardPage, calendarPage, schedulePage, attendancePage] = await Promise.all([
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.transcript, looksLikeTranscriptPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.reportCard, looksLikeReportCardPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.calendar, (html) => /calendar|week view|fc-event|data-date=/i.test(html)),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.schedule, (html) => /schedule|room|periods?\b/i.test(html)),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.attendance, (html) => /attendance|tardy|absent/i.test(html)),
     ]);
 
     const classworkHtml = classwork.html;
     const transcriptHtml = transcriptPage.html;
     const reportCardHtml = reportCardPage.html;
     const calendarHtml = calendarPage.html;
+    const scheduleHtml = schedulePage.html;
+    const attendanceHtml = attendancePage.html;
 
     // Authentication and classwork-layout detection are separate concerns. A
     // valid session may have no current classwork (summer, schedule changes) or
@@ -380,6 +384,9 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
     const transcript = parseTranscript(transcriptHtml);
     const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
+    const schedule = looksLikeLoginPage(scheduleHtml) ? [] : parseSchedule(scheduleHtml);
+    const attendance = looksLikeLoginPage(attendanceHtml) ? null : parseAttendance(attendanceHtml);
+
 
     // Step 4: pull real per-marking-period classwork by re-posting the report-card
     // run dropdown for each quarter (the Assignments page only shows one MP at a time).
