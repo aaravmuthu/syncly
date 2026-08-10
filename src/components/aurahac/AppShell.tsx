@@ -4,6 +4,8 @@ import { useHac } from "@/lib/hac/store";
 import { LoginGate } from "./LoginGate";
 import { PullToRefresh } from "./PullToRefresh";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { PinLock } from "./PinLock";
+import { SaveIndicator } from "./SaveIndicator";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { GradesTab } from "./tabs/GradesTab";
 import { GpaTab } from "./tabs/GpaTab";
@@ -11,6 +13,7 @@ import { RecordsTab } from "./tabs/RecordsTab";
 import { CalendarTab } from "./tabs/CalendarTab";
 import { SettingsTab } from "./tabs/SettingsTab";
 import { Home, BookOpen, GraduationCap, FolderOpen, Calendar, Settings } from "lucide-react";
+
 
 type TabId = "overview" | "grades" | "gpa" | "records" | "calendar" | "settings";
 
