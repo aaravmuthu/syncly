@@ -265,7 +265,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 
 export async function syncHacHandler(input: unknown): Promise<HacData> {
     const data = Input.parse(input);
-    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns, parseSchedule, parseAttendance } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
