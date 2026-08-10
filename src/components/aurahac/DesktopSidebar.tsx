@@ -72,20 +72,29 @@ export function DesktopSidebar() {
     <aside className="hidden lg:flex flex-col w-[300px] shrink-0 h-full border-r border-white/10 overflow-y-auto px-4 py-6 gap-6">
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-1">
+        <button
+          onClick={() => setProfileOpen(true)}
+          aria-label="Open student profile"
+          className="shrink-0 active:scale-95 transition-transform"
+        >
+          <AuraAvatar profile={profile} fallbackName={data.student.name} size={40} />
+        </button>
+        <div className="min-w-0">
+          <div className="text-sm font-bold tracking-tight truncate">
+            {profile.displayName || data.student.name}
+          </div>
+          <div className="text-[11px] text-muted-foreground truncate">
+            {profile.schoolName || data.student.school || "AuraHAC"}
+          </div>
+        </div>
         <img
           src={logoAsset.url}
           alt="AuraHAC logo"
-          className="h-9 w-9 rounded-xl object-cover"
-          style={{
-            border: "1px solid color-mix(in oklab, var(--primary) 40%, transparent)",
-            boxShadow: "0 0 18px -6px var(--primary)",
-          }}
+          className="h-7 w-7 rounded-lg object-cover ml-auto opacity-80"
         />
-        <div className="min-w-0">
-          <div className="text-sm font-bold tracking-tight truncate">{data.student.name}</div>
-          <div className="text-[11px] text-muted-foreground truncate">{data.student.school ?? "AuraHAC"}</div>
-        </div>
       </div>
+      <ProfileDrawer open={profileOpen} onClose={() => setProfileOpen(false)} />
+
 
       {/* Grades updated today */}
       <section>
