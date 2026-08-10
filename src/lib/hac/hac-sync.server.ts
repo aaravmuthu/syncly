@@ -1,4 +1,3 @@
-import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { DistrictId, HacData } from "./types";
 
@@ -254,9 +253,8 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
   return { ...jar, ...next };
 }
 
-export const syncHac = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => Input.parse(data))
-  .handler(async ({ data }): Promise<HacData> => {
+export async function syncHacHandler(input: unknown): Promise<HacData> {
+    const data = Input.parse(input);
     const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
@@ -461,4 +459,4 @@ export const syncHac = createServerFn({ method: "POST" })
       username: data.username,
       debug,
     };
-  });
+}
