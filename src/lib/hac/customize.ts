@@ -1,4 +1,4 @@
-import type { Course, CourseCustom, BellRotation } from "./types";
+import type { Course, CourseCustom, BellRotation, HacData } from "./types";
 
 /** Color gradient presets students can assign to a class block. */
 export const GRADIENT_PRESETS: { id: string; label: string; css: string; from: string }[] = [
@@ -91,6 +91,41 @@ export function defaultBellRotation(): BellRotation {
     periods: { "A Day": blocks("a"), "B Day": blocks("b") },
     weekMap: { 1: "A Day", 2: "B Day", 3: "A Day", 4: "B Day", 5: "A Day" },
   };
+}
+
+/** Build the first bell schedule from the student's current HAC roster. */
+export function bellRotationFromHac(data: HacData): BellRotation {
+  const base = defaultBellRotation();
+  const transcriptNames = data.transcript
+    .map((course) => course.description?.trim() || course.course.trim());
+  const rosterNames = [...data.courses]
+    .sort((a, b) => Number.parseInt(a.period ?? "99", 10) - Number.parseInt(b.period ?? "99", 10))
+    .map((course) => course.name.trim());
+  const names = [...new Set([...rosterNames, ...transcriptNames].filter(Boolean))];
+  if (!names.length) return base;
+
+  const classSlots = base.periods["A Day"].filter((period) => !/lunch/i.test(period.label));
+  const lunch = base.periods["A Day"].find((period) => /lunch/i.test(period.label));
+  const splitAt = Math.ceil(names.length / 2);
+  const dayNames = [names.slice(0, splitAt), names.slice(splitAt)];
+  const dayTypes = ["A Day", "B Day"];
+  const periods: BellRotation["periods"] = {};
+
+  dayTypes.forEach((day, dayIndex) => {
+    periods[day] = dayNames[dayIndex].map((name, index) => {
+      const slot = classSlots[index] ?? classSlots[classSlots.length - 1];
+      return {
+        id: `${dayIndex ? "b" : "a"}-hac-${index}`,
+        label: name,
+        start: slot?.start ?? "08:00",
+        end: slot?.end ?? "08:50",
+        room: data.courses.find((course) => course.name.trim() === name)?.room ?? undefined,
+      };
+    });
+    if (lunch) periods[day].splice(Math.min(2, periods[day].length), 0, { ...lunch, id: `${dayIndex ? "b" : "a"}-lunch` });
+  });
+
+  return { ...base, enabled: true, periods };
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

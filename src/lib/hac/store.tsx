@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { HacData, DistrictId, UserEvent, CourseCustom, BellRotation } from "./types";
 import { getFallbackData } from "./mockData";
-import { defaultBellRotation } from "./customize";
+import { bellRotationFromHac, defaultBellRotation } from "./customize";
 import { encryptJSON, decryptJSON } from "./secureStore";
 import { emptyStreak, recordCheckIn, type StreakState } from "./streaks";
 import type { MarkingPeriod } from "./marking";
@@ -180,6 +180,11 @@ export function HacProvider({ children }: { children: ReactNode }) {
       setData(d);
       setIsFallback(false);
       setCred(c);
+      if (!localStorage.getItem(BELL_KEY)) {
+        const hacBell = bellRotationFromHac(d);
+        setBellRotationState(hacBell);
+        localStorage.setItem(BELL_KEY, JSON.stringify(hacBell));
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
       localStorage.setItem(DATA_VERSION_KEY, String(DATA_SCHEMA_VERSION));
       localStorage.setItem(CRED_KEY, await encryptJSON(c));
