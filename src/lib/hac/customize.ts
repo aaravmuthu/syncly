@@ -96,9 +96,7 @@ export function defaultBellRotation(): BellRotation {
 /** Build the first bell schedule from the student's current HAC roster. */
 export function bellRotationFromHac(data: HacData): BellRotation {
   const base = defaultBellRotation();
-  const latestYear = data.transcript.at(-1)?.year;
   const transcriptNames = data.transcript
-    .filter((course) => !latestYear || course.year === latestYear)
     .map((course) => course.description?.trim() || course.course.trim());
   const rosterNames = [...data.courses]
     .sort((a, b) => Number.parseInt(a.period ?? "99", 10) - Number.parseInt(b.period ?? "99", 10))
