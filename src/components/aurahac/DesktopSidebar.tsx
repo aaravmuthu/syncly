@@ -1,8 +1,11 @@
 import logoAsset from "@/assets/aurahac-logo.png.asset.json";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { useHac } from "@/lib/hac/store";
 import { courseDisplay } from "@/lib/hac/customize";
+import { AuraAvatar } from "./AuraAvatar";
+import { ProfileDrawer } from "./ProfileDrawer";
+
 import { Sparkles, CalendarClock, ChevronRight, FileText, FlaskConical } from "lucide-react";
 
 function parseSlash(s: string | null): number | null {
@@ -39,7 +42,9 @@ function scoreColor(v: number): string {
  * Hidden below the lg breakpoint where the mobile bottom-nav takes over.
  */
 export function DesktopSidebar() {
-  const { data, userEvents, completed, courseCustom, setCourseNav } = useHac();
+  const { data, userEvents, completed, courseCustom, setCourseNav, profile } = useHac();
+  const [profileOpen, setProfileOpen] = useState(false);
+
 
   const recent = useMemo(() => {
     if (!data) return [];
