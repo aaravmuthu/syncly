@@ -29,7 +29,17 @@ const PAGE_CANDIDATES = {
     "/HomeAccess/Home/WeekView",
     "/HomeAccess/Home/Calendar",
   ],
+  schedule: [
+    "/HomeAccess/Content/Student/Classes.aspx",
+    "/HomeAccess/Classes/Schedule",
+  ],
+  attendance: [
+    "/HomeAccess/Content/Attendance/MonthlyView.aspx",
+    "/HomeAccess/Home/Attendance",
+    "/HomeAccess/Attendance/MonthlyView",
+  ],
 } as const;
+
 
 const LOGIN_PATH = "/HomeAccess/Account/LogOn?ReturnUrl=%2fHomeAccess%2f";
 
@@ -255,7 +265,7 @@ function mergeCookies(jar: Record<string, string>, headers: Headers) {
 
 export async function syncHacHandler(input: unknown): Promise<HacData> {
     const data = Input.parse(input);
-    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns } = await import("./parser.server");
+    const { parseClasses, parseTranscript, parseTranscriptGpa, parseReportCard, extractReportCardEntries, parseCalendar, parseStudent, pickHidden, normalizeName, parseReportCardRuns, parseSchedule, parseAttendance } = await import("./parser.server");
     const base = BASES[data.district];
     const ua =
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15";
@@ -345,16 +355,20 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
     // finalizes per-session student context on the first authenticated page and
     // can race when several pages arrive immediately after sign-in.
     const classwork = await fetchBestPage(base, jar, ua, PAGE_CANDIDATES.classwork, looksLikeClassworkPage);
-    const [transcriptPage, reportCardPage, calendarPage] = await Promise.all([
+    const [transcriptPage, reportCardPage, calendarPage, schedulePage, attendancePage] = await Promise.all([
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.transcript, looksLikeTranscriptPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.reportCard, looksLikeReportCardPage),
       fetchBestPage(base, jar, ua, PAGE_CANDIDATES.calendar, (html) => /calendar|week view|fc-event|data-date=/i.test(html)),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.schedule, (html) => /schedule|room|periods?\b/i.test(html)),
+      fetchBestPage(base, jar, ua, PAGE_CANDIDATES.attendance, (html) => /attendance|tardy|absent/i.test(html)),
     ]);
 
     const classworkHtml = classwork.html;
     const transcriptHtml = transcriptPage.html;
     const reportCardHtml = reportCardPage.html;
     const calendarHtml = calendarPage.html;
+    const scheduleHtml = schedulePage.html;
+    const attendanceHtml = attendancePage.html;
 
     // Authentication and classwork-layout detection are separate concerns. A
     // valid session may have no current classwork (summer, schedule changes) or
@@ -370,6 +384,9 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
     const transcript = parseTranscript(transcriptHtml);
     const officialGpa = parseTranscriptGpa(transcriptHtml);
     const calendar = parseCalendar(calendarHtml);
+    const schedule = looksLikeLoginPage(scheduleHtml) ? [] : parseSchedule(scheduleHtml);
+    const attendance = looksLikeLoginPage(attendanceHtml) ? null : parseAttendance(attendanceHtml);
+
 
     // Step 4: pull real per-marking-period classwork by re-posting the report-card
     // run dropdown for each quarter (the Assignments page only shows one MP at a time).
@@ -444,8 +461,44 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
         if (term) course.reportCard = term;
       }
     }
+    // Merge the real schedule (room / period / teacher) onto each course, and
+    // add any scheduled class that has no classwork yet so the roster is complete.
+    if (schedule.length) {
+      const byName = new Map(schedule.map((s) => [normalizeName(s.description), s]));
+      for (const course of courses) {
+        const s = byName.get(normalizeName(course.name));
+        if (!s) continue;
+        course.room = s.room ?? course.room ?? null;
+        course.period = course.period ?? s.period;
+        course.teacher = course.teacher ?? s.teacher;
+        course.code = course.code ?? (s.course || null);
+      }
+      const known = new Set(courses.map((c) => normalizeName(c.name)));
+      for (const s of schedule) {
+        const key = normalizeName(s.description);
+        if (!key || known.has(key)) continue;
+        known.add(key);
+        courses.push({
+          id: `c-sch-${key}`,
+          name: s.description,
+          code: s.course || null,
+          teacher: s.teacher,
+          period: s.period,
+          average: null,
+          assignments: [],
+          categoryAverages: [],
+          room: s.room,
+          reportCard: rcMap.get(key),
+        });
+      }
+    }
+
     debug.coursesWithReportCard = courses.filter((c) => c.reportCard).length;
     debug.coursesWithPeriodData = courses.filter((c) => c.periodData && Object.keys(c.periodData).length).length;
+    debug.scheduleRows = schedule.length;
+    debug.attendanceEntries = attendance ? attendance.log.length : 0;
+    debug.transcriptRows = transcript.length;
+    debug.calendarEvents = calendar.length;
     console.log("[HAC SYNC DEBUG]", JSON.stringify(debug));
 
     return {
@@ -453,6 +506,8 @@ export async function syncHacHandler(input: unknown): Promise<HacData> {
       courses,
       transcript,
       calendar,
+      schedule,
+      ...(attendance ? { attendance } : {}),
       officialGpa,
       markingPeriodGPAs: [],
       syncedAt: new Date().toISOString(),

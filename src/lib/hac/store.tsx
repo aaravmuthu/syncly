@@ -16,7 +16,7 @@ const EVENTS_KEY = "aurahac.events.v1";
 const CUSTOM_KEY = "aurahac.coursecustom.v1";
 const BELL_KEY = "aurahac.bell.v1";
 const STREAK_KEY = "aurahac.streak.v1";
-const DATA_SCHEMA_VERSION = 6;
+const DATA_SCHEMA_VERSION = 7;
 
 export type Theme =
   | "nebula"

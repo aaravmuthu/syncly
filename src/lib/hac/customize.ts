@@ -96,13 +96,24 @@ export function defaultBellRotation(): BellRotation {
 /** Build the first bell schedule from the student's current HAC roster. */
 export function bellRotationFromHac(data: HacData): BellRotation {
   const base = defaultBellRotation();
-  const transcriptNames = data.transcript
-    .map((course) => course.description?.trim() || course.course.trim());
+  const periodNum = (p: string | null | undefined) => Number.parseInt((p ?? "").replace(/\D/g, "") || "99", 10);
+
+  // Prefer the real HAC schedule page (period + room), then the graded roster,
+  // then transcript descriptions as a last resort.
+  const scheduleRows = [...(data.schedule ?? [])].sort((a, b) => periodNum(a.period) - periodNum(b.period));
+  const roomByName = new Map<string, string>();
+  for (const row of scheduleRows) if (row.room) roomByName.set(row.description.trim(), row.room);
+  for (const course of data.courses) if (course.room) roomByName.set(course.name.trim(), course.room);
+
+  const scheduleNames = scheduleRows.map((row) => row.description.trim());
   const rosterNames = [...data.courses]
-    .sort((a, b) => Number.parseInt(a.period ?? "99", 10) - Number.parseInt(b.period ?? "99", 10))
+    .sort((a, b) => periodNum(a.period) - periodNum(b.period))
     .map((course) => course.name.trim());
-  const names = [...new Set([...rosterNames, ...transcriptNames].filter(Boolean))];
+  const transcriptNames = data.transcript.map((course) => course.description?.trim() || course.course.trim());
+  const preferred = scheduleNames.length ? scheduleNames : rosterNames.length ? rosterNames : transcriptNames;
+  const names = [...new Set(preferred.filter(Boolean))];
   if (!names.length) return base;
+
 
   const classSlots = base.periods["A Day"].filter((period) => !/lunch/i.test(period.label));
   const lunch = base.periods["A Day"].find((period) => /lunch/i.test(period.label));
@@ -119,7 +130,7 @@ export function bellRotationFromHac(data: HacData): BellRotation {
         label: name,
         start: slot?.start ?? "08:00",
         end: slot?.end ?? "08:50",
-        room: data.courses.find((course) => course.name.trim() === name)?.room ?? undefined,
+        room: roomByName.get(name) ?? undefined,
       };
     });
     if (lunch) periods[day].splice(Math.min(2, periods[day].length), 0, { ...lunch, id: `${dayIndex ? "b" : "a"}-lunch` });
