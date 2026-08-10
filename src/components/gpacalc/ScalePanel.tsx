@@ -13,9 +13,15 @@ import {
 import { TIER_LABELS, TIER_ORDER, type GpaSettings, type ScaleId } from "@/lib/gpacalc/types";
 
 const SCALES: { id: ScaleId; label: string; hint: string }[] = [
-  { id: "unweighted4", label: "4.0 Unweighted", hint: "A=4 · B=3 · C=2 · F=0" },
-  { id: "weighted5", label: "5.0 Weighted", hint: "AP/IB/DC +1.0 · Honors +0.5" },
-  { id: "tiered6", label: "6.0 Tiered (Texas)", hint: "Continuous: 100→6.0, 70→3.0" },
+  { id: "unweighted4", label: "4.0 Unweighted", hint: "90s=4 · 80s=3 · 70s=2 · <70=0" },
+  { id: "weighted5", label: "5.0 Weighted", hint: "AP/IB/DC 5.0 · Honors 4.5 · On-level 4.0" },
+  { id: "tiered6banded", label: "6.0 Tiered (Banded)", hint: "AP 6/5/4 · Honors 5.5/4.5/3.5" },
+  {
+    id: "tiered6continuous",
+    label: "6.0 Tiered (Continuous)",
+    hint: "−0.1 per point: AP 100→6.0, 90→5.0",
+  },
+  { id: "raw100", label: "Raw 100-pt Weighted", hint: "Average +10 AP · +5 Honors" },
   { id: "custom", label: "Custom", hint: "Define your own boosts" },
 ];
 
