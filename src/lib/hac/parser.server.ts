@@ -1,5 +1,5 @@
 // Server-only HTML parsing helpers for HAC pages.
-import type { Assignment, AssignmentCategory, CalendarActivity, Course, ReportCardTerm, TranscriptCourse } from "./types";
+import type { Assignment, AssignmentCategory, AttendanceCode, AttendanceEntry, AttendanceLedger, CalendarActivity, Course, ReportCardTerm, ScheduleEntry, TranscriptCourse } from "./types";
 
 const decode = (s: string) =>
   s
@@ -844,4 +844,147 @@ export function parseCalendar(html: string): CalendarActivity[] {
 
   out.sort((a, b) => a.date.localeCompare(b.date));
   return out;
+}
+
+/* ----------------------- Schedule ----------------------- */
+
+/**
+ * Parse the HAC "Classes → Schedule" page into the student's real roster
+ * (course code, description, period, teacher, room, days, term, building).
+ */
+export function parseSchedule(html: string): ScheduleEntry[] {
+  const out: ScheduleEntry[] = [];
+  const tables = findAll(html, /<table[^>]*>[\s\S]*?<\/table>/gi).map((t) => t[0]);
+
+  for (const table of tables) {
+    const rows = findAll(table, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+    if (rows.length < 2) continue;
+
+    // Locate a header row that looks like the schedule grid.
+    let head = -1;
+    let cols: Record<string, number> = {};
+    for (let i = 0; i < rows.length; i++) {
+      const headers = findAll(rows[i][1], /<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi).map((c) =>
+        decode(c[1]).toLowerCase(),
+      );
+      if (headers.length < 3) continue;
+      const idx: Record<string, number> = {};
+      headers.forEach((h, j) => {
+        if (idx.course === undefined && /^course$|course\b/.test(h) && !/description/.test(h)) idx.course = j;
+        if (idx.description === undefined && /description|course name/.test(h)) idx.description = j;
+        if (idx.period === undefined && /^periods?$/.test(h)) idx.period = j;
+        if (idx.teacher === undefined && /teacher/.test(h)) idx.teacher = j;
+        if (idx.room === undefined && /room/.test(h)) idx.room = j;
+        if (idx.days === undefined && /^days?$/.test(h)) idx.days = j;
+        if (idx.term === undefined && /term|marking/.test(h)) idx.term = j;
+        if (idx.building === undefined && /building|school/.test(h)) idx.building = j;
+        if (idx.status === undefined && /status/.test(h)) idx.status = j;
+      });
+      if (idx.description !== undefined && (idx.period !== undefined || idx.teacher !== undefined)) {
+        head = i;
+        cols = idx;
+        break;
+      }
+    }
+    if (head < 0) continue;
+
+    for (let i = head + 1; i < rows.length; i++) {
+      const cells = findAll(rows[i][1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
+      if (cells.length < 2) continue;
+      const at = (k: string) => (cols[k] !== undefined ? cells[cols[k]] || null : null);
+      const description = at("description");
+      if (!description || /^description$/i.test(description)) continue;
+      const status = at("status");
+      if (status && /dropped/i.test(status)) continue;
+      out.push({
+        course: at("course") ?? "",
+        description,
+        period: at("period"),
+        teacher: at("teacher"),
+        room: at("room"),
+        days: at("days"),
+        term: at("term"),
+        building: at("building"),
+      });
+    }
+    if (out.length) break;
+  }
+
+  return out;
+}
+
+/* ----------------------- Attendance ----------------------- */
+
+const ATT_CODE_MAP: { test: RegExp; code: AttendanceCode }[] = [
+  { test: /tardy|tardie|\btly?\b/i, code: "TLY" },
+  { test: /unexcused|\bunx\b|\bu\b/i, code: "UNX" },
+  { test: /excused|\bexc\b/i, code: "EXC" },
+  { test: /absent|absence|\babs\b|\ba\b/i, code: "ABS" },
+];
+
+function attendanceCode(label: string): AttendanceCode | null {
+  for (const r of ATT_CODE_MAP) if (r.test.test(label)) return r.code;
+  return null;
+}
+
+/**
+ * Parse the HAC Attendance month view into a real attendance ledger.
+ * HAC renders each day as a calendar cell whose tooltip/legend text carries the
+ * status ("Absent Excused", "Tardy", …); some builds also expose a table view.
+ */
+export function parseAttendance(html: string): AttendanceLedger | null {
+  const log: AttendanceEntry[] = [];
+  const seen = new Set<string>();
+
+  const push = (date: string | null, label: string, course: string | null) => {
+    if (!date || !label) return;
+    const code = attendanceCode(label);
+    if (!code) return;
+    const key = `${date}|${code}|${course ?? ""}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    log.push({ date, code, course, note: label });
+  };
+
+  // 1) Month grid: day cells carrying a date plus status text.
+  const cells = findAll(
+    html,
+    /<td[^>]*(?:data-date=["'](\d{4}-\d{2}-\d{2})["']|id=["'][^"']*day[^"']*["'])[^>]*>([\s\S]*?)<\/td>/gi,
+  );
+  for (const c of cells) {
+    const body = c[2] ?? "";
+    const date = c[1] ?? parseDate(decode(body));
+    const titles = findAll(body, /(?:title|data-original-title|aria-label)=["']([^"']+)["']/gi).map((t) => t[1]);
+    const text = decode(body);
+    for (const t of [...titles, text]) push(date, t, null);
+  }
+
+  // 2) Table view: Date | Course | Period | Attendance status rows.
+  const rows = findAll(html, /<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  for (const r of rows) {
+    const cs = findAll(r[1], /<td[^>]*>([\s\S]*?)<\/td>/gi).map((c) => decode(c[1]));
+    if (cs.length < 2) continue;
+    const date = cs.map((c) => parseDate(c)).find(Boolean) ?? null;
+    if (!date) continue;
+    const statusCell = cs.find((c) => attendanceCode(c) !== null);
+    if (!statusCell) continue;
+    const course = cs.find((c) => c.length > 4 && !parseDate(c) && c !== statusCell) ?? null;
+    push(date, statusCell, course);
+  }
+
+  if (!log.length) return null;
+  log.sort((a, b) => a.date.localeCompare(b.date));
+
+  const tardies = log.filter((e) => e.code === "TLY").length;
+  const excused = log.filter((e) => e.code === "EXC").length;
+  const unexcused = log.filter((e) => e.code === "UNX").length;
+  const absences = log.filter((e) => e.code !== "TLY").length;
+
+  return {
+    log,
+    tardies,
+    excusedAbsences: excused,
+    unexcusedAbsences: unexcused,
+    totalAbsences: absences,
+  };
 }
