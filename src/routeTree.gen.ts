@@ -20,6 +20,7 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as ReviewRouteImport } from './routes/review'
+import { Route as SubjectsRouteImport } from './routes/subjects'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -80,6 +81,11 @@ const ReviewRoute = ReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubjectsRoute = SubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93ListToolsRoute =
   Char91DotmcpChar93ListToolsRouteImport.update({
     id: '/.mcp/list-tools',
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/planner': typeof PlannerRoute
   '/practice': typeof PracticeRoute
   '/review': typeof ReviewRoute
+  '/subjects': typeof SubjectsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/planner': typeof PlannerRoute
   '/practice': typeof PracticeRoute
   '/review': typeof ReviewRoute
+  '/subjects': typeof SubjectsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/planner': typeof PlannerRoute
   '/practice': typeof PracticeRoute
   '/review': typeof ReviewRoute
+  '/subjects': typeof SubjectsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/planner'
     | '/practice'
     | '/review'
+    | '/subjects'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/planner'
     | '/practice'
     | '/review'
+    | '/subjects'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/planner'
     | '/practice'
     | '/review'
+    | '/subjects'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   PlannerRoute: typeof PlannerRoute
   PracticeRoute: typeof PracticeRoute
   ReviewRoute: typeof ReviewRoute
+  SubjectsRoute: typeof SubjectsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -307,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/subjects': {
+      id: '/subjects'
+      path: '/subjects'
+      fullPath: '/subjects'
+      preLoaderRoute: typeof SubjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.mcp/list-tools': {
       id: '/.mcp/list-tools'
       path: '/.mcp/list-tools'
@@ -350,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlannerRoute: PlannerRoute,
   PracticeRoute: PracticeRoute,
   ReviewRoute: ReviewRoute,
+  SubjectsRoute: SubjectsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
