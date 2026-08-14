@@ -22,7 +22,7 @@ export const Route = createFileRoute("/subjects")({
 });
 
 function SubjectsPage() {
-  const { state, setCourse } = useStudyGraph();
+  const { state, setProfile } = useStudyGraph();
 
   return (
     <AppLayout title="Subjects" subtitle="Every knowledge map available to you">
@@ -43,7 +43,7 @@ function SubjectsPage() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => setCourse(course.id)}
+                      onClick={() => setProfile({ courseId: course.id })}
                       className="rounded-lg border border-border px-2.5 py-1 text-[11px] hover:bg-secondary"
                     >
                       Switch
@@ -51,7 +51,9 @@ function SubjectsPage() {
                   )
                 }
               />
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{course.description}</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                {concepts.length} mapped concepts across {course.units.length} units.
+              </p>
               <div className="mt-4">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Graph mastery</span>
@@ -72,14 +74,14 @@ function SubjectsPage() {
                 <Link
                   to="/graph"
                   search={{ concept: undefined }}
-                  onClick={() => setCourse(course.id)}
+                  onClick={() => setProfile({ courseId: course.id })}
                   className="rounded-xl border border-border px-4 py-2 text-sm hover:bg-secondary"
                 >
                   Open map
                 </Link>
                 <Link
                   to="/dashboard"
-                  onClick={() => setCourse(course.id)}
+                  onClick={() => setProfile({ courseId: course.id })}
                   className="accent-gradient rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground"
                 >
                   Study this
