@@ -116,6 +116,7 @@ function Landing() {
             </Link>
             <Link
               to="/graph"
+              search={{ concept: undefined }}
               className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-medium transition-colors hover:bg-secondary"
             >
               <Network className="h-4 w-4" />
