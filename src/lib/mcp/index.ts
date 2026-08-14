@@ -1,20 +1,18 @@
 import { auth, defineMcp } from "@lovable.dev/mcp-js";
-import listDistricts from "./tools/list-districts";
-import calculateGpa from "./tools/calculate-gpa";
-import gradeNeeded from "./tools/grade-needed";
-import categoryAverage from "./tools/category-average";
+import listConcepts from "./tools/list-concepts";
+import learningPath from "./tools/learning-path";
 
 const projectRef = import.meta.env['VITE_SUPABASE_PROJECT_ID'] ?? "project-ref-unset";
 
 export default defineMcp({
-  name: "aurahac",
-  title: "AuraHAC",
-  version: "0.1.0",
+  name: "studygraph",
+  title: "StudyGraph",
+  version: "1.0.0",
   instructions:
-    "Academic tools for AuraHAC, a Home Access Center dashboard. Use these to compute GPAs, weighted course averages, and the score needed on remaining work, and to list supported districts. Student grade data itself stays encrypted on the student's own device and is not exposed here.",
+    "Knowledge-graph tools for StudyGraph, an adaptive learning platform. Use these to inspect the concept graph for a course and to compute the prerequisite path to any target concept. A learner's personal mastery data stays on their own device and is not exposed here.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [listDistricts, calculateGpa, gradeNeeded, categoryAverage],
+  tools: [listConcepts, learningPath],
 });
