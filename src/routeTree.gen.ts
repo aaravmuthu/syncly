@@ -16,6 +16,7 @@ import { Route as GraphRouteImport } from './routes/graph'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -56,6 +57,11 @@ const PracticeRoute = PracticeRouteImport.update({
   path: '/practice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93ListToolsRoute =
   Char91DotmcpChar93ListToolsRouteImport.update({
     id: '/.mcp/list-tools',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/learn': typeof LearnRoute
   '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
+  '/review': typeof ReviewRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/learn': typeof LearnRoute
   '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
+  '/review': typeof ReviewRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/learn': typeof LearnRoute
   '/mcp': typeof McpRoute
   '/practice': typeof PracticeRoute
+  '/review': typeof ReviewRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/learn'
     | '/mcp'
     | '/practice'
+    | '/review'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/learn'
     | '/mcp'
     | '/practice'
+    | '/review'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/learn'
     | '/mcp'
     | '/practice'
+    | '/review'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/.lovable/oauth/consent'
@@ -170,6 +182,7 @@ export interface RootRouteChildren {
   LearnRoute: typeof LearnRoute
   McpRoute: typeof McpRoute
   PracticeRoute: typeof PracticeRoute
+  ReviewRoute: typeof ReviewRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.mcp/list-tools': {
       id: '/.mcp/list-tools'
       path: '/.mcp/list-tools'
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   LearnRoute: LearnRoute,
   McpRoute: McpRoute,
   PracticeRoute: PracticeRoute,
+  ReviewRoute: ReviewRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
