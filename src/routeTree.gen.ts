@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CoachRouteImport } from './routes/coach'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as LearnRouteImport } from './routes/learn'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -95,6 +101,7 @@ const Char91DotmcpChar93InvokeToolToolRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coach': typeof CoachRoute
   '/dashboard': typeof DashboardRoute
   '/graph': typeof GraphRoute
   '/learn': typeof LearnRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coach': typeof CoachRoute
   '/dashboard': typeof DashboardRoute
   '/graph': typeof GraphRoute
   '/learn': typeof LearnRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/coach': typeof CoachRoute
   '/dashboard': typeof DashboardRoute
   '/graph': typeof GraphRoute
   '/learn': typeof LearnRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/coach'
     | '/dashboard'
     | '/graph'
     | '/learn'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/coach'
     | '/dashboard'
     | '/graph'
     | '/learn'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/coach'
     | '/dashboard'
     | '/graph'
     | '/learn'
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  CoachRoute: typeof CoachRoute
   DashboardRoute: typeof DashboardRoute
   GraphRoute: typeof GraphRoute
   LearnRoute: typeof LearnRoute
@@ -216,6 +229,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -301,6 +321,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  CoachRoute: CoachRoute,
   DashboardRoute: DashboardRoute,
   GraphRoute: GraphRoute,
   LearnRoute: LearnRoute,
