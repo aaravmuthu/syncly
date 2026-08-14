@@ -5,12 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * "Fluid Glow" design system — refined matte.
- *
- * Solid opaque surfaces, thin borders that glow with --primary on hover,
- * colored glow shadows. Six full token swaps via data-theme on <html>.
- *
- * All colors use oklch. Components reference tokens only, never hex.
+ * StudyGraph design system.
+ * Dark-first, glass surfaces, one restrained accent gradient.
+ * Components reference tokens only — never raw hex.
  */
 
 @theme inline {
@@ -59,523 +56,259 @@
 }
 
 /* ============================================================
- * NEBULA (default) — cosmic tech, deep navy
+ * Dark (default) — charcoal graphite + cool accent
  * ============================================================ */
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.17 0.07 274);
-  --background-deep: oklch(0.12 0.06 274);
-  --foreground: oklch(0.98 0.01 270);
-  --card: oklch(0.22 0.07 274);
-  --card-foreground: oklch(0.98 0.01 270);
-  --popover: oklch(0.20 0.07 274);
-  --popover-foreground: oklch(0.98 0.01 270);
-  --primary: oklch(0.55 0.21 285);
-  --primary-foreground: oklch(0.99 0.01 270);
-  --primary-glow: oklch(0.62 0.21 280);
-  --secondary: oklch(0.28 0.06 274);
-  --secondary-foreground: oklch(0.98 0.01 270);
-  --muted: oklch(0.26 0.05 274);
-  --muted-foreground: oklch(0.72 0.04 274);
-  --accent: oklch(0.55 0.21 285);
-  --accent-foreground: oklch(0.99 0.01 270);
-  --success: oklch(0.78 0.18 155);
-  --warning: oklch(0.82 0.17 75);
-  --destructive: oklch(0.68 0.24 25);
-  --destructive-foreground: oklch(0.99 0.01 0);
-  --border: oklch(0.40 0.06 280 / 0.45);
-  --input: oklch(0.40 0.06 280 / 0.5);
-  --ring: oklch(0.55 0.21 285);
-  --chart-1: oklch(0.55 0.21 285);
-  --chart-2: oklch(0.62 0.18 250);
-  --chart-3: oklch(0.78 0.18 155);
-  --chart-4: oklch(0.82 0.17 75);
-  --chart-5: oklch(0.68 0.24 25);
-  --sidebar: oklch(0.20 0.07 274);
-  --sidebar-foreground: oklch(0.98 0.01 270);
-  --sidebar-primary: oklch(0.55 0.21 285);
-  --sidebar-primary-foreground: oklch(0.99 0.01 270);
-  --sidebar-accent: oklch(0.28 0.06 274);
-  --sidebar-accent-foreground: oklch(0.98 0.01 270);
-  --sidebar-border: oklch(0.40 0.06 280 / 0.4);
-  --sidebar-ring: oklch(0.55 0.21 285);
+  --radius: 1rem;
+  --background: oklch(0.16 0.008 260);
+  --background-deep: oklch(0.115 0.008 260);
+  --foreground: oklch(0.97 0.004 260);
+  --card: oklch(0.215 0.009 260 / 0.62);
+  --card-foreground: oklch(0.97 0.004 260);
+  --popover: oklch(0.19 0.009 260);
+  --popover-foreground: oklch(0.97 0.004 260);
+  --primary: oklch(0.72 0.13 240);
+  --primary-foreground: oklch(0.15 0.01 260);
+  --primary-glow: oklch(0.78 0.13 195);
+  --secondary: oklch(0.26 0.008 260);
+  --secondary-foreground: oklch(0.97 0.004 260);
+  --muted: oklch(0.24 0.008 260);
+  --muted-foreground: oklch(0.68 0.012 260);
+  --accent: oklch(0.78 0.13 195);
+  --accent-foreground: oklch(0.15 0.01 260);
+  --success: oklch(0.78 0.15 158);
+  --warning: oklch(0.83 0.15 82);
+  --destructive: oklch(0.66 0.20 24);
+  --destructive-foreground: oklch(0.98 0.005 0);
+  --border: oklch(0.98 0.004 260 / 0.10);
+  --input: oklch(0.98 0.004 260 / 0.14);
+  --ring: oklch(0.72 0.13 240);
+  --chart-1: oklch(0.72 0.13 240);
+  --chart-2: oklch(0.78 0.13 195);
+  --chart-3: oklch(0.78 0.15 158);
+  --chart-4: oklch(0.83 0.15 82);
+  --chart-5: oklch(0.66 0.20 24);
+  --sidebar: oklch(0.185 0.008 260 / 0.8);
+  --sidebar-foreground: oklch(0.97 0.004 260);
+  --sidebar-primary: oklch(0.72 0.13 240);
+  --sidebar-primary-foreground: oklch(0.15 0.01 260);
+  --sidebar-accent: oklch(0.26 0.008 260);
+  --sidebar-accent-foreground: oklch(0.97 0.004 260);
+  --sidebar-border: oklch(0.98 0.004 260 / 0.09);
+  --sidebar-ring: oklch(0.72 0.13 240);
+  --glass-blur: 22px;
 }
 
 /* ============================================================
- * ONYX — pure monochrome, pitch black + white
+ * Light
  * ============================================================ */
-[data-theme="onyx"] {
-  --background: oklch(0 0 0);
-  --background-deep: oklch(0 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.13 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.11 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.98 0 0);
-  --primary-foreground: oklch(0.10 0 0);
-  --primary-glow: oklch(0.98 0 0);
-  --secondary: oklch(0.20 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.68 0 0);
-  --accent: oklch(0.98 0 0);
-  --accent-foreground: oklch(0.10 0 0);
-  --border: oklch(1 0 0 / 0.14);
-  --input: oklch(1 0 0 / 0.16);
-  --ring: oklch(0.98 0 0);
-  --sidebar: oklch(0.08 0 0);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.98 0 0);
-  --sidebar-primary-foreground: oklch(0.10 0 0);
-  --sidebar-accent: oklch(0.18 0 0);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(1 0 0 / 0.12);
-  --sidebar-ring: oklch(0.98 0 0);
-}
-
-/* ============================================================
- * EXECUTIVE — luxury editorial, obsidian + champagne gold
- * ============================================================ */
-[data-theme="executive"] {
-  --background: oklch(0.10 0.005 60);
-  --background-deep: oklch(0.06 0.005 60);
-  --foreground: oklch(0.96 0.01 80);
-  --card: oklch(0.16 0.01 60);
-  --card-foreground: oklch(0.96 0.01 80);
-  --popover: oklch(0.14 0.01 60);
-  --popover-foreground: oklch(0.96 0.01 80);
-  --primary: oklch(0.74 0.10 88);
-  --primary-foreground: oklch(0.14 0.02 70);
-  --primary-glow: oklch(0.80 0.11 88);
-  --secondary: oklch(0.22 0.02 70);
-  --secondary-foreground: oklch(0.96 0.01 80);
-  --muted: oklch(0.20 0.015 70);
-  --muted-foreground: oklch(0.70 0.03 80);
-  --accent: oklch(0.74 0.10 88);
-  --accent-foreground: oklch(0.14 0.02 70);
-  --border: oklch(0.74 0.08 88 / 0.22);
-  --input: oklch(0.74 0.08 88 / 0.24);
-  --ring: oklch(0.74 0.10 88);
-  --sidebar: oklch(0.13 0.02 60);
-  --sidebar-foreground: oklch(0.96 0.01 80);
-  --sidebar-primary: oklch(0.74 0.10 88);
-  --sidebar-primary-foreground: oklch(0.14 0.02 70);
-  --sidebar-accent: oklch(0.22 0.02 70);
-  --sidebar-accent-foreground: oklch(0.96 0.01 80);
-  --sidebar-border: oklch(0.74 0.08 88 / 0.2);
-  --sidebar-ring: oklch(0.74 0.10 88);
-}
-
-/* ============================================================
- * ARCTIC — light SaaS, pristine white + indigo
- * ============================================================ */
-[data-theme="arctic"] {
-  --background: oklch(1 0 0);
-  --background-deep: oklch(0.98 0.005 250);
-  --foreground: oklch(0.20 0.02 265);
-  --card: oklch(0.98 0.005 250);
-  --card-foreground: oklch(0.20 0.02 265);
+[data-theme="light"] {
+  --background: oklch(0.985 0.003 260);
+  --background-deep: oklch(0.955 0.005 250);
+  --foreground: oklch(0.22 0.015 262);
+  --card: oklch(1 0 0 / 0.72);
+  --card-foreground: oklch(0.22 0.015 262);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.02 265);
-  --primary: oklch(0.50 0.22 277);
-  --primary-foreground: oklch(0.99 0.005 265);
-  --primary-glow: oklch(0.58 0.21 277);
-  --secondary: oklch(0.95 0.01 255);
-  --secondary-foreground: oklch(0.20 0.02 265);
-  --muted: oklch(0.96 0.008 255);
-  --muted-foreground: oklch(0.48 0.03 265);
-  --accent: oklch(0.50 0.22 277);
-  --accent-foreground: oklch(0.99 0.005 265);
-  --border: oklch(0.50 0.05 265 / 0.16);
-  --input: oklch(0.50 0.05 265 / 0.20);
-  --ring: oklch(0.50 0.22 277);
-  --sidebar: oklch(0.96 0.01 255);
-  --sidebar-foreground: oklch(0.20 0.02 265);
-  --sidebar-primary: oklch(0.50 0.22 277);
-  --sidebar-primary-foreground: oklch(0.99 0.005 265);
-  --sidebar-accent: oklch(0.92 0.015 255);
-  --sidebar-accent-foreground: oklch(0.20 0.02 265);
-  --sidebar-border: oklch(0.50 0.05 265 / 0.14);
-  --sidebar-ring: oklch(0.50 0.22 277);
-}
-
-/* ============================================================
- * TITANIUM — industrial charcoal + silver
- * ============================================================ */
-[data-theme="titanium"] {
-  --background: oklch(0.20 0.005 255);
-  --background-deep: oklch(0.15 0.005 255);
-  --foreground: oklch(0.95 0.005 255);
-  --card: oklch(0.25 0.006 255);
-  --card-foreground: oklch(0.95 0.005 255);
-  --popover: oklch(0.23 0.006 255);
-  --popover-foreground: oklch(0.95 0.005 255);
-  --primary: oklch(0.80 0.025 255);
-  --primary-foreground: oklch(0.18 0.01 255);
-  --primary-glow: oklch(0.85 0.03 255);
-  --secondary: oklch(0.30 0.008 255);
-  --secondary-foreground: oklch(0.95 0.005 255);
-  --muted: oklch(0.28 0.007 255);
-  --muted-foreground: oklch(0.70 0.015 255);
-  --accent: oklch(0.80 0.025 255);
-  --accent-foreground: oklch(0.18 0.01 255);
-  --border: oklch(0.80 0.02 255 / 0.20);
-  --input: oklch(0.80 0.02 255 / 0.22);
-  --ring: oklch(0.80 0.025 255);
-  --sidebar: oklch(0.23 0.006 255);
-  --sidebar-foreground: oklch(0.95 0.005 255);
-  --sidebar-primary: oklch(0.80 0.025 255);
-  --sidebar-primary-foreground: oklch(0.18 0.01 255);
-  --sidebar-accent: oklch(0.30 0.008 255);
-  --sidebar-accent-foreground: oklch(0.95 0.005 255);
-  --sidebar-border: oklch(0.80 0.02 255 / 0.18);
-  --sidebar-ring: oklch(0.80 0.025 255);
-}
-
-/* ============================================================
- * PHANTOM JADE — black-hole base, dark emerald glass, neon mint
- * ============================================================ */
-[data-theme="phantom"] {
-  --background: oklch(0.13 0.012 165);
-  --background-deep: oklch(0.09 0.012 165);
-  --foreground: oklch(0.97 0.02 165);
-  --card: oklch(0.18 0.025 165);
-  --card-foreground: oklch(0.97 0.02 165);
-  --popover: oklch(0.16 0.025 165);
-  --popover-foreground: oklch(0.97 0.02 165);
-  --primary: oklch(0.78 0.18 165);
-  --primary-foreground: oklch(0.13 0.03 165);
-  --primary-glow: oklch(0.86 0.19 165);
-  --secondary: oklch(0.24 0.03 165);
-  --secondary-foreground: oklch(0.97 0.02 165);
-  --muted: oklch(0.22 0.025 165);
-  --muted-foreground: oklch(0.72 0.05 165);
-  --accent: oklch(0.78 0.18 165);
-  --accent-foreground: oklch(0.13 0.03 165);
-  --border: oklch(0.78 0.14 165 / 0.26);
-  --input: oklch(0.78 0.14 165 / 0.28);
-  --ring: oklch(0.78 0.18 165);
-  --chart-1: oklch(0.78 0.18 165);
-  --chart-2: oklch(0.70 0.15 195);
-  --chart-3: oklch(0.82 0.16 145);
-  --chart-4: oklch(0.82 0.17 75);
-  --chart-5: oklch(0.68 0.24 25);
-  --sidebar: oklch(0.16 0.025 165);
-  --sidebar-foreground: oklch(0.97 0.02 165);
-  --sidebar-primary: oklch(0.78 0.18 165);
-  --sidebar-primary-foreground: oklch(0.13 0.03 165);
-  --sidebar-accent: oklch(0.24 0.03 165);
-  --sidebar-accent-foreground: oklch(0.97 0.02 165);
-  --sidebar-border: oklch(0.78 0.14 165 / 0.24);
-  --sidebar-ring: oklch(0.78 0.18 165);
-}
-
-/* ============================================================
- * CYBER GENESIS — violet-black grid, indigo glass, magenta neon
- * ============================================================ */
-[data-theme="genesis"] {
-  --background: oklch(0.12 0.04 295);
-  --background-deep: oklch(0.08 0.035 295);
-  --foreground: oklch(0.97 0.02 320);
-  --card: oklch(0.17 0.05 290);
-  --card-foreground: oklch(0.97 0.02 320);
-  --popover: oklch(0.15 0.05 290);
-  --popover-foreground: oklch(0.97 0.02 320);
-  --primary: oklch(0.65 0.28 350);
-  --primary-foreground: oklch(0.99 0.01 0);
-  --primary-glow: oklch(0.70 0.29 350);
-  --secondary: oklch(0.23 0.06 290);
-  --secondary-foreground: oklch(0.97 0.02 320);
-  --muted: oklch(0.21 0.05 290);
-  --muted-foreground: oklch(0.74 0.06 300);
-  --accent: oklch(0.68 0.24 25);
-  --accent-foreground: oklch(0.99 0.01 0);
-  --border: oklch(0.65 0.22 350 / 0.30);
-  --input: oklch(0.65 0.22 350 / 0.32);
-  --ring: oklch(0.65 0.28 350);
-  --chart-1: oklch(0.65 0.28 350);
-  --chart-2: oklch(0.68 0.24 25);
-  --chart-3: oklch(0.62 0.20 285);
-  --chart-4: oklch(0.78 0.18 165);
-  --chart-5: oklch(0.82 0.17 75);
-  --sidebar: oklch(0.15 0.05 290);
-  --sidebar-foreground: oklch(0.97 0.02 320);
-  --sidebar-primary: oklch(0.65 0.28 350);
-  --sidebar-primary-foreground: oklch(0.99 0.01 0);
-  --sidebar-accent: oklch(0.23 0.06 290);
-  --sidebar-accent-foreground: oklch(0.97 0.02 320);
-  --sidebar-border: oklch(0.65 0.22 350 / 0.28);
-  --sidebar-ring: oklch(0.65 0.28 350);
-}
-
-/* ============================================================
- * GHOST PLATINUM — matte charcoal, obsidian panels, icy silver
- * ============================================================ */
-[data-theme="platinum"] {
-  --background: oklch(0.16 0 0);
-  --background-deep: oklch(0.11 0 0);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.20 0 0);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.18 0 0);
-  --popover-foreground: oklch(0.97 0 0);
-  --primary: oklch(0.93 0.005 250);
-  --primary-foreground: oklch(0.14 0 0);
-  --primary-glow: oklch(0.98 0.005 250);
-  --secondary: oklch(0.26 0 0);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.24 0 0);
-  --muted-foreground: oklch(0.70 0.005 250);
-  --accent: oklch(0.93 0.005 250);
-  --accent-foreground: oklch(0.14 0 0);
-  --border: oklch(0.93 0.005 250 / 0.18);
-  --input: oklch(0.93 0.005 250 / 0.20);
-  --ring: oklch(0.93 0.005 250);
-  --chart-1: oklch(0.93 0.005 250);
-  --chart-2: oklch(0.78 0.005 250);
-  --chart-3: oklch(0.62 0.005 250);
-  --chart-4: oklch(0.85 0.005 250);
-  --chart-5: oklch(0.70 0.005 250);
-  --sidebar: oklch(0.18 0 0);
-  --sidebar-foreground: oklch(0.97 0 0);
-  --sidebar-primary: oklch(0.93 0.005 250);
-  --sidebar-primary-foreground: oklch(0.14 0 0);
-  --sidebar-accent: oklch(0.26 0 0);
-  --sidebar-accent-foreground: oklch(0.97 0 0);
-  --sidebar-border: oklch(0.93 0.005 250 / 0.16);
-  --sidebar-ring: oklch(0.93 0.005 250);
-}
-
-:root,
-[data-theme] {
-  --success: var(--success, oklch(0.78 0.18 155));
-  --warning: var(--warning, oklch(0.82 0.17 75));
-  --destructive: oklch(0.68 0.24 25);
-  --destructive-foreground: oklch(0.99 0.01 0);
-  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow, var(--primary)));
-  --shadow-elegant: 0 18px 40px -24px color-mix(in oklab, var(--primary) 55%, transparent);
-  --glow-primary: 0 0 0 1px color-mix(in oklab, var(--primary) 50%, transparent),
-    0 14px 36px -16px color-mix(in oklab, var(--primary) 60%, transparent);
-  --glow-accent: 0 0 30px color-mix(in oklab, var(--accent) 40%, transparent);
+  --popover-foreground: oklch(0.22 0.015 262);
+  --primary: oklch(0.52 0.16 250);
+  --primary-foreground: oklch(0.99 0.003 260);
+  --primary-glow: oklch(0.62 0.13 205);
+  --secondary: oklch(0.94 0.006 258);
+  --secondary-foreground: oklch(0.22 0.015 262);
+  --muted: oklch(0.95 0.005 258);
+  --muted-foreground: oklch(0.48 0.02 262);
+  --accent: oklch(0.62 0.13 205);
+  --accent-foreground: oklch(0.99 0.003 260);
+  --success: oklch(0.60 0.15 158);
+  --warning: oklch(0.72 0.15 75);
+  --destructive: oklch(0.58 0.20 25);
+  --border: oklch(0.30 0.02 262 / 0.14);
+  --input: oklch(0.30 0.02 262 / 0.18);
+  --ring: oklch(0.52 0.16 250);
+  --chart-1: oklch(0.52 0.16 250);
+  --chart-2: oklch(0.62 0.13 205);
+  --chart-3: oklch(0.60 0.15 158);
+  --chart-4: oklch(0.72 0.15 75);
+  --chart-5: oklch(0.58 0.20 25);
+  --sidebar: oklch(1 0 0 / 0.72);
+  --sidebar-foreground: oklch(0.22 0.015 262);
+  --sidebar-primary: oklch(0.52 0.16 250);
+  --sidebar-primary-foreground: oklch(0.99 0.003 260);
+  --sidebar-accent: oklch(0.94 0.006 258);
+  --sidebar-accent-foreground: oklch(0.22 0.015 262);
+  --sidebar-border: oklch(0.30 0.02 262 / 0.12);
+  --sidebar-ring: oklch(0.52 0.16 250);
 }
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--border);
   }
-
-  html,
-  body {
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-
-  body {
-    background: var(--background-deep, var(--color-background));
-    color: var(--color-foreground);
-    font-family: "Inter", "SF Pro Display", system-ui, sans-serif;
+  html {
     -webkit-font-smoothing: antialiased;
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family:
+      "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    letter-spacing: -0.011em;
+    min-height: 100dvh;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 32%, transparent);
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--foreground) 14%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }
 
-/* Matte surface — solid opaque fill, thin border that glows on hover */
 @utility glass {
   background: var(--card);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
-
-  &:hover {
-    border-color: color-mix(in oklab, var(--primary) 60%, transparent);
-    box-shadow: var(--shadow-elegant);
-  }
+  box-shadow:
+    0 1px 0 0 color-mix(in oklab, var(--foreground) 7%, transparent) inset,
+    0 24px 60px -30px oklch(0 0 0 / 0.6);
 }
 
-@utility glass-strong {
-  background: var(--popover);
-  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border));
-  border-radius: var(--radius-lg);
-  box-shadow: 0 24px 60px -28px color-mix(in oklab, var(--primary) 45%, transparent);
-}
-
-@utility glow-primary {
-  box-shadow: var(--glow-primary);
-}
-
-@utility glow-accent {
-  box-shadow: var(--glow-accent);
+@utility glass-soft {
+  background: color-mix(in oklab, var(--card) 60%, transparent);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid var(--border);
 }
 
 @utility text-gradient {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
+  background-image: linear-gradient(
+    100deg,
+    var(--foreground),
+    color-mix(in oklab, var(--primary) 70%, var(--foreground))
+  );
   background-clip: text;
   color: transparent;
 }
 
-/* ===== Dynamic state glows & micro-interaction keyframes ===== */
-@keyframes pulse-coral {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--destructive) 55%, transparent); }
-  50% { box-shadow: 0 0 22px 2px color-mix(in oklab, var(--destructive) 45%, transparent); }
+@utility accent-gradient {
+  background-image: linear-gradient(
+    120deg,
+    var(--primary),
+    var(--primary-glow)
+  );
 }
 
-@utility pulse-coral {
-  animation: pulse-coral 2.2s ease-in-out infinite;
+@utility ambient-field {
+  background:
+    radial-gradient(
+      55% 45% at 12% 8%,
+      color-mix(in oklab, var(--primary) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 40% at 88% 78%,
+      color-mix(in oklab, var(--accent) 12%, transparent),
+      transparent 70%
+    ),
+    var(--background-deep);
 }
 
-@utility aura-electric {
-  box-shadow: 0 0 24px -2px color-mix(in oklab, var(--primary-glow) 70%, transparent);
-}
-
-/* Spotlight overlay that tracks the cursor (driven by --mx / --my) */
-@utility spotlight {
-  position: relative;
-  isolation: isolate;
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: radial-gradient(
-      180px circle at var(--mx, 50%) var(--my, 50%),
-      color-mix(in oklab, var(--primary) 70%, transparent),
-      transparent 60%
+@utility grid-field {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
     );
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 250ms ease;
-    pointer-events: none;
-    z-index: 1;
+  background-size: 56px 56px;
+  mask-image: radial-gradient(70% 60% at 50% 30%, black, transparent 85%);
+}
+
+@keyframes sg-float {
+  0%,
+  100% {
+    transform: translateY(0);
   }
-  &:hover::before { opacity: 1; }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
-/* ===== Liquid-glass surface (translucent, blurred) ===== */
-@utility liquid {
-  background: color-mix(in oklab, var(--card) 55%, transparent);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+@keyframes sg-dash {
+  to {
+    stroke-dashoffset: -24;
+  }
 }
 
-/* ===== Horizontal micro-shimmer sweep ===== */
-@keyframes shimmer-sweep {
-  0% { transform: translateX(-130%); }
-  100% { transform: translateX(130%); }
+@keyframes sg-pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
-@utility shimmer-sweep {
+@keyframes sg-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes sg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: sg-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility skeleton {
   position: relative;
   overflow: hidden;
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      100deg,
-      transparent 30%,
-      color-mix(in oklab, var(--primary) 30%, transparent) 50%,
-      transparent 70%
-    );
-    transform: translateX(-130%);
-    animation: shimmer-sweep 3.4s ease-in-out infinite;
-    pointer-events: none;
-  }
+  background: color-mix(in oklab, var(--foreground) 8%, transparent);
+  border-radius: var(--radius-md);
 }
 
-/* ===== Sharp diagonal border-skating light beam (one-shot) ===== */
-@keyframes shimmer-beam {
-  0% { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
-  18% { opacity: 1; }
-  100% { transform: translateX(260%) skewX(-18deg); opacity: 0; }
-}
-
-/* Overlay span placed inside a position:relative card. Re-mount it (via key)
- * to replay the beam exactly once. */
-@utility shimmer-beam {
-  pointer-events: none;
+@utility skeleton-sheen {
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  z-index: 5;
-  &::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 38%;
-    background: linear-gradient(
-      100deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.05) 35%,
-      rgba(255, 255, 255, 0.85) 50%,
-      rgba(255, 255, 255, 0.05) 65%,
-      transparent 100%
-    );
-    filter: blur(1px);
-    transform: translateX(-160%) skewX(-18deg);
-    animation: shimmer-beam 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
-  }
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--foreground) 8%, transparent),
+    transparent
+  );
+  animation: sg-shimmer 1.6s infinite;
 }
-
-/* Slow kinetic rotation for the Apex tier energy ring */
-@keyframes tier-spin {
-  to { transform: rotate(360deg); }
-}
-@utility tier-spin {
-  animation: tier-spin 8s linear infinite;
-}
-
-/* Diamond shimmer drift for the Radiant tier */
-@keyframes tier-diamond {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-@utility tier-diamond {
-  background-size: 200% 200%;
-  animation: tier-diamond 4.5s ease-in-out infinite;
-}
-
-/* ---- Animated profile avatars & aura border effects ---- */
-@keyframes aura-rotate { to { transform: rotate(360deg); } }
-@utility aura-ring {
-  animation: aura-rotate 6s linear infinite;
-}
-@keyframes avatar-drift {
-  0%, 100% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.15) translate(-6%, 6%); }
-}
-@utility avatar-drift { animation: avatar-drift 5s ease-in-out infinite; }
-
-@keyframes avatar-spin { to { transform: rotate(360deg); } }
-@utility avatar-spin { animation: avatar-spin 4s linear infinite; }
-
-@keyframes avatar-pulse {
-  0%, 100% { opacity: 0.45; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-@utility avatar-pulse { animation: avatar-pulse 2.4s ease-in-out infinite; }
-
-@keyframes avatar-wave {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-@utility avatar-wave { animation: avatar-wave 6s ease-in-out infinite; }
-
-@keyframes avatar-hue { to { filter: hue-rotate(360deg); } }
-@utility avatar-hue { animation: avatar-hue 8s linear infinite; }
-
-/* Encrypted autosave indicator */
-@keyframes save-glow {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 45%, transparent); }
-  50% { box-shadow: 0 0 18px 2px color-mix(in oklab, var(--success) 45%, transparent); }
-}
-@utility save-glow { animation: save-glow 1.6s ease-in-out infinite; }
