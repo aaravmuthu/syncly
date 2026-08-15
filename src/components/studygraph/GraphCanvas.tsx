@@ -239,7 +239,7 @@ export function GraphCanvas({
                 const b = positions.get(edge.to)!;
                 const onPath = highlightPath.includes(edge.from) && highlightPath.includes(edge.to);
                 const active = selectedId === edge.from || selectedId === edge.to || onPath;
-                const strength = retention(recordFor(state, edge.from));
+                const strength = Math.round(retention(recordFor(state, edge.from)) * 100) / 100;
                 const mid = (a.x + b.x) / 2;
                 return (
                   <path
@@ -271,7 +271,7 @@ export function GraphCanvas({
                 if (!pos) return null;
                 const status = statusOf(state, concept);
                 const meta = STATUS_META[status];
-                const r = Math.round(retention(recordFor(state, concept.id)) * 1000) / 1000;
+                const r = Math.round(retention(recordFor(state, concept.id)) * 100) / 100;
                 const dim = !matches(concept.id);
                 const selected = selectedId === concept.id;
                 const radius = 22 + concept.importance * 3.2;
