@@ -15,7 +15,7 @@ interface Props {
   className?: string;
 }
 
-const MIN_K = 0.3;
+const MIN_K = 0.12;
 const MAX_K = 2.4;
 const clampK = (k: number) => Math.min(MAX_K, Math.max(MIN_K, k));
 
