@@ -293,6 +293,43 @@
   animation: sg-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes sg-sheet-up {
+  from {
+    transform: translateY(6%);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes sg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility sg-sheet-in {
+  animation: sg-sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility sg-fade-in {
+  animation: sg-fade 0.22s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @utility skeleton {
   position: relative;
   overflow: hidden;
