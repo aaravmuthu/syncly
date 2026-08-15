@@ -19,6 +19,7 @@ import { Route as LearnRouteImport } from './routes/learn'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PlannerRouteImport } from './routes/planner'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SubjectsRouteImport } from './routes/subjects'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -76,6 +77,11 @@ const PracticeRoute = PracticeRouteImport.update({
   path: '/practice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewRoute = ReviewRouteImport.update({
   id: '/review',
   path: '/review',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/planner': typeof PlannerRoute
   '/practice': typeof PracticeRoute
+  '/profile': typeof ProfileRoute
   '/review': typeof ReviewRoute
   '/subjects': typeof SubjectsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/planner': typeof PlannerRoute
   '/practice': typeof PracticeRoute
+  '/profile': typeof ProfileRoute
   '/review': typeof ReviewRoute
   '/subjects': typeof SubjectsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/planner': typeof PlannerRoute
   '/practice': typeof PracticeRoute
+  '/profile': typeof ProfileRoute
   '/review': typeof ReviewRoute
   '/subjects': typeof SubjectsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/planner'
     | '/practice'
+    | '/profile'
     | '/review'
     | '/subjects'
     | '/.mcp/list-tools'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/planner'
     | '/practice'
+    | '/profile'
     | '/review'
     | '/subjects'
     | '/.mcp/list-tools'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/planner'
     | '/practice'
+    | '/profile'
     | '/review'
     | '/subjects'
     | '/.mcp/list-tools'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PlannerRoute: typeof PlannerRoute
   PracticeRoute: typeof PracticeRoute
+  ProfileRoute: typeof ProfileRoute
   ReviewRoute: typeof ReviewRoute
   SubjectsRoute: typeof SubjectsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review': {
       id: '/review'
       path: '/review'
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PlannerRoute: PlannerRoute,
   PracticeRoute: PracticeRoute,
+  ProfileRoute: ProfileRoute,
   ReviewRoute: ReviewRoute,
   SubjectsRoute: SubjectsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,

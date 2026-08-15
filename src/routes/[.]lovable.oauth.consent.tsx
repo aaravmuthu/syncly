@@ -1,29 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { oauth, type AuthorizationDetails } from "@/lib/oauth-consent";
 
-type OAuthClient = { name?: string; client_name?: string };
-type AuthorizationDetails = {
-  client?: OAuthClient;
-  scope?: string;
-  redirect_uri?: string;
-  redirect_url?: string;
-  redirect_to?: string;
-};
-
-type OAuthApi = {
-  getAuthorizationDetails: (
-    id: string,
-  ) => Promise<{ data: AuthorizationDetails | null; error: { message: string } | null }>;
-  approveAuthorization: (
-    id: string,
-  ) => Promise<{ data: AuthorizationDetails | null; error: { message: string } | null }>;
-  denyAuthorization: (
-    id: string,
-  ) => Promise<{ data: AuthorizationDetails | null; error: { message: string } | null }>;
-};
-
-const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
 
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
