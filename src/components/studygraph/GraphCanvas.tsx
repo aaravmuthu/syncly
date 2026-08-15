@@ -271,7 +271,7 @@ export function GraphCanvas({
                 if (!pos) return null;
                 const status = statusOf(state, concept);
                 const meta = STATUS_META[status];
-                const r = retention(recordFor(state, concept.id));
+                const r = Math.round(retention(recordFor(state, concept.id)) * 1000) / 1000;
                 const dim = !matches(concept.id);
                 const selected = selectedId === concept.id;
                 const radius = 22 + concept.importance * 3.2;
