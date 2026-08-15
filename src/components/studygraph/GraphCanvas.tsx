@@ -364,7 +364,7 @@ export function GraphCanvas({
         </button>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap gap-x-3 gap-y-1 rounded-2xl border border-border bg-popover/80 px-3 py-2 pr-16 text-[10px] backdrop-blur-xl">
+      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-4.5rem)] flex-wrap gap-x-3 gap-y-1 rounded-2xl border border-border bg-popover/80 px-3 py-2 text-[10px] backdrop-blur-xl">
         {(["mastered", "strong", "developing", "weak", "locked"] as ConceptStatus[]).map((s) => (
           <span key={s} className="flex items-center gap-1.5 text-muted-foreground">
             <span className="h-2 w-2 rounded-full" style={{ background: STATUS_META[s].token }} />
