@@ -70,8 +70,10 @@ export function GraphCanvas({
   /** Fit the whole graph on first paint and whenever the course changes. */
   const fit = useCallback(() => {
     const el = wrapRef.current;
+    console.log("[fit] el", !!el);
     if (!el) return;
     const rect = el.getBoundingClientRect();
+    console.log("[fit] rect", rect.width, rect.height, bounds);
     if (!rect.width || !rect.height) return;
     const k = clampK(Math.min(rect.width / bounds.w, rect.height / bounds.h) * 0.92);
     setView({
