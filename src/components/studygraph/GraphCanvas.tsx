@@ -83,7 +83,13 @@ export function GraphCanvas({
 
   useLayoutEffect(() => {
     fit();
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => fit());
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [fit]);
+
 
   /** Focus the selected node without yanking zoom. */
   useEffect(() => {
