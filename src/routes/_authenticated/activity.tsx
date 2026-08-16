@@ -58,7 +58,7 @@ function ActivityPage() {
       subtitle="Everything that moved across your groups and plans."
       action={
         unread > 0 ? (
-          <Button variant="secondary" onClick={() => void markRead()}>
+          <Button variant="outline" onClick={() => void markRead()}>
             Mark all read
           </Button>
         ) : null
