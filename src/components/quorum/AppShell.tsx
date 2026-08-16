@@ -1,9 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Wordmark } from "./Wordmark";
+import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
+import { getMe } from "@/lib/quorum/plan.functions";
 
 const NAV = [
   { to: "/home", label: "Home", icon: "◎" },
