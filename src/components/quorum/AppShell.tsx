@@ -30,6 +30,8 @@ export function AppShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { unread } = useNotifications();
+  const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
+
 
   return (
     <div className="min-h-dvh bg-background">
