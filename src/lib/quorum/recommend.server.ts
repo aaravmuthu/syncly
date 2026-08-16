@@ -48,8 +48,12 @@ export async function regenerateRecommendations(planId: string) {
   const budgets = numbers(members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice));
 
   const origin = zip ? await geocodeZipServer(zip) : null;
+  // The host's chosen search radius caps the group's tightest personal radius.
+  const hostRadius = plan.search_radius_miles ?? null;
+  if (hostRadius != null) radii.push(hostRadius);
   const venueQuery = {
     category: plan.category as PlanCategory,
+    vibe: plan.food_vibe ?? null,
     maxRadiusMiles: radii.length ? Math.min(...radii) : null,
     maxBudget: budgets.length ? Math.min(...budgets) : null,
   };
