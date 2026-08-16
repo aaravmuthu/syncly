@@ -76,6 +76,11 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
     hard.push("travel");
   }
 
+  // ---- HARD: distance radius (miles, from live location data) -------------
+  if (c.maxDistanceMiles != null && option.distanceMiles != null && option.distanceMiles > c.maxDistanceMiles) {
+    hard.push("travel");
+  }
+
   // ---- HARD: schedule ------------------------------------------------------
   const optStart = toMinutes(option.start)!;
   const optEnd = toMinutes(option.end)!;
@@ -217,6 +222,9 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
     if (avgSoft > 0.7) reasons.push("Matches most stated preferences");
     if (minSoft < 0.45) cautions.push("One member's preferences are only partly met");
     if (option.travelMinutes > 25) cautions.push("Travel time is on the longer side for this group");
+    if (option.distanceMiles != null) {
+      reasons.push(`Within every member's travel radius — ${option.distanceMiles} miles away`);
+    }
   } else {
     cautions.push("This option does not meet every member's requirements");
     if (!transport.ok) cautions.push("There aren't enough seats to get everyone there and back");
@@ -235,6 +243,16 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
     fairness: Math.round(fairness * 100),
     reasons,
     cautions,
+    ...(option.address || option.distanceMiles != null
+      ? {
+          venue: {
+            ...(option.address ? { address: option.address } : {}),
+            ...(option.distanceMiles != null ? { distanceMiles: option.distanceMiles } : {}),
+            ...(option.priceLevel ? { priceLevel: option.priceLevel } : {}),
+            ...(option.rating != null ? { rating: option.rating } : {}),
+          },
+        }
+      : {}),
   };
 
   return { option, score, feasible, breakdown };

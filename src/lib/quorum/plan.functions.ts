@@ -44,6 +44,8 @@ export const saveProfile = createServerFn({ method: "POST" })
       "transport_features_enabled",
       "notifications_enabled",
       "onboarded",
+      "zip_code",
+      "theme_preference",
     ] as const;
     const patch: Record<string, unknown> = {};
     for (const k of allowed) if (k in data) patch[k] = data[k];
@@ -211,6 +213,7 @@ export const createPlan = createServerFn({ method: "POST" })
       windowStart?: string | null;
       windowEnd?: string | null;
       locationArea?: string | null;
+      zipCode?: string | null;
       participantIds?: string[];
     }) => d,
   )
@@ -227,7 +230,7 @@ export const createPlan = createServerFn({ method: "POST" })
         category: data.category,
         window_start: data.windowStart || null,
         window_end: data.windowEnd || null,
-        location_area: data.locationArea || null,
+        location_area: data.zipCode?.trim() || data.locationArea || null,
         status: "collecting",
       })
       .select("*")
