@@ -8,15 +8,31 @@ import type { ConstraintPayload, PlanCategory } from "./types";
 /* Profile                                                             */
 /* ------------------------------------------------------------------ */
 
+const REAL_NAME = (n: unknown) =>
+  typeof n === "string" && n.trim() !== "" && n.trim() !== "New member";
+
 export const getMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
-    if (data) return data;
+    if (data) {
+      // A profile that already carries a real display name is set up — never
+      // send that person back through onboarding.
+      if (!data.onboarded && REAL_NAME(data.display_name)) {
+        const { data: fixed } = await supabase
+          .from("profiles")
+          .update({ onboarded: true })
+          .eq("user_id", userId)
+          .select("*")
+          .maybeSingle();
+        return fixed ?? { ...data, onboarded: true };
+      }
+      return data;
+    }
     const { data: created, error } = await supabase
       .from("profiles")
-      .insert({ user_id: userId, display_name: "New member" })
+      .upsert({ user_id: userId, display_name: "New member" }, { onConflict: "user_id" })
       .select("*")
       .single();
     if (error) throw new Error(error.message);
@@ -31,6 +47,10 @@ export const saveProfile = createServerFn({ method: "POST" })
     const allowed = [
       "display_name",
       "avatar_emoji",
+      "avatar_url",
+      "bio",
+      "school",
+      "grad_year",
       "age",
       "home_area",
       "budget_preference",
@@ -47,33 +67,80 @@ export const saveProfile = createServerFn({ method: "POST" })
       "zip_code",
       "theme_preference",
     ] as const;
-    const nullable = new Set(["curfew_time", "zip_code", "home_area", "budget_preference", "age"]);
+    const nullable = new Set([
+      "curfew_time",
+      "zip_code",
+      "home_area",
+      "budget_preference",
+      "age",
+      "avatar_url",
+      "bio",
+      "school",
+      "grad_year",
+    ]);
     const patch: Record<string, unknown> = {};
     for (const k of allowed) {
       if (!(k in data)) continue;
       let v = data[k];
       // Empty inputs must clear the column, not fail the write with "".
       if (typeof v === "string" && v.trim() === "" && nullable.has(k)) v = null;
-      if (k === "age" && v != null && v !== "") {
+      if ((k === "age" || k === "grad_year") && v != null && v !== "") {
         const n = Number(v);
         v = Number.isFinite(n) ? Math.trunc(n) : null;
       }
+      if (k === "bio" && typeof v === "string") v = v.slice(0, 160);
       patch[k] = v;
     }
+    if (REAL_NAME(patch["display_name"])) patch["onboarded"] = true;
     if (Object.keys(patch).length === 0) {
       const { data: current } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
       return current;
     }
+    // Upsert so a first-time save creates the row instead of silently matching
+    // zero rows.
     const { data: row, error } = await supabase
       .from("profiles")
-      .update(patch as never)
-      .eq("user_id", userId)
+      .upsert({ ...patch, user_id: userId } as never, { onConflict: "user_id" })
       .select("*")
       .single();
     if (error) throw new Error(error.message);
     return row;
-
   });
+
+/** Uploads an avatar image (data URL) and returns a long-lived signed URL. */
+export const uploadAvatar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { dataUrl: string; ext: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);
+    if (!match) throw new Error("Unsupported image");
+    const contentType = match[1];
+    if (!/^image\/(png|jpeg|jpg|gif|webp)$/.test(contentType)) {
+      throw new Error("Use a PNG, JPG, GIF, or WebP image");
+    }
+    const bytes = Buffer.from(match[2], "base64");
+    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Image must be under 5 MB");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const path = `${userId}/${Date.now()}.${data.ext.replace(/[^a-z0-9]/gi, "").slice(0, 5) || "png"}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("avatars")
+      .upload(path, bytes, { contentType, upsert: true });
+    if (upErr) throw new Error(upErr.message);
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from("avatars")
+      .createSignedUrl(path, 60 * 60 * 24 * 3650);
+    if (signErr || !signed) throw new Error(signErr?.message ?? "Could not read image back");
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: signed.signedUrl })
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { avatar_url: signed.signedUrl };
+  });
+
 
 /* ------------------------------------------------------------------ */
 /* Groups                                                              */
@@ -180,7 +247,7 @@ export const getGroup = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const { data: members } = await supabase
       .from("group_members")
-      .select("role, profile_id, profiles(id, display_name, avatar_emoji)")
+      .select("role, profile_id, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)")
       .eq("group_id", data.groupId);
     const { data: plans } = await supabase
       .from("plans")
@@ -295,7 +362,7 @@ export const getPlan = createServerFn({ method: "GET" })
 
     const { data: participants } = await supabase
       .from("plan_participants")
-      .select("*, profiles(id, display_name, avatar_emoji)")
+      .select("*, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)")
       .eq("plan_id", data.planId);
     const { data: recommendations } = await supabase
       .from("recommendations")

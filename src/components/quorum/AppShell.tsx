@@ -1,9 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Wordmark } from "./Wordmark";
+import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
+import { getMe } from "@/lib/quorum/plan.functions";
 
 const NAV = [
   { to: "/home", label: "Home", icon: "◎" },
@@ -26,6 +30,8 @@ export function AppShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { unread } = useNotifications();
+  const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
+
 
   return (
     <div className="min-h-dvh bg-background">
@@ -57,6 +63,15 @@ export function AppShell({
             ))}
           </nav>
           <ThemeToggle />
+          <Link to="/settings" aria-label="Your profile" className="pressable active:pressable-active">
+            <Avatar
+              url={me.data?.avatar_url}
+              emoji={me.data?.avatar_emoji}
+              name={me.data?.display_name}
+              size={32}
+              className="ring-1 ring-border"
+            />
+          </Link>
           </div>
         </div>
       </header>

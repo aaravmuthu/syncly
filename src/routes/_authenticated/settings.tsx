@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
-import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
+import { getMe, saveProfile, uploadAvatar } from "@/lib/quorum/plan.functions";
+import { Avatar } from "@/components/quorum/Avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 const AVATARS = ["🙂", "😎", "🦊", "🐙", "🌵", "🍄", "⚡", "🌙", "🎧", "🧃"];
+const GRAD_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 1);
 
 function SettingsPage() {
   const qc = useQueryClient();
@@ -45,6 +47,36 @@ function SettingsPage() {
   useEffect(() => {
     if (me.data) setForm(me.data as unknown as Record<string, unknown>);
   }, [me.data]);
+
+  const [uploading, setUploading] = useState(false);
+  const doUpload = useServerFn(uploadAvatar);
+
+  async function onPickAvatar(file?: File) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5 MB");
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Could not read that file"));
+        reader.readAsDataURL(file);
+      });
+      const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
+      const res = await doUpload({ data: { dataUrl, ext } });
+      set("avatar_url", res.avatar_url);
+      void qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Photo updated");
+    } catch (e) {
+      toast.error("Couldn't upload that image", {
+        description: e instanceof Error ? e.message : "Please try another file.",
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+
 
 
   const save = useMutation({
@@ -113,6 +145,38 @@ function SettingsPage() {
   return (
     <AppShell title="You" subtitle="Your defaults travel with you into every questionnaire.">
       <Card className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Avatar
+            url={form["avatar_url"] as string | null}
+            emoji={String(form["avatar_emoji"] ?? "🙂")}
+            name={String(form["display_name"] ?? "")}
+            size={64}
+          />
+          <div className="space-y-1">
+            <label className="pressable active:pressable-active inline-flex cursor-pointer items-center rounded-full border border-input px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary">
+              {uploading ? "Uploading…" : "Upload photo"}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+                onChange={(e) => void onPickAvatar(e.target.files?.[0])}
+              />
+            </label>
+            <p className="text-xs text-muted-foreground">PNG, JPG, GIF or WebP — animation is kept. Max 5 MB.</p>
+            {form["avatar_url"] ? (
+              <button
+                type="button"
+                className="text-xs font-medium text-muted-foreground underline"
+                onClick={() => {
+                  set("avatar_url", null);
+                  save.mutate({ data: { avatar_url: null } });
+                }}
+              >
+                Remove photo
+              </button>
+            ) : null}
+          </div>
+        </div>
         <div>
           <span className="text-sm font-medium">Avatar</span>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -138,6 +202,40 @@ function SettingsPage() {
             onChange={(e) => set("display_name", e.target.value)}
           />
         </Field>
+        <Field label="Bio" hint="Optional — up to 160 characters">
+          <textarea
+            className={cn(inputClass, "min-h-20 resize-y")}
+            maxLength={160}
+            value={String(form["bio"] ?? "")}
+            onChange={(e) => set("bio", e.target.value)}
+            placeholder="Two lines about you"
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="School" hint="Optional">
+            <input
+              className={inputClass}
+              value={String(form["school"] ?? "")}
+              onChange={(e) => set("school", e.target.value)}
+              placeholder="Frisco High"
+            />
+          </Field>
+          <Field label="Graduation year" hint="Optional">
+            <select
+              className={inputClass}
+              value={String(form["grad_year"] ?? "")}
+              onChange={(e) => set("grad_year", e.target.value === "" ? null : Number(e.target.value))}
+            >
+              <option value="">Not set</option>
+              {GRAD_YEARS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="ZIP code" hint="Finds real venues nearby — never shared with your group">
             <PlaceAutocomplete
