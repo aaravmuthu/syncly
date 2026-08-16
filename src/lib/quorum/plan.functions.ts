@@ -49,7 +49,7 @@ export const saveProfile = createServerFn({ method: "POST" })
     for (const k of allowed) if (k in data) patch[k] = data[k];
     const { data: row, error } = await supabase
       .from("profiles")
-      .update(patch)
+      .update(patch as never)
       .eq("user_id", userId)
       .select("*")
       .single();
