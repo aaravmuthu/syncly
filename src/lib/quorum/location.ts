@@ -6,7 +6,7 @@
  * formula — no maps key, no billing, no third-party SDK.
  */
 
-import { OPTION_CATALOG } from "./catalog";
+import { optionsForCategory } from "./catalog";
 import type { OptionSeed, PlanCategory } from "./types";
 
 export type GeoPoint = { lat: number; lon: number };
@@ -91,16 +91,13 @@ export function queryVenuesNear(q: VenueQuery): OptionSeed[] {
   const { origin } = q;
   const city = origin.label.split(",")[0]?.trim() || "Nearby";
 
-  const venues = OPTION_CATALOG.filter(
-    (o) => o.category.includes(q.category) || OPTION_CATALOG.length < 4,
-  );
-  const pool = venues.length >= 4 ? venues : OPTION_CATALOG;
+  const pool = optionsForCategory(q.category);
 
   const placed = pool.map((o) => {
     // Spread each venue on a deterministic bearing/distance around the ZIP.
     const bearing = hash01(o.key + origin.zip, 7) * Math.PI * 2;
     const spread = 0.6 + hash01(o.key, 13) * 11.5; // 0.6 – 12.1 miles
-    const miles = o.category.includes("trip") || o.category.includes("roadtrip") ? spread * 9 : spread;
+    const miles = o.category.includes("trip") ? spread * 9 : spread;
     const dLat = (miles / 69) * Math.cos(bearing);
     const dLon = (miles / (69 * Math.cos(rad(origin.lat)) || 69)) * Math.sin(bearing);
     const point = { lat: origin.lat + dLat, lon: origin.lon + dLon };
