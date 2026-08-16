@@ -10,6 +10,7 @@ import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/qu
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { getGroupMemory } from "@/lib/quorum/insight.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
+import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
@@ -145,14 +146,7 @@ function GroupPage() {
               </div>
             </div>
             <Field label="ZIP code" hint="Used to find real venues nearby and estimate travel">
-              <input
-                className={inputClass}
-                inputMode="numeric"
-                maxLength={5}
-                value={zip}
-                onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-                placeholder="75034"
-              />
+              <PlaceAutocomplete value={zip} onChange={(z) => setZip(z)} />
             </Field>
             <Field label="Target date" hint="Optional — helps narrow options">
               <input

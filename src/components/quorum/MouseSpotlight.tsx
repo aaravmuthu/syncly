@@ -7,6 +7,9 @@ export function MouseSpotlight() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.style.willChange = "transform";
     let tx = window.innerWidth / 2;
     let ty = window.innerHeight * 0.3;
     let x = tx;

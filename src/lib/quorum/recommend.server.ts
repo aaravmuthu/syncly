@@ -48,14 +48,20 @@ export async function regenerateRecommendations(planId: string) {
   const budgets = numbers(members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice));
 
   const origin = zip ? await geocodeZipServer(zip) : null;
-  const options = origin
-    ? queryVenuesNear({
-        origin,
-        category: plan.category as PlanCategory,
-        maxRadiusMiles: radii.length ? Math.min(...radii) : null,
-        maxBudget: budgets.length ? Math.min(...budgets) : null,
-      })
-    : optionsForCategory(plan.category as PlanCategory);
+  const venueQuery = {
+    category: plan.category as PlanCategory,
+    maxRadiusMiles: radii.length ? Math.min(...radii) : null,
+    maxBudget: budgets.length ? Math.min(...budgets) : null,
+  };
+
+  // Live venues from Geoapify when available; otherwise the ZIP-anchored
+  // local layer; otherwise the seeded catalog. Never throws.
+  let options = optionsForCategory(plan.category as PlanCategory);
+  if (origin) {
+    const { searchVenuesGeoapify } = await import("./places.server");
+    const live = await searchVenuesGeoapify({ origin, ...venueQuery });
+    options = live.length ? live : queryVenuesNear({ origin, ...venueQuery });
+  }
 
   // ---- Live weather (keyless, Open-Meteo) ---------------------------------
   let forecast: Forecast | null = null;
@@ -103,6 +109,9 @@ export async function regenerateRecommendations(planId: string) {
         suggested_start: r.option.start,
         suggested_end: r.option.end,
         location_name: r.option.location,
+        lat: r.option.lat ?? null,
+        lon: r.option.lon ?? null,
+        address: r.option.address ?? null,
         tags: r.option.tags,
         score: r.score,
         feasible: r.feasible,

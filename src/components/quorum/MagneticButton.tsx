@@ -17,6 +17,8 @@ export function MagneticButton({ children, className, to, href, search, strength
   const onMove = (e: React.MouseEvent) => {
     const el = ref.current;
     if (!el) return;
+    // Fine-pointer devices only — no magnetic drift on touch.
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     const r = el.getBoundingClientRect();
     const dx = e.clientX - (r.left + r.width / 2);
     const dy = e.clientY - (r.top + r.height / 2);

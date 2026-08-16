@@ -261,6 +261,7 @@
 
 @utility spotlight-orb {
   position: absolute;
+  will-change: transform;
   height: 640px;
   width: 640px;
   border-radius: 9999px;
@@ -289,7 +290,51 @@
 }
 @utility marquee-track {
   display: flex;
+  will-change: transform;
   width: max-content;
   gap: 0.75rem;
   animation: q-marquee 34s linear infinite;
+}
+
+/* Cursor-reactive layers only run on real pointer devices. */
+@media (hover: none) {
+  .spotlight-orb {
+    display: none;
+  }
+}
+
+/* Dark-themed Mapbox markers */
+.q-map-pin {
+  display: grid;
+  place-items: center;
+  height: 28px;
+  width: 28px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border: 2px solid color-mix(in oklab, var(--background) 70%, transparent);
+  box-shadow: 0 6px 18px -6px oklch(0 0 0 / 0.6);
+  cursor: pointer;
+  will-change: transform;
+  transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.q-map-pin:hover {
+  transform: scale(1.12);
+}
+.q-map-pin-active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.mapboxgl-popup-content {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  padding: 6px 10px;
+}
+.mapboxgl-popup-tip {
+  border-top-color: var(--popover) !important;
+  border-bottom-color: var(--popover) !important;
 }

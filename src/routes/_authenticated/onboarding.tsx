@@ -9,6 +9,7 @@ import { CATEGORIES } from "@/lib/quorum/types";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
+import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -126,13 +127,9 @@ function Onboarding() {
       body: (
         <div className="space-y-4">
           <Field label="ZIP code" hint="Finds real venues near you — never shared with your group">
-            <input
-              className={inputClass}
-              inputMode="numeric"
-              maxLength={5}
+            <PlaceAutocomplete
               value={String(form["zip_code"] ?? "")}
-              onChange={(e) => set("zip_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
-              placeholder="75034"
+              onChange={(zip) => set("zip_code", zip)}
             />
           </Field>
           <Field label="Home area" hint="Only used to estimate travel time">
