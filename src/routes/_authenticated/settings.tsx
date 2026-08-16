@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 const AVATARS = ["🙂", "😎", "🦊", "🐙", "🌵", "🍄", "⚡", "🌙", "🎧", "🧃"];
+const GRAD_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 1);
 
 function SettingsPage() {
   const qc = useQueryClient();
