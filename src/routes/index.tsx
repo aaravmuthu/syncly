@@ -8,9 +8,15 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  Zap,
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
+import { MouseSpotlight } from "@/components/quorum/MouseSpotlight";
+import { MagneticButton } from "@/components/quorum/MagneticButton";
+import { TrendingPills } from "@/components/quorum/TrendingPills";
+import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
+
 
 const TITLE = `${BRAND.name} — Plans that actually work for everyone`;
 const DESCRIPTION =
@@ -32,8 +38,10 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   return (
-    <div className="paper-field min-h-dvh">
+    <div className="paper-field relative min-h-dvh">
+      <MouseSpotlight />
       <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
           <Wordmark />
           <div className="flex items-center gap-2">
@@ -62,7 +70,7 @@ function Landing() {
         </div>
       </header>
 
-      <main>
+      <main className="relative z-10">
         {/* Hero */}
         <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 sm:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
@@ -76,36 +84,52 @@ function Landing() {
               <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
                 {DESCRIPTION}
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <MagneticButton
                   to="/auth"
                   search={{ next: "/home", mode: "signup" }}
                   className="pressable active:pressable-active inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
                 >
-                  Start planning <ArrowRight className="size-4" />
-                </Link>
-                <Link
+                  <span className="inline-flex items-center gap-2">
+                    Start planning <ArrowRight className="size-4" />
+                  </span>
+                </MagneticButton>
+                <MagneticButton
                   to="/demo"
                   className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
                 >
                   Try the demo
-                </Link>
+                </MagneticButton>
                 <a
                   href="#how"
                   className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
                 >
                   See how it works
                 </a>
-
               </div>
-              <p className="mt-5 text-sm text-muted-foreground">
-                Stop planning around the loudest person.
-              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/5 px-4 py-2.5">
+                  <Zap className="size-4 text-primary" strokeWidth={1.75} />
+                  <div className="leading-tight">
+                    <p className="font-display text-lg font-semibold">&lt;2min</p>
+                    <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
+                      Setup
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Stop planning around the loudest person.
+                </p>
+              </div>
             </div>
 
             <PhoneMock />
           </div>
         </section>
+
+        <TrendingPills />
+        <WorksWithMarquee />
+
 
         {/* Problem */}
         <section className="mx-auto max-w-6xl px-5 py-16">
