@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
+import { SocialButtons } from "@/components/quorum/SocialButtons";
 
 type Mode = "signin" | "signup" | "reset";
 
@@ -41,6 +43,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [social, setSocial] = useState<"google" | "apple" | null>(null);
   const [checking, setChecking] = useState(true);
 
   const target = safeNext(next);
@@ -54,6 +57,23 @@ function AuthPage() {
       }
     });
   }, [target]);
+
+  async function signInWith(provider: "google" | "apple") {
+    setSocial(provider);
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: `${window.location.origin}/auth-callback`,
+      });
+      if (result && "error" in result && result.error) throw result.error;
+      if (result && "redirected" in result && result.redirected) return;
+      void navigate({ to: "/auth-callback" });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : `We couldn't sign you in with ${provider}. Try again.`,
+      );
+      setSocial(null);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,6 +106,9 @@ function AuthPage() {
       }
       if (target.startsWith("/.lovable/")) {
         window.location.href = target;
+      } else if (target === "/home") {
+        // Let the callback decide between onboarding and the dashboard.
+        void navigate({ to: "/auth-callback" });
       } else {
         void navigate({ to: target });
       }
@@ -128,7 +151,25 @@ function AuthPage() {
             : "Your private answers stay yours. Groups only ever see whether a plan works."}
         </p>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        {mode !== "reset" ? (
+          <>
+            <div className="mt-7">
+              <SocialButtons
+                onGoogle={() => void signInWith("google")}
+                onApple={() => void signInWith("apple")}
+                pending={social}
+                disabled={busy}
+              />
+            </div>
+            <div className="my-6 flex items-center gap-3">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">or sign in with email</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        ) : null}
+
+        <form onSubmit={submit} className={mode === "reset" ? "mt-8 space-y-4" : "space-y-4"}>
           <label className="block text-sm font-medium">
             Email
             <input

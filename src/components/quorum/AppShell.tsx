@@ -7,7 +7,8 @@ const NAV = [
   { to: "/home", label: "Home", icon: "◎" },
   { to: "/groups", label: "Groups", icon: "◍" },
   { to: "/plans", label: "Plans", icon: "◈" },
-  { to: "/settings", label: "You", icon: "◐" },
+  { to: "/activity", label: "Activity", icon: "✦" },
+  { to: "/settings", label: "Profile", icon: "◐" },
 ] as const;
 
 export function AppShell({

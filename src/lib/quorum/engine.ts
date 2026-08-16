@@ -218,7 +218,7 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
     if (minSoft < 0.45) cautions.push("One member's preferences are only partly met");
     if (option.travelMinutes > 25) cautions.push("Travel time is on the longer side for this group");
   } else {
-    cautions.push("This option does not meet every group member's requirements");
+    cautions.push("This option does not meet every member's requirements");
     if (!transport.ok) cautions.push("There aren't enough seats to get everyone there and back");
   }
 
