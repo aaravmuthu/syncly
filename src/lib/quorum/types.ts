@@ -90,6 +90,8 @@ export type ConstraintPayload = {
   earliestStart?: string | null; // "18:00"
   latestEnd?: string | null; // "22:30"
   unavailableDates?: string[];
+  /** Hour slots this member is free, e.g. ["18:00","19:00"]. Aggregated only. */
+  availability?: string[];
   requiredReturnTime?: string | null;
   parentApprovalRequired?: boolean;
   parentConditions?: string[];
