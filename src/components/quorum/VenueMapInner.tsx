@@ -9,6 +9,8 @@ export type MapVenue = {
   lon: number;
   rank?: number;
   selected?: boolean;
+  /** Chooses the pin icon: food spots vs entertainment/activity spots. */
+  kind?: "food" | "activity";
 };
 
 /** Browser-only. Rendered lazily behind <ClientOnly> — never imported by SSR. */
@@ -71,8 +73,13 @@ export default function VenueMapInner({
         if (!Number.isFinite(v.lat) || !Number.isFinite(v.lon)) return;
         const el = document.createElement("button");
         el.type = "button";
-        el.className = "q-map-pin" + (v.selected ? " q-map-pin-active" : "");
-        el.textContent = String(v.rank ?? "•");
+        el.className =
+          "q-map-pin" +
+          (v.selected ? " q-map-pin-active" : "") +
+          (v.kind === "activity" ? " q-map-pin-activity" : " q-map-pin-food");
+        el.innerHTML =
+          `<span class="q-map-pin-icon">${v.kind === "activity" ? "🎟️" : "🍽️"}</span>` +
+          `<span class="q-map-pin-rank">${v.rank ?? "•"}</span>`;
         el.setAttribute("aria-label", v.title);
         el.addEventListener("click", () => onSelect?.(v.id));
         const marker = new mapboxgl.Marker({ element: el })
