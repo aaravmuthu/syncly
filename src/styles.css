@@ -258,3 +258,41 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+@utility spotlight-orb {
+  position: absolute;
+  height: 640px;
+  width: 640px;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.55;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--primary) 26%, transparent) 0%,
+    color-mix(in oklab, var(--accent) 14%, transparent) 45%,
+    transparent 70%
+  );
+}
+
+@keyframes q-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@utility marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+}
+@utility marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 0.75rem;
+  animation: q-marquee 34s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
