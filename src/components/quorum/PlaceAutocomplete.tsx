@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { suggestPlaces } from "@/lib/quorum/location.functions";
+import { reverseZip, suggestPlaces } from "@/lib/quorum/location.functions";
 import { inputClass } from "@/components/quorum/ui";
 
 type Suggestion = { id: string; label: string; zip: string | null; lat: number; lon: number };
@@ -25,6 +25,7 @@ export function PlaceAutocomplete({
   const [items, setItems] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const search = useServerFn(suggestPlaces);
+  const toZip = useServerFn(reverseZip);
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setText(value), [value]);
@@ -85,7 +86,19 @@ export function PlaceAutocomplete({
                 onClick={() => {
                   setOpen(false);
                   setText(s.zip ?? s.label);
-                  onChange(s.zip ?? "", s);
+                  if (s.zip) {
+                    onChange(s.zip, s);
+                    return;
+                  }
+                  // Place-level result: resolve its ZIP before saving.
+                  void toZip({ data: { lat: s.lat, lon: s.lon } })
+                    .then((zip) => {
+                      if (zip) {
+                        setText(zip);
+                        onChange(zip, s);
+                      }
+                    })
+                    .catch(() => undefined);
                 }}
               >
                 <span className="font-medium">{s.label}</span>
