@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
+import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsights";
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
