@@ -39,7 +39,7 @@ function GroupPage() {
     onSuccess: (plan) => {
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["plans"] });
-      void navigate({ to: "/plans/$planId", params: { planId: plan.id } });
+      void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
     },
   });
 
