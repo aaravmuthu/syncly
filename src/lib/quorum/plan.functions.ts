@@ -74,7 +74,7 @@ export const listGroups = createServerFn({ method: "GET" })
     const groups = (memberships ?? []).map((m) => ({
       ...((m.groups ?? {}) as Record<string, unknown>),
       role: m.role,
-    })) as (Record<string, unknown> & { id: string })[];
+    })) as unknown as (Record<string, unknown> & { id: string })[];
     const ids = groups.map((g) => g.id);
     if (!ids.length) return [];
     const { data: counts } = await supabase
