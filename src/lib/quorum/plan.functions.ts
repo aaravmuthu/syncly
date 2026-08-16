@@ -72,10 +72,10 @@ export const listGroups = createServerFn({ method: "GET" })
       .select("group_id, role, groups(*)")
       .eq("profile_id", me);
     const groups = (memberships ?? []).map((m) => ({
-      ...(m.groups as Record<string, unknown>),
+      ...((m.groups ?? {}) as Record<string, unknown>),
       role: m.role,
-    }));
-    const ids = groups.map((g) => g["id"] as string);
+    })) as (Record<string, unknown> & { id: string })[];
+    const ids = groups.map((g) => g.id);
     if (!ids.length) return [];
     const { data: counts } = await supabase
       .from("group_members")
@@ -83,7 +83,7 @@ export const listGroups = createServerFn({ method: "GET" })
       .in("group_id", ids);
     return groups.map((g) => ({
       ...g,
-      member_count: (counts ?? []).filter((c) => c.group_id === g["id"]).length,
+      member_count: (counts ?? []).filter((c) => c.group_id === g.id).length,
     }));
   });
 
