@@ -188,6 +188,19 @@ export const listPlans = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/** Group-visible feed only: RLS keeps it to groups the caller belongs to. */
+export const listActivity = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("activity_events")
+      .select("id, type, message, created_at, plan_id, group_id")
+      .not("group_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(40);
+    return data ?? [];
+  });
+
 export const createPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
