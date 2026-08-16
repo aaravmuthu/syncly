@@ -209,7 +209,9 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
 
   const radiusMiles = Math.min(Math.max(q.maxRadiusMiles ?? 15, 2), 60);
   const radiusMeters = Math.round(radiusMiles * 1609.34);
-  const categories = GEOAPIFY_CATEGORIES[q.category] ?? GEOAPIFY_CATEGORIES.custom;
+  const { vibeById } = await import("./vibes");
+  const categories =
+    vibeById(q.vibe)?.categories ?? GEOAPIFY_CATEGORIES[q.category] ?? GEOAPIFY_CATEGORIES.custom;
 
   try {
     const url =
