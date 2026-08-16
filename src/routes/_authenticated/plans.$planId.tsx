@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
+import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
+import { estimateCost, formatRange } from "@/lib/quorum/cost";
 import {
   castVote,
   finalizePlan,
@@ -84,12 +86,37 @@ function PlanPage() {
   const needsMyAnswers = !myParticipant?.responded || editing;
   const votes = data.votes;
   const selected = data.plan.selected_recommendation_id;
+  const headcount = Math.max(total, 1);
+  const attendeeNames = data.participants
+    .filter((p) => p.attending !== false)
+    .map((p) => (p.profiles as { display_name?: string } | null)?.display_name ?? "Member");
+  const cars = data.transport.map((t) => ({
+    label: t.car_label,
+    driver: t.driver_label ?? "A driver",
+  }));
+  const selectedRec = data.recommendations.find((r) => r.id === selected) ?? null;
+  const backupRec =
+    data.recommendations.find((r) => r.id !== selected && r.feasible) ??
+    data.recommendations.find((r) => r.id !== selected) ??
+    null;
+  const latestApproval = data.approvals[0]?.status ?? null;
 
   return (
     <AppShell
       title={data.plan.title}
       subtitle={`${meta.emoji} ${meta.label} · ${responded} of ${total} have answered privately`}
     >
+      {selectedRec ? (
+        <FinalizedPlanHub
+          planTitle={data.plan.title}
+          windowStart={data.plan.window_start}
+          rec={selectedRec}
+          attendees={attendeeNames}
+          cars={cars}
+          approvalStatus={latestApproval}
+        />
+      ) : null}
+
       {needsMyAnswers ? (
         <ConstraintForm
           questionnaire={meta.questionnaire}
@@ -138,8 +165,12 @@ function PlanPage() {
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs ${
                   p.responded ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground"
                 }`}
+                title={p.responded ? "Completed questionnaire" : "Pending input"}
               >
                 {prof?.avatar_emoji ?? "🙂"} {prof?.display_name ?? "Member"}
+                <span className="opacity-75">
+                  · {p.responded ? (selected ? "Ready" : "Answered") : "Pending"}
+                </span>
               </span>
             );
           })}
@@ -208,6 +239,35 @@ function PlanPage() {
                   <Meter label="Fairness" value={b.fairness ?? 0} />
                 </div>
 
+                {(() => {
+                  const cost = estimateCost({
+                    costMin: r.cost_min ?? 0,
+                    costMax: r.cost_max ?? 0,
+                    travelMinutes: r.travel_minutes ?? 0,
+                    distanceMiles: b.venue?.distanceMiles ?? null,
+                    category: data.plan.category,
+                    headcount,
+                  });
+                  return (
+                    <div className="mt-4 rounded-2xl bg-secondary/60 p-3.5">
+                      <div className="flex items-baseline justify-between text-sm">
+                        <span className="font-medium">Estimated per person</span>
+                        <span className="font-semibold tabular-nums">
+                          {formatRange(cost.perPersonMin, cost.perPersonMax)}
+                        </span>
+                      </div>
+                      <ul className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                        {cost.lines.map((l) => (
+                          <li key={l.label} className="flex justify-between gap-3">
+                            <span>{l.label}</span>
+                            <span className="tabular-nums">{l.value}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
                 {(b.reasons ?? []).length ? (
                   <ul className="mt-4 space-y-1 text-sm">
                     {b.reasons.map((x) => (
@@ -248,6 +308,34 @@ function PlanPage() {
               </Card>
             );
           })}
+          {selectedRec && backupRec ? (
+            <Card className="border-dashed">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Pill tone="accent">Plan B</Pill>
+                    <span className="text-xs text-muted-foreground">
+                      {backupRec.score}% match
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-display font-semibold">{backupRec.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ready to swap in if weather, timing or a last-minute change breaks Plan A.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  loading={finalize.isPending}
+                  onClick={() =>
+                    finalize.mutate({ data: { planId, recommendationId: backupRec.id } })
+                  }
+                >
+                  Swap to backup plan
+                </Button>
+              </div>
+            </Card>
+          ) : null}
+
           <p className="px-1 text-xs text-muted-foreground">
             Scores come from everyone's private answers. Quorum never shows whose budget, curfew, or
             dietary need ruled an option out.
