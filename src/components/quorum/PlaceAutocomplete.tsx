@@ -26,6 +26,7 @@ export function PlaceAutocomplete({
   const [open, setOpen] = useState(false);
   const search = useServerFn(suggestPlaces);
   const toZip = useServerFn(reverseZip);
+  const [locating, setLocating] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setText(value), [value]);
@@ -61,6 +62,32 @@ export function PlaceAutocomplete({
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  const useMyLocation = () => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        void toZip({ data: { lat: pos.coords.latitude, lon: pos.coords.longitude } })
+          .then((zip) => {
+            if (zip) {
+              setText(zip);
+              onChange(zip, {
+                id: "current",
+                label: "Current location",
+                zip,
+                lat: pos.coords.latitude,
+                lon: pos.coords.longitude,
+              });
+            }
+          })
+          .catch(() => undefined)
+          .finally(() => setLocating(false));
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    );
+  };
+
   return (
     <div className="relative" ref={boxRef}>
       <input
@@ -76,6 +103,15 @@ export function PlaceAutocomplete({
           if (/^\d{0,5}$/.test(v.trim())) onChange(v.trim());
         }}
       />
+      <button
+        type="button"
+        onClick={useMyLocation}
+        disabled={locating}
+        className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
+      >
+        <span aria-hidden>📍</span>
+        {locating ? "Finding you…" : "Use my current location"}
+      </button>
       {open && items.length > 0 ? (
         <ul className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
           {items.map((s) => (
