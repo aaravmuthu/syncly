@@ -7,6 +7,7 @@ import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsigh
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
+import { VenueMap } from "@/components/quorum/VenueMap";
 import { estimateCost, formatRange } from "@/lib/quorum/cost";
 import {
   castVote,
