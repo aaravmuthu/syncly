@@ -88,7 +88,7 @@ export default function VenueMapInner({
       /* a bad coordinate must never take the page down */
     }
     return () => markers.forEach((mk) => mk.remove());
-  }, [venues, onSelect]);
+  }, [venues, onSelect, ready]);
 
 
   return <div ref={container} className="h-64 w-full rounded-2xl sm:h-80" />;
