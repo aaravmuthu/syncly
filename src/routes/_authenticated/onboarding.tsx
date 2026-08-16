@@ -1,0 +1,207 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
+import { Button, Card, Field, inputClass } from "@/components/quorum/ui";
+import { Wordmark } from "@/components/quorum/Wordmark";
+import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
+import { CATEGORIES } from "@/lib/quorum/types";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated/onboarding")({
+  head: () => ({
+    meta: [
+      { title: "Get set up — Quorum" },
+      { name: "description", content: "A few defaults so Quorum can pre-fill your private answers." },
+      { property: "og:title", content: "Get set up — Quorum" },
+      { property: "og:description", content: "A few defaults so planning takes seconds." },
+    ],
+  }),
+  component: Onboarding,
+});
+
+const AVATARS = ["🙂", "😎", "🦊", "🐙", "🌵", "🍄", "⚡", "🌙", "🎧", "🧃"];
+
+function Onboarding() {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe) });
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<Record<string, unknown>>({
+    avatar_emoji: "🙂",
+    preferred_categories: [] as string[],
+    parent_features_enabled: false,
+    transport_features_enabled: true,
+  });
+
+  useEffect(() => {
+    if (me.data?.display_name && me.data.display_name !== "New member") {
+      setForm((f) => ({ ...f, display_name: me.data.display_name }));
+    }
+  }, [me.data]);
+
+  const save = useMutation({
+    mutationFn: useServerFn(saveProfile),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["me"] });
+      void navigate({ to: "/home" });
+    },
+  });
+
+  const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
+  const cats = (form["preferred_categories"] as string[]) ?? [];
+
+  const steps = [
+    {
+      title: "Who are you here as?",
+      caption: "Just a name and a face for your groups.",
+      body: (
+        <div className="space-y-4">
+          <Field label="Display name">
+            <input
+              className={inputClass}
+              value={String(form["display_name"] ?? "")}
+              onChange={(e) => set("display_name", e.target.value)}
+              placeholder="Alex"
+            />
+          </Field>
+          <div>
+            <span className="text-sm font-medium">Pick an avatar</span>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {AVATARS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => set("avatar_emoji", a)}
+                  className={cn(
+                    "h-10 w-10 rounded-2xl text-lg transition",
+                    form["avatar_emoji"] === a ? "bg-primary/15 ring-1 ring-primary/40" : "bg-secondary",
+                  )}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "What do you plan most?",
+      caption: "This only decides which questionnaires appear first.",
+      body: (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {CATEGORIES.slice(0, 9).map((c) => {
+            const on = cats.includes(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() =>
+                  set("preferred_categories", on ? cats.filter((x) => x !== c.id) : [...cats, c.id])
+                }
+                className={cn(
+                  "rounded-2xl border px-3 py-2.5 text-left text-sm transition",
+                  on ? "border-primary/50 bg-primary/8" : "border-border hover:bg-secondary",
+                )}
+              >
+                <span className="mr-1.5">{c.emoji}</span>
+                <span className="font-medium">{c.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
+    {
+      title: "A couple of defaults",
+      caption: "These pre-fill your private answers. You can change them per plan.",
+      body: (
+        <div className="space-y-4">
+          <Field label="Home area" hint="Only used to estimate travel time">
+            <input
+              className={inputClass}
+              value={String(form["home_area"] ?? "")}
+              onChange={(e) => set("home_area", e.target.value)}
+              placeholder="North side"
+            />
+          </Field>
+          <Field label="Usual curfew" hint="Optional — treated as a hard limit when set">
+            <input
+              type="time"
+              className={inputClass}
+              value={String(form["curfew_time"] ?? "")}
+              onChange={(e) => set("curfew_time", e.target.value || null)}
+            />
+          </Field>
+          {[
+            { key: "parent_features_enabled", label: "I need parent approval for plans" },
+            { key: "transport_features_enabled", label: "Include me in transportation planning" },
+          ].map((t) => {
+            const on = Boolean(form[t.key]);
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => set(t.key, !on)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
+                  on ? "border-primary/50 bg-primary/8" : "border-border",
+                )}
+              >
+                {t.label}
+                <span className={cn("h-6 w-10 rounded-full p-0.5", on ? "bg-primary" : "bg-secondary-foreground/20")}>
+                  <span
+                    className={cn(
+                      "block h-5 w-5 rounded-full bg-background transition",
+                      on ? "translate-x-4" : "translate-x-0",
+                    )}
+                  />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ),
+    },
+  ];
+
+  const current = steps[step]!;
+  const last = step === steps.length - 1;
+
+  return (
+    <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-4 py-10">
+      <Wordmark className="mx-auto mb-8 h-7" />
+      <Card>
+        <div className="flex gap-1.5">
+          {steps.map((s, i) => (
+            <span
+              key={s.title}
+              className={cn("h-1 flex-1 rounded-full", i <= step ? "bg-primary" : "bg-secondary")}
+            />
+          ))}
+        </div>
+        <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight">{current.title}</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">{current.caption}</p>
+        <div className="mt-6">{current.body}</div>
+        <div className="mt-8 flex items-center justify-between">
+          <button
+            type="button"
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+            onClick={() =>
+              step === 0 ? save.mutate({ data: { ...form, onboarded: true } }) : setStep(step - 1)
+            }
+          >
+            {step === 0 ? "Skip" : "Back"}
+          </button>
+          <Button
+            disabled={save.isPending}
+            onClick={() => (last ? save.mutate({ data: { ...form, onboarded: true } }) : setStep(step + 1))}
+          >
+            {save.isPending ? "Saving…" : last ? "Start planning" : "Continue"}
+          </Button>
+        </div>
+      </Card>
+    </main>
+  );
+}
