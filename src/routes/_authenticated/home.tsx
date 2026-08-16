@@ -1,9 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Card, Button, Pill, Empty, Skeleton } from "@/components/quorum/ui";
+import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
+import { takePendingInvite } from "@/lib/quorum/invite";
 import { getMe, listGroups, listPlans } from "@/lib/quorum/plan.functions";
 import { categoryMeta } from "@/lib/quorum/types";
 
@@ -32,12 +34,20 @@ const STATUS_TONE: Record<string, "neutral" | "good" | "warn" | "accent"> = {
 
 function HomePage() {
   const navigate = useNavigate();
+  const [joinOpen, setJoinOpen] = useState(false);
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe) });
   const groups = useQuery({ queryKey: ["groups"], queryFn: useServerFn(listGroups) });
   const plans = useQuery({ queryKey: ["plans"], queryFn: useServerFn(listPlans) });
 
   useEffect(() => {
     if (me.data && !me.data.onboarded) void navigate({ to: "/onboarding" });
+  }, [me.data, navigate]);
+
+  // Picks up an invite code saved before sign-in and joins that group.
+  useEffect(() => {
+    if (!me.data?.onboarded) return;
+    const code = takePendingInvite();
+    if (code) void navigate({ to: "/join/$code", params: { code }, replace: true });
   }, [me.data, navigate]);
 
   const active = (plans.data ?? []).filter(
@@ -50,11 +60,18 @@ function HomePage() {
       title={me.data ? `Hey, ${me.data.display_name.split(" ")[0]}` : "Home"}
       subtitle="Everyone answers privately. Quorum only shows what works for the whole group."
       action={
-        <Link to="/groups">
-          <Button>New plan</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setJoinOpen(true)}>
+            Join
+          </Button>
+          <Link to="/groups">
+            <Button>New plan</Button>
+          </Link>
+        </div>
       }
     >
+      <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
+
       {plans.isLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-28 rounded-3xl" />
