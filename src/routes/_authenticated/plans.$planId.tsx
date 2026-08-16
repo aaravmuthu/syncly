@@ -24,6 +24,7 @@ import {
   submitConstraints,
 } from "@/lib/quorum/plan.functions";
 import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
+import { directionsUrl } from "@/lib/quorum/vibes";
 
 export const Route = createFileRoute("/_authenticated/plans/$planId")({
   head: () => ({
@@ -225,6 +226,9 @@ function PlanPage() {
                 lon: r.lon,
                 rank: r.rank,
                 selected: selected === r.id,
+                kind:
+                  ((r.breakdown ?? {}) as unknown as ScoreBreakdown).venue?.kind ??
+                  (data.plan.category === "dinner" ? "food" : "activity"),
               }))}
           />
           {data.recommendations.map((r) => {
@@ -250,18 +254,46 @@ function PlanPage() {
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{r.subtitle}</p>
                     <CompromiseNote text={summaries.data?.[r.id]} />
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {b.venue?.cuisine ? (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium">
+                          {b.venue.kind === "activity" ? "🎳" : "🍽️"} {b.venue.cuisine}
+                        </span>
+                      ) : null}
+                      {b.venue?.priceLevel ? (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold tabular-nums">
+                          {b.venue.priceLevel}
+                        </span>
+                      ) : null}
+                      {b.venue?.rating != null ? (
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] tabular-nums">
+                          ★ {b.venue.rating}
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      {b.venue?.priceLevel ? `${b.venue.priceLevel} · ` : ""}${r.cost_min}–${r.cost_max}
-                      {b.venue?.distanceMiles != null
-                        ? ` · ${b.venue.distanceMiles} miles away`
-                        : ` · ${r.travel_minutes} min away`}{" "}
-                      · {r.suggested_start}–{r.suggested_end}
-                      {b.venue?.rating != null ? ` · ★ ${b.venue.rating}` : ""}
+                      ${r.cost_min}–${r.cost_max} · {r.suggested_start}–{r.suggested_end} ·{" "}
+                      {r.travel_minutes} min drive
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {b.venue?.address ?? r.location_name}
-                      {b.venue?.distanceMiles != null ? ` · ${r.travel_minutes} min drive` : ""}
+                      {b.venue?.distanceMiles != null
+                        ? ` · ${b.venue.distanceMiles} miles away`
+                        : ""}
                     </p>
+                    <a
+                      href={directionsUrl({
+                        lat: r.lat ?? b.venue?.lat ?? null,
+                        lon: r.lon ?? b.venue?.lon ?? null,
+                        address: b.venue?.address ?? r.location_name,
+                        title: r.title,
+                      })}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      <span aria-hidden>🧭</span> Directions in Maps
+                    </a>
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="font-display text-2xl font-semibold tabular-nums">{r.score}%</div>
