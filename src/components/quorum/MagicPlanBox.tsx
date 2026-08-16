@@ -29,7 +29,7 @@ export function MagicPlanBox({
   const [result, setResult] = useState<MagicPlanResult | null>(null);
   const run = useMutation({
     mutationFn: useServerFn(magicPlanDraft),
-    onSuccess: (draft) => {
+    onSuccess: (draft: MagicPlanResult) => {
       setResult(draft);
       onApply({
         title: draft.title,
