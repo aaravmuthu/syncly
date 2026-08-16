@@ -136,13 +136,9 @@ function SettingsPage() {
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="ZIP code" hint="Finds real venues nearby — never shared with your group">
-            <input
-              className={inputClass}
-              inputMode="numeric"
-              maxLength={5}
+            <PlaceAutocomplete
               value={String(form["zip_code"] ?? "")}
-              onChange={(e) => set("zip_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
-              placeholder="75034"
+              onChange={(zip) => set("zip_code", zip)}
             />
           </Field>
           <Field label="Home area" hint="Used only to estimate travel time">

@@ -145,14 +145,7 @@ function GroupPage() {
               </div>
             </div>
             <Field label="ZIP code" hint="Used to find real venues nearby and estimate travel">
-              <input
-                className={inputClass}
-                inputMode="numeric"
-                maxLength={5}
-                value={zip}
-                onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
-                placeholder="75034"
-              />
+              <PlaceAutocomplete value={zip} onChange={(z) => setZip(z)} />
             </Field>
             <Field label="Target date" hint="Optional — helps narrow options">
               <input
