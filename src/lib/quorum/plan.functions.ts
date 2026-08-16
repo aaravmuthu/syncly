@@ -142,6 +142,12 @@ export const joinGroup = createServerFn({ method: "POST" })
       type: "member_joined",
       message: "A new member joined the group",
     });
+    const { notifyGroupMembers } = await import("./notify.server");
+    await notifyGroupMembers(group.id, {
+      type: "member_joined",
+      title: `Someone joined ${group.name}`,
+      exclude: me as string,
+    });
     return group;
   });
 
