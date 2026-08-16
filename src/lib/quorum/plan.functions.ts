@@ -247,7 +247,7 @@ export const getGroup = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const { data: members } = await supabase
       .from("group_members")
-      .select("role, profile_id, profiles(id, display_name, avatar_emoji)")
+      .select("role, profile_id, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)")
       .eq("group_id", data.groupId);
     const { data: plans } = await supabase
       .from("plans")
@@ -362,7 +362,7 @@ export const getPlan = createServerFn({ method: "GET" })
 
     const { data: participants } = await supabase
       .from("plan_participants")
-      .select("*, profiles(id, display_name, avatar_emoji)")
+      .select("*, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)")
       .eq("plan_id", data.planId);
     const { data: recommendations } = await supabase
       .from("recommendations")
