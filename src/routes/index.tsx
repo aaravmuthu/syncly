@@ -8,9 +8,15 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  Zap,
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
+import { MouseSpotlight } from "@/components/quorum/MouseSpotlight";
+import { MagneticButton } from "@/components/quorum/MagneticButton";
+import { TrendingPills } from "@/components/quorum/TrendingPills";
+import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
+
 
 const TITLE = `${BRAND.name} — Plans that actually work for everyone`;
 const DESCRIPTION =
@@ -32,8 +38,10 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   return (
-    <div className="paper-field min-h-dvh">
+    <div className="paper-field relative min-h-dvh">
+      <MouseSpotlight />
       <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
           <Wordmark />
           <div className="flex items-center gap-2">
