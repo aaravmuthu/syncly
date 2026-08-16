@@ -63,6 +63,15 @@ export function AppShell({
             ))}
           </nav>
           <ThemeToggle />
+          <Link to="/settings" aria-label="Your profile" className="pressable active:pressable-active">
+            <Avatar
+              url={me.data?.avatar_url}
+              emoji={me.data?.avatar_emoji}
+              name={me.data?.display_name}
+              size={32}
+              className="ring-1 ring-border"
+            />
+          </Link>
           </div>
         </div>
       </header>
