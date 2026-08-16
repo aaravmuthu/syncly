@@ -13,6 +13,7 @@ import { getGroupMemory } from "@/lib/quorum/insight.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { MagicPlanBox, type MagicApply } from "@/components/quorum/MagicPlanBox";
+import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
@@ -41,6 +42,8 @@ function GroupPage() {
   const [category, setCategory] = useState<PlanCategory>("dinner");
   const [windowStart, setWindowStart] = useState("");
   const [zip, setZip] = useState("");
+  const [vibe, setVibe] = useState<string | null>(null);
+  const [radius, setRadius] = useState<number>(10);
 
   // Group memory: aggregate patterns from past plans, used only to pre-fill.
   const fetchMemory = useServerFn(getGroupMemory);
@@ -156,9 +159,51 @@ function GroupPage() {
                 ))}
               </div>
             </div>
+            <div>
+              <span className="text-sm font-medium">Food & activity vibe</span>
+              <p className="text-xs text-muted-foreground">
+                Optional — narrows the real nearby spots we pull in
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {VIBES.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setVibe((cur) => (cur === v.id ? null : v.id))}
+                    className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                      vibe === v.id
+                        ? "border-primary/50 bg-primary/10 text-foreground"
+                        : "border-border text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <span className="mr-1">{v.emoji}</span>
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Field label="ZIP code" hint="Used to find real venues nearby and estimate travel">
               <PlaceAutocomplete value={zip} onChange={(z) => setZip(z)} />
             </Field>
+            <div>
+              <span className="text-sm font-medium">Search radius</span>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {RADIUS_OPTIONS.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRadius(r)}
+                    className={`rounded-full border px-3 py-1.5 text-sm tabular-nums transition ${
+                      radius === r
+                        ? "border-primary/50 bg-primary/10 text-foreground"
+                        : "border-border text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    {r} mi
+                  </button>
+                ))}
+              </div>
+            </div>
             <Field label="Target date" hint="Optional — helps narrow options">
               <input
                 type="date"
@@ -181,6 +226,8 @@ function GroupPage() {
                     category,
                     windowStart: windowStart || null,
                     zipCode: zip || null,
+                    foodVibe: vibe,
+                    radiusMiles: radius,
                     participantIds: memberIds,
                   },
                 });
