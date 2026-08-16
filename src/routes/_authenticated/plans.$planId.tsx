@@ -59,7 +59,8 @@ function PlanPage() {
   });
   const askParent = useMutation({
     mutationFn: useServerFn(requestParentApproval),
-    onSuccess: (row) => setApprovalLink(`${window.location.origin}/approve/${row.token}`),
+    onSuccess: (row) =>
+      setApprovalLink(`${window.location.origin}/approve/${(row as { token: string }).token}`),
   });
 
   const data = q.data;
