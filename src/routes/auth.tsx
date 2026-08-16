@@ -43,6 +43,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [social, setSocial] = useState<"google" | "apple" | null>(null);
   const [checking, setChecking] = useState(true);
 
   const target = safeNext(next);
@@ -56,6 +57,23 @@ function AuthPage() {
       }
     });
   }, [target]);
+
+  async function signInWith(provider: "google" | "apple") {
+    setSocial(provider);
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: `${window.location.origin}/auth-callback`,
+      });
+      if (result && "error" in result && result.error) throw result.error;
+      if (result && "redirected" in result && result.redirected) return;
+      void navigate({ to: "/auth-callback" });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : `We couldn't sign you in with ${provider}. Try again.`,
+      );
+      setSocial(null);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
