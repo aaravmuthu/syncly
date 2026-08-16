@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMapToken } from "@/lib/quorum/location.functions";
 import { Card, Skeleton } from "@/components/quorum/ui";
+import { ErrorBoundary } from "@/components/quorum/ErrorBoundary";
+
 import type { MapVenue } from "./VenueMapInner";
 
 const Inner = lazy(() => import("./VenueMapInner"));
@@ -25,15 +27,20 @@ export function VenueMap({ venues, onSelect }: { venues: MapVenue[]; onSelect?: 
 
   if (venues.length === 0) return null;
   if (token.isLoading) return <Skeleton className="h-64 rounded-3xl" />;
-  if (!token.data) return null;
+  // Missing token, disabled maps, or a failed lookup: render nothing rather
+  // than a broken map surface. The venue list above stays fully usable.
+  if (token.isError || !token.data) return null;
 
   return (
     <Card className="overflow-hidden p-0">
-      <ClientOnly fallback={<Skeleton className="h-64 rounded-2xl" />}>
-        <Suspense fallback={<Skeleton className="h-64 rounded-2xl" />}>
-          <Inner token={token.data} venues={venues} onSelect={onSelect} />
-        </Suspense>
-      </ClientOnly>
+      <ErrorBoundary label="venue-map" fallback={null}>
+        <ClientOnly fallback={<Skeleton className="h-64 rounded-2xl" />}>
+          <Suspense fallback={<Skeleton className="h-64 rounded-2xl" />}>
+            <Inner token={token.data} venues={venues} onSelect={onSelect} />
+          </Suspense>
+        </ClientOnly>
+      </ErrorBoundary>
     </Card>
   );
 }
+

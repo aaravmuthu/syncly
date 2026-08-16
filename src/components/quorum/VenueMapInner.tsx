@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -23,56 +23,73 @@ export default function VenueMapInner({
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [ready, setReady] = useState(false);
+  // Only the first venue seeds the initial centre; keeping it out of the deps
+  // stops the map from being torn down on every re-render.
+  const seed = venues[0];
 
   useEffect(() => {
-    if (!container.current || map.current || !token || venues.length === 0) return;
+    if (!container.current || !token || !seed) return;
+    container.current.innerHTML = "";
+    let alive = true;
     try {
       mapboxgl.accessToken = token;
       const m = new mapboxgl.Map({
         container: container.current,
         style: "mapbox://styles/mapbox/dark-v11",
-        center: [venues[0]!.lon, venues[0]!.lat],
+        center: [seed.lon, seed.lat],
         zoom: 11,
         attributionControl: false,
         cooperativeGestures: true,
       });
       m.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       map.current = m;
+      m.on("load", () => {
+        if (alive) setReady(true);
+      });
     } catch {
       map.current = null;
     }
     return () => {
+      alive = false;
+      setReady(false);
       map.current?.remove();
       map.current = null;
     };
-  }, [token, venues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     const m = map.current;
-    if (!m || venues.length === 0) return;
+    if (!m || !ready || venues.length === 0) return;
+
     const markers: mapboxgl.Marker[] = [];
-    const bounds = new mapboxgl.LngLatBounds();
+    try {
+      const bounds = new mapboxgl.LngLatBounds();
 
-    venues.forEach((v) => {
-      const el = document.createElement("button");
-      el.type = "button";
-      el.className = "q-map-pin" + (v.selected ? " q-map-pin-active" : "");
-      el.textContent = String(v.rank ?? "•");
-      el.setAttribute("aria-label", v.title);
-      el.addEventListener("click", () => onSelect?.(v.id));
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([v.lon, v.lat])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(v.title),
-        )
-        .addTo(m);
-      markers.push(marker);
-      bounds.extend([v.lon, v.lat]);
-    });
+      venues.forEach((v) => {
+        if (!Number.isFinite(v.lat) || !Number.isFinite(v.lon)) return;
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "q-map-pin" + (v.selected ? " q-map-pin-active" : "");
+        el.textContent = String(v.rank ?? "•");
+        el.setAttribute("aria-label", v.title);
+        el.addEventListener("click", () => onSelect?.(v.id));
+        const marker = new mapboxgl.Marker({ element: el })
+          .setLngLat([v.lon, v.lat])
+          .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(v.title))
+          .addTo(m);
+        markers.push(marker);
+        bounds.extend([v.lon, v.lat]);
+      });
 
-    if (!bounds.isEmpty()) m.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 400 });
+      if (!bounds.isEmpty()) m.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 400 });
+    } catch {
+      /* a bad coordinate must never take the page down */
+    }
     return () => markers.forEach((mk) => mk.remove());
-  }, [venues, onSelect]);
+  }, [venues, onSelect, ready]);
+
 
   return <div ref={container} className="h-64 w-full rounded-2xl sm:h-80" />;
 }

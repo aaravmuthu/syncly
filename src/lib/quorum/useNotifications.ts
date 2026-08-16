@@ -27,9 +27,12 @@ export function useNotifications() {
   });
 
   useEffect(() => {
+    // Unique per subscriber: reusing one channel name across mounted
+    // components makes supabase-js throw once the channel is subscribed.
     const channel = supabase
-      .channel("quorum-notifications")
+      .channel(`quorum-notifications-${Math.random().toString(36).slice(2)}`)
       .on(
+
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
         (payload) => {

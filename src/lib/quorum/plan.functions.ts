@@ -47,8 +47,23 @@ export const saveProfile = createServerFn({ method: "POST" })
       "zip_code",
       "theme_preference",
     ] as const;
+    const nullable = new Set(["curfew_time", "zip_code", "home_area", "budget_preference", "age"]);
     const patch: Record<string, unknown> = {};
-    for (const k of allowed) if (k in data) patch[k] = data[k];
+    for (const k of allowed) {
+      if (!(k in data)) continue;
+      let v = data[k];
+      // Empty inputs must clear the column, not fail the write with "".
+      if (typeof v === "string" && v.trim() === "" && nullable.has(k)) v = null;
+      if (k === "age" && v != null && v !== "") {
+        const n = Number(v);
+        v = Number.isFinite(n) ? Math.trunc(n) : null;
+      }
+      patch[k] = v;
+    }
+    if (Object.keys(patch).length === 0) {
+      const { data: current } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+      return current;
+    }
     const { data: row, error } = await supabase
       .from("profiles")
       .update(patch as never)
@@ -57,6 +72,7 @@ export const saveProfile = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
     return row;
+
   });
 
 /* ------------------------------------------------------------------ */
