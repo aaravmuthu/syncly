@@ -15,7 +15,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     if (!data.session) {
       throw redirect({
         to: "/auth",
-        search: { next: location.pathname + location.searchStr },
+        search: { next: location.pathname + location.searchStr, mode: "signin" as const },
       });
     }
   },

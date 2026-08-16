@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
 
+type Mode = "signin" | "signup" | "reset";
+
 function safeNext(next: string | undefined) {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return "/home";
   return next;
@@ -27,12 +29,10 @@ export const Route = createFileRoute("/auth")({
   }),
   validateSearch: (s: Record<string, unknown>) => ({
     next: typeof s.next === "string" ? s.next : undefined,
-    mode: s.mode === "signup" || s.mode === "reset" ? (s.mode as "signup" | "reset") : "signin",
+    mode: (s.mode === "signup" || s.mode === "reset" ? s.mode : "signin") as Mode,
   }),
   component: AuthPage,
 });
-
-type Mode = "signin" | "signup" | "reset";
 
 function AuthPage() {
   const { next, mode: initialMode } = Route.useSearch();
