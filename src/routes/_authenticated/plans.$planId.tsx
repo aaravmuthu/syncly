@@ -4,6 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsights";
+import {
+  CompromiseNote,
+  PlanBGuardian,
+  useCompromiseSummaries,
+} from "@/components/quorum/PlanAiInsights";
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
@@ -181,6 +186,7 @@ function PlanPage() {
 
       <div className="mt-4 space-y-3">
         <WeatherCard planId={planId} />
+        {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
         <AvailabilityHeatmap planId={planId} />
       </div>
 
