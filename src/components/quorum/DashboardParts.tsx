@@ -331,7 +331,7 @@ export function WeatherChip({ planId }: { planId: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-foreground/6 px-2 py-1 text-[11px] font-medium text-muted-foreground">
       <span aria-hidden>{w.emoji}</span>
-      {Math.round(q.data.tempMaxC * 1.8 + 32)}°F · {w.label}
+      {Math.round(q.data.tempMaxF)}°F · {w.label}
     </span>
   );
 }
