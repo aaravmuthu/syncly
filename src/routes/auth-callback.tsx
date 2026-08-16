@@ -45,7 +45,12 @@ function AuthCallback() {
     void go();
     const { data: sub } = supabase.auth.onAuthStateChange(() => void go());
     const timer = window.setTimeout(() => {
-      if (!done) void navigate({ to: "/auth", search: { mode: "signin" as const }, replace: true });
+      if (!done)
+        void navigate({
+          to: "/auth",
+          search: { next: undefined, mode: "signin" as const },
+          replace: true,
+        });
     }, 6000);
 
     return () => {
