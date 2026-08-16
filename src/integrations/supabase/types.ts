@@ -474,9 +474,11 @@ export type Database = {
           parent_features_enabled: boolean
           personalization_enabled: boolean
           preferred_categories: string[]
+          theme_preference: string
           transport_features_enabled: boolean
           updated_at: string
           user_id: string | null
+          zip_code: string | null
         }
         Insert: {
           age?: number | null
@@ -496,9 +498,11 @@ export type Database = {
           parent_features_enabled?: boolean
           personalization_enabled?: boolean
           preferred_categories?: string[]
+          theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
           user_id?: string | null
+          zip_code?: string | null
         }
         Update: {
           age?: number | null
@@ -518,9 +522,11 @@ export type Database = {
           parent_features_enabled?: boolean
           personalization_enabled?: boolean
           preferred_categories?: string[]
+          theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
           user_id?: string | null
+          zip_code?: string | null
         }
         Relationships: []
       }
