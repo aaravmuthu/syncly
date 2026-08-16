@@ -177,6 +177,11 @@ function PlanPage() {
         </div>
       </Card>
 
+      <div className="mt-4 space-y-3">
+        <WeatherCard planId={planId} />
+        <AvailabilityHeatmap planId={planId} />
+      </div>
+
       {data.recommendations.length > 0 ? (
         <section className="mt-8 space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
