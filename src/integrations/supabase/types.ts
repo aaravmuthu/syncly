@@ -459,10 +459,13 @@ export type Database = {
         Row: {
           age: number | null
           avatar_emoji: string
+          avatar_url: string | null
+          bio: string | null
           budget_preference: string | null
           created_at: string
           curfew_time: string | null
           display_name: string
+          grad_year: number | null
           home_area: string | null
           id: string
           independence_level: string | null
@@ -474,6 +477,7 @@ export type Database = {
           parent_features_enabled: boolean
           personalization_enabled: boolean
           preferred_categories: string[]
+          school: string | null
           theme_preference: string
           transport_features_enabled: boolean
           updated_at: string
@@ -483,10 +487,13 @@ export type Database = {
         Insert: {
           age?: number | null
           avatar_emoji?: string
+          avatar_url?: string | null
+          bio?: string | null
           budget_preference?: string | null
           created_at?: string
           curfew_time?: string | null
           display_name?: string
+          grad_year?: number | null
           home_area?: string | null
           id?: string
           independence_level?: string | null
@@ -498,6 +505,7 @@ export type Database = {
           parent_features_enabled?: boolean
           personalization_enabled?: boolean
           preferred_categories?: string[]
+          school?: string | null
           theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
@@ -507,10 +515,13 @@ export type Database = {
         Update: {
           age?: number | null
           avatar_emoji?: string
+          avatar_url?: string | null
+          bio?: string | null
           budget_preference?: string | null
           created_at?: string
           curfew_time?: string | null
           display_name?: string
+          grad_year?: number | null
           home_area?: string | null
           id?: string
           independence_level?: string | null
@@ -522,6 +533,7 @@ export type Database = {
           parent_features_enabled?: boolean
           personalization_enabled?: boolean
           preferred_categories?: string[]
+          school?: string | null
           theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
