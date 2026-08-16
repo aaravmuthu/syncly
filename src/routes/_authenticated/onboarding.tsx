@@ -9,6 +9,7 @@ import { CATEGORIES } from "@/lib/quorum/types";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
+import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({

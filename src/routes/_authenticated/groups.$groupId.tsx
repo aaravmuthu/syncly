@@ -10,6 +10,7 @@ import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/qu
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { getGroupMemory } from "@/lib/quorum/insight.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
+import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
