@@ -18,9 +18,9 @@ import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 
 
-const TITLE = `${BRAND.name} — Plans that actually work for everyone`;
+const TITLE = "Quorum — Plans that actually work for everyone";
 const DESCRIPTION =
-  "Everyone has different budgets, schedules, rides, preferences, and rules. Quorum privately accounts for all of them so your group can make plans without anyone having to explain themselves.";
+  "Private, smart group planning with privacy protection, keyless location discovery, and voting.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,8 +29,11 @@ export const Route = createFileRoute("/")({
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
+      { property: "og:image", content: "https://quorumapp.lovable.app/og-image.png" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: TITLE },
       { name: "twitter:description", content: DESCRIPTION },
+      { name: "twitter:image", content: "https://quorumapp.lovable.app/og-image.png" },
     ],
   }),
   component: Landing,
