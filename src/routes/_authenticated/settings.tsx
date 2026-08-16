@@ -36,10 +36,16 @@ function SettingsPage() {
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe) });
   const [form, setForm] = useState<Record<string, unknown>>({});
   const { theme, setTheme } = useTheme();
+  const [pushState, setPushState] = useState<string>("unsupported");
+
+  useEffect(() => {
+    setPushState(pushPermission());
+  }, []);
 
   useEffect(() => {
     if (me.data) setForm(me.data as unknown as Record<string, unknown>);
   }, [me.data]);
+
 
   const save = useMutation({
     mutationFn: useServerFn(saveProfile),
@@ -102,10 +108,7 @@ function SettingsPage() {
     { key: "notifications_enabled", label: "Notify me", hint: "When a plan needs my answers or vote" },
   ];
 
-  const [pushState, setPushState] = useState<string>("unsupported");
-  useEffect(() => {
-    setPushState(pushPermission());
-  }, []);
+
 
   return (
     <AppShell title="You" subtitle="Your defaults travel with you into every questionnaire.">

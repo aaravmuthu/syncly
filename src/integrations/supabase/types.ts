@@ -754,6 +754,7 @@ export type Database = {
       gen_invite_code: { Args: never; Returns: string }
       is_group_member: { Args: { _group_id: string }; Returns: boolean }
       my_profile_id: { Args: never; Returns: string }
+      shares_group_with_me: { Args: { _profile_id: string }; Returns: boolean }
     }
     Enums: {
       approval_status:

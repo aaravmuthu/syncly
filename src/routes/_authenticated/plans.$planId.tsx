@@ -81,6 +81,9 @@ function PlanPage() {
   );
   const responded = data?.participants.filter((p) => p.responded).length ?? 0;
   const total = data?.participants.length ?? 0;
+  // Must stay above the loading guard — hooks cannot run conditionally.
+  const summaries = useCompromiseSummaries(planId, (data?.recommendations.length ?? 0) > 0);
+
 
   if (q.isLoading || !data || !meta) {
     return (
@@ -102,7 +105,7 @@ function PlanPage() {
     driver: t.driver_label ?? "A driver",
   }));
   const selectedRec = data.recommendations.find((r) => r.id === selected) ?? null;
-  const summaries = useCompromiseSummaries(planId, data.recommendations.length > 0);
+  
   const backupRec =
     data.recommendations.find((r) => r.id !== selected && r.feasible) ??
     data.recommendations.find((r) => r.id !== selected) ??

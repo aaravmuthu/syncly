@@ -51,28 +51,32 @@ export default function VenueMapInner({
     const m = map.current;
     if (!m || venues.length === 0) return;
     const markers: mapboxgl.Marker[] = [];
-    const bounds = new mapboxgl.LngLatBounds();
+    try {
+      const bounds = new mapboxgl.LngLatBounds();
 
-    venues.forEach((v) => {
-      const el = document.createElement("button");
-      el.type = "button";
-      el.className = "q-map-pin" + (v.selected ? " q-map-pin-active" : "");
-      el.textContent = String(v.rank ?? "•");
-      el.setAttribute("aria-label", v.title);
-      el.addEventListener("click", () => onSelect?.(v.id));
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([v.lon, v.lat])
-        .setPopup(
-          new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(v.title),
-        )
-        .addTo(m);
-      markers.push(marker);
-      bounds.extend([v.lon, v.lat]);
-    });
+      venues.forEach((v) => {
+        if (!Number.isFinite(v.lat) || !Number.isFinite(v.lon)) return;
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "q-map-pin" + (v.selected ? " q-map-pin-active" : "");
+        el.textContent = String(v.rank ?? "•");
+        el.setAttribute("aria-label", v.title);
+        el.addEventListener("click", () => onSelect?.(v.id));
+        const marker = new mapboxgl.Marker({ element: el })
+          .setLngLat([v.lon, v.lat])
+          .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(v.title))
+          .addTo(m);
+        markers.push(marker);
+        bounds.extend([v.lon, v.lat]);
+      });
 
-    if (!bounds.isEmpty()) m.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 400 });
+      if (!bounds.isEmpty()) m.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 400 });
+    } catch {
+      /* a bad coordinate must never take the page down */
+    }
     return () => markers.forEach((mk) => mk.remove());
   }, [venues, onSelect]);
+
 
   return <div ref={container} className="h-64 w-full rounded-2xl sm:h-80" />;
 }
