@@ -89,6 +89,19 @@ export const respondToApproval = createServerFn({ method: "POST" })
 
     // A condition becomes a private constraint for that member, then the whole
     // group's options are recalculated against it.
+    const { notifyProfiles } = await import("./notify.server");
+    await notifyProfiles([row.profile_id], {
+      type: "parent_response",
+      title:
+        data.decision === "declined"
+          ? "A parent did not approve this plan"
+          : data.decision === "approved_with_condition"
+            ? "A parent approved with a condition"
+            : "A parent approved this plan",
+      ...(condition ? { body: condition } : {}),
+      planId: row.plan_id,
+    });
+
     if (condition) {
       const { applyParentCondition, regenerateRecommendations } = await import("./recommend.server");
       await applyParentCondition(row.plan_id, row.profile_id, condition);

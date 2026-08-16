@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
+import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,6 +100,11 @@ function SettingsPage() {
     },
     { key: "notifications_enabled", label: "Notify me", hint: "When a plan needs my answers or vote" },
   ];
+
+  const [pushState, setPushState] = useState<string>("unsupported");
+  useEffect(() => {
+    setPushState(pushPermission());
+  }, []);
 
   return (
     <AppShell title="You" subtitle="Your defaults travel with you into every questionnaire.">
@@ -214,7 +220,33 @@ function SettingsPage() {
             </button>
           );
         })}
+
+        <div className="flex items-center justify-between gap-4 py-3.5">
+          <span>
+            <span className="block text-sm font-medium">Browser notifications</span>
+            <span className="block text-xs text-muted-foreground">
+              {pushState === "granted"
+                ? "Enabled on this device"
+                : pushState === "denied"
+                  ? "Blocked in your browser settings"
+                  : pushState === "unsupported"
+                    ? "Not supported on this browser"
+                    : "Get pinged when a plan needs you"}
+            </span>
+          </span>
+          {pushState === "default" ? (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setPushState(await requestPush());
+              }}
+            >
+              Enable
+            </Button>
+          ) : null}
+        </div>
       </Card>
+
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Button

@@ -4,7 +4,9 @@ import { optionsForCategory } from "./catalog";
 import { normalizeZip, queryVenuesNear } from "./location";
 import { geocodeZipServer } from "./location.server";
 import { buildTransportPlan, rankOptions, type MemberInput } from "./engine";
-import type { ConstraintPayload, PlanCategory } from "./types";
+import { isOutdoorOption, weatherPenalty, type Forecast } from "./weather";
+import { notifyPlanParticipants } from "./notify.server";
+import type { ConstraintPayload, PlanCategory, ScoreBreakdown } from "./types";
 
 export async function regenerateRecommendations(planId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -55,7 +57,35 @@ export async function regenerateRecommendations(planId: string) {
       })
     : optionsForCategory(plan.category as PlanCategory);
 
-  const ranked = rankOptions(options, members).slice(0, 6);
+  // ---- Live weather (keyless, Open-Meteo) ---------------------------------
+  let forecast: Forecast | null = null;
+  if (origin) {
+    const { fetchForecast } = await import("./weather.server");
+    forecast = await fetchForecast(origin.lat, origin.lon, plan.window_start);
+  }
+
+  const scored = rankOptions(options, members).map((r) => {
+    const outdoor = isOutdoorOption({
+      style: r.option.style,
+      tags: r.option.tags,
+      title: r.option.title,
+    });
+    const { multiplier, caution } = weatherPenalty(forecast, outdoor);
+    if (multiplier === 1 && !caution) return r;
+    const breakdown: ScoreBreakdown = {
+      ...r.breakdown,
+      cautions: caution ? [...r.breakdown.cautions, caution] : r.breakdown.cautions,
+    };
+    return { ...r, score: Math.round(r.score * multiplier), breakdown };
+  });
+
+  const ranked = scored
+    .sort((a, b) => {
+      if (a.feasible !== b.feasible) return a.feasible ? -1 : 1;
+      if (b.score !== a.score) return b.score - a.score;
+      return b.breakdown.fairness - a.breakdown.fairness;
+    })
+    .slice(0, 6);
 
   await supabaseAdmin.from("recommendations").delete().eq("plan_id", planId);
   const { data: inserted, error } = await supabaseAdmin
@@ -123,7 +153,19 @@ export async function regenerateRecommendations(planId: string) {
     message: "Compatible options are ready to review",
   });
 
-  return { count: inserted?.length ?? 0, feasible: ranked.filter((r) => r.feasible).length };
+  await notifyPlanParticipants(planId, {
+    type: "recommendations_ready",
+    title: `Options are ready for ${plan.title}`,
+    body: forecast?.alert
+      ? `${forecast.alertText} — indoor picks rank higher.`
+      : "Vote on the options that work for everyone.",
+  });
+
+  return {
+    count: inserted?.length ?? 0,
+    feasible: ranked.filter((r) => r.feasible).length,
+    weatherAlert: forecast?.alertText ?? null,
+  };
 }
 
 /**

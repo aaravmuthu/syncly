@@ -13,7 +13,8 @@ export type Field =
       options: string[];
       hard?: boolean;
     }
-  | { kind: "text"; key: keyof ConstraintPayload; label: string; hint?: string };
+  | { kind: "text"; key: keyof ConstraintPayload; label: string; hint?: string }
+  | { kind: "availability"; key: keyof ConstraintPayload; label: string; hint?: string };
 
 export type Step = { id: string; title: string; caption: string; fields: Field[] };
 
@@ -73,6 +74,12 @@ const dinner: Step[] = [
     title: "When you're actually free",
     caption: "Curfews and return times are hard limits.",
     fields: [
+      {
+        kind: "availability",
+        key: "availability",
+        label: "Tap the hours you're free",
+        hint: "The group only ever sees how many people are free — never who, or why not.",
+      },
       { kind: "time", key: "earliestStart", label: "Earliest I can start", hard: true },
       { kind: "time", key: "latestEnd", label: "Latest I can stay out", hard: true },
       { kind: "time", key: "requiredReturnTime", label: "Must be home by", hard: true },
@@ -109,6 +116,12 @@ const event: Step[] = [
     title: "Timing and permission",
     caption: "",
     fields: [
+      {
+        kind: "availability",
+        key: "availability",
+        label: "Tap the hours you're free",
+        hint: "The group only ever sees how many people are free — never who, or why not.",
+      },
       { kind: "time", key: "earliestStart", label: "Earliest I can start", hard: true },
       { kind: "time", key: "requiredReturnTime", label: "Must be home by", hard: true },
       { kind: "toggle", key: "parentApprovalRequired", label: "Parent permission required" },
@@ -189,6 +202,12 @@ const general: Step[] = [
     title: "Timing",
     caption: "",
     fields: [
+      {
+        kind: "availability",
+        key: "availability",
+        label: "Tap the hours you're free",
+        hint: "The group only ever sees how many people are free — never who, or why not.",
+      },
       { kind: "time", key: "earliestStart", label: "Earliest I can start", hard: true },
       { kind: "time", key: "latestEnd", label: "Latest I can stay out", hard: true },
       { kind: "time", key: "requiredReturnTime", label: "Must be home by", hard: true },

@@ -8,6 +8,7 @@ import { AppShell } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
+import { getGroupMemory } from "@/lib/quorum/insight.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
@@ -37,6 +38,19 @@ function GroupPage() {
   const [category, setCategory] = useState<PlanCategory>("dinner");
   const [windowStart, setWindowStart] = useState("");
   const [zip, setZip] = useState("");
+
+  // Group memory: aggregate patterns from past plans, used only to pre-fill.
+  const fetchMemory = useServerFn(getGroupMemory);
+  const memory = useQuery({
+    queryKey: ["group-memory", groupId],
+    queryFn: () => fetchMemory({ data: { groupId } }),
+  });
+  const topCategory = (
+    (memory.data?.favorite_activities as { category: string; count: number }[] | null) ?? []
+  )[0];
+  const topArea = (
+    (memory.data?.common_locations as { area: string; count: number }[] | null) ?? []
+  )[0];
 
   const create = useMutation({
     mutationFn: useServerFn(createPlan),
@@ -75,6 +89,29 @@ function GroupPage() {
       {creating ? (
         <Card className="mb-6">
           <h2 className="font-display text-base font-semibold">Start a plan</h2>
+          {topCategory || topArea ? (
+            <div className="mt-3 rounded-2xl bg-secondary/70 p-3 text-xs">
+              <p className="font-medium">This group usually…</p>
+              <p className="mt-0.5 text-muted-foreground">
+                {topCategory ? `picks ${topCategory.category} plans` : ""}
+                {topCategory && topArea ? " · " : ""}
+                {topArea ? `meets around ${topArea.area}` : ""}
+                {memory.data?.avg_spend_max
+                  ? ` · spends about $${Math.round(Number(memory.data.avg_spend_min ?? 0))}–${Math.round(Number(memory.data.avg_spend_max))} per person`
+                  : ""}
+              </p>
+              <button
+                type="button"
+                className="mt-1.5 font-medium text-primary underline-offset-4 hover:underline"
+                onClick={() => {
+                  if (topCategory) setCategory(topCategory.category as PlanCategory);
+                  if (topArea) setZip(topArea.area.replace(/\D/g, "").slice(0, 5));
+                }}
+              >
+                Use these defaults
+              </button>
+            </div>
+          ) : null}
           <p className="mt-1 text-sm text-muted-foreground">
             Everyone in the group gets their own private questionnaire. Nobody sees anyone else's answers.
           </p>

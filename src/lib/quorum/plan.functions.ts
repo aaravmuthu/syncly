@@ -142,6 +142,12 @@ export const joinGroup = createServerFn({ method: "POST" })
       type: "member_joined",
       message: "A new member joined the group",
     });
+    const { notifyGroupMembers } = await import("./notify.server");
+    await notifyGroupMembers(group.id, {
+      type: "member_joined",
+      title: `Someone joined ${group.name}`,
+      exclude: me as string,
+    });
     return group;
   });
 
@@ -248,6 +254,13 @@ export const createPlan = createServerFn({ method: "POST" })
       type: "plan_created",
       message: `${plan.title} needs everyone's private answers`,
     });
+    const { notifyGroupMembers } = await import("./notify.server");
+    await notifyGroupMembers(data.groupId, {
+      type: "plan_created",
+      title: `New plan: ${plan.title}`,
+      body: "Answer privately — nobody sees what you put in.",
+      exclude: me as string,
+    });
     return plan;
   });
 
@@ -327,6 +340,20 @@ export const submitConstraints = createServerFn({ method: "POST" })
       type: "constraints_submitted",
       message: "Someone submitted their private answers",
     });
+
+    const { data: roster } = await supabase
+      .from("plan_participants")
+      .select("responded, attending")
+      .eq("plan_id", data.planId);
+    const going = (roster ?? []).filter((r) => r.attending !== false);
+    if (going.length && going.every((r) => r.responded)) {
+      const { notifyPlanParticipants } = await import("./notify.server");
+      await notifyPlanParticipants(data.planId, {
+        type: "all_answered",
+        title: "Everyone has answered",
+        body: "Compatible options can be generated now.",
+      });
+    }
     return { ok: true };
   });
 
@@ -338,100 +365,13 @@ export const generateRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { planId: string }) => d)
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
     // Authorize as the user first — only a plan participant may run this.
-    const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
+    const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
-
-    // Private answers are read with elevated access ONLY inside this handler,
-    // aggregated, and never returned per person.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: plan } = await supabaseAdmin
-      .from("plans")
-      .select("*")
-      .eq("id", data.planId)
-      .single();
-    if (!plan) throw new Error("Plan not found");
-
-    const { data: participants } = await supabaseAdmin
-      .from("plan_participants")
-      .select("profile_id, attending, profiles(display_name)")
-      .eq("plan_id", data.planId);
-    const { data: constraintRows } = await supabaseAdmin
-      .from("plan_constraints")
-      .select("profile_id, payload")
-      .eq("plan_id", data.planId);
-
-    const attending = (participants ?? []).filter((p) => p.attending !== false);
-    const members: MemberInput[] = attending.map((p) => ({
-      profileId: p.profile_id,
-      constraints:
-        ((constraintRows ?? []).find((c) => c.profile_id === p.profile_id)?.payload as ConstraintPayload) ?? {},
-    }));
-
-    const ranked = rankOptions(optionsForCategory(plan.category as PlanCategory), members).slice(0, 6);
-
-    await supabaseAdmin.from("recommendations").delete().eq("plan_id", data.planId);
-    const rows = ranked.map((r, i) => ({
-      plan_id: data.planId,
-      rank: i + 1,
-      title: r.option.title,
-      subtitle: r.option.subtitle,
-      category: plan.category,
-      cost_min: r.option.costMin,
-      cost_max: r.option.costMax,
-      travel_minutes: r.option.travelMinutes,
-      suggested_start: r.option.start,
-      suggested_end: r.option.end,
-      location_name: r.option.location,
-      tags: r.option.tags,
-      score: r.score,
-      feasible: r.feasible,
-      breakdown: r.breakdown as never,
-    }));
-    const { data: inserted, error } = await supabaseAdmin
-      .from("recommendations")
-      .insert(rows)
-      .select("*");
-    if (error) throw new Error(error.message);
-
-    const best = ranked[0];
-    await supabaseAdmin
-      .from("plans")
-      .update({ status: "voting", compatibility_score: best?.score ?? null })
-      .eq("id", data.planId);
-
-    // Transport plan for the top option.
-    if (best) {
-      const named = attending.map((p) => ({
-        profileId: p.profile_id,
-        name: (p.profiles as { display_name?: string } | null)?.display_name ?? "Member",
-        constraints:
-          ((constraintRows ?? []).find((c) => c.profile_id === p.profile_id)?.payload as ConstraintPayload) ?? {},
-      }));
-      const tp = buildTransportPlan(best.option, named);
-      await supabaseAdmin.from("transport_assignments").delete().eq("plan_id", data.planId);
-      if (tp.cars.length) {
-        await supabaseAdmin.from("transport_assignments").insert(
-          tp.cars.map((c) => ({
-            plan_id: data.planId,
-            car_label: c.label,
-            driver_label: c.driver,
-            passenger_profile_ids: [],
-            leg: "both",
-          })),
-        );
-      }
-    }
-
-    await supabaseAdmin.from("activity_events").insert({
-      plan_id: data.planId,
-      group_id: plan.group_id,
-      type: "recommendations_ready",
-      message: "Compatible options are ready to review",
-    });
-
-    return { count: inserted?.length ?? 0 };
+    // Private answers are read with elevated access ONLY inside the engine,
+    // aggregated there, and never returned per person.
+    const { regenerateRecommendations } = await import("./recommend.server");
+    return regenerateRecommendations(data.planId);
   });
 
 /* ------------------------------------------------------------------ */
@@ -452,6 +392,13 @@ export const castVote = createServerFn({ method: "POST" })
         { onConflict: "plan_id,profile_id" },
       );
     if (error) throw new Error(error.message);
+    const { notifyPlanParticipants } = await import("./notify.server");
+    await notifyPlanParticipants(data.planId, {
+      type: "vote_cast",
+      title: "A vote was cast",
+      body: "Someone in the group picked an option.",
+      exclude: me as string,
+    });
     return { ok: true };
   });
 
@@ -470,6 +417,21 @@ export const finalizePlan = createServerFn({ method: "POST" })
       type: "plan_finalized",
       message: "The plan is locked in",
     });
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("group_id, title")
+      .eq("id", data.planId)
+      .maybeSingle();
+    const { notifyPlanParticipants } = await import("./notify.server");
+    await notifyPlanParticipants(data.planId, {
+      type: "plan_finalized",
+      title: `${plan?.title ?? "The plan"} is locked in`,
+      body: "Check the plan hub for time, place, cost and rides.",
+    });
+    if (plan?.group_id) {
+      const { refreshGroupMemory } = await import("./memory.server");
+      await refreshGroupMemory(plan.group_id);
+    }
     return { ok: true };
   });
 
