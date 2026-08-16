@@ -1,76 +1,88 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { BRAND } from "@/lib/brand";
+import { Wordmark } from "@/components/quorum/Wordmark";
 
 function safeNext(next: string | undefined) {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/home";
   return next;
 }
+
+const TITLE = `Sign in — ${BRAND.name}`;
+const DESCRIPTION =
+  "Log in or create a Quorum account to plan with your group while keeping your budget, schedule, and rules private.";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — AuraHAC Account" },
-      {
-        name: "description",
-        content:
-          "Sign in to your AuraHAC account to authorize connected apps and agent integrations.",
-      },
-      { property: "og:title", content: "Sign in — AuraHAC Account" },
-      {
-        property: "og:description",
-        content: "Sign in to your AuraHAC account to authorize connected apps.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { title: TITLE },
+      { name: "description", content: DESCRIPTION },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESCRIPTION },
     ],
   }),
   validateSearch: (s: Record<string, unknown>) => ({
     next: typeof s.next === "string" ? s.next : undefined,
+    mode: s.mode === "signup" || s.mode === "reset" ? (s.mode as "signup" | "reset") : "signin",
   }),
   component: AuthPage,
 });
 
+type Mode = "signin" | "signup" | "reset";
+
 function AuthPage() {
-  const { next } = Route.useSearch();
+  const { next, mode: initialMode } = Route.useSearch();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
 
   const target = safeNext(next);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = target;
+      if (data.session) {
+        window.location.href = target;
+      } else {
+        setChecking(false);
+      }
     });
   }, [target]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setError(null);
-    setMessage(null);
     try {
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth`,
+        });
+        if (error) throw error;
+        toast.success("Check your email for a reset link.");
+        setMode("signin");
+        return;
+      }
       if (mode === "signup") {
-        const { data, error: err } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}${target}` },
         });
-        if (err) throw err;
+        if (error) throw error;
         if (!data.session) {
-          setMessage("Check your email to confirm your account, then sign in.");
+          toast.success("Account created. Confirm your email, then log in.");
           setMode("signin");
           return;
         }
       } else {
-        const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-        if (err) throw err;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
       }
       if (target.startsWith("/.lovable/")) {
         window.location.href = target;
@@ -78,67 +90,99 @@ function AuthPage() {
         void navigate({ to: target });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      toast.error(err instanceof Error ? err.message : "We couldn't sign you in. Try again.");
     } finally {
       setBusy(false);
     }
   }
 
+  if (checking) {
+    return (
+      <div className="paper-field grid min-h-dvh place-items-center">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-dvh grid place-items-center p-6">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl"
+    <div className="paper-field min-h-dvh px-5 py-8">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <h1 className="text-xl font-semibold">
-          {mode === "signin" ? "Sign in to AuraHAC" : "Create an AuraHAC account"}
+        <ArrowLeft className="size-4" /> Back
+      </Link>
+
+      <div className="mx-auto mt-10 w-full max-w-sm">
+        <Wordmark />
+        <h1 className="mt-6 text-3xl font-semibold">
+          {mode === "signin"
+            ? "Welcome back"
+            : mode === "signup"
+              ? "Create your account"
+              : "Reset your password"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          This account is only used to authorize connected apps. It is separate from your Home
-          Access Center login.
+          {mode === "reset"
+            ? "We'll email you a link to set a new password."
+            : "Your private answers stay yours. Groups only ever see whether a plan works."}
         </p>
-        <label className="mt-5 block text-sm">
-          Email
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="mt-3 block text-sm">
-          Password
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-        {error ? (
-          <p role="alert" className="mt-3 text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        {message ? <p className="mt-3 text-sm text-muted-foreground">{message}</p> : null}
-        <button
-          type="submit"
-          disabled={busy}
-          className="mt-5 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
-        >
-          {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Sign up"}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-3 w-full text-xs text-muted-foreground underline"
-        >
-          {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
-        </button>
-      </form>
-    </main>
+
+        <form onSubmit={submit} className="mt-8 space-y-4">
+          <label className="block text-sm font-medium">
+            Email
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 text-sm outline-none focus:border-primary"
+            />
+          </label>
+          {mode !== "reset" && (
+            <label className="block text-sm font-medium">
+              Password
+              <input
+                type="password"
+                required
+                minLength={6}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 text-sm outline-none focus:border-primary"
+              />
+            </label>
+          )}
+          <button
+            type="submit"
+            disabled={busy}
+            className="pressable active:pressable-active flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {busy && <Loader2 className="size-4 animate-spin" />}
+            {mode === "signin" ? "Log in" : mode === "signup" ? "Create account" : "Send reset link"}
+          </button>
+        </form>
+
+        <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+          {mode !== "reset" && (
+            <button
+              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              className="underline underline-offset-4 transition-colors hover:text-foreground"
+            >
+              {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Log in"}
+            </button>
+          )}
+          <div>
+            <button
+              onClick={() => setMode(mode === "reset" ? "signin" : "reset")}
+              className="underline underline-offset-4 transition-colors hover:text-foreground"
+            >
+              {mode === "reset" ? "Back to log in" : "Forgot your password?"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
