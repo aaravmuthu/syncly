@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Wordmark } from "./Wordmark";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/lib/theme";
 
 const NAV = [
   { to: "/home", label: "Home", icon: "◎" },
@@ -31,6 +32,7 @@ export function AppShell({
           <Link to="/home" className="flex items-center gap-2">
             <Wordmark className="h-6" />
           </Link>
+          <div className="flex items-center gap-2">
           <nav className="hidden items-center gap-1 sm:flex">
             {NAV.map((n) => (
               <Link
@@ -47,6 +49,8 @@ export function AppShell({
               </Link>
             ))}
           </nav>
+          <ThemeToggle />
+          </div>
         </div>
       </header>
 

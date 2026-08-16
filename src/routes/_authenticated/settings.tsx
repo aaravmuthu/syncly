@@ -6,6 +6,9 @@ import { AppShell } from "@/components/quorum/AppShell";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { isValidZip } from "@/lib/quorum/location";
+import { useTheme, type ThemeChoice } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -30,6 +33,7 @@ function SettingsPage() {
   const navigate = useNavigate();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe) });
   const [form, setForm] = useState<Record<string, unknown>>({});
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (me.data) setForm(me.data as unknown as Record<string, unknown>);
@@ -37,8 +41,28 @@ function SettingsPage() {
 
   const save = useMutation({
     mutationFn: useServerFn(saveProfile),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["me"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Saved");
+    },
+    onError: (e: unknown) =>
+      toast.error("Couldn't save", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
   });
+
+  // Restore the stored preference once the profile loads.
+  useEffect(() => {
+    const pref = me.data?.theme_preference as ThemeChoice | undefined;
+    if (pref && pref !== theme) setTheme(pref);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me.data?.theme_preference]);
+
+  const chooseTheme = (t: ThemeChoice) => {
+    setTheme(t);
+    set("theme_preference", t);
+    save.mutate({ data: { theme_preference: t } });
+  };
 
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -105,6 +129,16 @@ function SettingsPage() {
           />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="ZIP code" hint="Finds real venues nearby — never shared with your group">
+            <input
+              className={inputClass}
+              inputMode="numeric"
+              maxLength={5}
+              value={String(form["zip_code"] ?? "")}
+              onChange={(e) => set("zip_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
+              placeholder="75034"
+            />
+          </Field>
           <Field label="Home area" hint="Used only to estimate travel time">
             <input
               className={inputClass}
@@ -120,6 +154,33 @@ function SettingsPage() {
               onChange={(e) => set("curfew_time", e.target.value || null)}
             />
           </Field>
+        </div>
+      </Card>
+
+      <Card className="mt-4">
+        <span className="text-sm font-medium">Appearance</span>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Follows your device by default. Your choice is saved to this device and your profile.
+        </p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {([
+            { id: "light", label: "Light", icon: "☀" },
+            { id: "dark", label: "Dark", icon: "☾" },
+            { id: "system", label: "System", icon: "◐" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => chooseTheme(opt.id)}
+              className={cn(
+                "rounded-2xl border px-3 py-2.5 text-sm font-medium transition",
+                theme === opt.id ? "border-primary/50 bg-primary/10" : "border-border hover:bg-secondary",
+              )}
+            >
+              <span className="mr-1.5">{opt.icon}</span>
+              {opt.label}
+            </button>
+          ))}
         </div>
       </Card>
 
@@ -156,7 +217,14 @@ function SettingsPage() {
       </Card>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <Button disabled={save.isPending} onClick={() => save.mutate({ data: form })}>
+        <Button
+          loading={save.isPending}
+          onClick={() => {
+            const zip = String(form["zip_code"] ?? "").trim();
+            if (zip && !isValidZip(zip)) return toast.error("Enter a valid 5-digit ZIP code");
+            save.mutate({ data: form });
+          }}
+        >
           {save.isPending ? "Saving…" : "Save changes"}
         </Button>
         <Button variant="outline" onClick={() => void signOut()}>

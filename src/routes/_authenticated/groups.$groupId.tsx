@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { toast } from "sonner";
+import { isValidZip } from "@/lib/quorum/location";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
@@ -33,10 +35,16 @@ function GroupPage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<PlanCategory>("dinner");
   const [windowStart, setWindowStart] = useState("");
+  const [zip, setZip] = useState("");
 
   const create = useMutation({
     mutationFn: useServerFn(createPlan),
+    onError: (e: unknown) =>
+      toast.error("Could not create the plan", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
     onSuccess: (plan) => {
+      toast.success("Plan created", { description: "Everyone gets their own private questionnaire." });
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["plans"] });
       void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
@@ -96,6 +104,16 @@ function GroupPage() {
                 ))}
               </div>
             </div>
+            <Field label="ZIP code" hint="Used to find real venues nearby and estimate travel">
+              <input
+                className={inputClass}
+                inputMode="numeric"
+                maxLength={5}
+                value={zip}
+                onChange={(e) => setZip(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                placeholder="75034"
+              />
+            </Field>
             <Field label="Target date" hint="Optional — helps narrow options">
               <input
                 type="date"
@@ -106,18 +124,22 @@ function GroupPage() {
             </Field>
             <Button
               className="w-full"
-              disabled={!title.trim() || create.isPending}
-              onClick={() =>
+              loading={create.isPending}
+              disabled={!title.trim()}
+              onClick={() => {
+                if (!title.trim()) return toast.error("Give the plan a name first");
+                if (zip && !isValidZip(zip)) return toast.error("Enter a valid 5-digit ZIP code");
                 create.mutate({
                   data: {
                     groupId,
                     title,
                     category,
                     windowStart: windowStart || null,
+                    zipCode: zip || null,
                     participantIds: memberIds,
                   },
-                })
-              }
+                });
+              }}
             >
               {create.isPending ? "Creating…" : "Create plan"}
             </Button>

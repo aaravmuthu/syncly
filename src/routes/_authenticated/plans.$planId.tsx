@@ -174,15 +174,28 @@ function PlanPage() {
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{r.subtitle}</p>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      ${r.cost_min}–${r.cost_max} · {r.travel_minutes} min away · {r.suggested_start}–
-                      {r.suggested_end} · {r.location_name}
+                      {b.venue?.priceLevel ? `${b.venue.priceLevel} · ` : ""}${r.cost_min}–${r.cost_max}
+                      {b.venue?.distanceMiles != null
+                        ? ` · ${b.venue.distanceMiles} miles away`
+                        : ` · ${r.travel_minutes} min away`}{" "}
+                      · {r.suggested_start}–{r.suggested_end}
+                      {b.venue?.rating != null ? ` · ★ ${b.venue.rating}` : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {b.venue?.address ?? r.location_name}
+                      {b.venue?.distanceMiles != null ? ` · ${r.travel_minutes} min drive` : ""}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="font-display text-2xl font-semibold tabular-nums">{r.score}</div>
+                    <div className="font-display text-2xl font-semibold tabular-nums">{r.score}%</div>
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      compatible
+                      match
                     </div>
+                    {b.venue?.distanceMiles != null ? (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                        {b.venue.distanceMiles} mi
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 

@@ -1,6 +1,8 @@
 // Server-only. Reads private constraints with elevated access, aggregates them,
 // and writes back only group-safe results (scores, generic reasons, transport).
 import { optionsForCategory } from "./catalog";
+import { normalizeZip, queryVenuesNear } from "./location";
+import { geocodeZipServer } from "./location.server";
 import { buildTransportPlan, rankOptions, type MemberInput } from "./engine";
 import type { ConstraintPayload, PlanCategory } from "./types";
 
@@ -28,7 +30,32 @@ export async function regenerateRecommendations(planId: string) {
     constraints: constraintsFor(p.profile_id),
   }));
 
-  const ranked = rankOptions(optionsForCategory(plan.category as PlanCategory), members).slice(0, 6);
+  // ---- Live, ZIP-anchored venue discovery (keyless) ------------------------
+  // The plan's ZIP wins; otherwise fall back to any attending member's home ZIP.
+  const { data: profileRows } = await supabaseAdmin
+    .from("profiles")
+    .select("id, zip_code")
+    .in("id", attending.length ? attending.map((p) => p.profile_id) : ["00000000-0000-0000-0000-000000000000"]);
+
+  const memberZip = (profileRows ?? []).map((r) => normalizeZip(r.zip_code)).find(Boolean) ?? null;
+  const constraintZip = members.map((m) => normalizeZip(m.constraints.zipCode)).find(Boolean) ?? null;
+  const zip = normalizeZip(plan.location_area) ?? constraintZip ?? memberZip;
+
+  const numbers = (vals: (number | null | undefined)[]) => vals.filter((v): v is number => v != null);
+  const radii = numbers(members.map((m) => m.constraints.maxDistanceMiles));
+  const budgets = numbers(members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice));
+
+  const origin = zip ? await geocodeZipServer(zip) : null;
+  const options = origin
+    ? queryVenuesNear({
+        origin,
+        category: plan.category as PlanCategory,
+        maxRadiusMiles: radii.length ? Math.min(...radii) : null,
+        maxBudget: budgets.length ? Math.min(...budgets) : null,
+      })
+    : optionsForCategory(plan.category as PlanCategory);
+
+  const ranked = rankOptions(options, members).slice(0, 6);
 
   await supabaseAdmin.from("recommendations").delete().eq("plan_id", planId);
   const { data: inserted, error } = await supabaseAdmin

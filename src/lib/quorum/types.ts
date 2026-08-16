@@ -82,6 +82,8 @@ export type ConstraintPayload = {
   venueStyle?: string[]; // fast food / casual / sit-down / dessert / cafe
   // logistics
   maxTravelMinutes?: number | null;
+  maxDistanceMiles?: number | null;
+  zipCode?: string | null;
   needsRide?: boolean;
   canDrive?: boolean;
   seats?: number | null;
@@ -116,6 +118,13 @@ export type OptionSeed = {
   style: string; // casual / sit-down / fast food / venue / outdoor ...
   requiresDriving: boolean;
   seatsNeeded?: boolean;
+  // live location metadata (filled by the ZIP-anchored venue layer)
+  lat?: number;
+  lon?: number;
+  distanceMiles?: number;
+  address?: string;
+  priceLevel?: "$" | "$$" | "$$$" | "$$$$";
+  rating?: number;
 };
 
 export type ScoreBreakdown = {
@@ -129,4 +138,10 @@ export type ScoreBreakdown = {
   fairness: number;
   reasons: string[];
   cautions: string[];
+  venue?: {
+    address?: string;
+    distanceMiles?: number;
+    priceLevel?: string;
+    rating?: number;
+  };
 };
