@@ -293,6 +293,3 @@
   gap: 0.75rem;
   animation: q-marquee 34s linear infinite;
 }
-.marquee:hover .marquee-track {
-  animation-play-state: paused;
-}
