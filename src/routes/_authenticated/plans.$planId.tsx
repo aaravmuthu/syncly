@@ -169,7 +169,11 @@ function PlanPage() {
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {data.participants.map((p) => {
-            const prof = p.profiles as { display_name?: string; avatar_emoji?: string } | null;
+            const prof = p.profiles as {
+              display_name?: string;
+              avatar_emoji?: string;
+              avatar_url?: string | null;
+            } | null;
             return (
               <span
                 key={p.profile_id}
@@ -178,13 +182,21 @@ function PlanPage() {
                 }`}
                 title={p.responded ? "Completed questionnaire" : "Pending input"}
               >
-                {prof?.avatar_emoji ?? "🙂"} {prof?.display_name ?? "Member"}
+                <Avatar
+                  url={prof?.avatar_url}
+                  emoji={prof?.avatar_emoji}
+                  name={prof?.display_name}
+                  size={18}
+                  className="bg-transparent"
+                />
+                {prof?.display_name ?? "Member"}
                 <span className="opacity-75">
                   · {p.responded ? (selected ? "Ready" : "Answered") : "Pending"}
                 </span>
               </span>
             );
           })}
+
         </div>
       </Card>
 

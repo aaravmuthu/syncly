@@ -217,15 +217,30 @@ function GroupPage() {
         </h2>
         <Card className="divide-y divide-border">
           {members.map((m) => {
-            const p = m.profiles as { display_name?: string; avatar_emoji?: string } | null;
+            const p = m.profiles as {
+              display_name?: string;
+              avatar_emoji?: string;
+              avatar_url?: string | null;
+              bio?: string | null;
+              school?: string | null;
+              grad_year?: number | null;
+            } | null;
+            const meta = [p?.school, p?.grad_year ? `Class of ${p.grad_year}` : null]
+              .filter(Boolean)
+              .join(" · ");
             return (
-              <div key={m.profile_id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                <span className="text-xl">{p?.avatar_emoji ?? "🙂"}</span>
-                <span className="flex-1 text-sm font-medium">{p?.display_name ?? "Member"}</span>
+              <div key={m.profile_id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+                <Avatar url={p?.avatar_url} emoji={p?.avatar_emoji} name={p?.display_name} size={36} />
+                <div className="flex-1">
+                  <span className="block text-sm font-medium">{p?.display_name ?? "Member"}</span>
+                  {meta ? <span className="block text-xs text-muted-foreground">{meta}</span> : null}
+                  {p?.bio ? <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p> : null}
+                </div>
                 <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
               </div>
             );
           })}
+
         </Card>
       </section>
     </AppShell>
