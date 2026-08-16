@@ -138,19 +138,23 @@ function HomePage() {
             Your groups
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
-            {(groups.data ?? []).map((g) => (
-              <Link key={g.id} to="/groups/$groupId" params={{ groupId: g.id }}>
-                <Card className="flex items-center gap-3 transition hover:border-primary/40">
-                  <span className="text-2xl">{String(g["emoji"] ?? "✨")}</span>
-                  <div>
-                    <p className="font-semibold">{String(g["name"])}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {String(g["member_count"] ?? 1)} members
-                    </p>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+            {(groups.data ?? []).map((raw) => {
+              const g = raw as unknown as Record<string, unknown>;
+              const id = String(g["id"]);
+              return (
+                <Link key={id} to="/groups/$groupId" params={{ groupId: id }}>
+                  <Card className="flex items-center gap-3 transition hover:border-primary/40">
+                    <span className="text-2xl">{String(g["emoji"] ?? "✨")}</span>
+                    <div>
+                      <p className="font-semibold">{String(g["name"])}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {String(g["member_count"] ?? 1)} members
+                      </p>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
       ) : null}
