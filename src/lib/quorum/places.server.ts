@@ -101,8 +101,9 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
 // -------------------------------------------------------------- venue search
 
 const GEOAPIFY_CATEGORIES: Record<PlanCategory, string> = {
-  dinner: "catering.restaurant,catering.fast_food,catering.cafe",
-  hangout: "catering.cafe,entertainment,leisure.park",
+  dinner:
+    "catering.restaurant,catering.fast_food,catering.cafe,catering.restaurant.pizza,catering.fast_food.burger",
+  hangout: "catering.cafe,entertainment,leisure.park,leisure",
   concert: "entertainment.culture,entertainment.nightclub,adult.nightclub",
   trip: "tourism.attraction,tourism.sights,natural",
   party: "entertainment,catering.bar,entertainment.bowling_alley",
