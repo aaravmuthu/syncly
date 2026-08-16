@@ -17,6 +17,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as AuthenticatedGroupsIndexRouteImport } from './routes/_authenticated/groups.index'
 import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups.$groupId'
 import { Route as AuthenticatedPlansIndexRouteImport } from './routes/_authenticated/plans.index'
+import { Route as AuthenticatedPlansPlanIdRouteImport } from './routes/_authenticated/plans.$planId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,6 +60,12 @@ const AuthenticatedPlansIndexRoute = AuthenticatedPlansIndexRouteImport.update({
   path: '/plans/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlansPlanIdRoute =
+  AuthenticatedPlansPlanIdRouteImport.update({
+    id: '/plans/$planId',
+    path: '/plans/$planId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
+  '/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
   '/groups/': typeof AuthenticatedGroupsIndexRoute
   '/plans/': typeof AuthenticatedPlansIndexRoute
 }
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
+  '/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
   '/groups': typeof AuthenticatedGroupsIndexRoute
   '/plans': typeof AuthenticatedPlansIndexRoute
 }
@@ -86,6 +95,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
+  '/_authenticated/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
   '/_authenticated/groups/': typeof AuthenticatedGroupsIndexRoute
   '/_authenticated/plans/': typeof AuthenticatedPlansIndexRoute
 }
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/.lovable/oauth/consent'
     | '/groups/$groupId'
+    | '/plans/$planId'
     | '/groups/'
     | '/plans/'
   fileRoutesByTo: FileRoutesByTo
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/.lovable/oauth/consent'
     | '/groups/$groupId'
+    | '/plans/$planId'
     | '/groups'
     | '/plans'
   id:
@@ -116,6 +128,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/.lovable/oauth/consent'
     | '/_authenticated/groups/$groupId'
+    | '/_authenticated/plans/$planId'
     | '/_authenticated/groups/'
     | '/_authenticated/plans/'
   fileRoutesById: FileRoutesById
@@ -185,12 +198,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlansIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/plans/$planId': {
+      id: '/_authenticated/plans/$planId'
+      path: '/plans/$planId'
+      fullPath: '/plans/$planId'
+      preLoaderRoute: typeof AuthenticatedPlansPlanIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
+  AuthenticatedPlansPlanIdRoute: typeof AuthenticatedPlansPlanIdRoute
   AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
   AuthenticatedPlansIndexRoute: typeof AuthenticatedPlansIndexRoute
 }
@@ -198,6 +219,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
+  AuthenticatedPlansPlanIdRoute: AuthenticatedPlansPlanIdRoute,
   AuthenticatedGroupsIndexRoute: AuthenticatedGroupsIndexRoute,
   AuthenticatedPlansIndexRoute: AuthenticatedPlansIndexRoute,
 }
