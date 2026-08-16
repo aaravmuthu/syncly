@@ -207,6 +207,7 @@ export async function summarizeCompromises(facts: CompromiseFacts[]): Promise<Re
         "PRIVACY RULE: never name a person and never attribute a constraint to an individual.",
         "Talk about the group as a whole ('the tightest $25 budget in the group', 'everyone stays under 12 minutes of driving').",
         "Be concrete with the numbers provided. If the option is not feasible, say plainly what still blocks it.",
+        'Reply with ONLY JSON: {"items":[{"id":string,"summary":string}]} — one entry per option below.',
         "",
         JSON.stringify(
           facts.map((f) => ({
