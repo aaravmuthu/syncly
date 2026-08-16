@@ -6,6 +6,8 @@ import { Button, Card, Field, inputClass } from "@/components/quorum/ui";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { CATEGORIES } from "@/lib/quorum/types";
+import { toast } from "sonner";
+import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -44,8 +46,13 @@ function Onboarding() {
     mutationFn: useServerFn(saveProfile),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success("You're all set", { description: "Your defaults will pre-fill every questionnaire." });
       void navigate({ to: "/home" });
     },
+    onError: (e: unknown) =>
+      toast.error("Couldn't save your setup", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
   });
 
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
@@ -118,6 +125,16 @@ function Onboarding() {
       caption: "These pre-fill your private answers. You can change them per plan.",
       body: (
         <div className="space-y-4">
+          <Field label="ZIP code" hint="Finds real venues near you — never shared with your group">
+            <input
+              className={inputClass}
+              inputMode="numeric"
+              maxLength={5}
+              value={String(form["zip_code"] ?? "")}
+              onChange={(e) => set("zip_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
+              placeholder="75034"
+            />
+          </Field>
           <Field label="Home area" hint="Only used to estimate travel time">
             <input
               className={inputClass}
@@ -195,8 +212,18 @@ function Onboarding() {
             {step === 0 ? "Skip" : "Back"}
           </button>
           <Button
-            disabled={save.isPending}
-            onClick={() => (last ? save.mutate({ data: { ...form, onboarded: true } }) : setStep(step + 1))}
+            loading={save.isPending}
+            onClick={() => {
+              if (step === 0 && !String(form["display_name"] ?? "").trim()) {
+                return toast.error("Add a display name so your group knows who you are");
+              }
+              const zip = String(form["zip_code"] ?? "").trim();
+              if (last && zip && !isValidZip(zip)) {
+                return toast.error("Enter a valid 5-digit ZIP code");
+              }
+              if (last) save.mutate({ data: { ...form, onboarded: true } });
+              else setStep(step + 1);
+            }}
           >
             {save.isPending ? "Saving…" : last ? "Start planning" : "Continue"}
           </Button>
