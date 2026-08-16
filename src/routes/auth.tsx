@@ -222,7 +222,13 @@ function AuthPage() {
               {mode === "reset" ? "Back to log in" : "Forgot your password?"}
             </button>
           </div>
+          <div>
+            <Link to="/demo" className="underline underline-offset-4 transition-colors hover:text-foreground">
+              Just looking? Try the demo without an account
+            </Link>
+          </div>
         </div>
+
       </div>
     </div>
   );
