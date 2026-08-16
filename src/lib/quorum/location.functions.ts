@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { ZipLocation } from "./location";
+import type { PlaceSuggestion } from "./places.server";
 
 /**
  * Keyless ZIP → coordinates via OpenStreetMap Nominatim.
