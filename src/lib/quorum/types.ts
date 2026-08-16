@@ -149,5 +149,9 @@ export type ScoreBreakdown = {
     distanceMiles?: number;
     priceLevel?: string;
     rating?: number;
+    cuisine?: string;
+    kind?: "food" | "activity";
+    lat?: number;
+    lon?: number;
   };
 };
