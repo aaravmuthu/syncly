@@ -261,6 +261,7 @@
 
 @utility spotlight-orb {
   position: absolute;
+  will-change: transform;
   height: 640px;
   width: 640px;
   border-radius: 9999px;
@@ -289,6 +290,7 @@
 }
 @utility marquee-track {
   display: flex;
+  will-change: transform;
   width: max-content;
   gap: 0.75rem;
   animation: q-marquee 34s linear infinite;
