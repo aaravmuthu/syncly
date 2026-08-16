@@ -250,6 +250,10 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
             ...(option.distanceMiles != null ? { distanceMiles: option.distanceMiles } : {}),
             ...(option.priceLevel ? { priceLevel: option.priceLevel } : {}),
             ...(option.rating != null ? { rating: option.rating } : {}),
+            ...(option.cuisine ? { cuisine: option.cuisine } : {}),
+            ...(option.kind ? { kind: option.kind } : {}),
+            ...(option.lat != null ? { lat: option.lat } : {}),
+            ...(option.lon != null ? { lon: option.lon } : {}),
           },
         }
       : {}),

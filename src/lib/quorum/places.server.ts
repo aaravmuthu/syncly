@@ -101,8 +101,9 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
 // -------------------------------------------------------------- venue search
 
 const GEOAPIFY_CATEGORIES: Record<PlanCategory, string> = {
-  dinner: "catering.restaurant,catering.fast_food,catering.cafe",
-  hangout: "catering.cafe,entertainment,leisure.park",
+  dinner:
+    "catering.restaurant,catering.fast_food,catering.cafe,catering.restaurant.pizza,catering.fast_food.burger",
+  hangout: "catering.cafe,entertainment,leisure.park,leisure",
   concert: "entertainment.culture,entertainment.nightclub,adult.nightclub",
   trip: "tourism.attraction,tourism.sights,natural",
   party: "entertainment,catering.bar,entertainment.bowling_alley",
@@ -167,12 +168,35 @@ function dietaryFrom(raw: Record<string, unknown> | undefined, categories: strin
   return [...out];
 }
 
+/** Human cuisine / activity label from the provider's category list. */
+function cuisineFrom(categories: string[], raw: Record<string, unknown> | undefined): string | undefined {
+  const rawCuisine = String(raw?.["cuisine"] ?? "").split(";")[0]?.trim();
+  const pretty = (s: string) =>
+    s
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (m) => m.toUpperCase())
+      .trim();
+  if (rawCuisine) return pretty(rawCuisine);
+  const leaf = categories
+    .filter((c) => c.split(".").length > 2)
+    .map((c) => c.split(".").pop()!)
+    .find(Boolean);
+  if (leaf) return pretty(leaf);
+  const top = categories[0]?.split(".")[1];
+  return top ? pretty(top) : undefined;
+}
+
+const kindFor = (categories: string[]): "food" | "activity" =>
+  categories.join(" ").includes("catering") ? "food" : "activity";
+
 export type VenueSearch = {
   origin: ZipLocation;
   category: PlanCategory;
   maxRadiusMiles?: number | null;
   maxBudget?: number | null;
   limit?: number;
+  /** Optional food/activity vibe id — overrides the category defaults. */
+  vibe?: string | null;
 };
 
 /**
@@ -185,7 +209,9 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
 
   const radiusMiles = Math.min(Math.max(q.maxRadiusMiles ?? 15, 2), 60);
   const radiusMeters = Math.round(radiusMiles * 1609.34);
-  const categories = GEOAPIFY_CATEGORIES[q.category] ?? GEOAPIFY_CATEGORIES.custom;
+  const { vibeById } = await import("./vibes");
+  const categories =
+    vibeById(q.vibe)?.categories ?? GEOAPIFY_CATEGORIES[q.category] ?? GEOAPIFY_CATEGORIES.custom;
 
   try {
     const url =
@@ -233,6 +259,10 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
           distanceMiles,
           address: p.address_line2 ?? p.formatted ?? undefined,
           priceLevel: priceLevelFor(costMax),
+          ...(cuisineFrom(cats, p.datasource?.raw)
+            ? { cuisine: cuisineFrom(cats, p.datasource?.raw)! }
+            : {}),
+          kind: kindFor(cats),
         };
         return seed;
       });
