@@ -338,3 +338,14 @@
   border-top-color: var(--popover) !important;
   border-bottom-color: var(--popover) !important;
 }
+
+@utility glass-card {
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(14px) saturate(130%);
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s ease;
+}
