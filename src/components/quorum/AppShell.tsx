@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Wordmark } from "./Wordmark";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
+import { useNotifications } from "@/lib/quorum/useNotifications";
 
 const NAV = [
   { to: "/home", label: "Home", icon: "◎" },
@@ -24,6 +25,7 @@ export function AppShell({
   action?: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { unread } = useNotifications();
 
   return (
     <div className="min-h-dvh bg-background">
@@ -46,6 +48,11 @@ export function AppShell({
                 )}
               >
                 {n.label}
+                {n.to === "/activity" && unread > 0 ? (
+                  <span className="ml-1.5 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                ) : null}
               </Link>
             ))}
           </nav>
@@ -80,7 +87,12 @@ export function AppShell({
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <span className="text-base leading-none">{n.icon}</span>
+                <span className="relative text-base leading-none">
+                  {n.icon}
+                  {n.to === "/activity" && unread > 0 ? (
+                    <span className="absolute -right-2 -top-1 size-2 rounded-full bg-primary" />
+                  ) : null}
+                </span>
                 {n.label}
               </Link>
             );
