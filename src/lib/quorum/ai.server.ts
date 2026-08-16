@@ -62,38 +62,96 @@ function heuristicDraft(prompt: string): MagicDraft {
   };
 }
 
+/** Pull the first JSON object/array out of a model reply. */
+function extractJson(text: string | undefined): unknown {
+  if (!text) return null;
+  const cleaned = text.replace(/```(?:json)?/gi, "");
+  const start = cleaned.search(/[[{]/);
+  if (start < 0) return null;
+  const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+  try {
+    return JSON.parse(cleaned.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
+
+/** Models rename fields freely, so accept a few aliases per field. */
+function pick(obj: Record<string, unknown>, keys: string[]): unknown {
+  for (const k of keys) {
+    const v = obj[k];
+    if (v !== undefined && v !== null && v !== "") return v;
+  }
+  return null;
+}
+
+function coerceDraft(raw: unknown, prompt: string): MagicDraft {
+  const base = heuristicDraft(prompt);
+  if (!raw || typeof raw !== "object") return base;
+  const o = raw as Record<string, unknown>;
+
+  const num = (v: unknown) => {
+    const n = typeof v === "string" ? Number(v.replace(/[^\d.]/g, "")) : Number(v);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  };
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+
+  const cat = str(pick(o, ["category", "plan_category", "type", "activity"]))?.toLowerCase();
+  const date = str(pick(o, ["date", "plan_date", "day"]));
+  const time = str(pick(o, ["time", "start_time", "startTime", "when"]));
+  const tier = str(pick(o, ["budget_tier", "budgetTier", "budget"]))?.toLowerCase();
+
+  return {
+    title: str(pick(o, ["title", "name", "plan_title"]))?.slice(0, 80) ?? base.title,
+    category: (CATEGORY_IDS as string[]).includes(cat ?? "")
+      ? (cat as PlanCategory)
+      : base.category,
+    date: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
+    time: time && /^\d{1,2}:\d{2}/.test(time) ? time.slice(0, 5).padStart(5, "0") : null,
+    budgetTier: tier === "low" || tier === "medium" || tier === "high" ? tier : null,
+    maxSpendPerPerson:
+      num(pick(o, ["max_spend_per_person", "budget_per_person", "maxSpendPerPerson", "max_budget"])) ??
+      base.maxSpendPerPerson,
+    searchRadiusMiles: num(pick(o, ["search_radius_miles", "radius_miles", "radius"])),
+    targetCityOrZip:
+      str(pick(o, ["target_city_zip", "zip", "zip_code", "city", "location", "area"])) ??
+      base.targetCityOrZip,
+  };
+}
+
 export async function parseMagicPrompt(prompt: string, todayIso: string): Promise<MagicDraft> {
+  const instructions = [
+    "You turn a casual group-planning sentence into structured JSON.",
+    "Reply with ONLY a JSON object using exactly these keys:",
+    '{"title":string,"category":string,"date":string|null,"time":string|null,"budget_tier":"low"|"medium"|"high"|null,"max_spend_per_person":number|null,"search_radius_miles":number|null,"target_city_zip":string|null}',
+    `Today is ${todayIso}. Resolve relative dates ("this Friday", "tomorrow") to a real YYYY-MM-DD date.`,
+    `category must be one of: ${CATEGORY_IDS.join(", ")}.`,
+    "time is 24h HH:MM. max_spend_per_person is dollars per person when a cap is implied.",
+    "target_city_zip is a US ZIP code when given, otherwise the city/place name, otherwise null.",
+    "title is a short friendly plan name (max ~6 words), not the whole sentence.",
+    "Unknown fields must be null. Never invent a budget or location that is not implied.",
+    "",
+    `Request: ${prompt}`,
+  ].join("\n");
+
   try {
     const { output } = await generateText({
       model: lovableAiModel(),
       output: Output.object({ schema: DraftSchema }),
-      prompt: [
-        "You turn a casual group-planning sentence into structured fields.",
-        `Today is ${todayIso}. Resolve relative dates ("this Friday", "tomorrow") to a real YYYY-MM-DD date.`,
-        `Allowed categories: ${CATEGORY_IDS.join(", ")}.`,
-        "time must be 24h HH:MM. max_spend_per_person is dollars per person if the text implies a cap.",
-        "target_city_zip is a US ZIP code when given, otherwise the city/place name, otherwise null.",
-        "title is a short friendly plan name (max ~6 words), not the whole sentence.",
-        "Unknown fields must be null. Never invent a budget or location that is not implied.",
-        "",
-        `Request: ${prompt}`,
-      ].join("\n"),
+      prompt: instructions,
     });
-    return {
-      title: output.title.trim().slice(0, 80) || heuristicDraft(prompt).title,
-      category: output.category,
-      date: output.date && /^\d{4}-\d{2}-\d{2}$/.test(output.date) ? output.date : null,
-      time: output.time && /^\d{2}:\d{2}$/.test(output.time) ? output.time : null,
-      budgetTier: output.budget_tier,
-      maxSpendPerPerson:
-        output.max_spend_per_person != null ? Math.round(output.max_spend_per_person) : null,
-      searchRadiusMiles:
-        output.search_radius_miles != null ? Math.round(output.search_radius_miles) : null,
-      targetCityOrZip: output.target_city_zip?.trim() || null,
-    };
+    return coerceDraft(output, prompt);
   } catch (error) {
-    if (NoObjectGeneratedError.isInstance(error)) return heuristicDraft(prompt);
-    return heuristicDraft(prompt);
+    // The model often answers with its own key names; salvage the raw text.
+    if (NoObjectGeneratedError.isInstance(error)) {
+      return coerceDraft(extractJson(error.text), prompt);
+    }
+    try {
+      const { text } = await generateText({ model: lovableAiModel(), prompt: instructions });
+      return coerceDraft(extractJson(text), prompt);
+    } catch {
+      return heuristicDraft(prompt);
+    }
   }
 }
 
