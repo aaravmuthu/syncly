@@ -279,6 +279,69 @@ export const listPlans = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+/**
+ * Dashboard digest: every plan the caller can see, enriched with the response
+ * progress of its participants, whether the caller still owes an action, and
+ * the selected venue (with coordinates) once the plan is finalized.
+ */
+export const getDashboard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data: myId } = await supabase.rpc("my_profile_id");
+    const { data: plans } = await supabase
+      .from("plans")
+      .select("*, groups(id, name, emoji)")
+      .order("created_at", { ascending: false })
+      .limit(40);
+    const list = plans ?? [];
+    if (list.length === 0) return { myProfileId: myId ?? null, plans: [] };
+
+    const ids = list.map((p) => p.id as string);
+    const [{ data: parts }, { data: votes }, { data: recs }] = await Promise.all([
+      supabase
+        .from("plan_participants")
+        .select("plan_id, profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)")
+        .in("plan_id", ids),
+      supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids),
+      supabase
+        .from("recommendations")
+        .select("id, plan_id, title, location_name, address, lat, lon, suggested_start")
+        .in("plan_id", ids),
+    ]);
+
+    return {
+      myProfileId: (myId as string | null) ?? null,
+      plans: list.map((p) => {
+        const mine = (parts ?? []).filter((r) => r.plan_id === p.id);
+        const planVotes = (votes ?? []).filter((v) => v.plan_id === p.id);
+        const selected =
+          (recs ?? []).find((r) => r.id === p.selected_recommendation_id) ?? null;
+        const meRow = mine.find((r) => r.profile_id === myId);
+        return {
+          ...p,
+          participants: mine.map((r) => {
+            const pr = r.profiles as unknown as Record<string, unknown> | null;
+            return {
+              profile_id: r.profile_id as string,
+              responded: Boolean(r.responded),
+              name: (pr?.["display_name"] as string) ?? "Member",
+              emoji: (pr?.["avatar_emoji"] as string) ?? null,
+              avatar_url: (pr?.["avatar_url"] as string) ?? null,
+            };
+          }),
+          responded_count: mine.filter((r) => r.responded).length,
+          participant_count: mine.length,
+          vote_count: planVotes.length,
+          i_responded: Boolean(meRow?.responded),
+          i_voted: planVotes.some((v) => v.profile_id === myId),
+          selected_recommendation: selected,
+        };
+      }),
+    };
+  });
+
+
 /** Group-visible feed only: RLS keeps it to groups the caller belongs to. */
 export const listActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
