@@ -68,20 +68,48 @@ export const respondToApproval = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("parent_approvals")
-      .select("id, expires_at, status")
+      .select("id, expires_at, status, plan_id, profile_id")
       .eq("token", data.token)
       .maybeSingle();
     if (!row) throw new Error("This link is not valid");
     if (new Date(row.expires_at) < new Date()) throw new Error("This link has expired");
 
+    const condition =
+      data.decision === "approved_with_condition" ? (data.condition?.trim() || null) : null;
+
     const { error } = await supabaseAdmin
       .from("parent_approvals")
       .update({
         status: data.decision,
-        condition_text: data.decision === "approved_with_condition" ? (data.condition ?? null) : null,
+        condition_text: condition,
         responded_at: new Date().toISOString(),
       })
       .eq("id", row.id);
     if (error) throw new Error(error.message);
+
+    // A condition becomes a private constraint for that member, then the whole
+    // group's options are recalculated against it.
+    if (condition) {
+      const { applyParentCondition, regenerateRecommendations } = await import("./recommend.server");
+      await applyParentCondition(row.plan_id, row.profile_id, condition);
+      try {
+        await regenerateRecommendations(row.plan_id);
+      } catch {
+        /* recalculation is best-effort; the response itself is already saved */
+      }
+    }
+
+    await supabaseAdmin.from("activity_events").insert({
+      plan_id: row.plan_id,
+      group_id: null,
+      type: "parent_response",
+      message:
+        data.decision === "declined"
+          ? "A permission request was declined"
+          : condition
+            ? "A permission request was approved with a condition"
+            : "A permission request was approved",
+    });
+
     return { ok: true };
   });
