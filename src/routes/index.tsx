@@ -38,12 +38,19 @@ function Landing() {
           <Wordmark />
           <div className="flex items-center gap-2">
             <Link
+              to="/demo"
+              className="hidden rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+            >
+              Demo
+            </Link>
+            <Link
               to="/auth"
               search={{ next: "/home", mode: "signin" }}
               className="rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Log in
             </Link>
+
             <Link
               to="/auth"
               search={{ next: "/home", mode: "signup" }}
@@ -77,12 +84,19 @@ function Landing() {
                 >
                   Start planning <ArrowRight className="size-4" />
                 </Link>
+                <Link
+                  to="/demo"
+                  className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+                >
+                  Try the demo
+                </Link>
                 <a
                   href="#how"
                   className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
                 >
                   See how it works
                 </a>
+
               </div>
               <p className="mt-5 text-sm text-muted-foreground">
                 Stop planning around the loudest person.
