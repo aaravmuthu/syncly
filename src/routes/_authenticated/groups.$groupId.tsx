@@ -11,6 +11,7 @@ import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { getGroupMemory } from "@/lib/quorum/insight.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
+import { MagicPlanBox, type MagicApply } from "@/components/quorum/MagicPlanBox";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
@@ -119,7 +120,7 @@ function GroupPage() {
           <div className="mt-4 space-y-4">
             <MagicPlanBox
               fallbackZip={zip || (topArea?.area ?? null)}
-              onApply={(d) => {
+              onApply={(d: MagicApply) => {
                 setTitle(d.title);
                 setCategory(d.category);
                 if (d.date) setWindowStart(d.date);
