@@ -532,6 +532,7 @@ export type Database = {
       }
       recommendations: {
         Row: {
+          address: string | null
           breakdown: Json
           category: string | null
           cost_max: number | null
@@ -539,7 +540,9 @@ export type Database = {
           created_at: string
           feasible: boolean
           id: string
+          lat: number | null
           location_name: string | null
+          lon: number | null
           plan_id: string
           rank: number
           score: number
@@ -551,6 +554,7 @@ export type Database = {
           travel_minutes: number | null
         }
         Insert: {
+          address?: string | null
           breakdown?: Json
           category?: string | null
           cost_max?: number | null
@@ -558,7 +562,9 @@ export type Database = {
           created_at?: string
           feasible?: boolean
           id?: string
+          lat?: number | null
           location_name?: string | null
+          lon?: number | null
           plan_id: string
           rank?: number
           score?: number
@@ -570,6 +576,7 @@ export type Database = {
           travel_minutes?: number | null
         }
         Update: {
+          address?: string | null
           breakdown?: Json
           category?: string | null
           cost_max?: number | null
@@ -577,7 +584,9 @@ export type Database = {
           created_at?: string
           feasible?: boolean
           id?: string
+          lat?: number | null
           location_name?: string | null
+          lon?: number | null
           plan_id?: string
           rank?: number
           score?: number
