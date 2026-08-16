@@ -48,6 +48,36 @@ function SettingsPage() {
     if (me.data) setForm(me.data as unknown as Record<string, unknown>);
   }, [me.data]);
 
+  const [uploading, setUploading] = useState(false);
+  const doUpload = useServerFn(uploadAvatar);
+
+  async function onPickAvatar(file?: File) {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5 MB");
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Could not read that file"));
+        reader.readAsDataURL(file);
+      });
+      const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
+      const res = await doUpload({ data: { dataUrl, ext } });
+      set("avatar_url", res.avatar_url);
+      void qc.invalidateQueries({ queryKey: ["me"] });
+      toast.success("Photo updated");
+    } catch (e) {
+      toast.error("Couldn't upload that image", {
+        description: e instanceof Error ? e.message : "Please try another file.",
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+
+
 
   const save = useMutation({
     mutationFn: useServerFn(saveProfile),
