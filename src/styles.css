@@ -327,6 +327,38 @@
   background: var(--accent);
   color: var(--accent-foreground);
 }
+.q-map-pin {
+  position: relative;
+  height: 32px;
+  width: 32px;
+}
+.q-map-pin-icon {
+  font-size: 14px;
+  line-height: 1;
+  filter: saturate(1.1);
+}
+.q-map-pin-rank {
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  display: grid;
+  place-items: center;
+  height: 15px;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid color-mix(in oklab, var(--foreground) 25%, transparent);
+}
+.q-map-pin-food {
+  background: color-mix(in oklab, var(--primary) 88%, white 12%);
+}
+.q-map-pin-activity {
+  background: color-mix(in oklab, var(--accent) 88%, black 12%);
+}
 .mapboxgl-popup-content {
   background: var(--popover);
   color: var(--popover-foreground);
