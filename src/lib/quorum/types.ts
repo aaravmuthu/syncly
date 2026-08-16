@@ -127,6 +127,10 @@ export type OptionSeed = {
   address?: string;
   priceLevel?: "$" | "$$" | "$$$" | "$$$$";
   rating?: number;
+  /** "Pizza", "Coffee", "Bowling" … derived from the provider's categories. */
+  cuisine?: string;
+  /** Drives the map pin icon. */
+  kind?: "food" | "activity";
 };
 
 export type ScoreBreakdown = {
