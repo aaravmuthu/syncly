@@ -305,6 +305,51 @@ export type Database = {
           },
         ]
       }
+      plan_conflicts: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          kind: string
+          plan_id: string
+          profile_id: string | null
+          resolved: boolean
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind: string
+          plan_id: string
+          profile_id?: string | null
+          resolved?: boolean
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          kind?: string
+          plan_id?: string
+          profile_id?: string | null
+          resolved?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_conflicts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_conflicts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_constraints: {
         Row: {
           created_at: string
