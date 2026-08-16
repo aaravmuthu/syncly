@@ -77,12 +77,19 @@ function Landing() {
                 >
                   Start planning <ArrowRight className="size-4" />
                 </Link>
+                <Link
+                  to="/demo"
+                  className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+                >
+                  Try the demo
+                </Link>
                 <a
                   href="#how"
                   className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
                 >
                   See how it works
                 </a>
+
               </div>
               <p className="mt-5 text-sm text-muted-foreground">
                 Stop planning around the loudest person.
