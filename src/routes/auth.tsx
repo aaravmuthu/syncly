@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
+import { SocialButtons } from "@/components/quorum/SocialButtons";
 
 type Mode = "signin" | "signup" | "reset";
 
