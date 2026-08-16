@@ -117,6 +117,15 @@ function GroupPage() {
             Everyone in the group gets their own private questionnaire. Nobody sees anyone else's answers.
           </p>
           <div className="mt-4 space-y-4">
+            <MagicPlanBox
+              fallbackZip={zip || (topArea?.area ?? null)}
+              onApply={(d) => {
+                setTitle(d.title);
+                setCategory(d.category);
+                if (d.date) setWindowStart(d.date);
+                if (d.zip) setZip(d.zip);
+              }}
+            />
             <Field label="What are you planning?">
               <input
                 className={inputClass}
