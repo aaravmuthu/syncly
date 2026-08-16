@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
+import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -99,6 +100,11 @@ function SettingsPage() {
     },
     { key: "notifications_enabled", label: "Notify me", hint: "When a plan needs my answers or vote" },
   ];
+
+  const [pushState, setPushState] = useState<string>("unsupported");
+  useEffect(() => {
+    setPushState(pushPermission());
+  }, []);
 
   return (
     <AppShell title="You" subtitle="Your defaults travel with you into every questionnaire.">
