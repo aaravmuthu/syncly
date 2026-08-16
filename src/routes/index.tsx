@@ -1,235 +1,309 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
-  Brain,
-  CalendarRange,
-  Gauge,
-  Layers,
-  LineChart,
-  Network,
+  CalendarCheck,
+  Car,
+  Check,
+  Lock,
   ShieldCheck,
   Sparkles,
-  Target,
+  Users,
 } from "lucide-react";
-import { Logo } from "@/components/studygraph/Logo";
-import { Panel } from "@/components/studygraph/ui";
+import { BRAND } from "@/lib/brand";
+import { Wordmark } from "@/components/quorum/Wordmark";
+
+const TITLE = `${BRAND.name} — Plans that actually work for everyone`;
+const DESCRIPTION =
+  "Everyone has different budgets, schedules, rides, preferences, and rules. Quorum privately accounts for all of them so your group can make plans without anyone having to explain themselves.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "StudyGraph — Adaptive Knowledge Graph Learning" },
-      {
-        name: "description",
-        content:
-          "StudyGraph maps what you know, finds the prerequisite gaps behind every struggle, and tells you the single highest-impact thing to learn next.",
-      },
-      { property: "og:title", content: "StudyGraph — Adaptive Knowledge Graph Learning" },
-      {
-        property: "og:description",
-        content:
-          "Map your knowledge, expose prerequisite gaps, and always know the highest-impact thing to study next.",
-      },
+      { title: TITLE },
+      { name: "description", content: DESCRIPTION },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESCRIPTION },
+      { name: "twitter:title", content: TITLE },
+      { name: "twitter:description", content: DESCRIPTION },
     ],
   }),
   component: Landing,
 });
 
-const FEATURES = [
-  {
-    icon: Network,
-    title: "Living knowledge graph",
-    body: "Every concept is a node, every prerequisite an edge. Mastery colors the map in real time so gaps are impossible to miss.",
-  },
-  {
-    icon: Gauge,
-    title: "Mastery, not completion",
-    body: "Bayesian mastery estimates blend accuracy, difficulty, response time and decay — no more checkbox learning.",
-  },
-  {
-    icon: Target,
-    title: "Highest-impact next step",
-    body: "The engine scores every concept by gap size, exam weight and how many downstream topics it unlocks.",
-  },
-  {
-    icon: Brain,
-    title: "Root-cause diagnosis",
-    body: "Struggling with buffers? StudyGraph traces it back to equilibrium and tells you exactly where the chain broke.",
-  },
-  {
-    icon: CalendarRange,
-    title: "Spaced review that respects decay",
-    body: "A forgetting model schedules reviews right before retention drops, not on an arbitrary calendar.",
-  },
-  {
-    icon: LineChart,
-    title: "Honest analytics",
-    body: "Mastery velocity, retention curves, prerequisite bottlenecks and a projection of when you'll hit your target.",
-  },
-];
-
 function Landing() {
   return (
-    <div className="ambient-field min-h-dvh">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/60 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <Logo className="h-8 w-8" />
-            <span className="text-[15px] font-semibold tracking-tight">StudyGraph</span>
+    <div className="paper-field min-h-dvh">
+      <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
+          <Wordmark />
+          <div className="flex items-center gap-2">
+            <Link
+              to="/auth"
+              search={{ next: "/home", mode: "signin" }}
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Log in
+            </Link>
+            <Link
+              to="/auth"
+              search={{ next: "/home", mode: "signup" }}
+              className="pressable active:pressable-active rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Start planning
+            </Link>
           </div>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
-            <a href="#features" className="transition-colors hover:text-foreground">Features</a>
-            <Link to="/subjects" className="transition-colors hover:text-foreground">Subjects</Link>
-          </nav>
-          <Link
-            to="/dashboard"
-            className="accent-gradient inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground"
-          >
-            Open StudyGraph
-            <ArrowRight className="h-4 w-4" />
-          </Link>
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="grid-field pointer-events-none absolute inset-0" aria-hidden />
-        <div className="relative mx-auto max-w-6xl px-5 pb-20 pt-20 text-center">
-          <span className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            Adaptive prerequisite intelligence
-          </span>
-          <h1 className="animate-rise mx-auto mt-6 max-w-3xl text-balance text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
-            Stop studying topics. <span className="text-gradient">Start closing gaps.</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground md:text-lg">
-            StudyGraph builds a live map of everything you know, traces every struggle back to
-            the prerequisite that caused it, and answers the only question that matters:
-            what should I learn next?
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/dashboard"
-              className="accent-gradient inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_18px_40px_-16px_var(--primary)]"
-            >
-              Explore the demo graph
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/graph"
-              search={{ concept: undefined }}
-              className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-medium transition-colors hover:bg-secondary"
-            >
-              <Network className="h-4 w-4" />
-              See a knowledge graph
-            </Link>
-          </div>
-
-          <Panel className="mx-auto mt-14 max-w-4xl overflow-hidden p-1.5">
-            <div className="rounded-[22px] bg-background/60 p-6">
-              <div className="grid gap-4 text-left sm:grid-cols-3">
-                {[
-                  { k: "Next best action", v: "Equilibrium & K", d: "Unlocks 5 downstream concepts" },
-                  { k: "Root cause found", v: "Rate laws → 47%", d: "Blocking acids, buffers, ΔG links" },
-                  { k: "Projected mastery", v: "90% in 6 weeks", d: "At 300 min/week" },
-                ].map((card) => (
-                  <div key={card.k} className="glass-soft rounded-2xl p-4">
-                    <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                      {card.k}
-                    </p>
-                    <p className="mt-2 text-lg font-semibold tracking-tight">{card.v}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{card.d}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Panel>
-        </div>
-      </section>
-
-      <section id="how" className="mx-auto max-w-6xl px-5 py-16">
-        <h2 className="text-center text-3xl font-semibold tracking-tight">
-          Three steps, then the graph does the thinking
-        </h2>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {[
-            {
-              n: "01",
-              t: "Map",
-              b: "Pick a subject and StudyGraph loads its full prerequisite graph — every concept, every dependency.",
-            },
-            {
-              n: "02",
-              t: "Measure",
-              b: "Adaptive diagnostics estimate mastery and confidence per node, then keep updating as you practice.",
-            },
-            {
-              n: "03",
-              t: "Move",
-              b: "The recommendation engine ranks what to study by impact, readiness and how fast retention is decaying.",
-            },
-          ].map((s) => (
-            <Panel key={s.n} className="p-6">
-              <span className="text-xs font-semibold tracking-[0.2em] text-primary">{s.n}</span>
-              <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.b}</p>
-            </Panel>
-          ))}
-        </div>
-      </section>
-
-      <section id="features" className="mx-auto max-w-6xl px-5 pb-16">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => {
-            const Icon = f.icon;
-            return (
-              <Panel key={f.title} className="p-6">
-                <div
-                  className="grid h-10 w-10 place-items-center rounded-xl"
-                  style={{ background: "color-mix(in oklab, var(--primary) 16%, transparent)" }}
+      <main>
+        {/* Hero */}
+        <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 sm:pt-24">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="animate-rise">
+              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                <Lock className="size-3.5" /> Private by design
+              </span>
+              <h1 className="mt-5 text-[2.6rem] leading-[1.03] font-semibold sm:text-6xl">
+                Plans that actually work for everyone.
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                {DESCRIPTION}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  to="/auth"
+                  search={{ next: "/home", mode: "signup" }}
+                  className="pressable active:pressable-active inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
                 >
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <h3 className="mt-4 text-base font-semibold">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
-              </Panel>
-            );
-          })}
-        </div>
-      </section>
+                  Start planning <ArrowRight className="size-4" />
+                </Link>
+                <a
+                  href="#how"
+                  className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+                >
+                  See how it works
+                </a>
+              </div>
+              <p className="mt-5 text-sm text-muted-foreground">
+                Stop planning around the loudest person.
+              </p>
+            </div>
 
-      <section className="mx-auto max-w-6xl px-5 pb-24">
-        <Panel className="flex flex-col items-center gap-4 px-8 py-12 text-center">
-          <Layers className="h-8 w-8 text-primary" />
-          <h2 className="text-3xl font-semibold tracking-tight">
-            Your knowledge, finally visible
+            <PhoneMock />
+          </div>
+        </section>
+
+        {/* Problem */}
+        <section className="mx-auto max-w-6xl px-5 py-16">
+          <h2 className="max-w-2xl text-3xl font-semibold sm:text-4xl">
+            Group plans don't fail because nobody cares. They fail because of everything nobody
+            wants to say out loud.
           </h2>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            Load the AP Chemistry demo graph and see the whole system working — mastery, gaps,
-            recommendations, spaced review and analytics — in about thirty seconds.
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { t: "\u201cI can't spend that much.\u201d", s: "Budget is the hardest thing to say in a group chat." },
+              { t: "\u201cI need a ride.\u201d", s: "Getting there is half the plan and never gets planned." },
+              { t: "\u201cI have to be home by 10.\u201d", s: "Curfews quietly kill otherwise perfect plans." },
+              { t: "\u201cI can't eat there.\u201d", s: "Dietary needs get remembered at the table, too late." },
+            ].map((c) => (
+              <div key={c.t} className="card-surface p-5">
+                <p className="font-semibold">{c.t}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{c.s}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section id="how" className="border-y border-border bg-surface/60 py-20">
+          <div className="mx-auto max-w-6xl px-5">
+            <p className="text-sm font-semibold tracking-widest text-primary uppercase">How it works</p>
+            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Four steps. No negotiating.</h2>
+            <ol className="mt-10 grid gap-5 md:grid-cols-4">
+              {[
+                { n: "01", t: "Create a plan", d: "Pick a category, a date window, and a group." },
+                { n: "02", t: "Everyone answers privately", d: "Budget, timing, rides, food, rules — seen by nobody else." },
+                { n: "03", t: "We compute what's possible", d: "Hard limits filter. Preferences rank. Fairness breaks ties." },
+                { n: "04", t: "Vote on real options", d: "Every option on the ballot already works for everyone." },
+              ].map((s) => (
+                <li key={s.n} className="card-surface p-6">
+                  <span className="font-display text-2xl text-primary">{s.n}</span>
+                  <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Feature trio */}
+        <section className="mx-auto max-w-6xl space-y-5 px-5 py-20">
+          <FeatureRow
+            icon={<ShieldCheck className="size-5" />}
+            kicker="Privacy"
+            title="Your friends don't need to know why you can't."
+            body="Constraints stay on your side of the wall. The group only ever sees whether an option works — never who it didn't work for, and never why."
+            bullets={[
+              "Private answers are readable only by you",
+              "Group sees compatibility, never individual limits",
+              "Neutral language everywhere: \u201cdoesn't meet every requirement\u201d",
+            ]}
+          />
+          <FeatureRow
+            icon={<Sparkles className="size-5" />}
+            kicker="Compatibility"
+            title="A score you can actually trust."
+            body="Hard constraints eliminate. Soft preferences rank. And fairness makes sure the same person isn't quietly sacrificed every single weekend."
+            bullets={[
+              "Feasibility before popularity",
+              "Fairness-aware ranking across plans",
+              "Clear, non-identifying explanations",
+            ]}
+          />
+          <FeatureRow
+            icon={<CalendarCheck className="size-5" />}
+            kicker="Parent approval"
+            title="Approval without downloading anything."
+            body="Send one link. A parent sees the plan, the people, the cost, the ride, and the return time — then approves, declines, or approves with a condition."
+            bullets={[
+              "Conditions attach privately to that person",
+              "The plan re-checks itself instantly",
+              "Alternatives appear if it no longer fits",
+            ]}
+          />
+          <FeatureRow
+            icon={<Car className="size-5" />}
+            kicker="Transportation"
+            title="Rides are part of the plan, not an afterthought."
+            body="Seats, drivers, distance limits and return times get solved together, so nobody finds out at 9pm that they have no way home."
+            bullets={["Car-by-car assignments", "Respects capacity and curfews", "Ride needs stay private"]}
+          />
+        </section>
+
+        {/* Testimonial-ish */}
+        <section className="border-y border-border bg-surface/60 py-20">
+          <div className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
+            {[
+              { q: "We stopped having the \u201cwhere do you want to go\u201d conversation entirely.", a: "Maya, 17" },
+              { q: "I didn't have to tell six people my budget. It just worked.", a: "Dev, 16" },
+              { q: "The approval link answered every question I usually have to ask.", a: "Parent of a junior" },
+            ].map((t) => (
+              <figure key={t.a} className="card-surface p-6">
+                <blockquote className="font-display text-lg leading-snug">{t.q}</blockquote>
+                <figcaption className="mt-4 text-sm text-muted-foreground">{t.a}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="mx-auto max-w-3xl px-5 py-24 text-center">
+          <h2 className="text-3xl font-semibold sm:text-4xl">Everyone gets a seat at the table.</h2>
+          <p className="mt-4 text-muted-foreground">
+            Private constraints. Better plans. Free to start with your group.
           </p>
           <Link
-            to="/dashboard"
-            className="accent-gradient mt-2 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-primary-foreground"
+            to="/auth"
+            search={{ next: "/home", mode: "signup" }}
+            className="pressable active:pressable-active mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground"
           >
-            Open the dashboard
-            <ArrowRight className="h-4 w-4" />
+            Start planning <ArrowRight className="size-4" />
           </Link>
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Progress stays in your browser until you create an account.
-          </p>
-        </Panel>
-      </section>
+        </section>
+      </main>
 
-      <footer className="border-t border-border py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Logo className="h-5 w-5" />
-            StudyGraph
-          </div>
-          <p>Adaptive knowledge-graph learning.</p>
+      <footer className="border-t border-border py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 text-sm text-muted-foreground sm:flex-row sm:justify-between">
+          <Wordmark size="sm" />
+          <p>© {new Date().getFullYear()} {BRAND.name}. Private constraints. Better plans.</p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function FeatureRow({
+  icon,
+  kicker,
+  title,
+  body,
+  bullets,
+}: {
+  icon: React.ReactNode;
+  kicker: string;
+  title: string;
+  body: string;
+  bullets: string[];
+}) {
+  return (
+    <div className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
+      <div>
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
+          {icon} {kicker}
+        </span>
+        <h3 className="mt-4 text-2xl font-semibold">{title}</h3>
+      </div>
+      <div>
+        <p className="text-muted-foreground">{body}</p>
+        <ul className="mt-4 space-y-2">
+          {bullets.map((b) => (
+            <li key={b} className="flex items-start gap-2 text-sm">
+              <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function PhoneMock() {
+  return (
+    <div className="animate-rise mx-auto w-full max-w-[330px]">
+      <div className="rounded-[2.4rem] border border-border bg-card p-3 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.45)]">
+        <div className="rounded-[1.9rem] bg-surface p-4">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Saturday Night Out</span>
+            <span className="inline-flex items-center gap-1">
+              <Users className="size-3.5" /> 6
+            </span>
+          </div>
+          <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold">TopGolf</p>
+              <span className="rounded-full bg-primary/12 px-2.5 py-1 text-xs font-semibold text-primary">
+                91%
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">$24–$32 · 12 min away</p>
+            <ul className="mt-3 space-y-1.5 text-xs">
+              {["Fits everyone's budget", "Works with every schedule", "Rides cover all seats"].map(
+                (r) => (
+                  <li key={r} className="flex items-center gap-2 text-muted-foreground">
+                    <Check className="size-3.5 text-primary" /> {r}
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+          {[
+            { t: "Bowling + Diner", s: "89%" },
+            { t: "Dinner + Movie", s: "85%" },
+          ].map((o) => (
+            <div
+              key={o.t}
+              className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm"
+            >
+              <span>{o.t}</span>
+              <span className="text-xs font-semibold text-muted-foreground">{o.s}</span>
+            </div>
+          ))}
+          <div className="mt-3 rounded-2xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+            One option was hidden because it didn't meet every group member's requirements.
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
