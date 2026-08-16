@@ -18,6 +18,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
+import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedGroupsIndexRouteImport } from './routes/_authenticated/groups.index'
 import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups.$groupId'
@@ -68,6 +69,11 @@ const ApproveTokenRoute = ApproveTokenRouteImport.update({
   path: '/approve/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
   path: '/.lovable/oauth/consent',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
+  '/join/$code': typeof JoinCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
+  '/join/$code': typeof JoinCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
+  '/join/$code': typeof JoinCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
   '/_authenticated/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/settings'
     | '/approve/$token'
+    | '/join/$code'
     | '/.lovable/oauth/consent'
     | '/groups/$groupId'
     | '/plans/$planId'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/settings'
     | '/approve/$token'
+    | '/join/$code'
     | '/.lovable/oauth/consent'
     | '/groups/$groupId'
     | '/plans/$planId'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/settings'
     | '/approve/$token'
+    | '/join/$code'
     | '/.lovable/oauth/consent'
     | '/_authenticated/groups/$groupId'
     | '/_authenticated/plans/$planId'
@@ -199,6 +211,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ApproveTokenRoute: typeof ApproveTokenRoute
+  JoinCodeRoute: typeof JoinCodeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/approve/$token'
       fullPath: '/approve/$token'
       preLoaderRoute: typeof ApproveTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
@@ -336,6 +356,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ApproveTokenRoute: ApproveTokenRoute,
+  JoinCodeRoute: JoinCodeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport

@@ -122,6 +122,7 @@ function GroupsPage() {
             <Button
               variant="outline"
               className="w-full"
+              loading={join.isPending}
               disabled={code.length < 4 || join.isPending}
               onClick={() => join.mutate({ data: { code } })}
             >

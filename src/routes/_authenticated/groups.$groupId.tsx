@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { AppShell } from "@/components/quorum/AppShell";
+import { InviteCard } from "@/components/quorum/InviteCard";
 import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
@@ -69,6 +70,8 @@ function GroupPage() {
       subtitle={`${members.length} members · invite code ${group.invite_code}`}
       action={<Button onClick={() => setCreating((v) => !v)}>{creating ? "Cancel" : "New plan"}</Button>}
     >
+      <InviteCard code={group.invite_code} groupName={group.name} />
+
       {creating ? (
         <Card className="mb-6">
           <h2 className="font-display text-base font-semibold">Start a plan</h2>
