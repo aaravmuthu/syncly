@@ -102,6 +102,7 @@ function PlanPage() {
     driver: t.driver_label ?? "A driver",
   }));
   const selectedRec = data.recommendations.find((r) => r.id === selected) ?? null;
+  const summaries = useCompromiseSummaries(planId, data.recommendations.length > 0);
   const backupRec =
     data.recommendations.find((r) => r.id !== selected && r.feasible) ??
     data.recommendations.find((r) => r.id !== selected) ??
@@ -232,6 +233,7 @@ function PlanPage() {
                       {isSelected ? <Pill tone="accent">Chosen</Pill> : null}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{r.subtitle}</p>
+                    <CompromiseNote text={summaries.data?.[r.id]} />
                     <p className="mt-2 text-xs text-muted-foreground">
                       {b.venue?.priceLevel ? `${b.venue.priceLevel} · ` : ""}${r.cost_min}–${r.cost_max}
                       {b.venue?.distanceMiles != null
