@@ -214,7 +214,33 @@ function SettingsPage() {
             </button>
           );
         })}
+
+        <div className="flex items-center justify-between gap-4 py-3.5">
+          <span>
+            <span className="block text-sm font-medium">Browser notifications</span>
+            <span className="block text-xs text-muted-foreground">
+              {pushState === "granted"
+                ? "Enabled on this device"
+                : pushState === "denied"
+                  ? "Blocked in your browser settings"
+                  : pushState === "unsupported"
+                    ? "Not supported on this browser"
+                    : "Get pinged when a plan needs you"}
+            </span>
+          </span>
+          {pushState === "default" ? (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setPushState(await requestPush());
+              }}
+            >
+              Enable
+            </Button>
+          ) : null}
+        </div>
       </Card>
+
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Button
