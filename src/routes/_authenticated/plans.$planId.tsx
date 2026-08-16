@@ -188,6 +188,21 @@ function PlanPage() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Options that work for the group
           </h2>
+          <VenueMap
+            venues={data.recommendations
+              .filter(
+                (r): r is typeof r & { lat: number; lon: number } =>
+                  typeof r.lat === "number" && typeof r.lon === "number",
+              )
+              .map((r) => ({
+                id: r.id,
+                title: r.title,
+                lat: r.lat,
+                lon: r.lon,
+                rank: r.rank,
+                selected: selected === r.id,
+              }))}
+          />
           {data.recommendations.map((r) => {
             const b = (r.breakdown ?? {}) as unknown as ScoreBreakdown;
             const myVote = votes.find((v) => v.profile_id === data.meProfileId)?.recommendation_id;
