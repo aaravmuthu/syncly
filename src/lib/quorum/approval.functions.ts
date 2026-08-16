@@ -26,14 +26,21 @@ export const getApproval = createServerFn({ method: "GET" })
       .eq("id", row.profile_id)
       .single();
 
-    let details: Record<string, unknown> | null = null;
+    let details: {
+      title: string;
+      location_name: string | null;
+      suggested_start: string | null;
+      suggested_end: string | null;
+      cost_min: number | null;
+      cost_max: number | null;
+    } | null = null;
     if (plan?.selected_recommendation_id) {
       const { data: rec } = await supabaseAdmin
         .from("recommendations")
         .select("title, location_name, suggested_start, suggested_end, cost_min, cost_max")
         .eq("id", plan.selected_recommendation_id)
         .maybeSingle();
-      details = rec as Record<string, unknown> | null;
+      details = rec ?? null;
     }
     const { data: cars } = await supabaseAdmin
       .from("transport_assignments")
