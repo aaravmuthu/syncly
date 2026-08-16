@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Card, Field, Pill, inputClass } from "./ui";
 import { QUESTIONNAIRES, type Field as FieldDef, type Step } from "@/lib/quorum/questionnaires";
+import { AVAILABILITY_SLOTS, prettySlot } from "@/lib/quorum/availability";
 import type { ConstraintPayload } from "@/lib/quorum/types";
 import { cn } from "@/lib/utils";
 
@@ -117,6 +118,56 @@ function FieldRenderer({
           />
         </span>
       </button>
+    );
+  }
+
+  if (field.kind === "availability") {
+    const selected = Array.isArray(current) ? (current as string[]) : [];
+    const toggle = (slot: string) =>
+      onChange(
+        field.key,
+        selected.includes(slot) ? selected.filter((s) => s !== slot) : [...selected, slot],
+      );
+    return (
+      <div>
+        <span className="text-sm font-medium">{field.label}</span>
+        {field.hint ? <p className="mt-0.5 text-xs text-muted-foreground">{field.hint}</p> : null}
+        <div className="mt-2 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+          {AVAILABILITY_SLOTS.map((slot) => {
+            const on = selected.includes(slot);
+            return (
+              <button
+                key={slot}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(slot)}
+                className={cn(
+                  "rounded-xl px-2 py-2.5 text-xs font-medium tabular-nums transition",
+                  on ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
+                )}
+              >
+                {prettySlot(slot)}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2 flex gap-3 text-xs">
+          <button
+            type="button"
+            className="text-muted-foreground underline-offset-4 hover:underline"
+            onClick={() => onChange(field.key, [...AVAILABILITY_SLOTS])}
+          >
+            Free all day
+          </button>
+          <button
+            type="button"
+            className="text-muted-foreground underline-offset-4 hover:underline"
+            onClick={() => onChange(field.key, [])}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
     );
   }
 
