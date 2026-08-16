@@ -237,14 +237,32 @@ export async function summarizeCompromises(facts: CompromiseFacts[]): Promise<Re
       ].join("\n"),
     });
 
-    const map = { ...fallback };
-    for (const item of output.items) {
-      if (item.id in map && item.summary.trim()) map[item.id] = item.summary.trim();
+    return mergeSummaries(fallback, output.items);
+  } catch (error) {
+    if (NoObjectGeneratedError.isInstance(error)) {
+      const raw = extractJson(error.text) as { items?: unknown } | unknown[] | null;
+      const items = Array.isArray(raw) ? raw : (raw?.items ?? null);
+      if (Array.isArray(items)) return mergeSummaries(fallback, items);
     }
-    return map;
-  } catch {
     return fallback;
   }
+}
+
+function mergeSummaries(fallback: Record<string, string>, items: unknown[]): Record<string, string> {
+  const map = { ...fallback };
+  for (const item of items) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Record<string, unknown>;
+    const id = typeof o["id"] === "string" ? o["id"] : null;
+    const summary =
+      typeof o["summary"] === "string"
+        ? o["summary"]
+        : typeof o["text"] === "string"
+          ? o["text"]
+          : null;
+    if (id && summary && id in map && summary.trim()) map[id] = summary.trim();
+  }
+  return map;
 }
 
 /* ------------------------------------------------------------------ */
