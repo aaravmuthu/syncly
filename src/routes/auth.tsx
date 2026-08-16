@@ -148,7 +148,25 @@ function AuthPage() {
             : "Your private answers stay yours. Groups only ever see whether a plan works."}
         </p>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        {mode !== "reset" ? (
+          <>
+            <div className="mt-7">
+              <SocialButtons
+                onGoogle={() => void signInWith("google")}
+                onApple={() => void signInWith("apple")}
+                pending={social}
+                disabled={busy}
+              />
+            </div>
+            <div className="my-6 flex items-center gap-3">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">or sign in with email</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        ) : null}
+
+        <form onSubmit={submit} className={mode === "reset" ? "mt-8 space-y-4" : "space-y-4"}>
           <label className="block text-sm font-medium">
             Email
             <input
