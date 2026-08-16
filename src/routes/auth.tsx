@@ -106,6 +106,9 @@ function AuthPage() {
       }
       if (target.startsWith("/.lovable/")) {
         window.location.href = target;
+      } else if (target === "/home") {
+        // Let the callback decide between onboarding and the dashboard.
+        void navigate({ to: "/auth-callback" });
       } else {
         void navigate({ to: target });
       }
