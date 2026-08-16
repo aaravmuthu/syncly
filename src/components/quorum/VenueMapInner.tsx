@@ -23,33 +23,46 @@ export default function VenueMapInner({
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [ready, setReady] = useState(false);
+  // Only the first venue seeds the initial centre; keeping it out of the deps
+  // stops the map from being torn down on every re-render.
+  const seed = venues[0];
 
   useEffect(() => {
-    if (!container.current || map.current || !token || venues.length === 0) return;
+    if (!container.current || !token || !seed) return;
+    container.current.innerHTML = "";
+    let alive = true;
     try {
       mapboxgl.accessToken = token;
       const m = new mapboxgl.Map({
         container: container.current,
         style: "mapbox://styles/mapbox/dark-v11",
-        center: [venues[0]!.lon, venues[0]!.lat],
+        center: [seed.lon, seed.lat],
         zoom: 11,
         attributionControl: false,
         cooperativeGestures: true,
       });
       m.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
       map.current = m;
+      m.on("load", () => {
+        if (alive) setReady(true);
+      });
     } catch {
       map.current = null;
     }
     return () => {
+      alive = false;
+      setReady(false);
       map.current?.remove();
       map.current = null;
     };
-  }, [token, venues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => {
     const m = map.current;
-    if (!m || venues.length === 0) return;
+    if (!m || !ready || venues.length === 0) return;
+
     const markers: mapboxgl.Marker[] = [];
     try {
       const bounds = new mapboxgl.LngLatBounds();
