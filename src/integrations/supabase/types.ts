@@ -395,10 +395,12 @@ export type Database = {
           compatibility_score: number | null
           created_at: string
           created_by: string
+          food_vibe: string | null
           group_id: string
           id: string
           location_area: string | null
           notes: string | null
+          search_radius_miles: number | null
           selected_recommendation_id: string | null
           status: Database["public"]["Enums"]["plan_status"]
           title: string
@@ -411,10 +413,12 @@ export type Database = {
           compatibility_score?: number | null
           created_at?: string
           created_by: string
+          food_vibe?: string | null
           group_id: string
           id?: string
           location_area?: string | null
           notes?: string | null
+          search_radius_miles?: number | null
           selected_recommendation_id?: string | null
           status?: Database["public"]["Enums"]["plan_status"]
           title: string
@@ -427,10 +431,12 @@ export type Database = {
           compatibility_score?: number | null
           created_at?: string
           created_by?: string
+          food_vibe?: string | null
           group_id?: string
           id?: string
           location_area?: string | null
           notes?: string | null
+          search_radius_miles?: number | null
           selected_recommendation_id?: string | null
           status?: Database["public"]["Enums"]["plan_status"]
           title?: string
