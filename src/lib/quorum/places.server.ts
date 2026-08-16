@@ -257,9 +257,7 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
           lat: p.lat,
           lon: p.lon,
           distanceMiles,
-          address: p.address_line2
-            ? `${p.address_line1 ? `${p.address_line1}, ` : ""}${p.address_line2}`
-            : (p.formatted ?? undefined),
+          address: p.address_line2 ?? p.formatted ?? undefined,
           priceLevel: priceLevelFor(costMax),
           ...(cuisineFrom(cats, p.datasource?.raw)
             ? { cuisine: cuisineFrom(cats, p.datasource?.raw)! }
