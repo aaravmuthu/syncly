@@ -251,3 +251,40 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
     return [];
   }
 }
+
+/** Reverse-geocode coordinates to a US ZIP (Mapbox, OSM fallback). */
+export async function reverseZipServer(lat: number, lon: number): Promise<string | null> {
+  const token = mapboxToken();
+  if (token) {
+    try {
+      const url =
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lon},${lat}.json` +
+        `?access_token=${encodeURIComponent(token)}&types=postcode&limit=1`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = (await res.json()) as { features?: { text: string }[] };
+        const zip = json.features?.[0]?.text;
+        if (zip && /^\d{5}$/.test(zip)) return zip;
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`,
+      {
+        headers: {
+          "User-Agent": "Quorum group planner (https://quorumapp.lovable.app)",
+          Accept: "application/json",
+        },
+      },
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as { address?: { postcode?: string } };
+    const zip = json.address?.postcode;
+    return zip && /^\d{5}$/.test(zip) ? zip : null;
+  } catch {
+    return null;
+  }
+}

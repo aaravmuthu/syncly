@@ -26,3 +26,11 @@ export const getMapToken = createServerFn({ method: "GET" }).handler(async (): P
   const { publicMapToken } = await import("./places.server");
   return publicMapToken();
 });
+
+/** Coordinates → ZIP, used when a picked suggestion has no postcode. */
+export const reverseZip = createServerFn({ method: "POST" })
+  .inputValidator((d: { lat: number; lon: number }) => d)
+  .handler(async ({ data }): Promise<string | null> => {
+    const { reverseZipServer } = await import("./places.server");
+    return reverseZipServer(data.lat, data.lon);
+  });
