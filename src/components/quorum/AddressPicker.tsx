@@ -89,14 +89,22 @@ export function AddressPicker({
   const commit = (s: Suggestion) => {
     setOpen(false);
     setText(s.label);
+    const base = {
+      address: s.label,
+      city: s.city ?? null,
+      state: s.state ?? null,
+      lat: s.lat,
+      lon: s.lon,
+    };
     if (s.zip) {
-      onPick({ address: s.label, zip: s.zip, lat: s.lat, lon: s.lon });
+      onPick({ ...base, zip: s.zip });
       return;
     }
     void toZip({ data: { lat: s.lat, lon: s.lon } })
-      .then((zip) => onPick({ address: s.label, zip: zip ?? null, lat: s.lat, lon: s.lon }))
-      .catch(() => onPick({ address: s.label, zip: null, lat: s.lat, lon: s.lon }));
+      .then((zip) => onPick({ ...base, zip: zip ?? null }))
+      .catch(() => onPick({ ...base, zip: null }));
   };
+
 
   const useMyLocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
