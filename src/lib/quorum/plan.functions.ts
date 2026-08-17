@@ -286,7 +286,13 @@ export const getGroup = createServerFn({ method: "GET" })
       .eq("group_id", data.groupId)
       .order("created_at", { ascending: false })
       .limit(12);
-    return { group, members: members ?? [], plans: plans ?? [], activity: activity ?? [] };
+    return {
+      group,
+      members: members ?? [],
+      plans: plans ?? [],
+      activity: activity ?? [],
+      myProfileId: (me as string | null) ?? null,
+    };
   });
 
 /* ------------------------------------------------------------------ */
