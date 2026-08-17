@@ -131,6 +131,8 @@ export type OptionSeed = {
   cuisine?: string;
   /** Drives the map pin icon. */
   kind?: "food" | "activity";
+  /** Raw OSM-style opening hours when the provider supplies them. */
+  openHours?: string;
 };
 
 export type ScoreBreakdown = {
@@ -144,6 +146,8 @@ export type ScoreBreakdown = {
   fairness: number;
   reasons: string[];
   cautions: string[];
+  /** Assigned when the option makes the strict top-3 shortlist. */
+  optionLabel?: { key: "A" | "B" | "C"; emoji: string; title: string };
   fair?: {
     avgMinutes: number;
     spreadMinutes: number;

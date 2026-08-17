@@ -109,6 +109,7 @@ function PlanPage() {
   const [editing, setEditing] = useState(false);
   const [approvalLink, setApprovalLink] = useState<string | null>(null);
   const [venueDetail, setVenueDetail] = useState<VenueDetail | null>(null);
+  const [shuffle, setShuffle] = useState(0);
 
   const submit = useMutation({
     mutationFn: useServerFn(submitConstraints),
@@ -235,7 +236,7 @@ function PlanPage() {
             variant={responded === total ? "primary" : "outline"}
             loading={generate.isPending}
             className="shrink-0"
-            onClick={() => generate.mutate({ data: { planId } })}
+            onClick={() => generate.mutate({ data: { planId, shuffle } })}
           >
             {generate.isPending ? "Finding fair spots…" : "Find options"}
           </Button>
@@ -289,7 +290,7 @@ function PlanPage() {
       {data.recommendations.length > 0 ? (
         <section className="mt-8 space-y-3">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Options that work for the group
+            Top 3 options that work for everyone
           </h2>
           <VenueMap
             venues={data.recommendations
@@ -321,6 +322,11 @@ function PlanPage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
+                    {b.optionLabel ? (
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                        {b.optionLabel.emoji} {b.optionLabel.title}
+                      </p>
+                    ) : null}
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-display text-lg font-semibold">{r.title}</h3>
                       {r.feasible ? (
@@ -581,9 +587,23 @@ function PlanPage() {
             </Card>
           ) : null}
 
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              loading={generate.isPending}
+              onClick={() => {
+                const next = shuffle + 1;
+                setShuffle(next);
+                generate.mutate({ data: { planId, shuffle: next } });
+              }}
+            >
+              🔀 Shuffle · load 3 different options
+            </Button>
+          </div>
+
           <p className="px-1 text-xs text-muted-foreground">
-            Scores come from everyone's private answers. Quorum never shows whose budget, curfew, or
-            dietary need ruled an option out.
+            Only options that clear everyone's distance, curfew, and opening-hours limits are shown.
+            Quorum never reveals whose constraint ruled an option out.
           </p>
         </section>
       ) : null}

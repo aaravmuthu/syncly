@@ -323,6 +323,9 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
             ? { cuisine: cuisineFrom(cats, p.datasource?.raw)! }
             : {}),
           kind: kindFor(cats),
+          ...(typeof p.datasource?.raw?.["opening_hours"] === "string"
+            ? { openHours: p.datasource.raw["opening_hours"] as string }
+            : {}),
         };
         return seed;
       });
