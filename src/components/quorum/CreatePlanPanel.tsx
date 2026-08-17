@@ -373,7 +373,7 @@ export function CreatePlanPanel({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <Field label="Date">
               <input
                 type="date"
