@@ -115,8 +115,18 @@ function PlanPage() {
   });
   const generate = useMutation({
     mutationFn: useServerFn(generateRecommendations),
-    onSuccess: () => void invalidate(),
+    onSuccess: (res) => {
+      void invalidate();
+      toast.success("Fair spots ready", {
+        description: `${res?.count ?? 0} options centered on your group's midpoint.`,
+      });
+    },
+    onError: (e: unknown) =>
+      toast.error("Couldn't find options", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
   });
+
   const vote = useMutation({
     mutationFn: useServerFn(castVote),
     onSuccess: () => void invalidate(),
