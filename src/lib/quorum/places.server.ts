@@ -215,15 +215,26 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
   const radiusMeters = Math.round(radiusMiles * 1609.34);
   const { vibeById } = await import("./vibes");
   const categories =
-    vibeById(q.vibe)?.categories ?? GEOAPIFY_CATEGORIES[q.category] ?? GEOAPIFY_CATEGORIES.custom;
+    q.categoriesOverride ??
+    vibeById(q.vibe)?.categories ??
+    GEOAPIFY_CATEGORIES[q.category] ??
+    GEOAPIFY_CATEGORIES.custom;
+  const name = (q.name ?? "").trim();
 
   try {
-    const url =
-      `https://api.geoapify.com/v2/places?categories=${encodeURIComponent(categories)}` +
+    const build = (cats: string) =>
+      `https://api.geoapify.com/v2/places?categories=${encodeURIComponent(cats)}` +
       `&filter=circle:${q.origin.lon},${q.origin.lat},${radiusMeters}` +
       `&bias=proximity:${q.origin.lon},${q.origin.lat}` +
+      (name ? `&name=${encodeURIComponent(name)}` : "") +
       `&limit=40&apiKey=${encodeURIComponent(key)}`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    let res = await fetch(build(categories), { headers: { Accept: "application/json" } });
+    if (!res.ok && categories !== GEOAPIFY_CATEGORIES.custom) {
+      // An unsupported category list must not blank the picker — retry broad.
+      res = await fetch(build(GEOAPIFY_CATEGORIES.custom), {
+        headers: { Accept: "application/json" },
+      });
+    }
     if (!res.ok) {
       console.error(`Geoapify places failed [${res.status}]: ${await res.text()}`);
       return [];
