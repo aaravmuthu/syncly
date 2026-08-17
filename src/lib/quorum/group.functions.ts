@@ -1,24 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/** Remove a member's plan-level participation (votes, RSVPs, private constraints). */
-async function clearMemberFromGroupPlans(
-  admin: {
-    from: (t: string) => {
-      select: (c: string) => { eq: (c: string, v: string) => Promise<{ data: { id: string }[] | null }> };
-      delete: () => { in: (c: string, v: string[]) => { eq: (c: string, v: string) => Promise<unknown> } };
-    };
-  },
-  groupId: string,
-  profileId: string,
-) {
-  const { data: plans } = await admin.from("plans").select("id").eq("group_id", groupId);
-  const planIds = (plans ?? []).map((p) => p.id);
-  if (!planIds.length) return;
-  for (const table of ["votes", "plan_participants", "plan_constraints"]) {
-    await admin.from(table).delete().in("plan_id", planIds).eq("profile_id", profileId);
-  }
-}
+
+
 
 export const leaveGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
