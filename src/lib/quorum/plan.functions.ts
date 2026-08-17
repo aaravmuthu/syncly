@@ -70,11 +70,17 @@ export const saveProfile = createServerFn({ method: "POST" })
       "onboarded",
       "zip_code",
       "theme_preference",
+      "home_address",
+      "home_lat",
+      "home_lon",
     ] as const;
     const nullable = new Set([
       "curfew_time",
       "zip_code",
       "home_area",
+      "home_address",
+      "home_lat",
+      "home_lon",
       "budget_preference",
       "age",
       "avatar_url",
