@@ -47,11 +47,11 @@ export function SpotBrowser({
     staleTime: 1000 * 60 * 5,
   });
 
+  const addFn = useServerFn(addSpotToPlan);
   const add = useMutation({
-    mutationFn: useServerFn(addSpotToPlan),
+    mutationFn: (vars: { planId: string; spot: BrowseSpot }) => addFn({ data: vars }),
     onSuccess: (_r, vars) => {
-      const v = vars as unknown as { data: { spot: BrowseSpot } };
-      setAdded((prev) => [...prev, v.data.spot.key]);
+      setAdded((prev) => [...prev, vars.spot.key]);
       onAdded?.();
     },
   });
