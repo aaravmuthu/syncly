@@ -359,6 +359,18 @@
 .q-map-pin-activity {
   background: color-mix(in oklab, var(--accent) 88%, black 12%);
 }
+.q-map-pin-home {
+  height: 26px;
+  width: 26px;
+  background: color-mix(in oklab, var(--foreground) 16%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 30%, transparent);
+}
+.q-map-pin-fair {
+  height: 30px;
+  width: 30px;
+  background: color-mix(in oklab, var(--success, var(--primary)) 80%, white 20%);
+  box-shadow: 0 0 0 6px color-mix(in oklab, var(--primary) 18%, transparent);
+}
 .mapboxgl-popup-content {
   background: var(--popover);
   color: var(--popover-foreground);
