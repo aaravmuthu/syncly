@@ -415,11 +415,30 @@ export const listActivity = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("activity_events")
-      .select("id, type, message, created_at, plan_id, group_id")
+      .select(
+        "id, type, message, created_at, plan_id, group_id, actor:profiles!activity_events_actor_profile_id_fkey(display_name, avatar_url, avatar_emoji)",
+      )
       .not("group_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(40);
-    return data ?? [];
+    return (data ?? []).map((row) => {
+      const actorRaw = (row as { actor?: unknown }).actor;
+      const actor = (Array.isArray(actorRaw) ? actorRaw[0] : actorRaw) as
+        | { display_name: string | null; avatar_url: string | null; avatar_emoji: string | null }
+        | null
+        | undefined;
+      return {
+        id: row.id,
+        type: row.type,
+        message: row.message,
+        created_at: row.created_at,
+        plan_id: row.plan_id,
+        group_id: row.group_id,
+        actorName: actor?.display_name ?? null,
+        actorAvatarUrl: actor?.avatar_url ?? null,
+        actorEmoji: actor?.avatar_emoji ?? null,
+      };
+    });
   });
 
 export const createPlan = createServerFn({ method: "POST" })
