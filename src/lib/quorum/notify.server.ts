@@ -9,7 +9,8 @@ export type NotifyKind =
   | "plan_finalized"
   | "parent_response"
   | "member_joined"
-  | "compromise_applied";
+  | "compromise_applied"
+  | "conflict_flagged";
 
 export async function notifyProfiles(
   profileIds: string[],
