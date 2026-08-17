@@ -263,6 +263,7 @@ export const getGroup = createServerFn({ method: "GET" })
   .inputValidator((d: { groupId: string }) => d)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    const { data: me } = await supabase.rpc("my_profile_id");
     const { data: group, error } = await supabase
       .from("groups")
       .select("*")
