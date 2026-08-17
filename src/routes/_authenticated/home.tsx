@@ -93,12 +93,18 @@ function HomePage() {
     [plans, selectedDay],
   );
 
+  const conflicted = dayFiltered.filter(
+    (p) => (p.conflicts?.length ?? 0) > 0 && (p.alternatives?.length ?? 0) > 0,
+  );
   const needsAction = dayFiltered.filter(
     (p) =>
-      (p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted),
+      !conflicted.includes(p) &&
+      ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
   );
   const otherActive = dayFiltered.filter(
-    (p) => (p.status === "collecting" || p.status === "voting") && !needsAction.includes(p),
+    (p) => (p.status === "collecting" || p.status === "voting") &&
+      !needsAction.includes(p) &&
+      !conflicted.includes(p),
   );
   const confirmed = dayFiltered
     .filter((p) => p.status === "finalized")
