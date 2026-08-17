@@ -26,6 +26,7 @@ import {
 } from "@/lib/quorum/plan.functions";
 import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
 import { directionsUrl } from "@/lib/quorum/vibes";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/plans/$planId")({
   head: () => ({
@@ -115,7 +116,7 @@ function PlanPage() {
   });
   const generate = useMutation({
     mutationFn: useServerFn(generateRecommendations),
-    onSuccess: (res) => {
+    onSuccess: (res: { count?: number } | undefined) => {
       void invalidate();
       toast.success("Fair spots ready", {
         description: `${res?.count ?? 0} options centered on your group's midpoint.`,
