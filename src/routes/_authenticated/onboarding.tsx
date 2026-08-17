@@ -230,6 +230,9 @@ function Onboarding() {
                 return toast.error("Add a display name so your group knows who you are");
               }
               const zip = String(form["zip_code"] ?? "").trim();
+              if (last && (form["home_lat"] == null || form["home_lon"] == null)) {
+                return toast.error("Pick your home address so Quorum can measure real distances");
+              }
               if (last && zip && !isValidZip(zip)) {
                 return toast.error("Enter a valid 5-digit ZIP code");
               }
