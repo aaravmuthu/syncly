@@ -197,6 +197,10 @@ export type VenueSearch = {
   limit?: number;
   /** Optional food/activity vibe id — overrides the category defaults. */
   vibe?: string | null;
+  /** Explicit Geoapify category list — overrides both vibe and category. */
+  categoriesOverride?: string | null;
+  /** Free-text name filter ("chipotle"). */
+  name?: string | null;
 };
 
 /**
