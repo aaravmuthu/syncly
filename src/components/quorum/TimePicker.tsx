@@ -121,7 +121,7 @@ export function TimePicker({
               className={cn(
                 "rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums backdrop-blur transition duration-150",
                 on
-                  ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-4px_hsl(var(--success)/0.8)]"
+                  ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-6px_var(--success)]"
                   : "border-border/70 bg-secondary/60 text-secondary-foreground hover:border-primary/40",
                 pulse === p ? "scale-105" : "scale-100",
               )}
@@ -138,7 +138,7 @@ export function TimePicker({
             className={cn(
               "rounded-full border px-3 py-1.5 text-xs font-semibold transition duration-150",
               normalized === null
-                ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-4px_hsl(var(--success)/0.8)]"
+                ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-6px_var(--success)]"
                 : "border-border/70 bg-secondary/60 text-secondary-foreground hover:border-primary/40",
               pulse === "none" ? "scale-105" : "scale-100",
             )}
