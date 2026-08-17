@@ -815,7 +815,9 @@ export type Database = {
     Functions: {
       can_see_plan: { Args: { _plan_id: string }; Returns: boolean }
       gen_invite_code: { Args: never; Returns: string }
+      is_group_admin: { Args: { _group_id: string }; Returns: boolean }
       is_group_member: { Args: { _group_id: string }; Returns: boolean }
+      is_plan_owner: { Args: { _plan_id: string }; Returns: boolean }
       my_profile_id: { Args: never; Returns: string }
       shares_group_with_me: { Args: { _profile_id: string }; Returns: boolean }
     }
