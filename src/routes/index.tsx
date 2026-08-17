@@ -21,6 +21,7 @@ import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 const TITLE = "Quorum — Plans that actually work for everyone";
 const DESCRIPTION =
   "Private, smart group planning with privacy protection, keyless location discovery, and voting.";
+const OG_IMAGE = "https://quorumapp.lovable.app/og-image.png?v=3";
 
 export const Route = createFileRoute("/")({
   head: () => ({
