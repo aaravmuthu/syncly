@@ -238,8 +238,10 @@ function HomePage() {
           <Section title="Needs your action" accent="text-emerald-500">
             <div className="grid gap-3 sm:grid-cols-2">
               {needsAction.map((p) => (
-                <div key={p.id} className="space-y-2">
-                  <ActionCard plan={p} />
+                <div key={p.id} className="flex h-full flex-col gap-2">
+                  <div className="flex-1">
+                    <ActionCard plan={p} />
+                  </div>
                   <QuickActions planId={p.id} />
                 </div>
               ))}
