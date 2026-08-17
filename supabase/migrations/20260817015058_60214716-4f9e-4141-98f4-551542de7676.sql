@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.prevent_role_escalation() FROM anon, authenticated, PUBLIC;
