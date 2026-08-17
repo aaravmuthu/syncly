@@ -15,11 +15,21 @@ export const geocodeZip = createServerFn({ method: "POST" })
 
 /** Address / ZIP autocomplete (Mapbox, falls back to OpenStreetMap). */
 export const suggestPlaces = createServerFn({ method: "POST" })
-  .inputValidator((d: { query: string }) => d)
+  .inputValidator(
+    (d: {
+      query: string;
+      addressOnly?: boolean;
+      proximity?: { lat: number; lon: number } | null;
+    }) => d,
+  )
   .handler(async ({ data }): Promise<PlaceSuggestion[]> => {
     const { suggestPlacesServer } = await import("./places.server");
-    return suggestPlacesServer(data.query);
+    return suggestPlacesServer(data.query, {
+      ...(data.addressOnly != null ? { addressOnly: data.addressOnly } : {}),
+      ...(data.proximity != null ? { proximity: data.proximity } : {}),
+    });
   });
+
 
 /** Public Mapbox GL token for the browser. Empty string when maps are disabled. */
 export const getMapToken = createServerFn({ method: "GET" }).handler(async (): Promise<string> => {
