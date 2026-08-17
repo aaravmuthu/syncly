@@ -21,6 +21,7 @@ import {
   dayKey,
   formatWhen,
   startOfWeek,
+  CostBadge,
   type DashPlan,
 } from "@/components/quorum/DashboardParts";
 import { takePendingInvite } from "@/lib/quorum/invite";
@@ -237,8 +238,10 @@ function HomePage() {
           <Section title="Needs your action" accent="text-emerald-500">
             <div className="grid gap-3 sm:grid-cols-2">
               {needsAction.map((p) => (
-                <div key={p.id} className="space-y-2">
-                  <ActionCard plan={p} />
+                <div key={p.id} className="flex h-full flex-col gap-2">
+                  <div className="flex-1">
+                    <ActionCard plan={p} />
+                  </div>
                   <QuickActions planId={p.id} />
                 </div>
               ))}
@@ -342,8 +345,9 @@ function UpNextHero({ plan }: { plan: DashPlan }) {
                   ? ` · ${plan.location_area}`
                   : ""}
             </p>
-            <div className="pt-1">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <WeatherChip planId={plan.id} />
+              <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} />
             </div>
           </div>
           <MapThumb lat={rec?.lat} lon={rec?.lon} className="hidden h-28 w-40 shrink-0 sm:block" />

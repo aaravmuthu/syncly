@@ -163,6 +163,8 @@ export type ParentSummary = {
   } | null;
   costMin: number | null;
   costMax: number | null;
+  estCostMin: number | null;
+  estCostMax: number | null;
   totalCostMin: number | null;
   totalCostMax: number | null;
   parentDecision: { status: string; note: string | null } | null;
@@ -176,7 +178,7 @@ export const getParentSummary = createServerFn({ method: "GET" })
     const { data: plan } = await supabaseAdmin
       .from("plans")
       .select(
-        "id, title, category, status, window_start, window_end, created_by, selected_recommendation_id",
+        "id, title, category, status, window_start, window_end, created_by, selected_recommendation_id, est_cost_min, est_cost_max",
       )
       .eq("id", data.planId)
       .maybeSingle();
@@ -326,6 +328,8 @@ export const getParentSummary = createServerFn({ method: "GET" })
       venue,
       costMin,
       costMax,
+      estCostMin: (plan.est_cost_min as number | null) ?? null,
+      estCostMax: (plan.est_cost_max as number | null) ?? null,
       totalCostMin: costMin != null ? costMin * Math.max(rows.length, 1) : null,
       totalCostMax: costMax != null ? costMax * Math.max(rows.length, 1) : null,
       parentDecision:

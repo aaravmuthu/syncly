@@ -31,30 +31,82 @@ export const getPlanConflicts = createServerFn({ method: "POST" })
  * Either way the plan auto-pivots: alternatives are generated and everyone is
  * pushed a quick re-vote.
  */
+export type ConflictReason = "budget" | "curfew" | "distance" | "schedule" | "manual";
+
+/** Quick-pill copy for the 1-tap "doesn't work for me" overlay. */
+export const CONFLICT_REASONS: { id: ConflictReason; label: string; detail: string }[] = [
+  { id: "budget", label: "Too Expensive 💸", detail: "This is over someone's budget" },
+  { id: "curfew", label: "Past Curfew ⏰", detail: "This runs past someone's curfew" },
+  { id: "distance", label: "Too Far 🚗", detail: "This is outside someone's travel range" },
+  { id: "schedule", label: "Time Conflict 📅", detail: "Someone is busy at this time" },
+];
+
+/**
+ * One-tap "this doesn't work for me". No forms: a single reason pill records
+ * the flag, pings the host, and auto-pivots the plan with fresh alternatives.
+ */
 export const flagConflict = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (d: { planId: string; kind?: "curfew" | "budget" | "distance" | "manual"; detail?: string }) =>
-      d,
-  )
+  .inputValidator((d: { planId: string; kind?: ConflictReason; detail?: string }) => d)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
     const { data: me } = await supabase.rpc("my_profile_id");
+    const kind = data.kind ?? "manual";
+    const preset = CONFLICT_REASONS.find((r) => r.id === kind);
 
     const { error } = await supabase.from("plan_conflicts").insert({
       plan_id: data.planId,
       profile_id: (me as string | null) ?? null,
-      kind: data.kind ?? "manual",
-      detail: data.detail?.slice(0, 200) ?? "A member flagged that this doesn't work for them",
+      kind,
+      detail:
+        data.detail?.slice(0, 200) ??
+        preset?.detail ??
+        "A member flagged that this doesn't work for them",
     });
     if (error) throw new Error(error.message);
+
+    // The flag also means "I'm not locked in" until the group re-votes.
+    if (me) {
+      await supabase
+        .from("plan_participants")
+        .update({ responded: true, attending: false })
+        .eq("plan_id", data.planId)
+        .eq("profile_id", me as string);
+    }
 
     const { detectConflicts, generateAlternatives } = await import("./conflict.server");
     await detectConflicts(data.planId);
     const result = await generateAlternatives(data.planId);
-    return { ok: true, alternatives: result.created };
+
+    // Ping the host directly — budget flags ask them to adjust the estimate.
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("created_by, title, est_cost_min, est_cost_max")
+      .eq("id", data.planId)
+      .maybeSingle();
+    if (plan?.created_by) {
+      const { notifyProfiles } = await import("./notify.server");
+      const budgetNote =
+        kind === "budget"
+          ? plan.est_cost_max != null
+            ? `Your $${Math.round(Number(plan.est_cost_max))}/person estimate is too high for someone — cheaper options are on the ballot.`
+            : "Someone needs a cheaper option — cheaper picks are on the ballot."
+          : null;
+      await notifyProfiles([plan.created_by], {
+        type: "conflict_flagged",
+        title: `${preset?.label ?? "Doesn't work"} · ${plan.title}`,
+        body:
+          budgetNote ??
+          (result.created
+            ? `${result.created} adjusted options are up for a quick re-vote.`
+            : "A member flagged this plan."),
+        planId: data.planId,
+      });
+    }
+
+    return { ok: true, alternatives: result.created, kind };
   });
 
 /** Runs the automatic constraint sweep (curfew / budget / distance). */

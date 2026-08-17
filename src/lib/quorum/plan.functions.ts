@@ -454,6 +454,8 @@ export const createPlan = createServerFn({ method: "POST" })
       zipCode?: string | null;
       foodVibe?: string | null;
       radiusMiles?: number | null;
+      estCostMin?: number | null;
+      estCostMax?: number | null;
       participantIds?: string[];
     }) => d,
   )
@@ -473,6 +475,8 @@ export const createPlan = createServerFn({ method: "POST" })
         location_area: data.zipCode?.trim() || data.locationArea || null,
         food_vibe: data.foodVibe || null,
         search_radius_miles: data.radiusMiles ?? null,
+        est_cost_min: data.estCostMin ?? null,
+        est_cost_max: data.estCostMax ?? null,
         status: "collecting",
       })
       .select("*")

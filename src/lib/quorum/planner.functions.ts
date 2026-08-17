@@ -216,7 +216,15 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
  */
 export const launchAiPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string; prompt: string; useDefaults?: boolean }) => d)
+  .inputValidator(
+    (d: {
+      groupId: string;
+      prompt: string;
+      useDefaults?: boolean;
+      estCostMin?: number | null;
+      estCostMax?: number | null;
+    }) => d,
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const prompt = data.prompt.trim();
@@ -263,6 +271,8 @@ export const launchAiPlan = createServerFn({ method: "POST" })
         window_end: windowEnd,
         location_area: origin?.zip ?? draft.targetCityOrZip ?? null,
         search_radius_miles: draft.searchRadiusMiles ?? 12,
+        est_cost_min: data.estCostMin ?? null,
+        est_cost_max: data.estCostMax ?? null,
         status: "collecting",
       })
       .select("*")

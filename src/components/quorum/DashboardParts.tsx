@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getMapToken } from "@/lib/quorum/location.functions";
 import { getPlanWeather } from "@/lib/quorum/insight.functions";
 import { describeWeather } from "@/lib/quorum/weather";
+import { estCostLabel } from "@/lib/quorum/estcost";
 
 export type DashParticipant = {
   profile_id: string;
@@ -25,6 +26,8 @@ export type DashPlan = {
   window_end: string | null;
   location_area: string | null;
   compatibility_score: number | null;
+  est_cost_min: number | null;
+  est_cost_max: number | null;
   created_at: string;
   groups: { id?: string; name?: string; emoji?: string } | null;
   participants: DashParticipant[];
@@ -87,6 +90,30 @@ const TONES: Record<string, string> = {
   finalized: "bg-indigo-400/14 text-indigo-400 ring-indigo-400/25",
   draft: "bg-foreground/8 text-muted-foreground ring-foreground/12",
 };
+
+/** Creator's up-front "bring this much money" badge. */
+export function CostBadge({
+  min,
+  max,
+  className,
+}: {
+  min: number | null | undefined;
+  max: number | null | undefined;
+  className?: string;
+}) {
+  const label = estCostLabel(min, max);
+  if (!label) return null;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-lg bg-emerald-400/12 px-2 py-0.5 text-[11px] font-semibold text-emerald-500 ring-1 ring-emerald-400/25",
+        className,
+      )}
+    >
+      {label}
+    </span>
+  );
+}
 
 export function StatusTag({ status, label }: { status: string; label?: string }) {
   return (
@@ -367,6 +394,7 @@ export function ActionCard({ plan }: { plan: DashPlan }) {
               {plan.groups?.emoji ?? "✨"} {plan.groups?.name ?? "Group"}
             </p>
             <h3 className="mt-0.5 truncate font-display text-base font-semibold">{plan.title}</h3>
+            <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} className="mt-1" />
           </div>
           <StatusTag status={plan.status} />
         </div>
@@ -406,6 +434,7 @@ export function ConfirmedCard({ plan }: { plan: DashPlan }) {
               {formatWhen(plan.window_start)}
             </span>
             <WeatherChip planId={plan.id} />
+            <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} />
           </div>
           <h3 className="truncate font-display text-base font-semibold">{plan.title}</h3>
           <p className="truncate text-xs text-muted-foreground">

@@ -19,6 +19,7 @@ import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
 import { inviteLink, shareOrCopy } from "@/lib/quorum/invite";
 import { isValidZip } from "@/lib/quorum/location";
+import { EST_COST_PRESETS, estCostLabel } from "@/lib/quorum/estcost";
 
 /**
  * Frictionless, map-centric plan creation: saved defaults, a Fair-Point venue
@@ -54,6 +55,8 @@ export function CreatePlanPanel({
   const [startTime, setStartTime] = useState("18:30");
   const [zip, setZip] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
+  // Creator's "bring this much" estimate — shown to everyone up front.
+  const [estCost, setEstCost] = useState<{ min: number; max: number } | null>(null);
 
   // Saved defaults hydrate the form the moment they arrive.
   useEffect(() => {
@@ -230,7 +233,15 @@ export function CreatePlanPanel({
             className="flex-1"
             loading={launch.isPending}
             disabled={!prompt.trim()}
-            onClick={() => launch.mutate({ data: { groupId, prompt, useDefaults: useSaved } })}
+            onClick={() => launch.mutate({
+                data: {
+                  groupId,
+                  prompt,
+                  useDefaults: useSaved,
+                  estCostMin: estCost?.min ?? null,
+                  estCostMax: estCost?.max ?? null,
+                },
+              })}
           >
             <Rocket className="h-4 w-4" aria-hidden />
             {launch.isPending ? "Building your plan…" : "Launch Plan Now"}
@@ -348,6 +359,72 @@ export function CreatePlanPanel({
             </div>
           </div>
 
+          <div>
+            <span className="text-sm font-medium">Estimated cost per person</span>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Everyone sees this on the plan card so they know what to bring.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {EST_COST_PRESETS.map((p) => {
+                const active = estCost?.min === p.min && estCost?.max === p.max;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() =>
+                      setEstCost(active ? null : { min: p.min, max: p.max })
+                    }
+                    className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
+                      active
+                        ? "border-primary/50 bg-primary/10 text-foreground"
+                        : "border-border text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                className={`${inputClass} w-24`}
+                placeholder="Min $"
+                value={estCost?.min ?? ""}
+                onChange={(e) =>
+                  setEstCost((c) => ({
+                    min: Number(e.target.value || 0),
+                    max: c?.max ?? Number(e.target.value || 0),
+                  }))
+                }
+                aria-label="Minimum cost per person"
+              />
+              <span className="text-sm text-muted-foreground">to</span>
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                className={`${inputClass} w-24`}
+                placeholder="Max $"
+                value={estCost?.max ?? ""}
+                onChange={(e) =>
+                  setEstCost((c) => ({
+                    min: c?.min ?? Number(e.target.value || 0),
+                    max: Number(e.target.value || 0),
+                  }))
+                }
+                aria-label="Maximum cost per person"
+              />
+              {estCost ? (
+                <span className="text-xs font-medium text-primary">
+                  {estCostLabel(estCost.min, estCost.max)}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
           <Field label="ZIP code" hint="Leave as-is to use the group's fair point">
             <PlaceAutocomplete value={zip} onChange={setZip} />
           </Field>
@@ -412,6 +489,8 @@ export function CreatePlanPanel({
                     zipCode: zip || null,
                     foodVibe: vibe,
                     radiusMiles: radius,
+                    estCostMin: estCost?.min ?? null,
+                    estCostMax: estCost?.max ?? null,
                     participantIds: memberIds,
                   },
                 });

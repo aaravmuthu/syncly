@@ -440,6 +440,8 @@ export type Database = {
           compatibility_score: number | null
           created_at: string
           created_by: string
+          est_cost_max: number | null
+          est_cost_min: number | null
           food_vibe: string | null
           group_id: string
           id: string
@@ -458,6 +460,8 @@ export type Database = {
           compatibility_score?: number | null
           created_at?: string
           created_by: string
+          est_cost_max?: number | null
+          est_cost_min?: number | null
           food_vibe?: string | null
           group_id: string
           id?: string
@@ -476,6 +480,8 @@ export type Database = {
           compatibility_score?: number | null
           created_at?: string
           created_by?: string
+          est_cost_max?: number | null
+          est_cost_min?: number | null
           food_vibe?: string | null
           group_id?: string
           id?: string

@@ -3,11 +3,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui";
-import {
-  castResolutionVote,
-  confirmAttendance,
-  flagConflict,
-} from "@/lib/quorum/conflict.functions";
+import { QuickResponse } from "./QuickResponse";
+import { castResolutionVote } from "@/lib/quorum/conflict.functions";
 
 export type ConflictAlt = {
   id: string;
@@ -112,56 +109,5 @@ export function ConflictCard({
 
 /** 1-tap timeline actions: confirm attendance or raise a conflict. */
 export function QuickActions({ planId }: { planId: string }) {
-  const qc = useQueryClient();
-  const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ["dashboard"] });
-    void qc.invalidateQueries({ queryKey: ["plan", planId] });
-  };
-
-  const confirm = useMutation({
-    mutationFn: useServerFn(confirmAttendance),
-    onSuccess: () => {
-      refresh();
-      toast.success("You're marked as going");
-    },
-  });
-  const flag = useMutation({
-    mutationFn: useServerFn(flagConflict),
-    onSuccess: (raw) => {
-      const r = raw as { alternatives: number };
-      refresh();
-      toast.success("Conflict flagged", {
-        description: r.alternatives
-          ? `${r.alternatives} alternatives are up for a quick re-vote.`
-          : "The group has been notified.",
-      });
-    },
-    onError: (e: unknown) =>
-      toast.error("Could not flag that", {
-        description: e instanceof Error ? e.message : "Try again.",
-      }),
-  });
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button
-        variant="outline"
-        className="flex-1 py-2 text-xs"
-        loading={confirm.isPending}
-        onClick={() => confirm.mutate({ data: { planId, attending: true } })}
-      >
-        I'm in
-      </Button>
-      <Button
-        variant="ghost"
-        className="flex-1 py-2 text-xs"
-        loading={flag.isPending}
-        onClick={() =>
-          flag.mutate({ data: { planId, kind: "manual", detail: "This time doesn't work for me" } })
-        }
-      >
-        Doesn't work
-      </Button>
-    </div>
-  );
+  return <QuickResponse planId={planId} compact />;
 }
