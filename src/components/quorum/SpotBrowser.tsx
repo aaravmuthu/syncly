@@ -203,7 +203,7 @@ export function SpotBrowser({
                 <Button
                   variant={added.includes(s.key) ? "outline" : "primary"}
                   disabled={add.isPending || added.includes(s.key)}
-                  onClick={() => add.mutate({ data: { planId, spot: s } })}
+                  onClick={() => add.mutate({ planId, spot: s })}
                 >
                   {added.includes(s.key) ? "Added ✓" : "Add to plan"}
                 </Button>
