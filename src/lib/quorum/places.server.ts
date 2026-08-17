@@ -10,14 +10,26 @@ import type { OptionSeed, PlanCategory } from "./types";
 
 export type PlaceSuggestion = {
   id: string;
-  label: string; // "Frisco, TX 75034"
+  label: string; // "6390 Main St, Frisco, TX 75034"
   zip: string | null;
+  city: string | null;
+  state: string | null;
   lat: number;
   lon: number;
 };
 
+export type SuggestOptions = {
+  /** Prefer full residential street addresses over ZIP/city results. */
+  addressOnly?: boolean;
+  /** Bias results near these coordinates (user's saved home, else Texas). */
+  proximity?: { lat: number; lon: number } | null;
+};
+
 const mapboxToken = () => process.env["MAPBOX_TOKEN"] ?? "";
 const geoapifyKey = () => process.env["GEOAPIFY_KEY"] ?? "";
+
+/** Fallback proximity bias: Frisco, TX. */
+const DEFAULT_PROXIMITY = { lat: 33.1507, lon: -96.8236 };
 
 /** Public map token for the browser (Mapbox GL). Empty string = maps disabled. */
 export function publicMapToken(): string {
@@ -27,9 +39,17 @@ export function publicMapToken(): string {
 
 // ---------------------------------------------------------------- autocomplete
 
-export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSuggestion[]> {
+export async function suggestPlacesServer(
+  queryRaw: string,
+  opts: SuggestOptions = {},
+): Promise<PlaceSuggestion[]> {
   const query = (queryRaw ?? "").trim();
   if (query.length < 3) return [];
+
+  const prox = opts.proximity ?? DEFAULT_PROXIMITY;
+  const types = opts.addressOnly
+    ? "address,place,postcode"
+    : "postcode,place,locality,neighborhood,address";
 
   const token = mapboxToken();
   if (token) {
@@ -37,7 +57,8 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
       const url =
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json` +
         `?access_token=${encodeURIComponent(token)}&country=us&limit=6&autocomplete=true` +
-        `&types=postcode,place,locality,neighborhood,address`;
+        `&proximity=${prox.lon},${prox.lat}` +
+        `&types=${encodeURIComponent(types)}`;
       const res = await fetch(url);
       if (res.ok) {
         const json = (await res.json()) as {
@@ -45,22 +66,36 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
             id: string;
             place_name: string;
             text: string;
+            address?: string;
             center: [number, number];
-            context?: { id: string; text: string }[];
+            context?: { id: string; text: string; short_code?: string }[];
           }[];
         };
         const out = (json.features ?? []).map((f) => {
-          const postcode =
-            f.id.startsWith("postcode") ? f.text : f.context?.find((c) => c.id.startsWith("postcode"))?.text;
+          const ctx = f.context ?? [];
+          const pick = (prefix: string) => ctx.find((c) => c.id.startsWith(prefix));
+          const postcode = f.id.startsWith("postcode") ? f.text : pick("postcode")?.text;
+          const cityCtx = pick("place")?.text ?? (f.id.startsWith("place") ? f.text : null);
+          const region = pick("region");
+          const state = region?.short_code?.replace(/^US-/, "") ?? region?.text ?? null;
           return {
             id: f.id,
             label: f.place_name.replace(/, United States$/, ""),
             zip: postcode && /^\d{5}$/.test(postcode) ? postcode : null,
+            city: cityCtx ?? null,
+            state,
             lat: f.center[1],
             lon: f.center[0],
           } satisfies PlaceSuggestion;
         });
-        if (out.length) return out;
+        // Address-mode: surface exact street matches first.
+        if (out.length) {
+          return opts.addressOnly
+            ? [...out].sort(
+                (a, b) => Number(b.id.startsWith("address")) - Number(a.id.startsWith("address")),
+              )
+            : out;
+        }
       }
     } catch {
       /* fall through to OSM */
@@ -69,9 +104,10 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
 
   // Keyless fallback
   try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-      query,
-    )}&countrycodes=us&format=json&limit=6&addressdetails=1`;
+    const url =
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}` +
+      `&countrycodes=us&format=json&limit=6&addressdetails=1` +
+      `&viewbox=${prox.lon - 1.5},${prox.lat + 1.5},${prox.lon + 1.5},${prox.lat - 1.5}`;
     const res = await fetch(url, {
       headers: {
         "User-Agent": "Quorum group planner (https://quorumapp.lovable.app)",
@@ -84,12 +120,20 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
       display_name: string;
       lat: string;
       lon: string;
-      address?: { postcode?: string };
+      address?: {
+        postcode?: string;
+        city?: string;
+        town?: string;
+        village?: string;
+        state?: string;
+      };
     }[];
     return json.map((r) => ({
       id: String(r.place_id),
       label: r.display_name.replace(/, United States$/, ""),
       zip: r.address?.postcode && /^\d{5}$/.test(r.address.postcode) ? r.address.postcode : null,
+      city: r.address?.city ?? r.address?.town ?? r.address?.village ?? null,
+      state: r.address?.state ?? null,
       lat: Number(r.lat),
       lon: Number(r.lon),
     }));
@@ -97,6 +141,7 @@ export async function suggestPlacesServer(queryRaw: string): Promise<PlaceSugges
     return [];
   }
 }
+
 
 // -------------------------------------------------------------- venue search
 
