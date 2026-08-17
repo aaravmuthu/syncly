@@ -233,7 +233,15 @@ export function CreatePlanPanel({
             className="flex-1"
             loading={launch.isPending}
             disabled={!prompt.trim()}
-            onClick={() => launch.mutate({ data: { groupId, prompt, useDefaults: useSaved } })}
+            onClick={() => launch.mutate({
+                data: {
+                  groupId,
+                  prompt,
+                  useDefaults: useSaved,
+                  estCostMin: estCost?.min ?? null,
+                  estCostMax: estCost?.max ?? null,
+                },
+              })}
           >
             <Rocket className="h-4 w-4" aria-hidden />
             {launch.isPending ? "Building your plan…" : "Launch Plan Now"}
