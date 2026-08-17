@@ -5,6 +5,7 @@ import { Button, Card, Pill, Skeleton, inputClass } from "./ui";
 import { VenueMap } from "./VenueMap";
 import { Avatar } from "./Avatar";
 import { prettyTime } from "./TimePicker";
+import { estCostLabel } from "@/lib/quorum/estcost";
 import { getParentSummary, parentRespondToPlan } from "@/lib/quorum/approval.functions";
 
 export function ParentSummaryView({ planId }: { planId: string }) {
@@ -175,6 +176,11 @@ export function ParentSummaryView({ planId }: { planId: string }) {
       <Card>
         <SectionTitle>Estimated cost</SectionTitle>
         <p className="mt-2 font-display text-xl font-semibold">{cost}</p>
+        {s.estCostMin != null || s.estCostMax != null ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Host's estimate: {estCostLabel(s.estCostMin, s.estCostMax)}
+          </p>
+        ) : null}
         {s.totalCostMin != null ? (
           <p className="mt-1 text-sm text-muted-foreground">
             Group total ≈ ${Math.round(s.totalCostMin)}–$
