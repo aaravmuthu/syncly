@@ -153,23 +153,26 @@ export const applyAiCompromise = createServerFn({ method: "POST" })
     if (readError) throw new Error(readError.message);
     if (!plan) throw new Error("Plan not found");
 
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      window_start?: string;
+      window_end?: string;
+      selected_recommendation_id?: string;
+      status?: "finalized";
+    } = {};
     if (data.startTime && plan.window_start) {
       const start = new Date(plan.window_start);
       const original = start.getTime();
       start.setHours(Number(data.startTime.slice(0, 2)), Number(data.startTime.slice(3, 5)), 0, 0);
-      patch["window_start"] = start.toISOString();
+      patch.window_start = start.toISOString();
       // Keep the same duration so the window stays coherent.
       if (plan.window_end) {
         const end = new Date(plan.window_end);
-        patch["window_end"] = new Date(
-          end.getTime() + (start.getTime() - original),
-        ).toISOString();
+        patch.window_end = new Date(end.getTime() + (start.getTime() - original)).toISOString();
       }
     }
     if (data.recommendationId) {
-      patch["selected_recommendation_id"] = data.recommendationId;
-      patch["status"] = "finalized";
+      patch.selected_recommendation_id = data.recommendationId;
+      patch.status = "finalized";
     }
     if (Object.keys(patch).length) {
       const { error } = await context.supabase.from("plans").update(patch).eq("id", data.planId);

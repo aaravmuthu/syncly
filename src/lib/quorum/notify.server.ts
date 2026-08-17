@@ -8,7 +8,8 @@ export type NotifyKind =
   | "vote_cast"
   | "plan_finalized"
   | "parent_response"
-  | "member_joined";
+  | "member_joined"
+  | "compromise_applied";
 
 export async function notifyProfiles(
   profileIds: string[],
