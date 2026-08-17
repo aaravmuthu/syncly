@@ -12,6 +12,8 @@ import {
   useCompromiseSummaries,
 } from "@/components/quorum/PlanAiInsights";
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
+import { QuickResponse } from "@/components/quorum/QuickResponse";
+import { CostBadge } from "@/components/quorum/DashboardParts";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
 import { VenueMap } from "@/components/quorum/VenueMap";
@@ -202,26 +204,42 @@ function PlanPage() {
         />
       ) : null}
 
-      {needsMyAnswers ? (
-        <ConstraintForm
-          questionnaire={meta.questionnaire}
-          initial={data.myConstraints}
-          saving={submit.isPending}
-          onSubmit={(payload) => submit.mutate({ data: { planId, payload } })}
-        />
-      ) : (
-        <Card className="flex items-center justify-between gap-3">
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="font-semibold">Your answers are in</p>
+            <p className="font-semibold">
+              {myParticipant?.responded && myParticipant.attending !== false
+                ? "You're in for this one"
+                : myParticipant?.responded
+                  ? "You flagged this — the host is adjusting"
+                  : "Does this work for you?"}
+            </p>
             <p className="text-sm text-muted-foreground">
-              Private to you. Change them any time before the plan is locked.
+              Two taps, no survey. Your reason stays private to you.
             </p>
           </div>
-          <Button variant="outline" onClick={() => setEditing(true)}>
-            Edit
-          </Button>
-        </Card>
-      )}
+          <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
+        </div>
+        <QuickResponse planId={planId} className="mt-3" />
+        <button
+          type="button"
+          className="mt-3 text-xs font-medium text-primary underline-offset-4 hover:underline"
+          onClick={() => setEditing((v) => !v)}
+        >
+          {editing ? "Hide extra details" : "Add optional details (budget, curfew, ride)"}
+        </button>
+      </Card>
+
+      {editing ? (
+        <div className="mt-4">
+          <ConstraintForm
+            questionnaire={meta.questionnaire}
+            initial={data.myConstraints}
+            saving={submit.isPending}
+            onSubmit={(payload) => submit.mutate({ data: { planId, payload } })}
+          />
+        </div>
+      ) : null}
 
       <Card className="mt-4">
         <div className="flex items-center justify-between gap-3">
