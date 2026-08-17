@@ -24,14 +24,25 @@ export function PlaceAutocomplete({
   const [text, setText] = useState(value);
   const [items, setItems] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const skipNextSearch = useRef(false);
   const search = useServerFn(suggestPlaces);
   const toZip = useServerFn(reverseZip);
   const [locating, setLocating] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setText(value), [value]);
+  useEffect(() => {
+    skipNextSearch.current = true;
+    setText(value);
+  }, [value]);
 
   useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false;
+      setItems([]);
+      setOpen(false);
+      return;
+    }
     const q = text.trim();
     if (q.length < 3 || /^\d{5}$/.test(q)) {
       setItems([]);
@@ -53,6 +64,7 @@ export function PlaceAutocomplete({
       clearTimeout(t);
     };
   }, [text, search]);
+
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
