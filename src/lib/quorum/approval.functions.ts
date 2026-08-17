@@ -299,7 +299,7 @@ export const parentRespondToPlan = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("parent_approvals").insert({
       plan_id: plan.id,
       profile_id: plan.created_by,
-      token: crypto.randomUUID(),
+      token: crypto.randomUUID().replace(/-/g, ""),
       status: data.decision,
       condition_text: note,
       responded_at: new Date().toISOString(),
