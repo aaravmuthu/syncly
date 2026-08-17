@@ -42,6 +42,48 @@ export const Route = createFileRoute("/_authenticated/plans/$planId")({
   component: PlanPage,
 });
 
+/** Conflict banner + one-tap alternative ballot for this plan. */
+function PlanConflictBanner({
+  planId,
+  title,
+  recs,
+}: {
+  planId: string;
+  title: string;
+  recs: { id: string; title: string; subtitle: string | null; cost_min: number | null; cost_max: number | null; suggested_start: string | null; tags: string[] }[];
+}) {
+  const fetchConflicts = useServerFn(getPlanConflicts);
+  const q = useQuery({
+    queryKey: ["plan-conflicts", planId],
+    queryFn: () => fetchConflicts({ data: { planId } }),
+    retry: false,
+  });
+  const conflicts = q.data?.conflicts ?? [];
+  const alternatives = recs.filter((r) => (r.tags ?? []).includes("alternative"));
+  const original = recs.find((r) => !(r.tags ?? []).includes("alternative")) ?? null;
+  if (!conflicts.length || !alternatives.length) return null;
+
+  return (
+    <ConflictCard
+      planId={planId}
+      title={title}
+      conflicts={conflicts.map((c) => ({ id: c.id, kind: c.kind, detail: c.detail }))}
+      alternatives={alternatives.map((r) => ({
+        id: r.id,
+        title: r.title,
+        subtitle: r.subtitle,
+        cost_min: r.cost_min,
+        cost_max: r.cost_max,
+        suggested_start: r.suggested_start,
+        tags: r.tags ?? [],
+      }))}
+      original={original ? { id: original.id, title: original.title } : null}
+    />
+  );
+}
+
+import { ConflictCard } from "@/components/quorum/ConflictCard";
+import { getPlanConflicts } from "@/lib/quorum/conflict.functions";
 function PlanPage() {
   const { planId } = Route.useParams();
   const qc = useQueryClient();
@@ -203,6 +245,7 @@ function PlanPage() {
       </Card>
 
       <div className="mt-4 space-y-3">
+        <PlanConflictBanner planId={planId} title={data.plan.title} recs={data.recommendations} />
         <WeatherCard planId={planId} />
         {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
         <AvailabilityHeatmap planId={planId} />
