@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
+import { TimePicker } from "@/components/quorum/TimePicker";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -158,11 +159,10 @@ function Onboarding() {
             />
           </Field>
           <Field label="Usual curfew" hint="Optional — treated as a hard limit when set">
-            <input
-              type="time"
-              className={inputClass}
-              value={String(form["curfew_time"] ?? "")}
-              onChange={(e) => set("curfew_time", e.target.value || null)}
+            <TimePicker
+              allowNone
+              value={(form["curfew_time"] as string | null) ?? null}
+              onChange={(v) => set("curfew_time", v)}
             />
           </Field>
           {[
