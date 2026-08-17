@@ -126,3 +126,200 @@ export const respondToApproval = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/* ------------------------------------------------------------------ */
+/* Public parent summary — /approve/:planId                            */
+/* ------------------------------------------------------------------ */
+
+export type ParentSummary = {
+  planId: string;
+  title: string;
+  category: string;
+  status: string;
+  date: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  curfewLimit: string | null;
+  curfewOk: boolean | null;
+  roster: { id: string; name: string; emoji: string; avatarUrl: string | null; host: boolean; confirmed: boolean }[];
+  cars: { car_label: string; driver: string; leg: string; riders: string[]; seatsLeft: number | null }[];
+  venue: {
+    title: string;
+    address: string | null;
+    locationName: string | null;
+    category: string | null;
+    lat: number | null;
+    lon: number | null;
+  } | null;
+  costMin: number | null;
+  costMax: number | null;
+  parentDecision: { status: string; note: string | null } | null;
+};
+
+/** Public, plan-scoped: only the logistics a parent needs, nothing private. */
+export const getParentSummary = createServerFn({ method: "GET" })
+  .inputValidator((d: { planId: string }) => d)
+  .handler(async ({ data }): Promise<ParentSummary | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: plan } = await supabaseAdmin
+      .from("plans")
+      .select(
+        "id, title, category, status, window_start, window_end, created_by, selected_recommendation_id",
+      )
+      .eq("id", data.planId)
+      .maybeSingle();
+    if (!plan) return null;
+
+    const { data: parts } = await supabaseAdmin
+      .from("plan_participants")
+      .select("profile_id, attending, responded, profiles(id, display_name, avatar_emoji, avatar_url, curfew_time)")
+      .eq("plan_id", plan.id);
+
+    type P = {
+      profile_id: string;
+      attending: boolean;
+      responded: boolean;
+      profiles: {
+        id: string;
+        display_name: string;
+        avatar_emoji: string;
+        avatar_url: string | null;
+        curfew_time: string | null;
+      } | null;
+    };
+    const rows = (parts ?? []) as unknown as P[];
+    const nameOf = (id: string) => rows.find((r) => r.profile_id === id)?.profiles?.display_name ?? "A member";
+
+    const roster = rows.map((r) => ({
+      id: r.profile_id,
+      name: r.profiles?.display_name ?? "Member",
+      emoji: r.profiles?.avatar_emoji ?? "🙂",
+      avatarUrl: r.profiles?.avatar_url ?? null,
+      host: r.profile_id === plan.created_by,
+      confirmed: Boolean(r.attending && r.responded),
+    }));
+
+    let venue: ParentSummary["venue"] = null;
+    let startTime: string | null = null;
+    let endTime: string | null = null;
+    let costMin: number | null = null;
+    let costMax: number | null = null;
+    if (plan.selected_recommendation_id) {
+      const { data: rec } = await supabaseAdmin
+        .from("recommendations")
+        .select("title, subtitle, category, address, location_name, lat, lon, suggested_start, suggested_end, cost_min, cost_max")
+        .eq("id", plan.selected_recommendation_id)
+        .maybeSingle();
+      if (rec) {
+        venue = {
+          title: rec.title,
+          address: rec.address,
+          locationName: rec.location_name,
+          category: rec.category,
+          lat: rec.lat,
+          lon: rec.lon,
+        };
+        startTime = rec.suggested_start?.slice(0, 5) ?? null;
+        endTime = rec.suggested_end?.slice(0, 5) ?? null;
+        costMin = rec.cost_min;
+        costMax = rec.cost_max;
+      }
+    }
+    if (!startTime && plan.window_start) startTime = new Date(plan.window_start).toISOString().slice(11, 16);
+    if (!endTime && plan.window_end) endTime = new Date(plan.window_end).toISOString().slice(11, 16);
+
+    const { data: transport } = await supabaseAdmin
+      .from("transport_assignments")
+      .select("car_label, driver_label, driver_profile_id, passenger_profile_ids, leg")
+      .eq("plan_id", plan.id);
+    const cars = (transport ?? []).map((t) => ({
+      car_label: t.car_label,
+      driver: t.driver_label ?? (t.driver_profile_id ? nameOf(t.driver_profile_id) : "TBC"),
+      leg: t.leg,
+      riders: (t.passenger_profile_ids ?? []).map((id: string) => nameOf(id)),
+      seatsLeft: null,
+    }));
+
+    // Curfew check uses the earliest curfew among attendees.
+    const curfews = rows
+      .map((r) => r.profiles?.curfew_time?.slice(0, 5) ?? null)
+      .filter((c): c is string => Boolean(c))
+      .sort();
+    const curfewLimit = curfews[0] ?? null;
+    const mins = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    const curfewOk =
+      curfewLimit && endTime
+        ? (mins(endTime) === 0 ? 1440 : mins(endTime)) <= (mins(curfewLimit) === 0 ? 1440 : mins(curfewLimit))
+        : null;
+
+    const { data: approval } = await supabaseAdmin
+      .from("parent_approvals")
+      .select("status, condition_text, created_at")
+      .eq("plan_id", plan.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return {
+      planId: plan.id,
+      title: plan.title,
+      category: plan.category,
+      status: plan.status,
+      date: plan.window_start ? plan.window_start.slice(0, 10) : null,
+      startTime,
+      endTime,
+      curfewLimit,
+      curfewOk,
+      roster,
+      cars,
+      venue,
+      costMin,
+      costMax,
+      parentDecision:
+        approval && approval.status !== "pending"
+          ? { status: approval.status, note: approval.condition_text }
+          : null,
+    };
+  });
+
+/** Public one-tap parent action from the shared plan link. */
+export const parentRespondToPlan = createServerFn({ method: "POST" })
+  .inputValidator((d: { planId: string; decision: "approved" | "approved_with_condition"; note?: string }) => d)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: plan } = await supabaseAdmin
+      .from("plans")
+      .select("id, created_by, title")
+      .eq("id", data.planId)
+      .maybeSingle();
+    if (!plan) throw new Error("This plan link is not valid");
+
+    const note = data.note?.trim() || null;
+    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
+    const { error } = await supabaseAdmin.from("parent_approvals").insert({
+      plan_id: plan.id,
+      profile_id: plan.created_by,
+      token: crypto.randomUUID(),
+      status: data.decision,
+      condition_text: note,
+      responded_at: new Date().toISOString(),
+      expires_at: expires,
+    });
+    if (error) throw new Error(error.message);
+
+    const { notifyPlanParticipants } = await import("./notify.server");
+    await notifyPlanParticipants(plan.id, {
+      type: "parent_response",
+      title: note ? "A parent approved with a note" : "A parent approved this plan",
+      ...(note ? { body: note } : {}),
+    });
+
+    await supabaseAdmin.from("activity_events").insert({
+      plan_id: plan.id,
+      group_id: null,
+      type: "parent_response",
+      message: note ? "A parent approved with a note" : "A parent approved this plan",
+    });
+
+    return { ok: true };
+  });
