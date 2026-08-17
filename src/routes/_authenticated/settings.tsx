@@ -13,6 +13,7 @@ import { isValidZip } from "@/lib/quorum/location";
 import { useTheme, type ThemeChoice } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
+import { AddressPicker } from "@/components/quorum/AddressPicker";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
