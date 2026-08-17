@@ -109,13 +109,7 @@ export function statusLabel(status: string) {
   return "Draft";
 }
 
-export function AvatarStack({
-  people,
-  max = 4,
-}: {
-  people: DashParticipant[];
-  max?: number;
-}) {
+export function AvatarStack({ people, max = 4 }: { people: DashParticipant[]; max?: number }) {
   const shown = people.slice(0, max);
   const rest = people.length - shown.length;
   return (

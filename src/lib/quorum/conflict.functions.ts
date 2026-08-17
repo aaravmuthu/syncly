@@ -33,7 +33,10 @@ export const getPlanConflicts = createServerFn({ method: "POST" })
  */
 export const flagConflict = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; kind?: "curfew" | "budget" | "distance" | "manual"; detail?: string }) => d)
+  .inputValidator(
+    (d: { planId: string; kind?: "curfew" | "budget" | "distance" | "manual"; detail?: string }) =>
+      d,
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });

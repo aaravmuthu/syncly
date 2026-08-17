@@ -3,7 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "./ui";
-import { castResolutionVote, confirmAttendance, flagConflict } from "@/lib/quorum/conflict.functions";
+import {
+  castResolutionVote,
+  confirmAttendance,
+  flagConflict,
+} from "@/lib/quorum/conflict.functions";
 
 export type ConflictAlt = {
   id: string;
@@ -21,8 +25,7 @@ const LABELS: Record<string, string> = {
   location: "Closer spot",
 };
 
-const altLabel = (tags: string[]) =>
-  tags.map((t) => LABELS[t]).find(Boolean) ?? "Adjusted option";
+const altLabel = (tags: string[]) => tags.map((t) => LABELS[t]).find(Boolean) ?? "Adjusted option";
 
 /** Auto-pivot banner + 1-tap re-vote poll shown on the dashboard timeline. */
 export function ConflictCard({

@@ -15,7 +15,11 @@ export const getMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { data } = await supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
     if (data) {
       // A profile that already carries a real display name is set up — never
       // send that person back through onboarding.
@@ -93,7 +97,11 @@ export const saveProfile = createServerFn({ method: "POST" })
     }
     if (REAL_NAME(patch["display_name"])) patch["onboarded"] = true;
     if (Object.keys(patch).length === 0) {
-      const { data: current } = await supabase.from("profiles").select("*").eq("user_id", userId).single();
+      const { data: current } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
       return current;
     }
     // Upsert so a first-time save creates the row instead of silently matching
@@ -141,7 +149,6 @@ export const uploadAvatar = createServerFn({ method: "POST" })
     return { avatar_url: signed.signedUrl };
   });
 
-
 /* ------------------------------------------------------------------ */
 /* Groups                                                              */
 /* ------------------------------------------------------------------ */
@@ -174,7 +181,9 @@ export const listGroups = createServerFn({ method: "GET" })
 
 export const createGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { name: string; emoji?: string; kind?: "permanent" | "temporary"; purpose?: string }) => d)
+  .inputValidator(
+    (d: { name: string; emoji?: string; kind?: "permanent" | "temporary"; purpose?: string }) => d,
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -191,7 +200,9 @@ export const createGroup = createServerFn({ method: "POST" })
       .select("*")
       .single();
     if (error) throw new Error(error.message);
-    await supabase.from("group_members").insert({ group_id: group.id, profile_id: me, role: "owner" });
+    await supabase
+      .from("group_members")
+      .insert({ group_id: group.id, profile_id: me, role: "owner" });
     await supabase.from("activity_events").insert({
       group_id: group.id,
       actor_profile_id: me,
@@ -218,7 +229,10 @@ export const joinGroup = createServerFn({ method: "POST" })
     if (!group) throw new Error("That invite code doesn't match a group");
     await supabaseAdmin
       .from("group_members")
-      .upsert({ group_id: group.id, profile_id: me, role: "member" }, { onConflict: "group_id,profile_id" });
+      .upsert(
+        { group_id: group.id, profile_id: me, role: "member" },
+        { onConflict: "group_id,profile_id" },
+      );
     await supabaseAdmin.from("activity_events").insert({
       group_id: group.id,
       actor_profile_id: me,
@@ -247,7 +261,9 @@ export const getGroup = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     const { data: members } = await supabase
       .from("group_members")
-      .select("role, profile_id, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)")
+      .select(
+        "role, profile_id, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)",
+      )
       .eq("group_id", data.groupId);
     const { data: plans } = await supabase
       .from("plans")
@@ -298,33 +314,35 @@ export const getDashboard = createServerFn({ method: "GET" })
     if (list.length === 0) return { myProfileId: myId ?? null, plans: [] };
 
     const ids = list.map((p) => p.id as string);
-    const [{ data: parts }, { data: votes }, { data: recs }, { data: conflicts }] = await Promise.all([
-      supabase
-        .from("plan_participants")
-        .select("plan_id, profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)")
-        .in("plan_id", ids),
-      supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids),
-      supabase
-        .from("recommendations")
-        .select(
-          "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank",
-        )
-        .in("plan_id", ids)
-        .order("rank"),
-      supabase
-        .from("plan_conflicts")
-        .select("id, plan_id, kind, detail")
-        .in("plan_id", ids)
-        .eq("resolved", false),
-    ]);
+    const [{ data: parts }, { data: votes }, { data: recs }, { data: conflicts }] =
+      await Promise.all([
+        supabase
+          .from("plan_participants")
+          .select(
+            "plan_id, profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)",
+          )
+          .in("plan_id", ids),
+        supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids),
+        supabase
+          .from("recommendations")
+          .select(
+            "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank",
+          )
+          .in("plan_id", ids)
+          .order("rank"),
+        supabase
+          .from("plan_conflicts")
+          .select("id, plan_id, kind, detail")
+          .in("plan_id", ids)
+          .eq("resolved", false),
+      ]);
 
     return {
       myProfileId: (myId as string | null) ?? null,
       plans: list.map((p) => {
         const mine = (parts ?? []).filter((r) => r.plan_id === p.id);
         const planVotes = (votes ?? []).filter((v) => v.plan_id === p.id);
-        const selected =
-          (recs ?? []).find((r) => r.id === p.selected_recommendation_id) ?? null;
+        const selected = (recs ?? []).find((r) => r.id === p.selected_recommendation_id) ?? null;
         const meRow = mine.find((r) => r.profile_id === myId);
         const planConflicts = (conflicts ?? []).filter((c) => c.plan_id === p.id);
         const planRecs = (recs ?? []).filter((r) => r.plan_id === p.id);
@@ -373,7 +391,6 @@ export const getDashboard = createServerFn({ method: "GET" })
       }),
     };
   });
-
 
 /** Group-visible feed only: RLS keeps it to groups the caller belongs to. */
 export const listActivity = createServerFn({ method: "GET" })

@@ -20,7 +20,11 @@ const toMin = (v: string) => {
  */
 export async function detectConflicts(planId: string): Promise<ConflictRow[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", planId).maybeSingle();
+  const { data: plan } = await supabaseAdmin
+    .from("plans")
+    .select("*")
+    .eq("id", planId)
+    .maybeSingle();
   if (!plan) return [];
 
   const { data: recs } = await supabaseAdmin
@@ -59,19 +63,32 @@ export async function detectConflicts(planId: string): Promise<ConflictRow[]> {
       {}) as ConstraintPayload;
     const name = prof?.display_name ?? "A member";
 
-    const curfew = payload.latestEnd ?? (prof?.curfew_time ? String(prof.curfew_time).slice(0, 5) : null);
+    const curfew =
+      payload.latestEnd ?? (prof?.curfew_time ? String(prof.curfew_time).slice(0, 5) : null);
     if (curfew && end != null && end + travel > toMin(curfew)) {
-      found.push({ kind: "curfew", detail: `${name}'s ${curfew} curfew lands before this wraps up`, profileId: id });
+      found.push({
+        kind: "curfew",
+        detail: `${name}'s ${curfew} curfew lands before this wraps up`,
+        profileId: id,
+      });
     }
     const budget = payload.maxSpend ?? payload.maxTicketPrice ?? null;
     if (budget != null && cost > budget) {
-      found.push({ kind: "budget", detail: `The pick is above someone's budget cap`, profileId: id });
+      found.push({
+        kind: "budget",
+        detail: `The pick is above someone's budget cap`,
+        profileId: id,
+      });
     }
     const maxMiles = payload.maxDistanceMiles ?? null;
     const venueMiles = (pick.breakdown as { venue?: { distanceMiles?: number } } | null)?.venue
       ?.distanceMiles;
     if (maxMiles != null && venueMiles != null && venueMiles > maxMiles) {
-      found.push({ kind: "distance", detail: `The pick is outside someone's travel radius`, profileId: id });
+      found.push({
+        kind: "distance",
+        detail: `The pick is outside someone's travel radius`,
+        profileId: id,
+      });
     }
   }
 
@@ -87,7 +104,12 @@ export async function detectConflicts(planId: string): Promise<ConflictRow[]> {
     );
     if (fresh.length) {
       await supabaseAdmin.from("plan_conflicts").insert(
-        fresh.map((f) => ({ plan_id: planId, profile_id: f.profileId, kind: f.kind, detail: f.detail })),
+        fresh.map((f) => ({
+          plan_id: planId,
+          profile_id: f.profileId,
+          kind: f.kind,
+          detail: f.detail,
+        })),
       );
     }
   }
@@ -101,7 +123,11 @@ export async function detectConflicts(planId: string): Promise<ConflictRow[]> {
  */
 export async function generateAlternatives(planId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", planId).maybeSingle();
+  const { data: plan } = await supabaseAdmin
+    .from("plans")
+    .select("*")
+    .eq("id", planId)
+    .maybeSingle();
   if (!plan) return { created: 0 };
 
   const { data: conflicts } = await supabaseAdmin
@@ -117,11 +143,16 @@ export async function generateAlternatives(planId: string) {
     .select("*")
     .eq("plan_id", planId)
     .order("rank");
-  const base = (recs ?? []).find((r) => r.id === plan.selected_recommendation_id) ?? (recs ?? [])[0];
+  const base =
+    (recs ?? []).find((r) => r.id === plan.selected_recommendation_id) ?? (recs ?? [])[0];
   if (!base) return { created: 0 };
 
   // Remove any previous alternative set so the poll stays readable.
-  await supabaseAdmin.from("recommendations").delete().eq("plan_id", planId).contains("tags", ["alternative"]);
+  await supabaseAdmin
+    .from("recommendations")
+    .delete()
+    .eq("plan_id", planId)
+    .contains("tags", ["alternative"]);
 
   const { loadMemberBases, fairPointFor, drivesTo } = await import("./fairpoint.server");
   const bases = await loadMemberBases(plan.group_id);
@@ -185,7 +216,9 @@ export async function generateAlternatives(planId: string) {
       limit: 6,
     };
     const live = await searchVenuesGeoapify(query);
-    const seeds = (live.length ? live : queryVenuesNear(query)).filter((v) => v.title !== base.title);
+    const seeds = (live.length ? live : queryVenuesNear(query)).filter(
+      (v) => v.title !== base.title,
+    );
 
     if (kinds.has("budget")) {
       const cheap = [...seeds].sort((a, b) => a.costMax - b.costMax)[0];
@@ -215,8 +248,14 @@ export async function generateAlternatives(planId: string) {
 
     if (kinds.has("distance")) {
       const closest = [...seeds].sort((a, b) => {
-        const da = Math.max(...drivesTo(bases, { lat: a.lat, lon: a.lon }).map((d) => d.minutes), 0);
-        const db = Math.max(...drivesTo(bases, { lat: b.lat, lon: b.lon }).map((d) => d.minutes), 0);
+        const da = Math.max(
+          ...drivesTo(bases, { lat: a.lat, lon: a.lon }).map((d) => d.minutes),
+          0,
+        );
+        const db = Math.max(
+          ...drivesTo(bases, { lat: b.lat, lon: b.lon }).map((d) => d.minutes),
+          0,
+        );
         return da - db;
       })[0];
       if (closest) {

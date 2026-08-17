@@ -46,7 +46,9 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
 
     const { data: mine } = await supabase
       .from("profiles")
-      .select("id, display_name, zip_code, home_area, curfew_time, budget_preference, preferred_categories")
+      .select(
+        "id, display_name, zip_code, home_area, curfew_time, budget_preference, preferred_categories",
+      )
       .eq("id", myId ?? "")
       .maybeSingle();
 
@@ -133,62 +135,71 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
       endTime?: string | null;
     }) => d,
   )
-  .handler(async ({ data, context }): Promise<{ origin: { lat: number; lon: number; label: string } | null; venues: FairVenue[] }> => {
-    const { supabase } = context;
-    const { data: membership } = await supabase
-      .from("group_members")
-      .select("id")
-      .eq("group_id", data.groupId)
-      .limit(1);
-    if (!membership?.length) throw new Error("Forbidden");
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{
+      origin: { lat: number; lon: number; label: string } | null;
+      venues: FairVenue[];
+    }> => {
+      const { supabase } = context;
+      const { data: membership } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("group_id", data.groupId)
+        .limit(1);
+      if (!membership?.length) throw new Error("Forbidden");
 
-    const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } = await import("./fairpoint.server");
-    const bases = await loadMemberBases(data.groupId);
-    const origin = await fairPointFor(bases, data.zipOverride ?? null);
-    if (!origin) return { origin: null, venues: [] };
+      const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } =
+        await import("./fairpoint.server");
+      const bases = await loadMemberBases(data.groupId);
+      const origin = await fairPointFor(bases, data.zipOverride ?? null);
+      if (!origin) return { origin: null, venues: [] };
 
-    const { searchVenuesGeoapify } = await import("./places.server");
-    const { queryVenuesNear, haversineMiles, priceLevelFor } = await import("./location");
-    const query = {
-      origin,
-      category: data.category,
-      vibe: data.vibe ?? null,
-      maxRadiusMiles: data.radiusMiles ?? 12,
-      maxBudget: data.maxSpend ?? null,
-      limit: 8,
-    };
-    const live = await searchVenuesGeoapify(query);
-    const seeds = live.length ? live : queryVenuesNear(query);
+      const { searchVenuesGeoapify } = await import("./places.server");
+      const { queryVenuesNear, haversineMiles, priceLevelFor } = await import("./location");
+      const query = {
+        origin,
+        category: data.category,
+        vibe: data.vibe ?? null,
+        maxRadiusMiles: data.radiusMiles ?? 12,
+        maxBudget: data.maxSpend ?? null,
+        limit: 8,
+      };
+      const live = await searchVenuesGeoapify(query);
+      const seeds = live.length ? live : queryVenuesNear(query);
 
-    return {
-      origin: { lat: origin.lat, lon: origin.lon, label: origin.label },
-      venues: seeds.slice(0, 8).map((v) => {
-        const drives = drivesTo(bases, { lat: v.lat ?? null, lon: v.lon ?? null });
-        const end = data.endTime ?? v.end;
-        return {
-          key: v.key,
-          title: v.title,
-          subtitle: v.subtitle,
-          cuisine: v.cuisine ?? null,
-          kind: v.kind ?? "activity",
-          costMin: v.costMin,
-          costMax: v.costMax,
-          priceLevel: v.priceLevel ?? priceLevelFor(v.costMax),
-          address: v.address ?? null,
-          lat: v.lat ?? null,
-          lon: v.lon ?? null,
-          start: v.start,
-          end,
-          fairMiles:
-            v.lat != null && v.lon != null
-              ? Math.round(haversineMiles(origin, { lat: v.lat, lon: v.lon }) * 10) / 10
-              : null,
-          drives,
-          curfewWarnings: curfewWarnings(bases, end, drives),
-        };
-      }),
-    };
-  });
+      return {
+        origin: { lat: origin.lat, lon: origin.lon, label: origin.label },
+        venues: seeds.slice(0, 8).map((v) => {
+          const drives = drivesTo(bases, { lat: v.lat ?? null, lon: v.lon ?? null });
+          const end = data.endTime ?? v.end;
+          return {
+            key: v.key,
+            title: v.title,
+            subtitle: v.subtitle,
+            cuisine: v.cuisine ?? null,
+            kind: v.kind ?? "activity",
+            costMin: v.costMin,
+            costMax: v.costMax,
+            priceLevel: v.priceLevel ?? priceLevelFor(v.costMax),
+            address: v.address ?? null,
+            lat: v.lat ?? null,
+            lon: v.lon ?? null,
+            start: v.start,
+            end,
+            fairMiles:
+              v.lat != null && v.lon != null
+                ? Math.round(haversineMiles(origin, { lat: v.lat, lon: v.lon }) * 10) / 10
+                : null,
+            drives,
+            curfewWarnings: curfewWarnings(bases, end, drives),
+          };
+        }),
+      };
+    },
+  );
 
 /**
  * One-click AI plan: parses the prompt, creates the plan for the whole group,
@@ -218,9 +229,13 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       .eq("id", me)
       .maybeSingle();
 
-    const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } = await import("./fairpoint.server");
+    const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } =
+      await import("./fairpoint.server");
     const bases = await loadMemberBases(data.groupId);
-    const origin = await fairPointFor(bases, draft.targetCityOrZip ?? (mine?.zip_code as string | null));
+    const origin = await fairPointFor(
+      bases,
+      draft.targetCityOrZip ?? (mine?.zip_code as string | null),
+    );
 
     const startTime = draft.time ?? "18:30";
     const windowStart = draft.date ? `${draft.date}T${startTime}:00` : null;
@@ -296,7 +311,9 @@ export const launchAiPlan = createServerFn({ method: "POST" })
                 transportFit: 80,
                 fairness: 85,
                 reasons: [`Clustered around the group's fair point (${origin.label})`],
-                cautions: warns.map((w) => `Wraps at ${w.wrapsAt}, past ${w.name}'s ${w.curfew} curfew`),
+                cautions: warns.map(
+                  (w) => `Wraps at ${w.wrapsAt}, past ${w.name}'s ${w.curfew} curfew`,
+                ),
                 venue: {
                   ...(v.address ? { address: v.address } : {}),
                   ...(v.distanceMiles != null ? { distanceMiles: v.distanceMiles } : {}),
@@ -326,7 +343,9 @@ export const launchAiPlan = createServerFn({ method: "POST" })
     await notifyGroupMembers(data.groupId, {
       type: "plan_created",
       title: `New plan: ${plan.title}`,
-      body: seeded ? "Vote on the fair-point options." : "Answer privately — nobody sees your answers.",
+      body: seeded
+        ? "Vote on the fair-point options."
+        : "Answer privately — nobody sees your answers.",
       exclude: me as string,
     });
 

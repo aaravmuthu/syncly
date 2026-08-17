@@ -1,7 +1,12 @@
 import { Pill } from "./ui";
 import type { FairVenue } from "@/lib/quorum/planner.functions";
 
-export function directionsUrl(v: { title: string; lat: number | null; lon: number | null; address?: string | null }) {
+export function directionsUrl(v: {
+  title: string;
+  lat: number | null;
+  lon: number | null;
+  address?: string | null;
+}) {
   if (v.lat != null && v.lon != null) {
     return `https://www.google.com/maps/dir/?api=1&destination=${v.lat},${v.lon}`;
   }
@@ -44,7 +49,9 @@ export function FairVenueCard({
             <span className="mr-1">{venue.kind === "food" ? "🍽️" : "🎟️"}</span>
             {venue.title}
           </p>
-          <p className="truncate text-xs text-muted-foreground">{venue.address ?? venue.subtitle}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {venue.address ?? venue.subtitle}
+          </p>
         </div>
         <Pill tone="accent">
           ${venue.costMin}–{venue.costMax}/person

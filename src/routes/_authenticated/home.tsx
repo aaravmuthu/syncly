@@ -102,7 +102,8 @@ function HomePage() {
       ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
   );
   const otherActive = dayFiltered.filter(
-    (p) => (p.status === "collecting" || p.status === "voting") &&
+    (p) =>
+      (p.status === "collecting" || p.status === "voting") &&
       !needsAction.includes(p) &&
       !conflicted.includes(p),
   );
@@ -116,7 +117,9 @@ function HomePage() {
 
   // Up next: soonest confirmed plan, else the most urgent thing waiting on you.
   const upNext =
-    confirmed.find((p) => new Date(p.window_start ?? p.created_at).getTime() >= Date.now() - 864e5) ??
+    confirmed.find(
+      (p) => new Date(p.window_start ?? p.created_at).getTime() >= Date.now() - 864e5,
+    ) ??
     needsAction[0] ??
     confirmed[0] ??
     otherActive[0] ??
@@ -322,17 +325,17 @@ function UpNextHero({ plan }: { plan: DashPlan }) {
             <h2 className="font-display text-2xl font-semibold leading-tight">{plan.title}</h2>
             <p className="text-sm text-muted-foreground">
               {formatWhen(plan.window_start)}
-              {rec?.location_name ? ` · ${rec.location_name}` : plan.location_area ? ` · ${plan.location_area}` : ""}
+              {rec?.location_name
+                ? ` · ${rec.location_name}`
+                : plan.location_area
+                  ? ` · ${plan.location_area}`
+                  : ""}
             </p>
             <div className="pt-1">
               <WeatherChip planId={plan.id} />
             </div>
           </div>
-          <MapThumb
-            lat={rec?.lat}
-            lon={rec?.lon}
-            className="hidden h-28 w-40 shrink-0 sm:block"
-          />
+          <MapThumb lat={rec?.lat} lon={rec?.lon} className="hidden h-28 w-40 shrink-0 sm:block" />
         </div>
 
         {plan.status !== "finalized" ? (

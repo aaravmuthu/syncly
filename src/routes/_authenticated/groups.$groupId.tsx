@@ -51,12 +51,10 @@ function GroupPage() {
     queryKey: ["group-memory", groupId],
     queryFn: () => fetchMemory({ data: { groupId } }),
   });
-  const topCategory = (
-    (memory.data?.favorite_activities as { category: string; count: number }[] | null) ?? []
-  )[0];
-  const topArea = (
-    (memory.data?.common_locations as { area: string; count: number }[] | null) ?? []
-  )[0];
+  const topCategory = ((memory.data?.favorite_activities as
+    { category: string; count: number }[] | null) ?? [])[0];
+  const topArea = ((memory.data?.common_locations as { area: string; count: number }[] | null) ??
+    [])[0];
 
   const create = useMutation({
     mutationFn: useServerFn(createPlan),
@@ -65,7 +63,9 @@ function GroupPage() {
         description: e instanceof Error ? e.message : "Please try again.",
       }),
     onSuccess: (plan) => {
-      toast.success("Plan created", { description: "Everyone gets their own private questionnaire." });
+      toast.success("Plan created", {
+        description: "Everyone gets their own private questionnaire.",
+      });
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["plans"] });
       void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
@@ -88,7 +88,9 @@ function GroupPage() {
     <AppShell
       title={`${group.emoji} ${group.name}`}
       subtitle={`${members.length} members · invite code ${group.invite_code}`}
-      action={<Button onClick={() => setCreating((v) => !v)}>{creating ? "Cancel" : "New plan"}</Button>}
+      action={
+        <Button onClick={() => setCreating((v) => !v)}>{creating ? "Cancel" : "New plan"}</Button>
+      }
     >
       <InviteCard code={group.invite_code} groupName={group.name} />
 
@@ -97,7 +99,9 @@ function GroupPage() {
       ) : null}
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plans</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Plans
+        </h2>
         {plans.length === 0 ? (
           <Card>
             <p className="text-sm text-muted-foreground">No plans in this group yet.</p>
@@ -134,18 +138,27 @@ function GroupPage() {
               .filter(Boolean)
               .join(" · ");
             return (
-              <div key={m.profile_id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                <Avatar url={p?.avatar_url} emoji={p?.avatar_emoji} name={p?.display_name} size={36} />
+              <div
+                key={m.profile_id}
+                className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+              >
+                <Avatar
+                  url={p?.avatar_url}
+                  emoji={p?.avatar_emoji}
+                  name={p?.display_name}
+                  size={36}
+                />
                 <div className="flex-1">
                   <span className="block text-sm font-medium">{p?.display_name ?? "Member"}</span>
-                  {meta ? <span className="block text-xs text-muted-foreground">{meta}</span> : null}
+                  {meta ? (
+                    <span className="block text-xs text-muted-foreground">{meta}</span>
+                  ) : null}
                   {p?.bio ? <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p> : null}
                 </div>
                 <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
               </div>
             );
           })}
-
         </Card>
       </section>
     </AppShell>

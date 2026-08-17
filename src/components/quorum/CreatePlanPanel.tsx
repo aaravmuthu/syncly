@@ -9,7 +9,11 @@ import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { VenueMap, type MapVenue } from "./VenueMap";
 import { FairVenueCard } from "./FairPointVenues";
 import { createPlan } from "@/lib/quorum/plan.functions";
-import { getPlanDefaults, launchAiPlan, previewFairPointVenues } from "@/lib/quorum/planner.functions";
+import {
+  getPlanDefaults,
+  launchAiPlan,
+  previewFairPointVenues,
+} from "@/lib/quorum/planner.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
 import { inviteLink, shareOrCopy } from "@/lib/quorum/invite";
@@ -106,7 +110,17 @@ export function CreatePlanPanel({
     const fp = defaults.data?.fairPoint;
     return [
       ...homes,
-      ...(fp ? [{ id: "fair-point", title: "Group fair point", lat: fp.lat, lon: fp.lon, kind: "fair" as const }] : []),
+      ...(fp
+        ? [
+            {
+              id: "fair-point",
+              title: "Group fair point",
+              lat: fp.lat,
+              lon: fp.lon,
+              kind: "fair" as const,
+            },
+          ]
+        : []),
       ...spots,
     ];
   }, [defaults.data, venues.data, picked]);
@@ -133,7 +147,9 @@ export function CreatePlanPanel({
     onSuccess: (plan) => {
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Plan created", { description: "Everyone gets their own private questionnaire." });
+      toast.success("Plan created", {
+        description: "Everyone gets their own private questionnaire.",
+      });
       void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
     },
     onError: (e: unknown) =>
@@ -220,8 +236,8 @@ export function CreatePlanPanel({
           <h3 className="text-sm font-semibold">Fair-Point spots for this group</h3>
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Clustered around everyone's midpoint{venues.data?.origin ? ` · ${venues.data.origin.label}` : ""}.
-          Drive times are per member.
+          Clustered around everyone's midpoint
+          {venues.data?.origin ? ` · ${venues.data.origin.label}` : ""}. Drive times are per member.
         </p>
 
         <div className="mt-3">
@@ -232,15 +248,17 @@ export function CreatePlanPanel({
           {venues.isFetching ? (
             <Skeleton className="h-24 rounded-3xl" />
           ) : venues.data?.venues.length ? (
-            venues.data.venues.slice(0, 6).map((v) => (
-              <FairVenueCard
-                key={v.key}
-                venue={v}
-                meProfileId={d?.me.profileId}
-                selected={picked === v.key}
-                onSelect={() => setPicked(picked === v.key ? null : v.key)}
-              />
-            ))
+            venues.data.venues
+              .slice(0, 6)
+              .map((v) => (
+                <FairVenueCard
+                  key={v.key}
+                  venue={v}
+                  meProfileId={d?.me.profileId}
+                  selected={picked === v.key}
+                  onSelect={() => setPicked(picked === v.key ? null : v.key)}
+                />
+              ))
           ) : (
             <p className="text-xs text-muted-foreground">
               No spots yet — add a ZIP below or widen the radius.
@@ -278,7 +296,9 @@ export function CreatePlanPanel({
                   type="button"
                   onClick={() => setCategory(c.id)}
                   className={`rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
-                    category === c.id ? "border-primary/50 bg-primary/8" : "border-border hover:bg-secondary"
+                    category === c.id
+                      ? "border-primary/50 bg-primary/8"
+                      : "border-border hover:bg-secondary"
                   }`}
                 >
                   <span className="mr-1.5">{c.emoji}</span>
@@ -335,7 +355,12 @@ export function CreatePlanPanel({
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Date">
-              <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
+              <input
+                type="date"
+                className={inputClass}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
             </Field>
             <Field label="Start time">
               <input

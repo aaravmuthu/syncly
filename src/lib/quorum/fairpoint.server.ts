@@ -33,7 +33,11 @@ export async function loadMemberBases(groupId: string): Promise<MemberBase[]> {
     const p = (row.profiles ?? {}) as Record<string, unknown>;
     const zip =
       normalizeZip(p["zip_code"] as string | null) ??
-      normalizeZip(String(p["home_area"] ?? "").replace(/\D/g, "").slice(0, 5));
+      normalizeZip(
+        String(p["home_area"] ?? "")
+          .replace(/\D/g, "")
+          .slice(0, 5),
+      );
     const geo = zip ? await geocodeZipServer(zip) : null;
     members.push({
       profileId: row.profile_id as string,
@@ -54,7 +58,9 @@ export async function loadMemberBases(groupId: string): Promise<MemberBase[]> {
  * Geographic midpoint of every member with a known home base, computed on the
  * unit sphere so it stays correct across longitudes.
  */
-export function midpointOf(points: { lat: number; lon: number }[]): { lat: number; lon: number } | null {
+export function midpointOf(
+  points: { lat: number; lon: number }[],
+): { lat: number; lon: number } | null {
   if (!points.length) return null;
   let x = 0;
   let y = 0;
@@ -118,8 +124,9 @@ export function drivesTo(
     .filter((m) => m.lat != null && m.lon != null)
     .map((m) => {
       const miles =
-        Math.round(haversineMiles({ lat: m.lat!, lon: m.lon! }, { lat: venue.lat!, lon: venue.lon! }) * 10) /
-        10;
+        Math.round(
+          haversineMiles({ lat: m.lat!, lon: m.lon! }, { lat: venue.lat!, lon: venue.lon! }) * 10,
+        ) / 10;
       return { profileId: m.profileId, name: m.name, miles, minutes: milesToDriveMinutes(miles) };
     })
     .sort((a, b) => a.minutes - b.minutes);
