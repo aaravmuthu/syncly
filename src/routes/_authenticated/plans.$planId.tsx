@@ -587,9 +587,23 @@ function PlanPage() {
             </Card>
           ) : null}
 
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              loading={generate.isPending}
+              onClick={() => {
+                const next = shuffle + 1;
+                setShuffle(next);
+                generate.mutate({ data: { planId, shuffle: next } });
+              }}
+            >
+              🔀 Shuffle · load 3 different options
+            </Button>
+          </div>
+
           <p className="px-1 text-xs text-muted-foreground">
-            Scores come from everyone's private answers. Quorum never shows whose budget, curfew, or
-            dietary need ruled an option out.
+            Only options that clear everyone's distance, curfew, and opening-hours limits are shown.
+            Quorum never reveals whose constraint ruled an option out.
           </p>
         </section>
       ) : null}
