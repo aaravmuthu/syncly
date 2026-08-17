@@ -309,3 +309,133 @@ export async function writePlanBPitch(input: {
     return fallback;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* 4. Group conflict resolution                                        */
+/* ------------------------------------------------------------------ */
+
+export type ConflictFacts = {
+  planTitle: string;
+  category: string;
+  memberCount: number;
+  startTime: string | null;
+  endTime: string | null;
+  earliestCurfew: string | null;
+  curfewBreachCount: number;
+  tightestBudget: number | null;
+  topCostMin: number | null;
+  topCostMax: number | null;
+  voteSplit: { title: string; votes: number; id: string }[];
+  dietaryNeeds: string[];
+  longestDriveMinutes: number | null;
+  travelLimitMinutes: number | null;
+};
+
+export type CompromisePlan = {
+  needed: boolean;
+  headline: string;
+  detail: string;
+  suggestedStart: string | null;
+  suggestedRecommendationId: string | null;
+  suggestedRecommendationTitle: string | null;
+};
+
+const CompromiseSchema = z.object({
+  headline: z.string(),
+  detail: z.string(),
+  suggested_start: z.string().nullable(),
+});
+
+const clock = (mins: number) => {
+  const m = ((Math.round(mins) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
+const asMins = (t: string | null) =>
+  t ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : null;
+
+/** Deterministic compromise used when AI is unavailable or unusable. */
+function heuristicCompromise(f: ConflictFacts): CompromisePlan {
+  const start = asMins(f.startTime);
+  const end = asMins(f.endTime);
+  const curfew = asMins(f.earliestCurfew);
+  const drive = f.longestDriveMinutes ?? 20;
+  let suggestedStart: string | null = null;
+  if (start != null && end != null && curfew != null && end + drive > curfew) {
+    const shift = end + drive - curfew;
+    suggestedStart = clock(Math.max(start - shift, 15 * 60));
+  }
+  const leader = [...f.voteSplit].sort((a, b) => b.votes - a.votes)[0] ?? null;
+  const tie =
+    f.voteSplit.filter((v) => v.votes === (leader?.votes ?? 0)).length > 1 &&
+    (leader?.votes ?? 0) > 0;
+  const overBudget =
+    f.tightestBudget != null && f.topCostMax != null && f.topCostMax > f.tightestBudget;
+
+  const headline = suggestedStart
+    ? `Shift the start to ${clock(asMins(suggestedStart)!)} so everyone clears curfew`
+    : tie
+      ? "The vote is split — lock the fairest option to break the tie"
+      : overBudget
+        ? "Pick the cheaper option so the tightest budget in the group still works"
+        : "This plan already works for everyone";
+
+  return {
+    needed: Boolean(suggestedStart || tie || overBudget),
+    headline,
+    detail: suggestedStart
+      ? `Ending earlier leaves ${drive} minutes of drive time before the earliest curfew in the group.`
+      : tie
+        ? "Two options are tied. The fairest drive-time option keeps everyone's travel even."
+        : overBudget
+          ? `The top pick runs up to $${f.topCostMax} per person, above the group's tightest cap of $${f.tightestBudget}.`
+          : "No budget, curfew, or travel conflicts are open right now.",
+    suggestedStart,
+    suggestedRecommendationId: tie || overBudget ? (leader?.id ?? null) : null,
+    suggestedRecommendationTitle: tie || overBudget ? (leader?.title ?? null) : null,
+  };
+}
+
+/** Gemini Flash compromise: group-safe aggregates only, never names a person. */
+export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan> {
+  const fallback = heuristicCompromise(f);
+  if (!fallback.needed) return fallback;
+  try {
+    const { output } = await generateText({
+      model: lovableAiModel(),
+      output: Output.object({ schema: CompromiseSchema }),
+      prompt: [
+        "You resolve scheduling conflicts for a privacy-first group planning app.",
+        "PRIVACY RULE: never name a person; talk about the group ('the earliest curfew in the group').",
+        "Propose ONE concrete compromise that satisfies budget, curfew and travel limits together.",
+        "headline: under 90 characters, action-first. detail: one sentence explaining the trade-off.",
+        "suggested_start: 24h HH:MM start time, or null when the timing is already fine.",
+        'Reply with ONLY JSON: {"headline":string,"detail":string,"suggested_start":string|null}',
+        "",
+        JSON.stringify({
+          plan: f.planTitle,
+          category: f.category,
+          group_size: f.memberCount,
+          current_start: f.startTime,
+          current_end: f.endTime,
+          earliest_curfew_in_group: f.earliestCurfew,
+          members_breaching_curfew: f.curfewBreachCount,
+          tightest_budget_cap: f.tightestBudget,
+          top_option_cost: [f.topCostMin, f.topCostMax],
+          vote_split: f.voteSplit.map((v) => ({ option: v.title, votes: v.votes })),
+          dietary_needs_in_group: f.dietaryNeeds,
+          longest_drive_minutes: f.longestDriveMinutes,
+          travel_limit_minutes: f.travelLimitMinutes,
+        }),
+      ].join("\n"),
+    });
+    const start = output.suggested_start?.trim() || null;
+    return {
+      ...fallback,
+      headline: output.headline.trim() || fallback.headline,
+      detail: output.detail.trim() || fallback.detail,
+      suggestedStart: /^\d{2}:\d{2}$/.test(start ?? "") ? start : fallback.suggestedStart,
+    };
+  } catch {
+    return fallback;
+  }
+}
