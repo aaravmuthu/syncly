@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Sparkles, KeyRound } from "lucide-react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
+import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import {
   ActionCard,
@@ -195,11 +196,31 @@ function HomePage() {
           </Glass>
         ) : null}
 
+        {conflicted.length > 0 ? (
+          <Section title="Conflict — quick re-vote" accent="text-amber-500">
+            <div className="grid gap-3">
+              {conflicted.map((p) => (
+                <ConflictCard
+                  key={p.id}
+                  planId={p.id}
+                  title={p.title}
+                  conflicts={p.conflicts ?? []}
+                  alternatives={p.alternatives ?? []}
+                  original={p.original_option ?? null}
+                />
+              ))}
+            </div>
+          </Section>
+        ) : null}
+
         {needsAction.length > 0 ? (
           <Section title="Needs your action" accent="text-emerald-500">
             <div className="grid gap-3 sm:grid-cols-2">
               {needsAction.map((p) => (
-                <ActionCard key={p.id} plan={p} />
+                <div key={p.id} className="space-y-2">
+                  <ActionCard plan={p} />
+                  <QuickActions planId={p.id} />
+                </div>
               ))}
             </div>
           </Section>
