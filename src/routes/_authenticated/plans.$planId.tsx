@@ -27,6 +27,8 @@ import {
 import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { toast } from "sonner";
+import { VenueDetailModal, type VenueDetail } from "@/components/quorum/VenueDetailModal";
+import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 
 export const Route = createFileRoute("/_authenticated/plans/$planId")({
   head: () => ({
@@ -328,6 +330,50 @@ function PlanPage() {
                       {isSelected ? <Pill tone="accent">Chosen</Pill> : null}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{r.subtitle}</p>
+                    <button
+                      type="button"
+                      className="mt-2 block w-full overflow-hidden rounded-2xl text-left"
+                      aria-label={`Photos and reviews for ${r.title}`}
+                      onClick={() =>
+                        setVenueDetail({
+                          key: r.id,
+                          title: r.title,
+                          address: b.venue?.address ?? r.location_name,
+                          subtitle: r.subtitle,
+                          cuisine: b.venue?.cuisine ?? null,
+                          category: r.category,
+                          kind: b.venue?.kind ?? null,
+                          priceLevel: b.venue?.priceLevel ?? null,
+                          lat: r.lat ?? b.venue?.lat ?? null,
+                          lon: r.lon ?? b.venue?.lon ?? null,
+                        })
+                      }
+                    >
+                      <span className="relative block">
+                        <img
+                          src={venuePhoto({
+                            title: r.title,
+                            cuisine: b.venue?.cuisine ?? null,
+                            subtitle: r.subtitle,
+                            category: r.category,
+                            kind: b.venue?.kind ?? null,
+                          })}
+                          alt={`${r.title} — ${b.venue?.cuisine ?? r.category}`}
+                          loading="lazy"
+                          className="h-32 w-full object-cover transition hover:scale-[1.02]"
+                        />
+                        <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
+                          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                            {b.venue?.rating != null
+                              ? `★ ${b.venue.rating}`
+                              : venueStats(r.id).ratingLabel}
+                          </span>
+                          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                            {b.venue?.priceLevel ?? "$$"}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
                     <CompromiseNote text={summaries.data?.[r.id]} />
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       {b.venue?.cuisine ? (
@@ -394,6 +440,26 @@ function PlanPage() {
                     >
                       <span aria-hidden>🧭</span> Directions in Maps
                     </a>
+                    <button
+                      type="button"
+                      className="mt-1.5 ml-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
+                      onClick={() =>
+                        setVenueDetail({
+                          key: r.id,
+                          title: r.title,
+                          address: b.venue?.address ?? r.location_name,
+                          subtitle: r.subtitle,
+                          cuisine: b.venue?.cuisine ?? null,
+                          category: r.category,
+                          kind: b.venue?.kind ?? null,
+                          priceLevel: b.venue?.priceLevel ?? null,
+                          lat: r.lat ?? b.venue?.lat ?? null,
+                          lon: r.lon ?? b.venue?.lon ?? null,
+                        })
+                      }
+                    >
+                      Reviews & photos
+                    </button>
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="font-display text-2xl font-semibold tabular-nums">
