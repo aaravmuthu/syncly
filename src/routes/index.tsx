@@ -21,6 +21,7 @@ import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 const TITLE = "Quorum — Plans that actually work for everyone";
 const DESCRIPTION =
   "Private, smart group planning with privacy protection, keyless location discovery, and voting.";
+const OG_IMAGE = "https://quorumapp.lovable.app/og-image.png?v=3";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,11 +30,18 @@ export const Route = createFileRoute("/")({
       { name: "description", content: DESCRIPTION },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
-      { property: "og:image", content: "https://quorumapp.lovable.app/og-image.png" },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:secure_url", content: OG_IMAGE },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Quorum — private plans, group answers" },
+      { property: "og:url", content: "https://quorumapp.lovable.app/" },
+      { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: TITLE },
       { name: "twitter:description", content: DESCRIPTION },
-      { name: "twitter:image", content: "https://quorumapp.lovable.app/og-image.png" },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
   }),
   component: Landing,
