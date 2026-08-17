@@ -26,6 +26,7 @@ import {
 } from "@/lib/quorum/plan.functions";
 import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
 import { directionsUrl } from "@/lib/quorum/vibes";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/plans/$planId")({
   head: () => ({
@@ -115,8 +116,18 @@ function PlanPage() {
   });
   const generate = useMutation({
     mutationFn: useServerFn(generateRecommendations),
-    onSuccess: () => void invalidate(),
+    onSuccess: (res: { count?: number } | undefined) => {
+      void invalidate();
+      toast.success("Fair spots ready", {
+        description: `${res?.count ?? 0} options centered on your group's midpoint.`,
+      });
+    },
+    onError: (e: unknown) =>
+      toast.error("Couldn't find options", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
   });
+
   const vote = useMutation({
     mutationFn: useServerFn(castVote),
     onSuccess: () => void invalidate(),
@@ -219,11 +230,13 @@ function PlanPage() {
           </div>
           <Button
             variant={responded === total ? "primary" : "outline"}
-            disabled={generate.isPending || responded === 0}
+            loading={generate.isPending}
+            className="shrink-0"
             onClick={() => generate.mutate({ data: { planId } })}
           >
-            {generate.isPending ? "Working…" : "Find options"}
+            {generate.isPending ? "Finding fair spots…" : "Find options"}
           </Button>
+
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {data.participants.map((p) => {
@@ -343,6 +356,31 @@ function PlanPage() {
                         ? ` · ${b.venue.distanceMiles} miles away`
                         : ""}
                     </p>
+                    {b.fair?.drives?.length ? (
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {b.fair.drives
+                          .map((d) => `${d.miles} mi for ${d.name.split(" ")[0]}`)
+                          .join(" • ")}
+                      </p>
+                    ) : null}
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {b.fair && b.fair.drives.length ? (
+                        <Pill tone="accent">
+                          📍{" "}
+                          {b.fair.spreadMinutes <= 6
+                            ? `Equal ~${b.fair.avgMinutes} min drive for everyone`
+                            : `~${b.fair.avgMinutes} min average drive`}
+                        </Pill>
+                      ) : null}
+                      {b.fair ? (
+                        b.fair.curfewOk ? (
+                          <Pill tone="good">✓ Works with everyone's curfew</Pill>
+                        ) : (
+                          <Pill tone="warn">{b.fair.curfewNote}</Pill>
+                        )
+                      ) : null}
+                    </div>
+
                     <a
                       href={directionsUrl({
                         lat: r.lat ?? b.venue?.lat ?? null,

@@ -47,7 +47,18 @@ export async function regenerateRecommendations(planId: string) {
   const radii = numbers(members.map((m) => m.constraints.maxDistanceMiles));
   const budgets = numbers(members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice));
 
-  const origin = zip ? await geocodeZipServer(zip) : null;
+  // Fair-Point: geographic midpoint of every attending member's saved home.
+  // Falls back to the plan/host ZIP centroid when nobody has coordinates.
+  const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } = await import(
+    "./fairpoint.server"
+  );
+  const allBases = await loadMemberBases(plan.group_id);
+  const attendingIds = new Set(attending.map((p) => p.profile_id));
+  const bases = allBases.filter((b) => attendingIds.has(b.profileId));
+  const memberBases = bases.length ? bases : allBases;
+  const fairPoint = await fairPointFor(memberBases, zip);
+  const zipOrigin = zip ? await geocodeZipServer(zip) : null;
+  const origin = fairPoint ?? zipOrigin;
   // The host's chosen search radius caps the group's tightest personal radius.
   const hostRadius = plan.search_radius_miles ?? null;
   if (hostRadius != null) radii.push(hostRadius);
@@ -66,6 +77,7 @@ export async function regenerateRecommendations(planId: string) {
     const live = await searchVenuesGeoapify({ origin, ...venueQuery });
     options = live.length ? live : queryVenuesNear({ origin, ...venueQuery });
   }
+
 
   // ---- Live weather (keyless, Open-Meteo) ---------------------------------
   let forecast: Forecast | null = null;
@@ -97,11 +109,34 @@ export async function regenerateRecommendations(planId: string) {
     })
     .slice(0, 6);
 
+  // Per-member drive math from every saved home address to each venue.
+  const withFair = ranked.map((r) => {
+    const drives = drivesTo(memberBases, { lat: r.option.lat, lon: r.option.lon });
+    const warnings = curfewWarnings(memberBases, r.option.end, drives);
+    const mins = drives.map((d) => d.minutes);
+    const avgMinutes = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : 0;
+    const spreadMinutes = mins.length ? Math.max(...mins) - Math.min(...mins) : 0;
+    const breakdown: ScoreBreakdown = {
+      ...r.breakdown,
+      fair: {
+        avgMinutes,
+        spreadMinutes,
+        midpointLabel: fairPoint?.label ?? null,
+        drives: drives.map((d) => ({ name: d.name, miles: d.miles, minutes: d.minutes })),
+        curfewOk: warnings.length === 0,
+        curfewNote: warnings.length
+          ? `Wraps at ${warnings[0]!.wrapsAt}, past ${warnings[0]!.name}'s ${warnings[0]!.curfew} curfew`
+          : null,
+      },
+    };
+    return { ...r, breakdown };
+  });
+
   await supabaseAdmin.from("recommendations").delete().eq("plan_id", planId);
   const { data: inserted, error } = await supabaseAdmin
     .from("recommendations")
     .insert(
-      ranked.map((r, i) => ({
+      withFair.map((r, i) => ({
         plan_id: planId,
         rank: i + 1,
         title: r.option.title,
@@ -121,6 +156,7 @@ export async function regenerateRecommendations(planId: string) {
         feasible: r.feasible,
         breakdown: r.breakdown as never,
       })),
+
     )
     .select("id, feasible");
   if (error) throw new Error(error.message);
