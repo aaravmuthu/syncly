@@ -47,7 +47,18 @@ export async function regenerateRecommendations(planId: string) {
   const radii = numbers(members.map((m) => m.constraints.maxDistanceMiles));
   const budgets = numbers(members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice));
 
-  const origin = zip ? await geocodeZipServer(zip) : null;
+  // Fair-Point: geographic midpoint of every attending member's saved home.
+  // Falls back to the plan/host ZIP centroid when nobody has coordinates.
+  const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } = await import(
+    "./fairpoint.server"
+  );
+  const allBases = await loadMemberBases(plan.group_id);
+  const attendingIds = new Set(attending.map((p) => p.profile_id));
+  const bases = allBases.filter((b) => attendingIds.has(b.profileId));
+  const memberBases = bases.length ? bases : allBases;
+  const fairPoint = await fairPointFor(memberBases, zip);
+  const zipOrigin = zip ? await geocodeZipServer(zip) : null;
+  const origin = fairPoint ?? zipOrigin;
   // The host's chosen search radius caps the group's tightest personal radius.
   const hostRadius = plan.search_radius_miles ?? null;
   if (hostRadius != null) radii.push(hostRadius);
@@ -66,6 +77,7 @@ export async function regenerateRecommendations(planId: string) {
     const live = await searchVenuesGeoapify({ origin, ...venueQuery });
     options = live.length ? live : queryVenuesNear({ origin, ...venueQuery });
   }
+
 
   // ---- Live weather (keyless, Open-Meteo) ---------------------------------
   let forecast: Forecast | null = null;
