@@ -148,6 +148,8 @@ export type Database = {
       }
       groups: {
         Row: {
+          avatar_url: string | null
+          cover_theme: string
           created_at: string
           created_by: string
           emoji: string
@@ -159,6 +161,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          cover_theme?: string
           created_at?: string
           created_by: string
           emoji?: string
@@ -170,6 +174,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          cover_theme?: string
           created_at?: string
           created_by?: string
           emoji?: string
