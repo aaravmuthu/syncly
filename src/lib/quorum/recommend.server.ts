@@ -8,7 +8,7 @@ import { isOutdoorOption, weatherPenalty, type Forecast } from "./weather";
 import { notifyPlanParticipants } from "./notify.server";
 import type { ConstraintPayload, PlanCategory, ScoreBreakdown } from "./types";
 
-export async function regenerateRecommendations(planId: string) {
+export async function regenerateRecommendations(planId: string, shuffle = 0) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", planId).single();
@@ -101,21 +101,37 @@ export async function regenerateRecommendations(planId: string) {
     return { ...r, score: Math.round(r.score * multiplier), breakdown };
   });
 
-  const ranked = scored
-    .sort((a, b) => {
-      if (a.feasible !== b.feasible) return a.feasible ? -1 : 1;
-      if (b.score !== a.score) return b.score - a.score;
-      return b.breakdown.fairness - a.breakdown.fairness;
-    })
-    .slice(0, 6);
+  const { isOpenDuring, fairnessScore, OPTION_LABELS } = await import("./hardfilter");
 
-  // Per-member drive math from every saved home address to each venue.
-  const withFair = ranked.map((r) => {
+  // Per-member limits come from each person's PRIVATE answers; they are only
+  // ever used as a pass/fail gate here and never surfaced per person.
+  const limitFor = (profileId: string) =>
+    members.find((m) => m.profileId === profileId)?.constraints.maxDistanceMiles ?? null;
+
+  // Attach fair-point drive math to EVERY scored option before filtering.
+  const enriched = scored.map((r) => {
     const drives = drivesTo(memberBases, { lat: r.option.lat, lon: r.option.lon });
     const warnings = curfewWarnings(memberBases, r.option.end, drives);
     const mins = drives.map((d) => d.minutes);
     const avgMinutes = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : 0;
     const spreadMinutes = mins.length ? Math.max(...mins) - Math.min(...mins) : 0;
+    const fairness = fairnessScore(mins);
+
+    // (a) Distance: no member may exceed their own max travel miles.
+    const distanceOk = drives.every((d) => {
+      const cap = limitFor(d.profileId) ?? hostRadius;
+      return cap == null || d.miles <= cap;
+    });
+    // (b) Curfew: round-trip travel + hangout must clear every curfew.
+    const curfewOk = warnings.length === 0;
+    // (c) Operating hours during the planned window.
+    const hoursOk = isOpenDuring(
+      r.option.openHours,
+      r.option.start,
+      r.option.end,
+      plan.category as string,
+    );
+
     const breakdown: ScoreBreakdown = {
       ...r.breakdown,
       fair: {
@@ -123,14 +139,65 @@ export async function regenerateRecommendations(planId: string) {
         spreadMinutes,
         midpointLabel: fairPoint?.label ?? null,
         drives: drives.map((d) => ({ name: d.name, miles: d.miles, minutes: d.minutes })),
-        curfewOk: warnings.length === 0,
+        curfewOk,
         curfewNote: warnings.length
           ? `Wraps at ${warnings[0]!.wrapsAt}, past ${warnings[0]!.name}'s ${warnings[0]!.curfew} curfew`
           : null,
       },
     };
+    const maxMinutes = mins.length ? Math.max(...mins) : 0;
+    return { ...r, breakdown, fairness, avgMinutes, maxMinutes, distanceOk, curfewOk, hoursOk };
+  });
+
+  // Hard filter: only venues that satisfy every member's constraints.
+  const strict = enriched.filter((r) => r.distanceOk && r.curfewOk && r.hoursOk && r.feasible);
+  // Never leave the group empty-handed: relax to the best-scoring set only when
+  // nothing clears the strict gate.
+  const pool = (strict.length ? strict : enriched).sort((a, b) => {
+    if (b.fairness !== a.fairness) return b.fairness - a.fairness;
+    return b.score - a.score;
+  });
+
+  // Shuffle rotates through the pool in batches of three.
+  const batch = 3;
+  const offset = pool.length > batch ? ((shuffle % Math.ceil(pool.length / batch)) * batch) % pool.length : 0;
+  const rotated = [...pool.slice(offset), ...pool.slice(0, offset)];
+
+  // Option A = fairest midpoint, B = highest rated / most popular,
+  // C = quickest trip home (best curfew headroom). Never more than three.
+  const picked: typeof rotated = [];
+  const take = (candidate: (typeof rotated)[number] | undefined) => {
+    if (candidate && !picked.includes(candidate)) picked.push(candidate);
+  };
+  take(rotated[0]);
+  take(
+    [...rotated]
+      .filter((r) => !picked.includes(r))
+      .sort(
+        (a, b) =>
+          ((b.breakdown.venue?.rating ?? 0) - (a.breakdown.venue?.rating ?? 0)) || b.score - a.score,
+      )[0],
+  );
+  take(
+    [...rotated]
+      .filter((r) => !picked.includes(r))
+      .sort((a, b) => a.maxMinutes - b.maxMinutes || a.avgMinutes - b.avgMinutes)[0],
+  );
+  for (const r of rotated) {
+    if (picked.length >= batch) break;
+    take(r);
+  }
+
+  const keys: ("A" | "B" | "C")[] = ["A", "B", "C"];
+  const withFair = picked.slice(0, batch).map((r, i) => {
+    const key = keys[i]!;
+    const breakdown: ScoreBreakdown = {
+      ...r.breakdown,
+      optionLabel: { key, ...OPTION_LABELS[key] },
+    };
     return { ...r, breakdown };
   });
+  const ranked = withFair;
 
   await supabaseAdmin.from("recommendations").delete().eq("plan_id", planId);
   const { data: inserted, error } = await supabaseAdmin
