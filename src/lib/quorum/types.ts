@@ -144,6 +144,14 @@ export type ScoreBreakdown = {
   fairness: number;
   reasons: string[];
   cautions: string[];
+  fair?: {
+    avgMinutes: number;
+    spreadMinutes: number;
+    midpointLabel?: string | null;
+    drives: { name: string; miles: number; minutes: number }[];
+    curfewOk: boolean;
+    curfewNote?: string | null;
+  };
   venue?: {
     address?: string;
     distanceMiles?: number;
@@ -154,4 +162,5 @@ export type ScoreBreakdown = {
     lat?: number;
     lon?: number;
   };
+
 };
