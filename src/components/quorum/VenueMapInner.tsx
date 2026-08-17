@@ -10,7 +10,7 @@ export type MapVenue = {
   rank?: number;
   selected?: boolean;
   /** Chooses the pin icon: food spots vs entertainment/activity spots. */
-  kind?: "food" | "activity";
+  kind?: "food" | "activity" | "home" | "fair";
 };
 
 /** Browser-only. Rendered lazily behind <ClientOnly> — never imported by SSR. */
@@ -76,10 +76,20 @@ export default function VenueMapInner({
         el.className =
           "q-map-pin" +
           (v.selected ? " q-map-pin-active" : "") +
-          (v.kind === "activity" ? " q-map-pin-activity" : " q-map-pin-food");
+          (v.kind === "home"
+            ? " q-map-pin-home"
+            : v.kind === "fair"
+              ? " q-map-pin-fair"
+              : v.kind === "activity"
+                ? " q-map-pin-activity"
+                : " q-map-pin-food");
+        const icon =
+          v.kind === "home" ? "🏠" : v.kind === "fair" ? "🎯" : v.kind === "activity" ? "🎟️" : "🍽️";
         el.innerHTML =
-          `<span class="q-map-pin-icon">${v.kind === "activity" ? "🎟️" : "🍽️"}</span>` +
-          `<span class="q-map-pin-rank">${v.rank ?? "•"}</span>`;
+          `<span class="q-map-pin-icon">${icon}</span>` +
+          (v.kind === "home" || v.kind === "fair"
+            ? ""
+            : `<span class="q-map-pin-rank">${v.rank ?? "•"}</span>`);
         el.setAttribute("aria-label", v.title);
         el.addEventListener("click", () => onSelect?.(v.id));
         const marker = new mapboxgl.Marker({ element: el })
