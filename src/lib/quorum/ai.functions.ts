@@ -98,3 +98,94 @@ export const getPlanBSuggestion = createServerFn({ method: "POST" })
     const { buildPlanBSuggestion } = await import("./compromise.server");
     return buildPlanBSuggestion(data.planId);
   });
+
+/* ------------------------------------------------------------------ */
+/* 4. AI conflict resolution                                           */
+/* ------------------------------------------------------------------ */
+
+export type CompromisePlanResult = {
+  needed: boolean;
+  headline: string;
+  detail: string;
+  suggestedStart: string | null;
+  suggestedRecommendationId: string | null;
+  suggestedRecommendationTitle: string | null;
+};
+
+/** Reads private constraints server-side and returns one group-safe compromise. */
+export const getAiCompromise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { planId: string }) => d)
+  .handler(async ({ data, context }): Promise<CompromisePlanResult> => {
+    const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
+    if (!allowed) throw new Error("Forbidden");
+    const { buildConflictFacts } = await import("./compromise.server");
+    const facts = await buildConflictFacts(data.planId);
+    if (!facts) {
+      return {
+        needed: false,
+        headline: "",
+        detail: "",
+        suggestedStart: null,
+        suggestedRecommendationId: null,
+        suggestedRecommendationTitle: null,
+      };
+    }
+    const { writeCompromise } = await import("./ai.server");
+    return writeCompromise(facts);
+  });
+
+/** Host-only: applies the suggested start time and/or option to the plan. */
+export const applyAiCompromise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: { planId: string; startTime?: string | null; recommendationId?: string | null }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const { data: isOwner } = await context.supabase.rpc("is_plan_owner", { _plan_id: data.planId });
+    if (!isOwner) throw new Error("Only the host can apply a compromise");
+
+    const { data: plan, error: readError } = await context.supabase
+      .from("plans")
+      .select("window_start, window_end")
+      .eq("id", data.planId)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+    if (!plan) throw new Error("Plan not found");
+
+    const patch: {
+      window_start?: string;
+      window_end?: string;
+      selected_recommendation_id?: string;
+      status?: "finalized";
+    } = {};
+    if (data.startTime && plan.window_start) {
+      const start = new Date(plan.window_start);
+      const original = start.getTime();
+      start.setHours(Number(data.startTime.slice(0, 2)), Number(data.startTime.slice(3, 5)), 0, 0);
+      patch.window_start = start.toISOString();
+      // Keep the same duration so the window stays coherent.
+      if (plan.window_end) {
+        const end = new Date(plan.window_end);
+        patch.window_end = new Date(end.getTime() + (start.getTime() - original)).toISOString();
+      }
+    }
+    if (data.recommendationId) {
+      patch.selected_recommendation_id = data.recommendationId;
+      patch.status = "finalized";
+    }
+    if (Object.keys(patch).length) {
+      const { error } = await context.supabase.from("plans").update(patch).eq("id", data.planId);
+      if (error) throw new Error(error.message);
+    }
+
+    const { notifyPlanParticipants } = await import("./notify.server");
+    await notifyPlanParticipants(data.planId, {
+      type: "compromise_applied",
+      title: "The host applied an AI compromise",
+      body: data.startTime
+        ? `New start time: ${data.startTime}`
+        : "The group's pick was locked in.",
+    });
+    return { ok: true };
+  });

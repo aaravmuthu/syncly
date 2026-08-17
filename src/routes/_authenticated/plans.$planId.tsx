@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsights";
+import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
 import {
   CompromiseNote,
   PlanBGuardian,
@@ -292,6 +293,11 @@ function PlanPage() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Top 3 options that work for everyone
           </h2>
+          <AiCompromiseBanner
+            planId={planId}
+            isHost={data.plan.created_by === data.meProfileId}
+            enabled={data.recommendations.length > 0}
+          />
           <VenueMap
             venues={data.recommendations
               .filter(

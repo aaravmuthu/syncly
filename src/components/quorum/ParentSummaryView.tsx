@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button, Card, Pill, Skeleton, inputClass } from "./ui";
 import { VenueMap } from "./VenueMap";
+import { Avatar } from "./Avatar";
 import { prettyTime } from "./TimePicker";
 import { getParentSummary, parentRespondToPlan } from "@/lib/quorum/approval.functions";
 
@@ -69,17 +70,29 @@ export function ParentSummaryView({ planId }: { planId: string }) {
             <p className="text-sm text-muted-foreground">No one has confirmed yet.</p>
           ) : null}
           {s.roster.map((m) => (
-            <div key={m.id} className="flex items-center justify-between gap-3">
+            <div
+              key={m.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-secondary/50 px-3 py-2"
+            >
               <span className="flex items-center gap-2 text-sm font-medium">
-                <span aria-hidden className="text-lg">
-                  {m.emoji}
-                </span>
+                <Avatar url={m.avatarUrl} emoji={m.emoji} name={m.name} size={26} />
                 {m.name}
                 {m.host ? <Pill tone="accent">Host</Pill> : null}
               </span>
-              <Pill tone={m.confirmed ? "good" : "neutral"}>
-                {m.confirmed ? "Confirmed" : "Not confirmed"}
-              </Pill>
+              <span className="flex flex-wrap items-center gap-1.5">
+                {m.distanceMiles != null ? (
+                  <Pill tone="neutral">{m.distanceMiles} mi from home</Pill>
+                ) : null}
+                {m.curfew ? (
+                  <Pill tone={m.curfewOk === false ? "warn" : "good"}>
+                    Curfew {prettyTime(m.curfew)} ·{" "}
+                    {m.curfewOk === false ? "Tight" : "Compliant"}
+                  </Pill>
+                ) : null}
+                <Pill tone={m.confirmed ? "good" : "neutral"}>
+                  {m.confirmed ? "Confirmed" : "Not confirmed"}
+                </Pill>
+              </span>
             </div>
           ))}
         </div>
@@ -101,6 +114,9 @@ export function ParentSummaryView({ planId }: { planId: string }) {
                 </div>
                 <p className="mt-1 text-muted-foreground">
                   {c.driver} is driving{c.riders.length ? ` · with ${c.riders.join(", ")}` : " · no riders yet"}
+                  {c.seatsLeft != null
+                    ? ` · ${c.seatsLeft} ${c.seatsLeft === 1 ? "seat" : "seats"} open`
+                    : ""}
                 </p>
               </div>
             ))
@@ -159,6 +175,13 @@ export function ParentSummaryView({ planId }: { planId: string }) {
       <Card>
         <SectionTitle>Estimated cost</SectionTitle>
         <p className="mt-2 font-display text-xl font-semibold">{cost}</p>
+        {s.totalCostMin != null ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Group total ≈ ${Math.round(s.totalCostMin)}–$
+            {Math.round(s.totalCostMax ?? s.totalCostMin)} across {s.roster.length}{" "}
+            {s.roster.length === 1 ? "person" : "people"}
+          </p>
+        ) : null}
       </Card>
 
       {s.parentDecision ? (
@@ -181,7 +204,7 @@ export function ParentSummaryView({ planId }: { planId: string }) {
             className={inputClass}
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Be home by 9:30 PM instead"
+            placeholder="Send a note to the group — e.g. be home by 9:30 PM"
           />
           <Button
             variant="outline"
