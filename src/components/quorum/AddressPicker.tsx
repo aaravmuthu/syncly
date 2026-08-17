@@ -135,7 +135,11 @@ export function AddressPicker({
         value={text}
         placeholder={placeholder}
         onFocus={() => items.length && setOpen(true)}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          onTextChange?.(e.target.value);
+        }}
+
       />
       <button
         type="button"
