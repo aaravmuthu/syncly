@@ -230,11 +230,13 @@ function PlanPage() {
           </div>
           <Button
             variant={responded === total ? "primary" : "outline"}
-            disabled={generate.isPending || responded === 0}
+            loading={generate.isPending}
+            className="shrink-0"
             onClick={() => generate.mutate({ data: { planId } })}
           >
-            {generate.isPending ? "Working…" : "Find options"}
+            {generate.isPending ? "Finding fair spots…" : "Find options"}
           </Button>
+
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {data.participants.map((p) => {
