@@ -108,6 +108,7 @@ function PlanPage() {
 
   const [editing, setEditing] = useState(false);
   const [approvalLink, setApprovalLink] = useState<string | null>(null);
+  const [venueDetail, setVenueDetail] = useState<VenueDetail | null>(null);
 
   const submit = useMutation({
     mutationFn: useServerFn(submitConstraints),
@@ -665,6 +666,8 @@ function PlanPage() {
           ) : null}
         </Card>
       </section>
+
+      <VenueDetailModal venue={venueDetail} onClose={() => setVenueDetail(null)} />
     </AppShell>
   );
 }
