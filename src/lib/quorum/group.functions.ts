@@ -132,3 +132,66 @@ export const deleteGroup = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Owner/admin-only: rename a circle and restyle its avatar + cover banner. */
+export const updateGroupLook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      groupId: string;
+      name?: string;
+      emoji?: string;
+      avatarUrl?: string | null;
+      coverTheme?: string;
+      kind?: "permanent" | "temporary";
+    }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: admin } = await supabase.rpc("is_group_admin", { _group_id: data.groupId });
+    if (!admin) throw new Error("Only circle admins can change this");
+    const patch: {
+      name?: string;
+      emoji?: string;
+      avatar_url?: string | null;
+      cover_theme?: string;
+      kind?: "permanent" | "temporary";
+    } = {};
+    if (data.name != null && data.name.trim()) patch.name = data.name.trim().slice(0, 60);
+    if (data.emoji != null) patch.emoji = data.emoji.slice(0, 8);
+    if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl;
+    if (data.coverTheme != null) patch.cover_theme = data.coverTheme.slice(0, 40);
+    if (data.kind != null) patch.kind = data.kind;
+    if (!Object.keys(patch).length) return { ok: true };
+    const { error } = await supabase.from("groups").update(patch).eq("id", data.groupId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Uploads a group profile picture to storage and returns a long-lived URL. */
+export const uploadGroupImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { dataUrl: string; ext?: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);
+    if (!match) throw new Error("Unsupported image");
+    const contentType = match[1]!;
+    if (!/^image\/(png|jpeg|jpg|gif|webp)$/.test(contentType)) {
+      throw new Error("Use a PNG, JPG, GIF, or WebP image");
+    }
+    const bytes = Buffer.from(match[2]!, "base64");
+    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Image must be under 5 MB");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const ext = (data.ext ?? "png").replace(/[^a-z0-9]/gi, "").slice(0, 5) || "png";
+    const path = `${userId}/groups/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabaseAdmin.storage
+      .from("avatars")
+      .upload(path, bytes, { contentType, upsert: true });
+    if (upErr) throw new Error(upErr.message);
+    const { data: signed, error: signErr } = await supabaseAdmin.storage
+      .from("avatars")
+      .createSignedUrl(path, 60 * 60 * 24 * 3650);
+    if (signErr || !signed) throw new Error(signErr?.message ?? "Could not read image back");
+    return { url: signed.signedUrl };
+  });
