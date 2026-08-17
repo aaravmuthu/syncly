@@ -178,7 +178,7 @@ export const getParentSummary = createServerFn({ method: "GET" })
     const { data: plan } = await supabaseAdmin
       .from("plans")
       .select(
-        "id, title, category, status, window_start, window_end, created_by, selected_recommendation_id",
+        "id, title, category, status, window_start, window_end, created_by, selected_recommendation_id, est_cost_min, est_cost_max",
       )
       .eq("id", data.planId)
       .maybeSingle();
