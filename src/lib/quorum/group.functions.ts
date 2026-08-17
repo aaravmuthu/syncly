@@ -43,7 +43,8 @@ export const leaveGroup = createServerFn({ method: "POST" })
         .eq("id", data.groupId);
     }
 
-    await clearMemberFromGroupPlans(supabaseAdmin as never, data.groupId, me as string);
+    const { clearMemberFromGroupPlans } = await import("./group.server");
+    await clearMemberFromGroupPlans(data.groupId, me as string);
     const { error } = await supabaseAdmin
       .from("group_members")
       .delete()
