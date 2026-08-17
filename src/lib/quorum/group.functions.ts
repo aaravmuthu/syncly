@@ -150,12 +150,18 @@ export const updateGroupLook = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: admin } = await supabase.rpc("is_group_admin", { _group_id: data.groupId });
     if (!admin) throw new Error("Only circle admins can change this");
-    const patch: Record<string, unknown> = {};
-    if (data.name != null && data.name.trim()) patch["name"] = data.name.trim().slice(0, 60);
-    if (data.emoji != null) patch["emoji"] = data.emoji.slice(0, 8);
-    if (data.avatarUrl !== undefined) patch["avatar_url"] = data.avatarUrl;
-    if (data.coverTheme != null) patch["cover_theme"] = data.coverTheme.slice(0, 40);
-    if (data.kind != null) patch["kind"] = data.kind;
+    const patch: {
+      name?: string;
+      emoji?: string;
+      avatar_url?: string | null;
+      cover_theme?: string;
+      kind?: "permanent" | "temporary";
+    } = {};
+    if (data.name != null && data.name.trim()) patch.name = data.name.trim().slice(0, 60);
+    if (data.emoji != null) patch.emoji = data.emoji.slice(0, 8);
+    if (data.avatarUrl !== undefined) patch.avatar_url = data.avatarUrl;
+    if (data.coverTheme != null) patch.cover_theme = data.coverTheme.slice(0, 40);
+    if (data.kind != null) patch.kind = data.kind;
     if (!Object.keys(patch).length) return { ok: true };
     const { error } = await supabase.from("groups").update(patch).eq("id", data.groupId);
     if (error) throw new Error(error.message);
