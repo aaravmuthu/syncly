@@ -133,6 +133,7 @@ function Onboarding() {
           >
             <AddressPicker
               value={String(form["home_address"] ?? "")}
+              onTextChange={(t) => set("home_address", t)}
               onPick={(p) => {
                 set("home_address", p.address);
                 set("home_lat", p.lat);
@@ -140,6 +141,7 @@ function Onboarding() {
                 if (p.zip) set("zip_code", p.zip);
               }}
             />
+
           </Field>
           <Field label="ZIP code" hint="Finds real venues near you — never shared with your group">
             <PlaceAutocomplete
