@@ -533,7 +533,9 @@ export const getPlan = createServerFn({ method: "GET" })
       .eq("plan_id", data.planId);
     const { data: approvals } = await supabase
       .from("parent_approvals")
-      .select("id, profile_id, status, condition_text, token, expires_at")
+      // Never ship the parent token to plan viewers — it is a bearer credential
+      // that lets the holder answer the approval. Only status is needed here.
+      .select("id, profile_id, status, condition_text, expires_at")
       .eq("plan_id", data.planId);
 
     // Only the caller's own private answers are ever returned.
