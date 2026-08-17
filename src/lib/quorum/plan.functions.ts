@@ -298,7 +298,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     if (list.length === 0) return { myProfileId: myId ?? null, plans: [] };
 
     const ids = list.map((p) => p.id as string);
-    const [{ data: parts }, { data: votes }, { data: recs }] = await Promise.all([
+    const [{ data: parts }, { data: votes }, { data: recs }, { data: conflicts }] = await Promise.all([
       supabase
         .from("plan_participants")
         .select("plan_id, profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)")
@@ -306,8 +306,16 @@ export const getDashboard = createServerFn({ method: "GET" })
       supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids),
       supabase
         .from("recommendations")
-        .select("id, plan_id, title, location_name, address, lat, lon, suggested_start")
-        .in("plan_id", ids),
+        .select(
+          "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank",
+        )
+        .in("plan_id", ids)
+        .order("rank"),
+      supabase
+        .from("plan_conflicts")
+        .select("id, plan_id, kind, detail")
+        .in("plan_id", ids)
+        .eq("resolved", false),
     ]);
 
     return {
@@ -318,6 +326,14 @@ export const getDashboard = createServerFn({ method: "GET" })
         const selected =
           (recs ?? []).find((r) => r.id === p.selected_recommendation_id) ?? null;
         const meRow = mine.find((r) => r.profile_id === myId);
+        const planConflicts = (conflicts ?? []).filter((c) => c.plan_id === p.id);
+        const planRecs = (recs ?? []).filter((r) => r.plan_id === p.id);
+        const alternatives = planRecs.filter((r) =>
+          ((r.tags as string[] | null) ?? []).includes("alternative"),
+        );
+        const original = planRecs.find(
+          (r) => !((r.tags as string[] | null) ?? []).includes("alternative"),
+        );
         return {
           ...p,
           participants: mine.map((r) => {
@@ -336,6 +352,23 @@ export const getDashboard = createServerFn({ method: "GET" })
           i_responded: Boolean(meRow?.responded),
           i_voted: planVotes.some((v) => v.profile_id === myId),
           selected_recommendation: selected,
+          conflicts: planConflicts.map((c) => ({
+            id: c.id as string,
+            kind: c.kind as string,
+            detail: (c.detail as string | null) ?? null,
+          })),
+          alternatives: alternatives.map((r) => ({
+            id: r.id as string,
+            title: r.title as string,
+            subtitle: (r.subtitle as string | null) ?? null,
+            cost_min: r.cost_min as number | null,
+            cost_max: r.cost_max as number | null,
+            suggested_start: (r.suggested_start as string | null) ?? null,
+            tags: ((r.tags as string[] | null) ?? []) as string[],
+          })),
+          original_option: original
+            ? { id: original.id as string, title: original.title as string }
+            : null,
         };
       }),
     };
