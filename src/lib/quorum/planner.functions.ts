@@ -216,7 +216,15 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
  */
 export const launchAiPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string; prompt: string; useDefaults?: boolean }) => d)
+  .inputValidator(
+    (d: {
+      groupId: string;
+      prompt: string;
+      useDefaults?: boolean;
+      estCostMin?: number | null;
+      estCostMax?: number | null;
+    }) => d,
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const prompt = data.prompt.trim();
