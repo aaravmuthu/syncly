@@ -8,6 +8,7 @@ import { isValidZip } from "@/lib/quorum/location";
 import { AppShell } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { GroupSettings } from "@/components/quorum/GroupSettings";
+import { GroupAppearance } from "@/components/quorum/GroupAppearance";
 import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { getGroupMemory } from "@/lib/quorum/insight.functions";
