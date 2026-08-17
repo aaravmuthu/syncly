@@ -169,7 +169,6 @@ function PlanPage() {
     );
   }
 
-  const needsMyAnswers = !myParticipant?.responded || editing;
   const votes = data.votes;
   const selected = data.plan.selected_recommendation_id;
   const headcount = Math.max(total, 1);
