@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { AppShell } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
+import { GroupSettings } from "@/components/quorum/GroupSettings";
 import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { getGroupMemory } from "@/lib/quorum/insight.functions";
@@ -81,7 +82,7 @@ function GroupPage() {
   }
   if (!q.data) return <AppShell title="Group not found">{null}</AppShell>;
 
-  const { group, members, plans } = q.data;
+  const { group, members, plans, myProfileId } = q.data;
   const memberIds = members.map((m) => m.profile_id);
 
   return (
@@ -161,6 +162,13 @@ function GroupPage() {
           })}
         </Card>
       </section>
+
+      <GroupSettings
+        groupId={groupId}
+        groupName={group.name}
+        members={members as never}
+        myProfileId={myProfileId}
+      />
     </AppShell>
   );
 }
