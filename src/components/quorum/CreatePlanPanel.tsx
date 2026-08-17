@@ -113,7 +113,8 @@ export function CreatePlanPanel({
 
   const launch = useMutation({
     mutationFn: useServerFn(launchAiPlan),
-    onSuccess: (r) => {
+    onSuccess: (raw) => {
+      const r = raw as { planId: string; optionCount: number; inviteCode: string | null };
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Plan launched", {
