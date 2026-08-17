@@ -125,3 +125,62 @@ export async function buildPlanBSuggestion(planId: string): Promise<PlanBSuggest
     swapToTitle: indoor?.title ?? null,
   };
 }
+
+/**
+ * Group-safe conflict aggregates: vote split, tightest budget/curfew, and the
+ * longest drive across the group. No per-person answer ever leaves here.
+ */
+export async function buildConflictFacts(planId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const ctx = await loadPlanContext(planId);
+  if (!ctx.plan) return null;
+
+  const { data: votes } = await supabaseAdmin
+    .from("votes")
+    .select("recommendation_id")
+    .eq("plan_id", planId);
+  const { data: parts } = await supabaseAdmin
+    .from("plan_participants")
+    .select("profile_id, attending, profiles(curfew_time)")
+    .eq("plan_id", planId);
+
+  const attending = (parts ?? []).filter((p) => p.attending !== false);
+  const curfews = attending
+    .map((p) => ((p.profiles as { curfew_time?: string | null } | null)?.curfew_time ?? null)?.slice(0, 5))
+    .filter((c): c is string => Boolean(c))
+    .sort();
+
+  const top = ctx.recs[0] ?? null;
+  const topBreakdown = (top?.breakdown ?? {}) as unknown as ScoreBreakdown;
+  const drives = topBreakdown.fair?.drives ?? [];
+  const longestDrive = drives.length ? Math.max(...drives.map((d) => d.minutes)) : null;
+
+  const toMin = (t: string | null | undefined) =>
+    t ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : null;
+  const endMin = toMin(top?.suggested_end ?? null);
+  const curfewBreachCount = curfews.filter((c) => {
+    const cm = toMin(c);
+    return endMin != null && cm != null && endMin + (longestDrive ?? 0) > cm;
+  }).length;
+
+  return {
+    planTitle: ctx.plan.title,
+    category: ctx.plan.category,
+    memberCount: ctx.memberCount,
+    startTime: top?.suggested_start?.slice(0, 5) ?? null,
+    endTime: top?.suggested_end?.slice(0, 5) ?? null,
+    earliestCurfew: curfews[0] ?? null,
+    curfewBreachCount,
+    tightestBudget: ctx.tightestBudget,
+    topCostMin: top?.cost_min ?? null,
+    topCostMax: top?.cost_max ?? null,
+    voteSplit: ctx.recs.map((r) => ({
+      id: r.id,
+      title: r.title,
+      votes: (votes ?? []).filter((v) => v.recommendation_id === r.id).length,
+    })),
+    dietaryNeeds: ctx.dietaryNeeds,
+    longestDriveMinutes: longestDrive,
+    travelLimitMinutes: ctx.tightestTravelMinutes,
+  };
+}
