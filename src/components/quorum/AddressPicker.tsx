@@ -6,24 +6,41 @@ import { inputClass } from "@/components/quorum/ui";
 export type PickedPlace = {
   address: string;
   zip: string | null;
+  city?: string | null;
+  state?: string | null;
   lat: number;
   lon: number;
 };
 
-type Suggestion = { id: string; label: string; zip: string | null; lat: number; lon: number };
+type Suggestion = {
+  id: string;
+  label: string;
+  zip: string | null;
+  city?: string | null;
+  state?: string | null;
+  lat: number;
+  lon: number;
+};
 
 /**
- * Mapbox-backed address autocomplete. Emits the formatted address, ZIP code and
- * exact coordinates so the profile can store a precise home location.
+ * Mapbox-backed street address autocomplete. Emits the formatted address, city,
+ * state, ZIP code and exact coordinates so the profile can store a precise home
+ * location. Typed text is preserved even when no suggestion is chosen.
  */
 export function AddressPicker({
   value,
   onPick,
-  placeholder = "1234 Main St, Frisco, TX",
+  onTextChange,
+  proximity,
+  placeholder = "6390 Main St, Frisco, TX 75034",
   ariaLabel = "Home address",
 }: {
   value: string;
   onPick: (place: PickedPlace) => void;
+  /** Fired on every keystroke so a manually typed street line is kept. */
+  onTextChange?: (text: string) => void;
+  /** Bias search near these coordinates (defaults to Texas server-side). */
+  proximity?: { lat: number; lon: number } | null;
   placeholder?: string;
   ariaLabel?: string;
 }) {
@@ -45,7 +62,7 @@ export function AddressPicker({
     }
     let cancelled = false;
     const t = setTimeout(() => {
-      void search({ data: { query: q } })
+      void search({ data: { query: q, addressOnly: true, proximity: proximity ?? null } })
         .then((res) => {
           if (!cancelled) {
             setItems(res as Suggestion[]);
@@ -58,7 +75,8 @@ export function AddressPicker({
       cancelled = true;
       clearTimeout(t);
     };
-  }, [text, search]);
+  }, [text, search, proximity]);
+
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
