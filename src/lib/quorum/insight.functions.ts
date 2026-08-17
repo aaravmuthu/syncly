@@ -40,7 +40,7 @@ export const getAvailabilityHeatmap = createServerFn({ method: "GET" })
     return { cells, answered: marked.length, total };
   });
 
-/** Live forecast for the plan's date and ZIP-anchored area. */
+/** Live forecast anchored on the chosen venue's coordinates (ZIP as fallback). */
 export const getPlanWeather = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { planId: string }) => d)
@@ -51,10 +51,26 @@ export const getPlanWeather = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: plan } = await supabaseAdmin
       .from("plans")
-      .select("location_area, window_start, group_id")
+      .select("location_area, window_start, group_id, selected_recommendation_id")
       .eq("id", data.planId)
       .maybeSingle();
     if (!plan) return null;
+
+    const { fetchForecast } = await import("./weather.server");
+
+    // Venue-accurate weather: prefer the picked venue, else the top-ranked one.
+    const recQuery = supabaseAdmin
+      .from("recommendations")
+      .select("lat, lon")
+      .eq("plan_id", data.planId)
+      .not("lat", "is", null)
+      .not("lon", "is", null);
+    const { data: rec } = plan.selected_recommendation_id
+      ? await recQuery.eq("id", plan.selected_recommendation_id).maybeSingle()
+      : await recQuery.order("rank", { ascending: true }).limit(1).maybeSingle();
+    if (rec?.lat != null && rec.lon != null) {
+      return fetchForecast(rec.lat, rec.lon, plan.window_start);
+    }
 
     const { normalizeZip } = await import("./location");
     let zip = normalizeZip(plan.location_area);
@@ -77,9 +93,9 @@ export const getPlanWeather = createServerFn({ method: "GET" })
     const { geocodeZipServer } = await import("./location.server");
     const origin = await geocodeZipServer(zip);
     if (!origin) return null;
-    const { fetchForecast } = await import("./weather.server");
     return fetchForecast(origin.lat, origin.lon, plan.window_start);
   });
+
 
 /* ------------------------------------------------------------------ */
 /* Notifications                                                       */
