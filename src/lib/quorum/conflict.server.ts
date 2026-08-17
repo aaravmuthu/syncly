@@ -212,7 +212,16 @@ export async function generateAlternatives(planId: string) {
       category: plan.category as PlanCategory,
       vibe: plan.food_vibe ?? null,
       maxRadiusMiles: kinds.has("distance") ? 6 : (plan.search_radius_miles ?? 12),
-      maxBudget: kinds.has("budget") ? 15 : null,
+      // Budget flags aim clearly below the host's estimate (default: under $10).
+      maxBudget: kinds.has("budget")
+        ? Math.max(
+            5,
+            Math.min(
+              10,
+              plan.est_cost_min != null ? Number(plan.est_cost_min) - 5 : 10,
+            ),
+          )
+        : null,
       limit: 6,
     };
     const live = await searchVenuesGeoapify(query);
