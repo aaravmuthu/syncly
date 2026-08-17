@@ -18,12 +18,16 @@ export type PlanDefaults = {
     profileId: string | null;
     name: string;
     zip: string | null;
+    homeAddress: string | null;
+    homeLat: number | null;
+    homeLon: number | null;
     curfew: string | null;
     budgetPreference: string | null;
     radiusMiles: number;
     dietary: string[];
     categories: string[];
   };
+
   members: MemberPin[];
   fairPoint: { lat: number; lon: number; label: string; zip: string; memberCount: number } | null;
   summary: string;
