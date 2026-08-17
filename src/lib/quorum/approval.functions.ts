@@ -141,7 +141,17 @@ export type ParentSummary = {
   endTime: string | null;
   curfewLimit: string | null;
   curfewOk: boolean | null;
-  roster: { id: string; name: string; emoji: string; avatarUrl: string | null; host: boolean; confirmed: boolean }[];
+  roster: {
+    id: string;
+    name: string;
+    emoji: string;
+    avatarUrl: string | null;
+    host: boolean;
+    confirmed: boolean;
+    curfew: string | null;
+    curfewOk: boolean | null;
+    distanceMiles: number | null;
+  }[];
   cars: { car_label: string; driver: string; leg: string; riders: string[]; seatsLeft: number | null }[];
   venue: {
     title: string;
@@ -153,6 +163,8 @@ export type ParentSummary = {
   } | null;
   costMin: number | null;
   costMax: number | null;
+  totalCostMin: number | null;
+  totalCostMax: number | null;
   parentDecision: { status: string; note: string | null } | null;
 };
 
@@ -172,7 +184,9 @@ export const getParentSummary = createServerFn({ method: "GET" })
 
     const { data: parts } = await supabaseAdmin
       .from("plan_participants")
-      .select("profile_id, attending, responded, profiles(id, display_name, avatar_emoji, avatar_url, curfew_time)")
+      .select(
+        "profile_id, attending, responded, profiles(id, display_name, avatar_emoji, avatar_url, curfew_time, home_lat, home_lon)",
+      )
       .eq("plan_id", plan.id);
 
     type P = {
@@ -185,19 +199,12 @@ export const getParentSummary = createServerFn({ method: "GET" })
         avatar_emoji: string;
         avatar_url: string | null;
         curfew_time: string | null;
+        home_lat: number | null;
+        home_lon: number | null;
       } | null;
     };
     const rows = (parts ?? []) as unknown as P[];
     const nameOf = (id: string) => rows.find((r) => r.profile_id === id)?.profiles?.display_name ?? "A member";
-
-    const roster = rows.map((r) => ({
-      id: r.profile_id,
-      name: r.profiles?.display_name ?? "Member",
-      emoji: r.profiles?.avatar_emoji ?? "🙂",
-      avatarUrl: r.profiles?.avatar_url ?? null,
-      host: r.profile_id === plan.created_by,
-      confirmed: Boolean(r.attending && r.responded),
-    }));
 
     let venue: ParentSummary["venue"] = null;
     let startTime: string | null = null;
@@ -228,17 +235,61 @@ export const getParentSummary = createServerFn({ method: "GET" })
     if (!startTime && plan.window_start) startTime = new Date(plan.window_start).toISOString().slice(11, 16);
     if (!endTime && plan.window_end) endTime = new Date(plan.window_end).toISOString().slice(11, 16);
 
+    // Per-member curfew + distance-from-home, computed once the venue and end
+    // time are known.
+    const { haversineMiles, milesToDriveMinutes } = await import("./location");
+    const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    const roster = rows.map((r) => {
+      const curfew = r.profiles?.curfew_time?.slice(0, 5) ?? null;
+      const lat = r.profiles?.home_lat ?? null;
+      const lon = r.profiles?.home_lon ?? null;
+      const distanceMiles =
+        lat != null && lon != null && venue?.lat != null && venue?.lon != null
+          ? Math.round(haversineMiles({ lat, lon }, { lat: venue.lat, lon: venue.lon }) * 10) / 10
+          : null;
+      const driveHome = distanceMiles != null ? milesToDriveMinutes(distanceMiles) : 0;
+      const memberCurfewOk =
+        curfew && endTime ? toMinutes(endTime) + driveHome <= toMinutes(curfew) : null;
+      return {
+        id: r.profile_id,
+        name: r.profiles?.display_name ?? "Member",
+        emoji: r.profiles?.avatar_emoji ?? "🙂",
+        avatarUrl: r.profiles?.avatar_url ?? null,
+        host: r.profile_id === plan.created_by,
+        confirmed: Boolean(r.attending && r.responded),
+        curfew,
+        curfewOk: memberCurfewOk,
+        distanceMiles,
+      };
+    });
+
+    // Seat availability per car comes from each driver's saved capacity.
+    const driverIds = [] as string[];
     const { data: transport } = await supabaseAdmin
       .from("transport_assignments")
       .select("car_label, driver_label, driver_profile_id, passenger_profile_ids, leg")
       .eq("plan_id", plan.id);
-    const cars = (transport ?? []).map((t) => ({
-      car_label: t.car_label,
-      driver: t.driver_label ?? (t.driver_profile_id ? nameOf(t.driver_profile_id) : "TBC"),
-      leg: t.leg,
-      riders: (t.passenger_profile_ids ?? []).map((id: string) => nameOf(id)),
-      seatsLeft: null,
-    }));
+    for (const t of transport ?? []) if (t.driver_profile_id) driverIds.push(t.driver_profile_id);
+    const { data: transportProfiles } = driverIds.length
+      ? await supabaseAdmin
+          .from("transport_profiles")
+          .select("profile_id, passenger_capacity")
+          .in("profile_id", driverIds)
+      : { data: [] as { profile_id: string; passenger_capacity: number }[] };
+
+    const cars = (transport ?? []).map((t) => {
+      const riders = (t.passenger_profile_ids ?? []).map((id: string) => nameOf(id));
+      const capacity =
+        (transportProfiles ?? []).find((p) => p.profile_id === t.driver_profile_id)
+          ?.passenger_capacity ?? null;
+      return {
+        car_label: t.car_label,
+        driver: t.driver_label ?? (t.driver_profile_id ? nameOf(t.driver_profile_id) : "TBC"),
+        leg: t.leg,
+        riders,
+        seatsLeft: capacity != null ? Math.max(capacity - riders.length, 0) : null,
+      };
+    });
 
     // Curfew check uses the earliest curfew among attendees.
     const curfews = rows
@@ -275,6 +326,8 @@ export const getParentSummary = createServerFn({ method: "GET" })
       venue,
       costMin,
       costMax,
+      totalCostMin: costMin != null ? costMin * Math.max(rows.length, 1) : null,
+      totalCostMax: costMax != null ? costMax * Math.max(rows.length, 1) : null,
       parentDecision:
         approval && approval.status !== "pending"
           ? { status: approval.status, note: approval.condition_text }
