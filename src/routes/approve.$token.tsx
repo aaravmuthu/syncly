@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button, Card, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { getApproval, respondToApproval } from "@/lib/quorum/approval.functions";
+import { ParentSummaryView } from "@/components/quorum/ParentSummaryView";
 
 export const Route = createFileRoute("/approve/$token")({
   ssr: false,
@@ -25,6 +26,21 @@ export const Route = createFileRoute("/approve/$token")({
 
 function ApprovePage() {
   const { token } = Route.useParams();
+  // A plan id (uuid, contains dashes) renders the full parent summary; an
+  // approval token (dashless hex) renders the per-member permission request.
+  const isPlanId = token.includes("-");
+  if (isPlanId) {
+    return (
+      <main className="mx-auto min-h-dvh max-w-lg px-4 py-10">
+        <Wordmark className="mx-auto mb-8 h-7" />
+        <ParentSummaryView planId={token} />
+      </main>
+    );
+  }
+  return <TokenApproval token={token} />;
+}
+
+function TokenApproval({ token }: { token: string }) {
   const qc = useQueryClient();
   const fetchApproval = useServerFn(getApproval);
   const q = useQuery({ queryKey: ["approval", token], queryFn: () => fetchApproval({ data: { token } }) });

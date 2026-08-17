@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Card, Field, Pill, inputClass } from "./ui";
+import { TimePicker } from "./TimePicker";
 import { QUESTIONNAIRES, type Field as FieldDef, type Step } from "@/lib/quorum/questionnaires";
 import { AVAILABILITY_SLOTS, prettySlot } from "@/lib/quorum/availability";
 import type { ConstraintPayload } from "@/lib/quorum/types";
@@ -204,7 +205,26 @@ function FieldRenderer({
     );
   }
 
-  const type = field.kind === "time" ? "time" : "number";
+  if (field.kind === "time") {
+    return (
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium">{field.label}</span>
+          {hardBadge}
+        </div>
+        {field.hint ? <p className="mt-0.5 text-xs text-muted-foreground">{field.hint}</p> : null}
+        <TimePicker
+          className="mt-2"
+          allowNone
+          noneLabel="No limit"
+          value={(current as string | null) ?? null}
+          onChange={(v) => onChange(field.key, v)}
+        />
+      </div>
+    );
+  }
+
+  const type = "number";
   const prefix = field.kind === "money" ? "$" : null;
   const suffix = "suffix" in field ? field.suffix : null;
 

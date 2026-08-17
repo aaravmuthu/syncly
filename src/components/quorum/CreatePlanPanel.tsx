@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { Sparkles, Rocket, PencilLine, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { TimePicker } from "./TimePicker";
 import { Button, Card, Field, Skeleton, inputClass } from "./ui";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { VenueMap, type MapVenue } from "./VenueMap";
@@ -372,7 +373,7 @@ export function CreatePlanPanel({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <Field label="Date">
               <input
                 type="date"
@@ -382,11 +383,10 @@ export function CreatePlanPanel({
               />
             </Field>
             <Field label="Start time">
-              <input
-                type="time"
-                className={inputClass}
+              <TimePicker
+                presets={["17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"]}
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={(v) => setStartTime(v ?? startTime)}
               />
             </Field>
           </div>
