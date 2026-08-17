@@ -7,6 +7,8 @@ import { VenueMap } from "@/components/quorum/VenueMap";
 import { directionsUrl } from "@/components/quorum/FairPointVenues";
 import { ACTIVITY_TABS, FOOD_TABS, SPOT_RADII, type SpotTab } from "@/lib/quorum/spotTabs";
 import { addSpotToPlan, browseSpots, type BrowseSpot } from "@/lib/quorum/spots.functions";
+import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
+import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 
 /**
  * Live restaurant / activity picker. Searches Geoapify around the member's
@@ -30,6 +32,7 @@ export function SpotBrowser({
   const [nearHome, setNearHome] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
   const [added, setAdded] = useState<string[]>([]);
+  const [detail, setDetail] = useState<BrowseSpot | null>(null);
 
   const run = useServerFn(browseSpots);
   const spots = useQuery({
@@ -198,6 +201,29 @@ export function SpotBrowser({
                 <Pill>{s.priceLevel}</Pill>
               </div>
             </button>
+            <button
+              type="button"
+              onClick={() => setDetail(s)}
+              className="mt-3 block w-full overflow-hidden rounded-2xl text-left"
+              aria-label={`View details for ${s.title}`}
+            >
+              <span className="relative block">
+                <img
+                  src={venuePhoto(s)}
+                  alt={`${s.title} — ${s.cuisine ?? s.subtitle}`}
+                  loading="lazy"
+                  className="h-28 w-full object-cover transition hover:scale-[1.02]"
+                />
+                <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
+                  <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                    {venueStats(s.key).ratingLabel}
+                  </span>
+                  <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                    {s.priceLevel}
+                  </span>
+                </span>
+              </span>
+            </button>
             <div className="mt-3 flex items-center gap-3">
               {planId && canAdd ? (
                 <Button
@@ -216,6 +242,13 @@ export function SpotBrowser({
               >
                 Directions in Maps →
               </a>
+              <button
+                type="button"
+                onClick={() => setDetail(s)}
+                className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
+              >
+                Reviews & photos
+              </button>
             </div>
           </div>
         ))}
@@ -225,6 +258,36 @@ export function SpotBrowser({
           </p>
         ) : null}
       </div>
+
+      <VenueDetailModal
+        venue={
+          detail
+            ? {
+                key: detail.key,
+                title: detail.title,
+                address: detail.address,
+                subtitle: detail.subtitle,
+                cuisine: detail.cuisine,
+                kind: detail.kind,
+                priceLevel: detail.priceLevel,
+                lat: detail.lat,
+                lon: detail.lon,
+              }
+            : null
+        }
+        onClose={() => setDetail(null)}
+        footer={
+          detail && planId && canAdd ? (
+            <Button
+              variant={added.includes(detail.key) ? "outline" : "primary"}
+              disabled={add.isPending || added.includes(detail.key)}
+              onClick={() => add.mutate({ planId, spot: detail })}
+            >
+              {added.includes(detail.key) ? "Added ✓" : "Add to plan"}
+            </Button>
+          ) : null
+        }
+      />
     </Card>
   );
 }
