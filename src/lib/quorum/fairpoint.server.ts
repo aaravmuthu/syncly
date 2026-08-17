@@ -24,7 +24,7 @@ export async function loadMemberBases(groupId: string): Promise<MemberBase[]> {
   const { data: rows } = await supabaseAdmin
     .from("group_members")
     .select(
-      "profile_id, profiles(id, display_name, avatar_emoji, avatar_url, zip_code, home_area, curfew_time, budget_preference)",
+      "profile_id, profiles(id, display_name, avatar_emoji, avatar_url, zip_code, home_area, home_lat, home_lon, curfew_time, budget_preference)",
     )
     .eq("group_id", groupId);
 
@@ -38,7 +38,15 @@ export async function loadMemberBases(groupId: string): Promise<MemberBase[]> {
           .replace(/\D/g, "")
           .slice(0, 5),
       );
-    const geo = zip ? await geocodeZipServer(zip) : null;
+    // An exact saved home address beats the ZIP centroid.
+    const exactLat = typeof p["home_lat"] === "number" ? (p["home_lat"] as number) : null;
+    const exactLon = typeof p["home_lon"] === "number" ? (p["home_lon"] as number) : null;
+    const geo =
+      exactLat != null && exactLon != null
+        ? { lat: exactLat, lon: exactLon }
+        : zip
+          ? await geocodeZipServer(zip)
+          : null;
     members.push({
       profileId: row.profile_id as string,
       name: (p["display_name"] as string) ?? "Member",
