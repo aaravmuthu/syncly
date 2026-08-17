@@ -179,20 +179,61 @@ export const listGroups = createServerFn({ method: "GET" })
     })) as unknown as (Record<string, unknown> & { id: string })[];
     const ids = groups.map((g) => g.id);
     if (!ids.length) return [];
-    const { data: counts } = await supabase
-      .from("group_members")
-      .select("group_id, profile_id")
-      .in("group_id", ids);
-    return groups.map((g) => ({
-      ...g,
-      member_count: (counts ?? []).filter((c) => c.group_id === g.id).length,
-    }));
+
+    const [{ data: members }, { data: plans }] = await Promise.all([
+      supabase
+        .from("group_members")
+        .select("group_id, profile_id, profiles(display_name, avatar_emoji, avatar_url)")
+        .in("group_id", ids),
+      supabase
+        .from("plans")
+        .select("id, group_id, title, status, window_start, location_area, created_at")
+        .in("group_id", ids)
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const LIVE = new Set(["collecting", "recommending", "voting"]);
+    return groups.map((g) => {
+      const mine = (members ?? []).filter((m) => m.group_id === g.id);
+      const gPlans = (plans ?? []).filter((p) => p.group_id === g.id);
+      const active = gPlans.find((p) => LIVE.has(String(p.status)));
+      const done = gPlans.filter((p) => p.status === "completed" || p.status === "finalized");
+      const spots = new Map<string, number>();
+      for (const p of done) {
+        const area = (p.location_area ?? "").trim();
+        if (area) spots.set(area, (spots.get(area) ?? 0) + 1);
+      }
+      const topSpot = [...spots.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      return {
+        ...g,
+        member_count: mine.length,
+        members: mine.slice(0, 5).map((m) => {
+          const p = (m.profiles ?? {}) as Record<string, unknown>;
+          return {
+            profile_id: m.profile_id,
+            display_name: (p["display_name"] as string) ?? "Member",
+            avatar_emoji: (p["avatar_emoji"] as string) ?? "🙂",
+            avatar_url: (p["avatar_url"] as string) ?? null,
+          };
+        }),
+        active_plan: active ? { id: active.id, title: active.title, status: active.status } : null,
+        hangouts_completed: done.length,
+        top_spot: topSpot,
+      };
+    });
   });
 
 export const createGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: { name: string; emoji?: string; kind?: "permanent" | "temporary"; purpose?: string }) => d,
+    (d: {
+      name: string;
+      emoji?: string;
+      kind?: "permanent" | "temporary";
+      purpose?: string;
+      avatarUrl?: string | null;
+      coverTheme?: string;
+    }) => d,
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -205,6 +246,8 @@ export const createGroup = createServerFn({ method: "POST" })
         emoji: data.emoji ?? "✨",
         kind: data.kind ?? "permanent",
         purpose: data.purpose ?? null,
+        avatar_url: data.avatarUrl ?? null,
+        cover_theme: data.coverTheme ?? "obsidian_emerald",
         created_by: me,
       })
       .select("*")
@@ -221,6 +264,7 @@ export const createGroup = createServerFn({ method: "POST" })
     });
     return group;
   });
+
 
 export const joinGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
