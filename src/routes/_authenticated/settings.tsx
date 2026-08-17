@@ -243,6 +243,12 @@ function SettingsPage() {
         >
           <AddressPicker
             value={String(form["home_address"] ?? "")}
+            onTextChange={(t) => set("home_address", t)}
+            proximity={
+              form["home_lat"] != null && form["home_lon"] != null
+                ? { lat: Number(form["home_lat"]), lon: Number(form["home_lon"]) }
+                : null
+            }
             onPick={(p) => {
               set("home_address", p.address);
               set("home_lat", p.lat);
@@ -250,6 +256,7 @@ function SettingsPage() {
               if (p.zip) set("zip_code", p.zip);
             }}
           />
+
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
