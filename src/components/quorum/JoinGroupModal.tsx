@@ -39,11 +39,17 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
         autoFocus
         inputMode="text"
         placeholder="SQUAD9"
-        onChange={(e) => setCode(normalizeCode(e.target.value))}
+        onChange={(e) => {
+          const next = normalizeCode(e.target.value);
+          setCode(next);
+          // Auto-submit as soon as a full six-character code lands.
+          if (next.length === 6 && !join.isPending) join.mutate({ data: { code: next } });
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && isValidCode(code)) join.mutate({ data: { code } });
         }}
       />
+
       <Button
         className="mt-4 w-full"
         loading={join.isPending}
