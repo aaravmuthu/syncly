@@ -517,6 +517,15 @@ function PlanPage() {
             >
               {askParent.isPending ? "Creating…" : "Create approval link"}
             </Button>
+            <Button
+              onClick={() => {
+                const link = `${window.location.origin}/approve/${planId}`;
+                void navigator.clipboard.writeText(link);
+                setApprovalLink(link);
+              }}
+            >
+              Share parent summary link
+            </Button>
             {approvalLink ? (
               <button
                 type="button"
