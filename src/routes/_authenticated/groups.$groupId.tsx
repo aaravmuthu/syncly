@@ -95,6 +95,9 @@ function GroupPage() {
     >
       <InviteCard code={group.invite_code} groupName={group.name} />
 
+      <SquadStats plans={plans as unknown as { status: string; location_area?: string | null }[]} />
+
+
       {creating ? (
         <CreatePlanPanel groupId={groupId} memberIds={memberIds} inviteCode={group.invite_code} />
       ) : null}
