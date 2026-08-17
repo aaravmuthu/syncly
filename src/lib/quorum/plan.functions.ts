@@ -599,7 +599,7 @@ export const submitConstraints = createServerFn({ method: "POST" })
 
 export const generateRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator((d: { planId: string; shuffle?: number }) => d)
   .handler(async ({ data, context }) => {
     // Authorize as the user first — only a plan participant may run this.
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
@@ -607,7 +607,7 @@ export const generateRecommendations = createServerFn({ method: "POST" })
     // Private answers are read with elevated access ONLY inside the engine,
     // aggregated there, and never returned per person.
     const { regenerateRecommendations } = await import("./recommend.server");
-    return regenerateRecommendations(data.planId);
+    return regenerateRecommendations(data.planId, data.shuffle ?? 0);
   });
 
 /* ------------------------------------------------------------------ */
