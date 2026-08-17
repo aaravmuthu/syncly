@@ -13,6 +13,7 @@ import { isValidZip } from "@/lib/quorum/location";
 import { useTheme, type ThemeChoice } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
+import { AddressPicker } from "@/components/quorum/AddressPicker";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -235,6 +236,21 @@ function SettingsPage() {
             </select>
           </Field>
         </div>
+
+        <Field
+          label="Home address"
+          hint="Required for exact mile distances. Private — never shared with your group."
+        >
+          <AddressPicker
+            value={String(form["home_address"] ?? "")}
+            onPick={(p) => {
+              set("home_address", p.address);
+              set("home_lat", p.lat);
+              set("home_lon", p.lon);
+              if (p.zip) set("zip_code", p.zip);
+            }}
+          />
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="ZIP code" hint="Finds real venues nearby — never shared with your group">

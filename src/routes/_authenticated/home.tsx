@@ -145,6 +145,17 @@ function HomePage() {
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
 
       <div className="space-y-6">
+        {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
+            <p className="text-sm">
+              <span className="mr-1">📍</span>
+              Add your home address to get exact drive distances to every spot.
+            </p>
+            <Link to="/settings">
+              <Button variant="outline">Set address</Button>
+            </Link>
+          </div>
+        ) : null}
         <WeekStrip
           weekStart={weekStart}
           selected={selectedDay}

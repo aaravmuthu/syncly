@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
+import { AddressPicker } from "@/components/quorum/AddressPicker";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -126,6 +127,20 @@ function Onboarding() {
       caption: "These pre-fill your private answers. You can change them per plan.",
       body: (
         <div className="space-y-4">
+          <Field
+            label="Home address"
+            hint="Required — used for exact distances. Never shared with your group."
+          >
+            <AddressPicker
+              value={String(form["home_address"] ?? "")}
+              onPick={(p) => {
+                set("home_address", p.address);
+                set("home_lat", p.lat);
+                set("home_lon", p.lon);
+                if (p.zip) set("zip_code", p.zip);
+              }}
+            />
+          </Field>
           <Field label="ZIP code" hint="Finds real venues near you — never shared with your group">
             <PlaceAutocomplete
               value={String(form["zip_code"] ?? "")}
@@ -215,6 +230,9 @@ function Onboarding() {
                 return toast.error("Add a display name so your group knows who you are");
               }
               const zip = String(form["zip_code"] ?? "").trim();
+              if (last && (form["home_lat"] == null || form["home_lon"] == null)) {
+                return toast.error("Pick your home address so Quorum can measure real distances");
+              }
               if (last && zip && !isValidZip(zip)) {
                 return toast.error("Enter a valid 5-digit ZIP code");
               }

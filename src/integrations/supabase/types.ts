@@ -517,7 +517,10 @@ export type Database = {
           curfew_time: string | null
           display_name: string
           grad_year: number | null
+          home_address: string | null
           home_area: string | null
+          home_lat: number | null
+          home_lon: number | null
           id: string
           independence_level: string | null
           is_demo: boolean
@@ -545,7 +548,10 @@ export type Database = {
           curfew_time?: string | null
           display_name?: string
           grad_year?: number | null
+          home_address?: string | null
           home_area?: string | null
+          home_lat?: number | null
+          home_lon?: number | null
           id?: string
           independence_level?: string | null
           is_demo?: boolean
@@ -573,7 +579,10 @@ export type Database = {
           curfew_time?: string | null
           display_name?: string
           grad_year?: number | null
+          home_address?: string | null
           home_area?: string | null
+          home_lat?: number | null
+          home_lon?: number | null
           id?: string
           independence_level?: string | null
           is_demo?: boolean

@@ -70,11 +70,17 @@ export const saveProfile = createServerFn({ method: "POST" })
       "onboarded",
       "zip_code",
       "theme_preference",
+      "home_address",
+      "home_lat",
+      "home_lon",
     ] as const;
     const nullable = new Set([
       "curfew_time",
       "zip_code",
       "home_area",
+      "home_address",
+      "home_lat",
+      "home_lon",
       "budget_preference",
       "age",
       "avatar_url",
@@ -91,6 +97,10 @@ export const saveProfile = createServerFn({ method: "POST" })
       if ((k === "age" || k === "grad_year") && v != null && v !== "") {
         const n = Number(v);
         v = Number.isFinite(n) ? Math.trunc(n) : null;
+      }
+      if (k === "home_lat" || k === "home_lon") {
+        const n = Number(v);
+        v = v == null || v === "" || !Number.isFinite(n) ? null : n;
       }
       if (k === "bio" && typeof v === "string") v = v.slice(0, 160);
       patch[k] = v;
