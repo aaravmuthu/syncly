@@ -20,9 +20,16 @@ export function WeatherCard({ planId }: { planId: string }) {
   return (
     <Card className={`p-4 ${f.alert ? "ring-1 ring-destructive/30" : ""}`}>
       <div className="flex items-center gap-3">
-        <span className="text-2xl leading-none">{f.emoji}</span>
+        <span className="text-2xl leading-none">{f.currentEmoji ?? f.emoji}</span>
         <div className="min-w-0">
-          <p className="text-sm font-medium">{forecastSummary(f)}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium">{forecastSummary(f)}</p>
+            {f.currentTempF != null ? (
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium">
+                Now at the spot · {f.currentTempF}°F {f.currentLabel}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {f.alert
               ? `${f.alertText} — indoor options are ranked higher.`
@@ -33,6 +40,7 @@ export function WeatherCard({ planId }: { planId: string }) {
     </Card>
   );
 }
+
 
 export function AvailabilityHeatmap({ planId }: { planId: string }) {
   const fetchGrid = useServerFn(getAvailabilityHeatmap);

@@ -10,10 +10,15 @@ export type Forecast = {
   code: number;
   label: string;
   emoji: string;
+  /** Live conditions at the venue right now (only when the plan is today). */
+  currentTempF: number | null;
+  currentLabel: string | null;
+  currentEmoji: string | null;
   /** True when an outdoor plan would genuinely be unpleasant or unsafe. */
   alert: boolean;
   alertText: string | null;
 };
+
 
 const CODES: Record<number, { label: string; emoji: string }> = {
   0: { label: "Clear", emoji: "☀️" },

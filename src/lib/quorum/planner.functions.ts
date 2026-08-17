@@ -18,12 +18,16 @@ export type PlanDefaults = {
     profileId: string | null;
     name: string;
     zip: string | null;
+    homeAddress: string | null;
+    homeLat: number | null;
+    homeLon: number | null;
     curfew: string | null;
     budgetPreference: string | null;
     radiusMiles: number;
     dietary: string[];
     categories: string[];
   };
+
   members: MemberPin[];
   fairPoint: { lat: number; lon: number; label: string; zip: string; memberCount: number } | null;
   summary: string;
@@ -47,7 +51,7 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
     const { data: mine } = await supabase
       .from("profiles")
       .select(
-        "id, display_name, zip_code, home_area, curfew_time, budget_preference, preferred_categories",
+        "id, display_name, zip_code, home_area, home_address, home_lat, home_lon, curfew_time, budget_preference, preferred_categories",
       )
       .eq("id", myId ?? "")
       .maybeSingle();
@@ -59,6 +63,7 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
     const curfew = ((mine?.curfew_time as string | null) ?? null)?.slice(0, 5) ?? null;
     const budget = (mine?.budget_preference as string | null) ?? null;
     const zip = (mine?.zip_code as string | null) ?? null;
+    const homeAddress = (mine?.home_address as string | null) ?? null;
 
     const summaryBits = [
       curfew ? `${to12(curfew)} curfew` : null,
@@ -71,12 +76,16 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
         profileId: (myId as string | null) ?? null,
         name: (mine?.display_name as string) ?? "You",
         zip,
+        homeAddress,
+        homeLat: (mine?.home_lat as number | null) ?? null,
+        homeLon: (mine?.home_lon as number | null) ?? null,
         curfew,
         budgetPreference: budget,
         radiusMiles: 10,
         dietary: [],
         categories: ((mine?.preferred_categories as string[] | null) ?? []).slice(0, 4),
       },
+
       members: bases.map((m) => ({
         profileId: m.profileId,
         name: m.name,

@@ -57,9 +57,27 @@ export function CreatePlanPanel({
   // Saved defaults hydrate the form the moment they arrive.
   useEffect(() => {
     if (!defaults.data || !useSaved) return;
-    setZip((z) => z || defaults.data.me.zip || defaults.data.fairPoint?.zip || "");
-    setRadius((r) => (r === 10 ? defaults.data.me.radiusMiles : r));
+    const me = defaults.data.me;
+    setZip((z) => z || me.zip || defaults.data.fairPoint?.zip || "");
+    setRadius((r) => (r === 10 ? me.radiusMiles : r));
+    const savedCat = me.categories[0] as PlanCategory | undefined;
+    if (savedCat && CATEGORIES.some((c) => c.id === savedCat)) {
+      setCategory((c) => (c === "dinner" ? savedCat : c));
+    }
+    // Respect a saved curfew: back the start time up so the plan ends in time.
+    if (me.curfew) {
+      const [ch, cm] = me.curfew.split(":");
+      const curfewMin = Number(ch) * 60 + Number(cm ?? 0);
+      setStartTime((s) => {
+        const [h, m] = s.split(":");
+        const startMin = Number(h) * 60 + Number(m ?? 0);
+        if (startMin + 150 <= curfewMin) return s;
+        const shifted = Math.max(11 * 60, curfewMin - 150);
+        return `${String(Math.floor(shifted / 60)).padStart(2, "0")}:${String(shifted % 60).padStart(2, "0")}`;
+      });
+    }
   }, [defaults.data, useSaved]);
+
 
   const endTime = useMemo(() => {
     const [h, m] = startTime.split(":");
