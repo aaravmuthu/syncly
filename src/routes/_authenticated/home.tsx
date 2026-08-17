@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Sparkles, KeyRound } from "lucide-react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
+import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import {
   ActionCard,
@@ -92,12 +93,19 @@ function HomePage() {
     [plans, selectedDay],
   );
 
+  const conflicted = dayFiltered.filter(
+    (p) => (p.conflicts?.length ?? 0) > 0 && (p.alternatives?.length ?? 0) > 0,
+  );
   const needsAction = dayFiltered.filter(
     (p) =>
-      (p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted),
+      !conflicted.includes(p) &&
+      ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
   );
   const otherActive = dayFiltered.filter(
-    (p) => (p.status === "collecting" || p.status === "voting") && !needsAction.includes(p),
+    (p) =>
+      (p.status === "collecting" || p.status === "voting") &&
+      !needsAction.includes(p) &&
+      !conflicted.includes(p),
   );
   const confirmed = dayFiltered
     .filter((p) => p.status === "finalized")
@@ -109,7 +117,9 @@ function HomePage() {
 
   // Up next: soonest confirmed plan, else the most urgent thing waiting on you.
   const upNext =
-    confirmed.find((p) => new Date(p.window_start ?? p.created_at).getTime() >= Date.now() - 864e5) ??
+    confirmed.find(
+      (p) => new Date(p.window_start ?? p.created_at).getTime() >= Date.now() - 864e5,
+    ) ??
     needsAction[0] ??
     confirmed[0] ??
     otherActive[0] ??
@@ -195,11 +205,31 @@ function HomePage() {
           </Glass>
         ) : null}
 
+        {conflicted.length > 0 ? (
+          <Section title="Conflict — quick re-vote" accent="text-amber-500">
+            <div className="grid gap-3">
+              {conflicted.map((p) => (
+                <ConflictCard
+                  key={p.id}
+                  planId={p.id}
+                  title={p.title}
+                  conflicts={p.conflicts ?? []}
+                  alternatives={p.alternatives ?? []}
+                  original={p.original_option ?? null}
+                />
+              ))}
+            </div>
+          </Section>
+        ) : null}
+
         {needsAction.length > 0 ? (
           <Section title="Needs your action" accent="text-emerald-500">
             <div className="grid gap-3 sm:grid-cols-2">
               {needsAction.map((p) => (
-                <ActionCard key={p.id} plan={p} />
+                <div key={p.id} className="space-y-2">
+                  <ActionCard plan={p} />
+                  <QuickActions planId={p.id} />
+                </div>
               ))}
             </div>
           </Section>
@@ -295,17 +325,17 @@ function UpNextHero({ plan }: { plan: DashPlan }) {
             <h2 className="font-display text-2xl font-semibold leading-tight">{plan.title}</h2>
             <p className="text-sm text-muted-foreground">
               {formatWhen(plan.window_start)}
-              {rec?.location_name ? ` · ${rec.location_name}` : plan.location_area ? ` · ${plan.location_area}` : ""}
+              {rec?.location_name
+                ? ` · ${rec.location_name}`
+                : plan.location_area
+                  ? ` · ${plan.location_area}`
+                  : ""}
             </p>
             <div className="pt-1">
               <WeatherChip planId={plan.id} />
             </div>
           </div>
-          <MapThumb
-            lat={rec?.lat}
-            lon={rec?.lon}
-            className="hidden h-28 w-40 shrink-0 sm:block"
-          />
+          <MapThumb lat={rec?.lat} lon={rec?.lon} className="hidden h-28 w-40 shrink-0 sm:block" />
         </div>
 
         {plan.status !== "finalized" ? (

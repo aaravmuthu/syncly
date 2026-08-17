@@ -42,11 +42,64 @@ export const Route = createFileRoute("/_authenticated/plans/$planId")({
   component: PlanPage,
 });
 
+/** Conflict banner + one-tap alternative ballot for this plan. */
+function PlanConflictBanner({
+  planId,
+  title,
+  recs,
+}: {
+  planId: string;
+  title: string;
+  recs: {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    cost_min: number | null;
+    cost_max: number | null;
+    suggested_start: string | null;
+    tags: string[];
+  }[];
+}) {
+  const fetchConflicts = useServerFn(getPlanConflicts);
+  const q = useQuery({
+    queryKey: ["plan-conflicts", planId],
+    queryFn: () => fetchConflicts({ data: { planId } }),
+    retry: false,
+  });
+  const conflicts = q.data?.conflicts ?? [];
+  const alternatives = recs.filter((r) => (r.tags ?? []).includes("alternative"));
+  const original = recs.find((r) => !(r.tags ?? []).includes("alternative")) ?? null;
+  if (!conflicts.length || !alternatives.length) return null;
+
+  return (
+    <ConflictCard
+      planId={planId}
+      title={title}
+      conflicts={conflicts.map((c) => ({ id: c.id, kind: c.kind, detail: c.detail }))}
+      alternatives={alternatives.map((r) => ({
+        id: r.id,
+        title: r.title,
+        subtitle: r.subtitle,
+        cost_min: r.cost_min,
+        cost_max: r.cost_max,
+        suggested_start: r.suggested_start,
+        tags: r.tags ?? [],
+      }))}
+      original={original ? { id: original.id, title: original.title } : null}
+    />
+  );
+}
+
+import { ConflictCard } from "@/components/quorum/ConflictCard";
+import { getPlanConflicts } from "@/lib/quorum/conflict.functions";
 function PlanPage() {
   const { planId } = Route.useParams();
   const qc = useQueryClient();
   const fetchPlan = useServerFn(getPlan);
-  const q = useQuery({ queryKey: ["plan", planId], queryFn: () => fetchPlan({ data: { planId } }) });
+  const q = useQuery({
+    queryKey: ["plan", planId],
+    queryFn: () => fetchPlan({ data: { planId } }),
+  });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["plan", planId] });
 
   const [editing, setEditing] = useState(false);
@@ -63,7 +116,10 @@ function PlanPage() {
     mutationFn: useServerFn(generateRecommendations),
     onSuccess: () => void invalidate(),
   });
-  const vote = useMutation({ mutationFn: useServerFn(castVote), onSuccess: () => void invalidate() });
+  const vote = useMutation({
+    mutationFn: useServerFn(castVote),
+    onSuccess: () => void invalidate(),
+  });
   const finalize = useMutation({
     mutationFn: useServerFn(finalizePlan),
     onSuccess: () => void invalidate(),
@@ -86,7 +142,6 @@ function PlanPage() {
   // Must stay above the loading guard — hooks cannot run conditionally.
   const summaries = useCompromiseSummaries(planId, (data?.recommendations.length ?? 0) > 0);
 
-
   if (q.isLoading || !data || !meta) {
     return (
       <AppShell title="Plan">
@@ -107,7 +162,7 @@ function PlanPage() {
     driver: t.driver_label ?? "A driver",
   }));
   const selectedRec = data.recommendations.find((r) => r.id === selected) ?? null;
-  
+
   const backupRec =
     data.recommendations.find((r) => r.id !== selected && r.feasible) ??
     data.recommendations.find((r) => r.id !== selected) ??
@@ -198,11 +253,11 @@ function PlanPage() {
               </span>
             );
           })}
-
         </div>
       </Card>
 
       <div className="mt-4 space-y-3">
+        <PlanConflictBanner planId={planId} title={data.plan.title} recs={data.recommendations} />
         <WeatherCard planId={planId} />
         {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
         <AvailabilityHeatmap planId={planId} />
@@ -296,7 +351,9 @@ function PlanPage() {
                     </a>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="font-display text-2xl font-semibold tabular-nums">{r.score}%</div>
+                    <div className="font-display text-2xl font-semibold tabular-nums">
+                      {r.score}%
+                    </div>
                     <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
                       match
                     </div>
@@ -392,9 +449,7 @@ function PlanPage() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <Pill tone="accent">Plan B</Pill>
-                    <span className="text-xs text-muted-foreground">
-                      {backupRec.score}% match
-                    </span>
+                    <span className="text-xs text-muted-foreground">{backupRec.score}% match</span>
                   </div>
                   <p className="mt-1.5 font-display font-semibold">{backupRec.title}</p>
                   <p className="text-sm text-muted-foreground">
@@ -444,7 +499,8 @@ function PlanPage() {
         <Card>
           <p className="text-sm text-muted-foreground">
             Send a parent a link with only the details they need: what, where, when, and how you're
-            getting home. They can approve, approve with a condition, or decline — no account required.
+            getting home. They can approve, approve with a condition, or decline — no account
+            required.
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button

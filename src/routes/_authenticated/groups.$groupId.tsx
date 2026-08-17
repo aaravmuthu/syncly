@@ -12,7 +12,7 @@ import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
 import { getGroupMemory } from "@/lib/quorum/insight.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
-import { MagicPlanBox, type MagicApply } from "@/components/quorum/MagicPlanBox";
+import { CreatePlanPanel } from "@/components/quorum/CreatePlanPanel";
 import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
@@ -51,12 +51,10 @@ function GroupPage() {
     queryKey: ["group-memory", groupId],
     queryFn: () => fetchMemory({ data: { groupId } }),
   });
-  const topCategory = (
-    (memory.data?.favorite_activities as { category: string; count: number }[] | null) ?? []
-  )[0];
-  const topArea = (
-    (memory.data?.common_locations as { area: string; count: number }[] | null) ?? []
-  )[0];
+  const topCategory = ((memory.data?.favorite_activities as
+    { category: string; count: number }[] | null) ?? [])[0];
+  const topArea = ((memory.data?.common_locations as { area: string; count: number }[] | null) ??
+    [])[0];
 
   const create = useMutation({
     mutationFn: useServerFn(createPlan),
@@ -65,7 +63,9 @@ function GroupPage() {
         description: e instanceof Error ? e.message : "Please try again.",
       }),
     onSuccess: (plan) => {
-      toast.success("Plan created", { description: "Everyone gets their own private questionnaire." });
+      toast.success("Plan created", {
+        description: "Everyone gets their own private questionnaire.",
+      });
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["plans"] });
       void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
@@ -88,159 +88,20 @@ function GroupPage() {
     <AppShell
       title={`${group.emoji} ${group.name}`}
       subtitle={`${members.length} members · invite code ${group.invite_code}`}
-      action={<Button onClick={() => setCreating((v) => !v)}>{creating ? "Cancel" : "New plan"}</Button>}
+      action={
+        <Button onClick={() => setCreating((v) => !v)}>{creating ? "Cancel" : "New plan"}</Button>
+      }
     >
       <InviteCard code={group.invite_code} groupName={group.name} />
 
       {creating ? (
-        <Card className="mb-6">
-          <h2 className="font-display text-base font-semibold">Start a plan</h2>
-          {topCategory || topArea ? (
-            <div className="mt-3 rounded-2xl bg-secondary/70 p-3 text-xs">
-              <p className="font-medium">This group usually…</p>
-              <p className="mt-0.5 text-muted-foreground">
-                {topCategory ? `picks ${topCategory.category} plans` : ""}
-                {topCategory && topArea ? " · " : ""}
-                {topArea ? `meets around ${topArea.area}` : ""}
-                {memory.data?.avg_spend_max
-                  ? ` · spends about $${Math.round(Number(memory.data.avg_spend_min ?? 0))}–${Math.round(Number(memory.data.avg_spend_max))} per person`
-                  : ""}
-              </p>
-              <button
-                type="button"
-                className="mt-1.5 font-medium text-primary underline-offset-4 hover:underline"
-                onClick={() => {
-                  if (topCategory) setCategory(topCategory.category as PlanCategory);
-                  if (topArea) setZip(topArea.area.replace(/\D/g, "").slice(0, 5));
-                }}
-              >
-                Use these defaults
-              </button>
-            </div>
-          ) : null}
-          <p className="mt-1 text-sm text-muted-foreground">
-            Everyone in the group gets their own private questionnaire. Nobody sees anyone else's answers.
-          </p>
-          <div className="mt-4 space-y-4">
-            <MagicPlanBox
-              fallbackZip={zip || (topArea?.area ?? null)}
-              onApply={(d: MagicApply) => {
-                setTitle(d.title);
-                setCategory(d.category);
-                if (d.date) setWindowStart(d.date);
-                if (d.zip) setZip(d.zip);
-              }}
-            />
-            <Field label="What are you planning?">
-              <input
-                className={inputClass}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Saturday dinner"
-              />
-            </Field>
-            <div>
-              <span className="text-sm font-medium">Category</span>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {CATEGORIES.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setCategory(c.id)}
-                    className={`rounded-2xl border px-3 py-2.5 text-left text-sm transition ${
-                      category === c.id
-                        ? "border-primary/50 bg-primary/8"
-                        : "border-border hover:bg-secondary"
-                    }`}
-                  >
-                    <span className="mr-1.5">{c.emoji}</span>
-                    <span className="font-medium">{c.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <span className="text-sm font-medium">Food & activity vibe</span>
-              <p className="text-xs text-muted-foreground">
-                Optional — narrows the real nearby spots we pull in
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {VIBES.map((v) => (
-                  <button
-                    key={v.id}
-                    type="button"
-                    onClick={() => setVibe((cur) => (cur === v.id ? null : v.id))}
-                    className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                      vibe === v.id
-                        ? "border-primary/50 bg-primary/10 text-foreground"
-                        : "border-border text-muted-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    <span className="mr-1">{v.emoji}</span>
-                    {v.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <Field label="ZIP code" hint="Used to find real venues nearby and estimate travel">
-              <PlaceAutocomplete value={zip} onChange={(z) => setZip(z)} />
-            </Field>
-            <div>
-              <span className="text-sm font-medium">Search radius</span>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {RADIUS_OPTIONS.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRadius(r)}
-                    className={`rounded-full border px-3 py-1.5 text-sm tabular-nums transition ${
-                      radius === r
-                        ? "border-primary/50 bg-primary/10 text-foreground"
-                        : "border-border text-muted-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    {r} mi
-                  </button>
-                ))}
-              </div>
-            </div>
-            <Field label="Target date" hint="Optional — helps narrow options">
-              <input
-                type="date"
-                className={inputClass}
-                value={windowStart}
-                onChange={(e) => setWindowStart(e.target.value)}
-              />
-            </Field>
-            <Button
-              className="w-full"
-              loading={create.isPending}
-              disabled={!title.trim()}
-              onClick={() => {
-                if (!title.trim()) return toast.error("Give the plan a name first");
-                if (zip && !isValidZip(zip)) return toast.error("Enter a valid 5-digit ZIP code");
-                create.mutate({
-                  data: {
-                    groupId,
-                    title,
-                    category,
-                    windowStart: windowStart || null,
-                    zipCode: zip || null,
-                    foodVibe: vibe,
-                    radiusMiles: radius,
-                    participantIds: memberIds,
-                  },
-                });
-              }}
-            >
-              {create.isPending ? "Creating…" : "Create plan"}
-            </Button>
-          </div>
-        </Card>
+        <CreatePlanPanel groupId={groupId} memberIds={memberIds} inviteCode={group.invite_code} />
       ) : null}
 
       <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plans</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Plans
+        </h2>
         {plans.length === 0 ? (
           <Card>
             <p className="text-sm text-muted-foreground">No plans in this group yet.</p>
@@ -277,18 +138,27 @@ function GroupPage() {
               .filter(Boolean)
               .join(" · ");
             return (
-              <div key={m.profile_id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                <Avatar url={p?.avatar_url} emoji={p?.avatar_emoji} name={p?.display_name} size={36} />
+              <div
+                key={m.profile_id}
+                className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+              >
+                <Avatar
+                  url={p?.avatar_url}
+                  emoji={p?.avatar_emoji}
+                  name={p?.display_name}
+                  size={36}
+                />
                 <div className="flex-1">
                   <span className="block text-sm font-medium">{p?.display_name ?? "Member"}</span>
-                  {meta ? <span className="block text-xs text-muted-foreground">{meta}</span> : null}
+                  {meta ? (
+                    <span className="block text-xs text-muted-foreground">{meta}</span>
+                  ) : null}
                   {p?.bio ? <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p> : null}
                 </div>
                 <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
               </div>
             );
           })}
-
         </Card>
       </section>
     </AppShell>

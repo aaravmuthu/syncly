@@ -42,6 +42,17 @@ export type DashPlan = {
     lon: number | null;
     suggested_start: string | null;
   } | null;
+  conflicts?: { id: string; kind: string; detail: string | null }[];
+  alternatives?: {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    cost_min: number | null;
+    cost_max: number | null;
+    suggested_start: string | null;
+    tags: string[];
+  }[];
+  original_option?: { id: string; title: string } | null;
 };
 
 /* ------------------------------------------------------------------ */
@@ -98,13 +109,7 @@ export function statusLabel(status: string) {
   return "Draft";
 }
 
-export function AvatarStack({
-  people,
-  max = 4,
-}: {
-  people: DashParticipant[];
-  max?: number;
-}) {
+export function AvatarStack({ people, max = 4 }: { people: DashParticipant[]; max?: number }) {
   const shown = people.slice(0, max);
   const rest = people.length - shown.length;
   return (
