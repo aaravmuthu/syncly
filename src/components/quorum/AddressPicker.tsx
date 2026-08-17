@@ -48,13 +48,24 @@ export function AddressPicker({
   const [items, setItems] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const skipNextSearch = useRef(false);
   const search = useServerFn(suggestPlaces);
   const toZip = useServerFn(reverseZip);
   const boxRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setText(value), [value]);
+  useEffect(() => {
+    skipNextSearch.current = true;
+    setText(value);
+  }, [value]);
 
   useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false;
+      setItems([]);
+      setOpen(false);
+      return;
+    }
     const q = text.trim();
     if (q.length < 3) {
       setItems([]);
@@ -88,6 +99,9 @@ export function AddressPicker({
 
   const commit = (s: Suggestion) => {
     setOpen(false);
+    setItems([]);
+    setLocked(true);
+    skipNextSearch.current = true;
     setText(s.label);
     const base = {
       address: s.label,
@@ -115,7 +129,11 @@ export function AddressPicker({
         void toZip({ data: { lat, lon } })
           .then((zip) => {
             const label = zip ? `Current location · ${zip}` : "Current location";
+            skipNextSearch.current = true;
             setText(label);
+            setOpen(false);
+            setItems([]);
+            setLocked(true);
             onPick({ address: label, zip: zip ?? null, lat, lon });
           })
           .catch(() => undefined)
@@ -128,19 +146,36 @@ export function AddressPicker({
 
   return (
     <div className="relative" ref={boxRef}>
-      <input
-        className={inputClass}
-        aria-label={ariaLabel}
-        autoComplete="off"
-        value={text}
-        placeholder={placeholder}
-        onFocus={() => items.length && setOpen(true)}
-        onChange={(e) => {
-          setText(e.target.value);
-          onTextChange?.(e.target.value);
-        }}
+      <div className="relative">
+        <input
+          className={inputClass}
+          aria-label={ariaLabel}
+          autoComplete="off"
+          value={text}
+          placeholder={placeholder}
+          onFocus={() => !locked && items.length && setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" || e.key === "Tab") setOpen(false);
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const first = items[0];
+              if (open && first) commit(first);
+              else setOpen(false);
+            }
+          }}
+          onChange={(e) => {
+            setLocked(false);
+            setText(e.target.value);
+            onTextChange?.(e.target.value);
+          }}
+        />
+        {locked ? (
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
+            ✓ Address saved
+          </span>
+        ) : null}
+      </div>
 
-      />
       <button
         type="button"
         onClick={useMyLocation}
