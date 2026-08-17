@@ -356,6 +356,31 @@ function PlanPage() {
                         ? ` · ${b.venue.distanceMiles} miles away`
                         : ""}
                     </p>
+                    {b.fair?.drives?.length ? (
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {b.fair.drives
+                          .map((d) => `${d.miles} mi for ${d.name.split(" ")[0]}`)
+                          .join(" • ")}
+                      </p>
+                    ) : null}
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {b.fair && b.fair.drives.length ? (
+                        <Pill tone="accent">
+                          📍{" "}
+                          {b.fair.spreadMinutes <= 6
+                            ? `Equal ~${b.fair.avgMinutes} min drive for everyone`
+                            : `~${b.fair.avgMinutes} min average drive`}
+                        </Pill>
+                      ) : null}
+                      {b.fair ? (
+                        b.fair.curfewOk ? (
+                          <Pill tone="good">✓ Works with everyone's curfew</Pill>
+                        ) : (
+                          <Pill tone="warn">{b.fair.curfewNote}</Pill>
+                        )
+                      ) : null}
+                    </div>
+
                     <a
                       href={directionsUrl({
                         lat: r.lat ?? b.venue?.lat ?? null,
