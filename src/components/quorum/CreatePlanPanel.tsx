@@ -334,21 +334,22 @@ export function CreatePlanPanel({
           </Field>
 
           <div>
-            <span className="text-sm font-medium">Search radius</span>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <label className="text-sm font-medium" htmlFor="plan-radius">
+              Search radius · {radius} mi
+            </label>
+            <input
+              id="plan-radius"
+              type="range"
+              min={RADIUS_OPTIONS[0]}
+              max={RADIUS_OPTIONS[RADIUS_OPTIONS.length - 1]}
+              step={5}
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="mt-2 w-full accent-[hsl(var(--primary))]"
+            />
+            <div className="flex justify-between text-[11px] text-muted-foreground">
               {RADIUS_OPTIONS.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRadius(r)}
-                  className={`rounded-full border px-3 py-1.5 text-sm tabular-nums transition ${
-                    radius === r
-                      ? "border-primary/50 bg-primary/10 text-foreground"
-                      : "border-border text-muted-foreground hover:bg-secondary"
-                  }`}
-                >
-                  {r} mi
-                </button>
+                <span key={r}>{r} mi</span>
               ))}
             </div>
           </div>
