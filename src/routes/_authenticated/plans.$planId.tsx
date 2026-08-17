@@ -14,6 +14,7 @@ import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
 import { VenueMap } from "@/components/quorum/VenueMap";
+import { SpotBrowser } from "@/components/quorum/SpotBrowser";
 import { estimateCost, formatRange } from "@/lib/quorum/cost";
 import {
   castVote,
@@ -257,6 +258,12 @@ function PlanPage() {
       </Card>
 
       <div className="mt-4 space-y-3">
+        <SpotBrowser
+          groupId={data.plan.group_id}
+          planId={planId}
+          canAdd={data.plan.created_by === data.meProfileId}
+          onAdded={() => void invalidate()}
+        />
         <PlanConflictBanner planId={planId} title={data.plan.title} recs={data.recommendations} />
         <WeatherCard planId={planId} />
         {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
