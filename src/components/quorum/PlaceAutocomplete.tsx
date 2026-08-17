@@ -100,21 +100,59 @@ export function PlaceAutocomplete({
     );
   };
 
+  const commit = (s: Suggestion) => {
+    setOpen(false);
+    setItems([]);
+    setLocked(true);
+    skipNextSearch.current = true;
+    setText(s.zip ?? s.label);
+    if (s.zip) {
+      onChange(s.zip, s);
+      return;
+    }
+    void toZip({ data: { lat: s.lat, lon: s.lon } })
+      .then((zip) => {
+        if (zip) {
+          skipNextSearch.current = true;
+          setText(zip);
+          onChange(zip, s);
+        }
+      })
+      .catch(() => undefined);
+  };
+
   return (
     <div className="relative" ref={boxRef}>
-      <input
-        className={inputClass}
-        aria-label={ariaLabel}
-        autoComplete="off"
-        value={text}
-        placeholder={placeholder}
-        onFocus={() => items.length && setOpen(true)}
-        onChange={(e) => {
-          const v = e.target.value;
-          setText(v);
-          if (/^\d{0,5}$/.test(v.trim())) onChange(v.trim());
-        }}
-      />
+      <div className="relative">
+        <input
+          className={inputClass}
+          aria-label={ariaLabel}
+          autoComplete="off"
+          value={text}
+          placeholder={placeholder}
+          onFocus={() => !locked && items.length && setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" || e.key === "Tab") setOpen(false);
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const first = items[0];
+              if (open && first) commit(first);
+              else setOpen(false);
+            }
+          }}
+          onChange={(e) => {
+            const v = e.target.value;
+            setLocked(false);
+            setText(v);
+            if (/^\d{0,5}$/.test(v.trim())) onChange(v.trim());
+          }}
+        />
+        {locked ? (
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
+            ✓ Saved
+          </span>
+        ) : null}
+      </div>
       <button
         type="button"
         onClick={useMyLocation}
@@ -131,23 +169,7 @@ export function PlaceAutocomplete({
               <button
                 type="button"
                 className="w-full px-3 py-2 text-left text-sm hover:bg-secondary"
-                onClick={() => {
-                  setOpen(false);
-                  setText(s.zip ?? s.label);
-                  if (s.zip) {
-                    onChange(s.zip, s);
-                    return;
-                  }
-                  // Place-level result: resolve its ZIP before saving.
-                  void toZip({ data: { lat: s.lat, lon: s.lon } })
-                    .then((zip) => {
-                      if (zip) {
-                        setText(zip);
-                        onChange(zip, s);
-                      }
-                    })
-                    .catch(() => undefined);
-                }}
+                onClick={() => commit(s)}
               >
                 <span className="font-medium">{s.label}</span>
                 {s.zip ? <span className="ml-2 text-xs text-muted-foreground">{s.zip}</span> : null}
@@ -156,6 +178,7 @@ export function PlaceAutocomplete({
           ))}
         </ul>
       ) : null}
+
     </div>
   );
 }
