@@ -82,6 +82,9 @@ export function PlaceAutocomplete({
         void toZip({ data: { lat: pos.coords.latitude, lon: pos.coords.longitude } })
           .then((zip) => {
             if (zip) {
+              skipNextSearch.current = true;
+              setLocked(true);
+              setOpen(false);
               setText(zip);
               onChange(zip, {
                 id: "current",
