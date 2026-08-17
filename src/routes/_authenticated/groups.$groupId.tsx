@@ -166,6 +166,21 @@ function GroupPage() {
         </Card>
       </section>
 
+      {members.find((m) => m.profile_id === myProfileId)?.role === "owner" ||
+      members.find((m) => m.profile_id === myProfileId)?.role === "admin" ? (
+        <section className="mt-8">
+          <GroupAppearance
+            groupId={groupId}
+            initial={{
+              name: group.name,
+              emoji: (group as { emoji?: string }).emoji,
+              avatar_url: (group as { avatar_url?: string | null }).avatar_url ?? null,
+              cover_theme: (group as { cover_theme?: string | null }).cover_theme ?? null,
+            }}
+          />
+        </section>
+      ) : null}
+
       <GroupSettings
         groupId={groupId}
         groupName={group.name}
@@ -175,3 +190,21 @@ function GroupPage() {
     </AppShell>
   );
 }
+
+/** Aggregate squad metrics shown on the group detail page. */
+function SquadStats({ plans }: { plans: { status: string; location_area?: string | null }[] }) {
+  const done = plans.filter((p) => p.status === "completed" || p.status === "finalized");
+  const spots = new Map<string, number>();
+  for (const p of done) {
+    const area = (p.location_area ?? "").trim();
+    if (area) spots.set(area, (spots.get(area) ?? 0) + 1);
+  }
+  const top = [...spots.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  return (
+    <p className="mt-3 text-xs text-muted-foreground">
+      {done.length} hangout{done.length === 1 ? "" : "s"} completed
+      {top ? ` • Most frequent spot: ${top}` : ""}
+    </p>
+  );
+}
+
