@@ -127,10 +127,11 @@ export async function runRlsProbe(userClient: AnyClient): Promise<RlsCheck[]> {
     );
 
     // 6. parent approval tokens must never leak to non-owners
+    const me = await currentProfileId(userClient);
     const { data: tokenRows, error: tokenErr } = await userClient
       .from("parent_approvals")
       .select("token")
-      .neq("profile_id", otherId)
+      .neq("profile_id", me)
       .limit(5);
     const leaked = (tokenRows ?? []).filter(Boolean).length;
     add(
@@ -151,7 +152,7 @@ export async function runRlsProbe(userClient: AnyClient): Promise<RlsCheck[]> {
         .from("group_messages")
         .update({ content: foreignMsg.content })
         .eq("id", foreignMsg.id)
-        .neq("sender_id", await currentProfileId(userClient))
+        .neq("sender_id", me)
         .select("id");
       add(
         "group_messages · UPDATE someone else's message",
