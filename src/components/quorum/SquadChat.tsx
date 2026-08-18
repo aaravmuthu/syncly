@@ -87,6 +87,17 @@ export function SquadChat({
     return map;
   }, [reads, me]);
 
+  /* only the newest of my messages that has been read shows a receipt */
+  const lastSeenMineId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i];
+      if (m && m.sender_id === me && !m.system_type && (readsByMessage.get(m.id)?.length ?? 0) > 0) {
+        return m.id;
+      }
+    }
+    return null;
+  }, [messages, me, readsByMessage]);
+
   /* live message + receipt stream ---------------------------------- */
   useEffect(() => {
     const channel = supabase
