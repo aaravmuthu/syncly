@@ -10,11 +10,11 @@ import { useNotifications } from "@/lib/quorum/useNotifications";
 import { getMe } from "@/lib/quorum/plan.functions";
 
 const NAV = [
-  { to: "/home", label: "Home", icon: "◎" },
-  { to: "/groups", label: "Groups", icon: "◍" },
-  { to: "/plans", label: "Plans", icon: "◈" },
-  { to: "/activity", label: "Activity", icon: "✦" },
-  { to: "/settings", label: "Profile", icon: "◐" },
+  { to: "/home", label: "Home", icon: "🏠" },
+  { to: "/groups", label: "Groups", icon: "👥" },
+  { to: "/plans", label: "Plans", icon: "⚡" },
+  { to: "/activity", label: "Activity", icon: "💬" },
+  { to: "/settings", label: "Profile", icon: "👤" },
 ] as const;
 
 export function AppShell({
@@ -34,14 +34,14 @@ export function AppShell({
 
 
   return (
-    <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur-xl">
+    <div className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl">
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link to="/home" className="flex items-center gap-2">
             <Wordmark className="h-6" />
           </Link>
           <div className="flex items-center gap-2">
-          <nav className="hidden items-center gap-1 sm:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((n) => (
               <Link
                 key={n.to}
@@ -89,7 +89,7 @@ export function AppShell({
         {children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         <div className="mx-auto flex max-w-md items-stretch justify-between px-2 py-1.5">
           {NAV.map((n) => {
             const active = pathname.startsWith(n.to);
@@ -98,10 +98,13 @@ export function AppShell({
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium transition",
-                  active ? "text-primary" : "text-muted-foreground",
+                  "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium transition-transform duration-100 ease-out active:scale-95",
+                  active ? "scale-105 text-primary" : "text-muted-foreground",
                 )}
               >
+                {active ? (
+                  <span className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500" />
+                ) : null}
                 <span className="relative text-base leading-none">
                   {n.icon}
                   {n.to === "/activity" && unread > 0 ? (
