@@ -37,10 +37,11 @@ export function ParentSummaryView({ planId }: { planId: string }) {
     return (
       <Card className="text-center">
         <div className="text-4xl">🔎</div>
-        <h1 className="mt-3 font-display text-xl font-semibold">Plan Not Found or Expired</h1>
+        <h1 className="mt-3 font-display text-xl font-semibold">This plan link is invalid or has expired</h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-          This plan may have been cancelled or the link is no longer valid. Ask for a fresh link.
+          The plan may have been cancelled or the link is no longer valid. Ask for a fresh link.
         </p>
+
       </Card>
     );
 
