@@ -41,7 +41,7 @@ export function AppShell({
             <Wordmark className="h-6" />
           </Link>
           <div className="flex items-center gap-2">
-          <nav className="hidden items-center gap-1 sm:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((n) => (
               <Link
                 key={n.to}
