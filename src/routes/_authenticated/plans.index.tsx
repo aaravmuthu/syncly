@@ -128,8 +128,6 @@ function PlanCard({ plan, now, index }: { plan: DashPlan; now: number; index: nu
   const left = finalized ? null : countdown(plan.window_start, now);
   const when = whenLabel(plan.window_start);
   const curfew = curfewState(plan.window_end);
-  const conflictIds = new Set(plan.conflicts.map(() => ""));
-  void conflictIds;
 
   return (
     <motion.article
