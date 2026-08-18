@@ -204,31 +204,53 @@ function PlanPage() {
         />
       ) : null}
 
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="font-semibold">
-              {myParticipant?.responded && myParticipant.attending !== false
-                ? "You're in for this one"
-                : myParticipant?.responded
-                  ? "You flagged this — the host is adjusting"
-                  : "Does this work for you?"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Two taps, no survey. Your reason stays private to you.
-            </p>
+      {data.plan.created_by === data.meProfileId ? (
+        <Card className="border-primary/25 bg-primary/[0.06]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold">👑 You organized this plan</p>
+              <p className="text-sm text-muted-foreground">
+                {total - responded > 0
+                  ? `Waiting for ${total - responded} squad response${total - responded === 1 ? "" : "s"}`
+                  : "Everyone has responded — you're good to lock it in."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
+              <Button variant="outline" onClick={() => setEditing((v) => !v)}>
+                {editing ? "Close ✏️" : "Edit Plan ✏️"}
+              </Button>
+            </div>
           </div>
-          <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
-        </div>
-        <QuickResponse planId={planId} className="mt-3" />
-        <button
-          type="button"
-          className="mt-3 text-xs font-medium text-primary underline-offset-4 hover:underline"
-          onClick={() => setEditing((v) => !v)}
-        >
-          {editing ? "Hide extra details" : "Add optional details (budget, curfew, ride)"}
-        </button>
-      </Card>
+        </Card>
+      ) : (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-semibold">
+                {myParticipant?.responded && myParticipant.attending !== false
+                  ? "You're in for this one"
+                  : myParticipant?.responded
+                    ? "You flagged this — the host is adjusting"
+                    : "Does this work for you?"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Two taps, no survey. Your reason stays private to you.
+              </p>
+            </div>
+            <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
+          </div>
+          <QuickResponse planId={planId} className="mt-3" />
+          <button
+            type="button"
+            className="mt-3 text-xs font-medium text-primary underline-offset-4 hover:underline"
+            onClick={() => setEditing((v) => !v)}
+          >
+            {editing ? "Hide extra details" : "Add optional details (budget, curfew, ride)"}
+          </button>
+        </Card>
+      )}
+
 
       {editing ? (
         <div className="mt-4">

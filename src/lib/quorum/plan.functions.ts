@@ -322,7 +322,9 @@ export const getGroup = createServerFn({ method: "GET" })
       .eq("group_id", data.groupId);
     const { data: plans } = await supabase
       .from("plans")
-      .select("*")
+      .select(
+        "*, plan_participants(profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)), plan_conflicts(id, resolved)",
+      )
       .eq("group_id", data.groupId)
       .order("created_at", { ascending: false });
     const { data: activity } = await supabase
@@ -528,9 +530,15 @@ export const createPlan = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const ids = new Set([me, ...(data.participantIds ?? [])]);
-    await supabase
-      .from("plan_participants")
-      .insert([...ids].map((profile_id) => ({ plan_id: plan.id, profile_id })));
+    await supabase.from("plan_participants").insert(
+      [...ids].map((profile_id) => ({
+        plan_id: plan.id,
+        profile_id,
+        // The host is automatically in — they organized it.
+        responded: profile_id === me,
+        attending: profile_id === me,
+      })),
+    );
     await supabase.from("activity_events").insert({
       group_id: data.groupId,
       plan_id: plan.id,
@@ -542,6 +550,13 @@ export const createPlan = createServerFn({ method: "POST" })
     await postSystemEvent(data.groupId, plan.id, {
       type: "plan_created",
       content: `New plan launched: ${plan.title}`,
+      meta: {
+        title: plan.title,
+        cost:
+          plan.est_cost_min != null || plan.est_cost_max != null
+            ? `💵 $${plan.est_cost_min ?? plan.est_cost_max}–$${plan.est_cost_max ?? plan.est_cost_min}/person`
+            : undefined,
+      },
     });
     const { notifyGroupMembers } = await import("./notify.server");
     await notifyGroupMembers(data.groupId, {
