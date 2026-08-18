@@ -66,6 +66,147 @@ export type Database = {
           },
         ]
       }
+      checkin_requests: {
+        Row: {
+          created_at: string
+          guardian_profile_id: string
+          id: string
+          lat: number | null
+          lon: number | null
+          note: string | null
+          place_label: string | null
+          responded_at: string | null
+          status: string
+          teen_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_profile_id: string
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          note?: string | null
+          place_label?: string | null
+          responded_at?: string | null
+          status?: string
+          teen_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_profile_id?: string
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          note?: string | null
+          place_label?: string | null
+          responded_at?: string | null
+          status?: string
+          teen_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_requests_guardian_profile_id_fkey"
+            columns: ["guardian_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_requests_teen_profile_id_fkey"
+            columns: ["teen_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delay_pings: {
+        Row: {
+          created_at: string
+          id: string
+          minutes: number
+          new_eta: string | null
+          plan_id: string | null
+          profile_id: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          minutes?: number
+          new_eta?: string | null
+          plan_id?: string | null
+          profile_id: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          minutes?: number
+          new_eta?: string | null
+          plan_id?: string | null
+          profile_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delay_pings_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delay_pings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geofence_events: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          profile_id: string
+          zone_id: string | null
+          zone_label: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          profile_id: string
+          zone_id?: string | null
+          zone_label: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          profile_id?: string
+          zone_id?: string | null
+          zone_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geofence_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "geofence_events_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "safe_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string
@@ -258,6 +399,157 @@ export type Database = {
           {
             foreignKeyName: "groups_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guardian_alerts: {
+        Row: {
+          body: string | null
+          created_at: string
+          guardian_profile_id: string
+          id: string
+          plan_id: string | null
+          priority: string
+          read: boolean
+          teen_profile_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          guardian_profile_id: string
+          id?: string
+          plan_id?: string | null
+          priority?: string
+          read?: boolean
+          teen_profile_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          guardian_profile_id?: string
+          id?: string
+          plan_id?: string | null
+          priority?: string
+          read?: boolean
+          teen_profile_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_alerts_guardian_profile_id_fkey"
+            columns: ["guardian_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_alerts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_alerts_teen_profile_id_fkey"
+            columns: ["teen_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guardian_links: {
+        Row: {
+          created_at: string
+          guardian_profile_id: string
+          id: string
+          relation: string
+          teen_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_profile_id: string
+          id?: string
+          relation?: string
+          teen_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          guardian_profile_id?: string
+          id?: string
+          relation?: string
+          teen_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_links_guardian_profile_id_fkey"
+            columns: ["guardian_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_links_teen_profile_id_fkey"
+            columns: ["teen_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_pings: {
+        Row: {
+          accuracy_m: number | null
+          battery_pct: number | null
+          created_at: string
+          id: string
+          lat: number
+          lon: number
+          plan_id: string | null
+          profile_id: string
+          status_label: string | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          battery_pct?: number | null
+          created_at?: string
+          id?: string
+          lat: number
+          lon: number
+          plan_id?: string | null
+          profile_id: string
+          status_label?: string | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          battery_pct?: number | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lon?: number
+          plan_id?: string | null
+          profile_id?: string
+          status_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_pings_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_pings_profile_id_fkey"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -543,6 +835,7 @@ export type Database = {
       }
       plans: {
         Row: {
+          adult_supervised: boolean
           category: string
           compatibility_score: number | null
           created_at: string
@@ -557,12 +850,14 @@ export type Database = {
           search_radius_miles: number | null
           selected_recommendation_id: string | null
           status: Database["public"]["Enums"]["plan_status"]
+          supervision_note: string | null
           title: string
           updated_at: string
           window_end: string | null
           window_start: string | null
         }
         Insert: {
+          adult_supervised?: boolean
           category: string
           compatibility_score?: number | null
           created_at?: string
@@ -577,12 +872,14 @@ export type Database = {
           search_radius_miles?: number | null
           selected_recommendation_id?: string | null
           status?: Database["public"]["Enums"]["plan_status"]
+          supervision_note?: string | null
           title: string
           updated_at?: string
           window_end?: string | null
           window_start?: string | null
         }
         Update: {
+          adult_supervised?: boolean
           category?: string
           compatibility_score?: number | null
           created_at?: string
@@ -597,6 +894,7 @@ export type Database = {
           search_radius_miles?: number | null
           selected_recommendation_id?: string | null
           status?: Database["public"]["Enums"]["plan_status"]
+          supervision_note?: string | null
           title?: string
           updated_at?: string
           window_end?: string | null
@@ -621,6 +919,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           age: number | null
           avatar_emoji: string
           avatar_url: string | null
@@ -637,14 +936,18 @@ export type Database = {
           id: string
           independence_level: string | null
           is_demo: boolean
+          location_sharing_enabled: boolean
           needs_transportation: boolean
           notifications_enabled: boolean
           onboarded: boolean
           parent_approval_required: boolean
           parent_features_enabled: boolean
           personalization_enabled: boolean
+          phone: string | null
           preferred_categories: string[]
           school: string | null
+          share_contact_with_parents: boolean
+          sync_code: string | null
           theme_preference: string
           transport_features_enabled: boolean
           updated_at: string
@@ -652,6 +955,7 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          account_type?: string
           age?: number | null
           avatar_emoji?: string
           avatar_url?: string | null
@@ -668,14 +972,18 @@ export type Database = {
           id?: string
           independence_level?: string | null
           is_demo?: boolean
+          location_sharing_enabled?: boolean
           needs_transportation?: boolean
           notifications_enabled?: boolean
           onboarded?: boolean
           parent_approval_required?: boolean
           parent_features_enabled?: boolean
           personalization_enabled?: boolean
+          phone?: string | null
           preferred_categories?: string[]
           school?: string | null
+          share_contact_with_parents?: boolean
+          sync_code?: string | null
           theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
@@ -683,6 +991,7 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          account_type?: string
           age?: number | null
           avatar_emoji?: string
           avatar_url?: string | null
@@ -699,14 +1008,18 @@ export type Database = {
           id?: string
           independence_level?: string | null
           is_demo?: boolean
+          location_sharing_enabled?: boolean
           needs_transportation?: boolean
           notifications_enabled?: boolean
           onboarded?: boolean
           parent_approval_required?: boolean
           parent_features_enabled?: boolean
           personalization_enabled?: boolean
+          phone?: string | null
           preferred_categories?: string[]
           school?: string | null
+          share_contact_with_parents?: boolean
+          sync_code?: string | null
           theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
@@ -792,36 +1105,102 @@ export type Database = {
           },
         ]
       }
+      safe_zones: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          label: string
+          lat: number
+          lon: number
+          radius_m: number
+          teen_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label: string
+          lat: number
+          lon: number
+          radius_m?: number
+          teen_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          lat?: number
+          lon?: number
+          radius_m?: number
+          teen_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safe_zones_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safe_zones_teen_profile_id_fkey"
+            columns: ["teen_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transport_assignments: {
         Row: {
           car_label: string
           created_at: string
+          departed_at: string | null
           driver_label: string | null
           driver_profile_id: string | null
+          eta_minutes: number | null
           id: string
           leg: string
           passenger_profile_ids: string[]
           plan_id: string
+          vehicle_color: string | null
+          vehicle_desc: string | null
+          vehicle_plate: string | null
         }
         Insert: {
           car_label: string
           created_at?: string
+          departed_at?: string | null
           driver_label?: string | null
           driver_profile_id?: string | null
+          eta_minutes?: number | null
           id?: string
           leg?: string
           passenger_profile_ids?: string[]
           plan_id: string
+          vehicle_color?: string | null
+          vehicle_desc?: string | null
+          vehicle_plate?: string | null
         }
         Update: {
           car_label?: string
           created_at?: string
+          departed_at?: string | null
           driver_label?: string | null
           driver_profile_id?: string | null
+          eta_minutes?: number | null
           id?: string
           leg?: string
           passenger_profile_ids?: string[]
           plan_id?: string
+          vehicle_color?: string | null
+          vehicle_desc?: string | null
+          vehicle_plate?: string | null
         }
         Relationships: [
           {
@@ -937,8 +1316,11 @@ export type Database = {
     Functions: {
       can_see_plan: { Args: { _plan_id: string }; Returns: boolean }
       gen_invite_code: { Args: never; Returns: string }
+      gen_sync_code: { Args: never; Returns: string }
       is_group_admin: { Args: { _group_id: string }; Returns: boolean }
       is_group_member: { Args: { _group_id: string }; Returns: boolean }
+      is_my_guardian: { Args: { _guardian: string }; Returns: boolean }
+      is_my_teen: { Args: { _teen: string }; Returns: boolean }
       is_plan_owner: { Args: { _plan_id: string }; Returns: boolean }
       my_profile_id: { Args: never; Returns: string }
       shares_group_with_me: { Args: { _profile_id: string }; Returns: boolean }
