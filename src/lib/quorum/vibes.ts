@@ -77,10 +77,12 @@ export function directionsUrl(v: {
   address?: string | null;
   title?: string | null;
 }): string {
-  if (v.lat != null && v.lon != null) {
-    const q = encodeURIComponent(`${v.lat},${v.lon}`);
-    return `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+  const named = [v.title, v.address].filter(Boolean).join(" ").trim();
+  if (named) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(named)}`;
   }
-  const q = encodeURIComponent([v.title, v.address].filter(Boolean).join(" "));
-  return `https://www.google.com/maps/dir/?api=1&destination=${q}`;
+  if (v.lat != null && v.lon != null) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${v.lat},${v.lon}`)}`;
+  }
+  return "https://www.google.com/maps";
 }

@@ -20,6 +20,8 @@ export type BrowseSpot = {
 
 export type BrowseSpotsResult = {
   origin: { lat: number; lon: number; label: string } | null;
+  /** Average of every confirmed member's home coordinates, when a group is given. */
+  midpoint: { lat: number; lon: number } | null;
   needsHome: boolean;
   spots: BrowseSpot[];
 };
@@ -64,7 +66,7 @@ export const browseSpots = createServerFn({ method: "POST" })
       const geo = zip ? await geocodeZipServer(zip) : null;
       if (geo) origin = { lat: geo.lat, lon: geo.lon, label: geo.label };
     }
-    if (!origin) return { origin: null, needsHome: true, spots: [] };
+    if (!origin) return { origin: null, midpoint: null, needsHome: true, spots: [] };
 
     const seeds = await searchVenuesGeoapify({
       origin: { lat: origin.lat, lon: origin.lon, label: origin.label, zip: profile?.zip_code ?? "" },
@@ -114,7 +116,27 @@ export const browseSpots = createServerFn({ method: "POST" })
       };
     });
 
-    return { origin, needsHome: false, spots };
+    // Strict rule of 3: when the group is known, keep only the three spots of
+    // this kind nearest the group's geographic midpoint.
+    const based = members.filter((m) => m.lat != null && m.lon != null);
+    let midpoint: { lat: number; lon: number } | null = null;
+    let shortlist = spots;
+    if (based.length) {
+      midpoint = {
+        lat: based.reduce((a, m) => a + m.lat!, 0) / based.length,
+        lon: based.reduce((a, m) => a + m.lon!, 0) / based.length,
+      };
+      const mid = midpoint;
+      shortlist = [...spots]
+        .sort(
+          (a, b) =>
+            haversineMiles(mid, { lat: a.lat, lon: a.lon }) -
+            haversineMiles(mid, { lat: b.lat, lon: b.lon }),
+        )
+        .slice(0, 3);
+    }
+
+    return { origin, midpoint, needsHome: false, spots: shortlist };
   });
 
 /** Adds a browsed spot to a plan as a votable option (plan host only). */

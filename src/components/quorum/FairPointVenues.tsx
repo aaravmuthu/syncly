@@ -77,7 +77,7 @@ export function FairVenueCard({
       <a
         href={directionsUrl(venue)}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         onClick={(e) => e.stopPropagation()}
         className="mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
       >

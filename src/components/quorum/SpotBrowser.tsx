@@ -8,7 +8,7 @@ import { directionsUrl } from "@/components/quorum/FairPointVenues";
 import { ACTIVITY_TABS, FOOD_TABS, SPOT_RADII, type SpotTab } from "@/lib/quorum/spotTabs";
 import { addSpotToPlan, browseSpots, type BrowseSpot } from "@/lib/quorum/spots.functions";
 import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
-import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
+import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 
 /**
  * Live restaurant / activity picker. Searches Geoapify around the member's
@@ -237,17 +237,25 @@ export function SpotBrowser({
               <a
                 href={directionsUrl({ title: s.title, lat: s.lat, lon: s.lon, address: s.address })}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="text-xs font-medium text-primary underline-offset-4 hover:underline"
               >
                 Directions in Maps →
+              </a>
+              <a
+                href={googleReviewsUrl(s.title, s.address)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Read reviews →
               </a>
               <button
                 type="button"
                 onClick={() => setDetail(s)}
                 className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
               >
-                Reviews & photos
+                Photos & highlights
               </button>
             </div>
           </div>

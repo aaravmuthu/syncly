@@ -466,7 +466,7 @@ function PlanPage() {
                         title: r.title,
                       })}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
                     >
                       <span aria-hidden>🧭</span> Directions in Maps
