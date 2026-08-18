@@ -216,7 +216,8 @@ export function SquadChat({
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(16,185,129,0.16),transparent_65%)]"
       />
-      <div ref={scrollRef} className="relative flex-1 space-y-3 overflow-y-auto p-4">
+      <div ref={scrollRef} className="relative flex flex-1 flex-col justify-end overflow-y-auto p-4">
+        <div className="mt-auto space-y-3">
         {q.isLoading ? (
           <div className="flex justify-center py-8">
             <Spinner />
