@@ -118,6 +118,23 @@
     font-family: var(--font-sans);
     letter-spacing: -0.011em;
     min-height: 100dvh;
+    overscroll-behavior-y: none;
+  }
+  html {
+    overscroll-behavior-y: none;
+  }
+  button,
+  a,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button,
+  [role="button"] {
+    transition: transform 0.1s ease-out;
+  }
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.96);
   }
   h1,
   h2,
