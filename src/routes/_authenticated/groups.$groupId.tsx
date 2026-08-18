@@ -1,21 +1,15 @@
 import { Avatar } from "@/components/quorum/Avatar";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { toast } from "sonner";
-import { isValidZip } from "@/lib/quorum/location";
 import { AppShell } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { GroupSettings } from "@/components/quorum/GroupSettings";
 import { GroupAppearance } from "@/components/quorum/GroupAppearance";
-import { Button, Card, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
-import { createPlan, getGroup } from "@/lib/quorum/plan.functions";
-import { getGroupMemory } from "@/lib/quorum/insight.functions";
-import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
-import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
-import { CreatePlanPanel } from "@/components/quorum/CreatePlanPanel";
-import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
+import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
+import { getGroup } from "@/lib/quorum/plan.functions";
+import { PlanWizard } from "@/components/quorum/PlanWizard";
 import { SquadChat } from "@/components/quorum/SquadChat";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
@@ -30,51 +24,24 @@ export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   component: GroupPage,
 });
 
+type Tab = "plans" | "chat" | "settings";
+
+const TABS: { id: Tab; label: string; emoji: string }[] = [
+  { id: "plans", label: "Plans", emoji: "⚡" },
+  { id: "chat", label: "Chat", emoji: "💬" },
+  { id: "settings", label: "Settings", emoji: "⚙️" },
+];
+
 function GroupPage() {
   const { groupId } = Route.useParams();
-  const navigate = useNavigate();
-  const qc = useQueryClient();
   const fetchGroup = useServerFn(getGroup);
   const q = useQuery({
     queryKey: ["group", groupId],
     queryFn: () => fetchGroup({ data: { groupId } }),
   });
 
-  const [creating, setCreating] = useState(false);
-  const [tab, setTab] = useState<"plans" | "chat">("plans");
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<PlanCategory>("dinner");
-  const [windowStart, setWindowStart] = useState("");
-  const [zip, setZip] = useState("");
-  const [vibe, setVibe] = useState<string | null>(null);
-  const [radius, setRadius] = useState<number>(10);
-
-  // Group memory: aggregate patterns from past plans, used only to pre-fill.
-  const fetchMemory = useServerFn(getGroupMemory);
-  const memory = useQuery({
-    queryKey: ["group-memory", groupId],
-    queryFn: () => fetchMemory({ data: { groupId } }),
-  });
-  const topCategory = ((memory.data?.favorite_activities as
-    { category: string; count: number }[] | null) ?? [])[0];
-  const topArea = ((memory.data?.common_locations as { area: string; count: number }[] | null) ??
-    [])[0];
-
-  const create = useMutation({
-    mutationFn: useServerFn(createPlan),
-    onError: (e: unknown) =>
-      toast.error("Could not create the plan", {
-        description: e instanceof Error ? e.message : "Please try again.",
-      }),
-    onSuccess: (plan) => {
-      toast.success("Plan created", {
-        description: "Everyone gets their own private questionnaire.",
-      });
-      void qc.invalidateQueries({ queryKey: ["group", groupId] });
-      void qc.invalidateQueries({ queryKey: ["plans"] });
-      void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
-    },
-  });
+  const [tab, setTab] = useState<Tab>("plans");
+  const [wizard, setWizard] = useState(false);
 
   if (q.isLoading) {
     return (
@@ -87,133 +54,148 @@ function GroupPage() {
 
   const { group, members, plans, myProfileId } = q.data;
   const memberIds = members.map((m) => m.profile_id);
+  const myRole = members.find((m) => m.profile_id === myProfileId)?.role;
+  const canManage = myRole === "owner" || myRole === "admin";
+  const activeIndex = TABS.findIndex((t) => t.id === tab);
 
   return (
     <AppShell
       title={`${group.emoji} ${group.name}`}
       subtitle={`${members.length} members · invite code ${group.invite_code}`}
-      action={
-        <Button onClick={() => setCreating((v) => !v)}>{creating ? "Cancel" : "New plan"}</Button>
-      }
     >
-      <InviteCard code={group.invite_code} groupName={group.name} />
-
-      <SquadStats plans={plans as unknown as { status: string; location_area?: string | null }[]} />
-
-
-      {creating ? (
-        <CreatePlanPanel groupId={groupId} memberIds={memberIds} inviteCode={group.invite_code} />
-      ) : null}
-
-      <section className="mt-6 space-y-3">
-        <div className="flex gap-2">
-          {(["plans", "chat"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={
-                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition " +
-                (tab === t
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:text-foreground")
-              }
-            >
-              {t === "plans" ? "Plans" : "Squad Chat 💬"}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {tab === "chat" ? (
-        <SquadChat groupId={groupId} className="mt-4 h-[65vh]" />
-      ) : (
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Plans
-        </h2>
-        {plans.length === 0 ? (
-          <Card>
-            <p className="text-sm text-muted-foreground">No plans in this group yet.</p>
-          </Card>
-        ) : null}
-        {plans.map((p) => (
-          <Link key={p.id} to="/plans/$planId" params={{ planId: p.id }}>
-            <Card className="flex items-center justify-between transition hover:border-primary/40">
-              <div>
-                <p className="font-display font-semibold">{p.title}</p>
-                <p className="text-xs text-muted-foreground capitalize">{p.category}</p>
-              </div>
-              <Pill tone={p.status === "finalized" ? "good" : "accent"}>{p.status}</Pill>
-            </Card>
-          </Link>
+      {/* Sub-tab bar */}
+      <div className="relative mt-1 grid grid-cols-3 gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
+        <span
+          className="absolute inset-y-1 left-1 rounded-xl bg-primary/15 ring-1 ring-primary/40 transition-transform duration-300 ease-out"
+          style={{ width: "calc((100% - 0.5rem) / 3)", transform: `translateX(${activeIndex * 100}%)` }}
+          aria-hidden
+        />
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`tap-target relative z-10 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 ${
+              tab === t.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span className="mr-1">{t.emoji}</span>
+            {t.label}
+          </button>
         ))}
-      </section>
-      )}
+      </div>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Members
-        </h2>
-        <Card className="divide-y divide-border">
-          {members.map((m) => {
-            const p = m.profiles as {
-              display_name?: string;
-              avatar_emoji?: string;
-              avatar_url?: string | null;
-              bio?: string | null;
-              school?: string | null;
-              grad_year?: number | null;
-            } | null;
-            const meta = [p?.school, p?.grad_year ? `Class of ${p.grad_year}` : null]
-              .filter(Boolean)
-              .join(" · ");
-            return (
-              <div
-                key={m.profile_id}
-                className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
-              >
-                <Avatar
-                  url={p?.avatar_url}
-                  emoji={p?.avatar_emoji}
-                  name={p?.display_name}
-                  size={36}
+      <div className="overflow-hidden">
+        <div key={tab} className="animate-fade-in mt-4">
+          {tab === "plans" ? (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <SquadStats
+                  plans={plans as unknown as { status: string; location_area?: string | null }[]}
                 />
-                <div className="flex-1">
-                  <span className="block text-sm font-medium">{p?.display_name ?? "Member"}</span>
-                  {meta ? (
-                    <span className="block text-xs text-muted-foreground">{meta}</span>
-                  ) : null}
-                  {p?.bio ? <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p> : null}
-                </div>
-                <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
+                <Button onClick={() => setWizard(true)}>+ Launch New Plan</Button>
               </div>
-            );
-          })}
-        </Card>
-      </section>
 
-      {members.find((m) => m.profile_id === myProfileId)?.role === "owner" ||
-      members.find((m) => m.profile_id === myProfileId)?.role === "admin" ? (
-        <section className="mt-8">
-          <GroupAppearance
-            groupId={groupId}
-            initial={{
-              name: group.name,
-              emoji: (group as { emoji?: string }).emoji,
-              avatar_url: (group as { avatar_url?: string | null }).avatar_url ?? null,
-              cover_theme: (group as { cover_theme?: string | null }).cover_theme ?? null,
-            }}
-          />
-        </section>
+              {plans.length === 0 ? (
+                <Card>
+                  <p className="text-sm text-muted-foreground">
+                    No plans yet — tap “Launch New Plan” to pick a vibe.
+                  </p>
+                </Card>
+              ) : null}
+
+              {plans.map((p) => (
+                <Link key={p.id} to="/plans/$planId" params={{ planId: p.id }}>
+                  <Card className="flex items-center justify-between transition hover:border-primary/40 active:scale-[0.99]">
+                    <div>
+                      <p className="font-display font-semibold">{p.title}</p>
+                      <p className="text-xs capitalize text-muted-foreground">{p.category}</p>
+                    </div>
+                    <Pill tone={p.status === "finalized" ? "good" : "accent"}>{p.status}</Pill>
+                  </Card>
+                </Link>
+              ))}
+            </section>
+          ) : null}
+
+          {tab === "chat" ? <SquadChat groupId={groupId} className="h-[70vh]" /> : null}
+
+          {tab === "settings" ? (
+            <section className="space-y-6">
+              <InviteCard code={group.invite_code} groupName={group.name} />
+
+              {canManage ? (
+                <GroupAppearance
+                  groupId={groupId}
+                  initial={{
+                    name: group.name,
+                    emoji: (group as { emoji?: string }).emoji,
+                    avatar_url: (group as { avatar_url?: string | null }).avatar_url ?? null,
+                    cover_theme: (group as { cover_theme?: string | null }).cover_theme ?? null,
+                  }}
+                />
+              ) : null}
+
+              <div>
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Members
+                </h2>
+                <Card className="divide-y divide-border">
+                  {members.map((m) => {
+                    const p = m.profiles as {
+                      display_name?: string;
+                      avatar_emoji?: string;
+                      avatar_url?: string | null;
+                      bio?: string | null;
+                      school?: string | null;
+                      grad_year?: number | null;
+                    } | null;
+                    const meta = [p?.school, p?.grad_year ? `Class of ${p.grad_year}` : null]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <div
+                        key={m.profile_id}
+                        className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+                      >
+                        <Avatar
+                          url={p?.avatar_url}
+                          emoji={p?.avatar_emoji}
+                          name={p?.display_name}
+                          size={36}
+                        />
+                        <div className="flex-1">
+                          <span className="block text-sm font-medium">
+                            {p?.display_name ?? "Member"}
+                          </span>
+                          {meta ? (
+                            <span className="block text-xs text-muted-foreground">{meta}</span>
+                          ) : null}
+                          {p?.bio ? (
+                            <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p>
+                          ) : null}
+                        </div>
+                        <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
+                      </div>
+                    );
+                  })}
+                </Card>
+              </div>
+
+              <GroupSettings
+                groupId={groupId}
+                groupName={group.name}
+                members={members as never}
+                myProfileId={myProfileId}
+              />
+            </section>
+          ) : null}
+        </div>
+      </div>
+
+      {wizard ? (
+        <PlanWizard groupId={groupId} memberIds={memberIds} onClose={() => setWizard(false)} />
       ) : null}
-
-      <GroupSettings
-        groupId={groupId}
-        groupName={group.name}
-        members={members as never}
-        myProfileId={myProfileId}
-      />
     </AppShell>
   );
 }
@@ -228,10 +210,9 @@ function SquadStats({ plans }: { plans: { status: string; location_area?: string
   }
   const top = [...spots.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   return (
-    <p className="mt-3 text-xs text-muted-foreground">
+    <p className="text-xs text-muted-foreground">
       {done.length} hangout{done.length === 1 ? "" : "s"} completed
       {top ? ` • Most frequent spot: ${top}` : ""}
     </p>
   );
 }
-
