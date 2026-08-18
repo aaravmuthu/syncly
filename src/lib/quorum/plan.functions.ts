@@ -445,6 +445,19 @@ export const getDashboard = createServerFn({ method: "GET" })
             kind: c.kind as string,
             detail: (c.detail as string | null) ?? null,
           })),
+          rides: (rides ?? [])
+            .filter((r) => r.plan_id === p.id)
+            .map((r) => ({
+              id: r.id as string,
+              car_label: (r.car_label as string) ?? "Car",
+              leg: (r.leg as string) ?? "there",
+              seats_taken: ((r.passenger_profile_ids as string[] | null) ?? []).length,
+              driver_name:
+                ((r.driver as unknown as { display_name?: string } | null)?.display_name ??
+                  (r.driver_label as string | null)) ||
+                null,
+            })),
+
           alternatives: alternatives.map((r) => ({
             id: r.id as string,
             title: r.title as string,
