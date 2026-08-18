@@ -121,7 +121,7 @@ export function VenueDetailModal({
           <a
             href={googleReviewsUrl(venue.title, venue.address)}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center rounded-xl border border-border px-3 py-2 text-xs font-medium hover:bg-secondary"
           >
             Read 100+ reviews on Google Maps →
@@ -134,7 +134,7 @@ export function VenueDetailModal({
               lon: venue.lon ?? null,
             })}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center rounded-xl border border-border px-3 py-2 text-xs font-medium hover:bg-secondary"
           >
             🧭 Directions

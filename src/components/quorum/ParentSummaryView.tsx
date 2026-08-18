@@ -157,7 +157,7 @@ export function ParentSummaryView({ planId }: { planId: string }) {
                 title: s.venue.title,
               })}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="mt-3 inline-flex rounded-2xl bg-secondary px-3.5 py-2 text-sm font-semibold hover:bg-secondary/70"
             >
               Open directions in Maps ↗
