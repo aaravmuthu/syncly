@@ -538,6 +538,11 @@ export const createPlan = createServerFn({ method: "POST" })
       type: "plan_created",
       message: `${plan.title} needs everyone's private answers`,
     });
+    const { postSystemEvent } = await import("./chat.server");
+    await postSystemEvent(data.groupId, plan.id, {
+      type: "plan_created",
+      content: `New plan launched: ${plan.title}`,
+    });
     const { notifyGroupMembers } = await import("./notify.server");
     await notifyGroupMembers(data.groupId, {
       type: "plan_created",
