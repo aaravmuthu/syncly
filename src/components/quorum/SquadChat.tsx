@@ -87,6 +87,17 @@ export function SquadChat({
     return map;
   }, [reads, me]);
 
+  /* only the newest of my messages that has been read shows a receipt */
+  const lastSeenMineId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i];
+      if (m && m.sender_id === me && !m.system_type && (readsByMessage.get(m.id)?.length ?? 0) > 0) {
+        return m.id;
+      }
+    }
+    return null;
+  }, [messages, me, readsByMessage]);
+
   /* live message + receipt stream ---------------------------------- */
   useEffect(() => {
     const channel = supabase
@@ -161,13 +172,19 @@ export function SquadChat({
     });
   }, [me, myName]);
 
-  async function submit(content: string, mediaUrl?: string | null) {
+  async function submit(content: string, mediaUrl?: string | null, replyToId?: string | null) {
     const body = content.trim();
     if (!body && !mediaUrl) return;
     setBusy(true);
     try {
       await send({
-        data: { groupId, planId, content: body, mediaUrl: mediaUrl ?? null, replyToId: replyTo?.id ?? null },
+        data: {
+          groupId,
+          planId,
+          content: body,
+          mediaUrl: mediaUrl ?? null,
+          replyToId: replyToId ?? replyTo?.id ?? null,
+        },
       });
       setText("");
       setReplyTo(null);
@@ -216,7 +233,8 @@ export function SquadChat({
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(16,185,129,0.16),transparent_65%)]"
       />
-      <div ref={scrollRef} className="relative flex-1 space-y-3 overflow-y-auto p-4">
+      <div ref={scrollRef} className="relative flex flex-1 flex-col justify-end overflow-y-auto p-4">
+        <div className="mt-auto space-y-3">
         {q.isLoading ? (
           <div className="flex justify-center py-8">
             <Spinner />
@@ -236,8 +254,9 @@ export function SquadChat({
               msg={m}
               mine={m.sender_id === me}
               isHost={Boolean(hostId && m.sender_id === hostId)}
-              readers={readsByMessage.get(m.id) ?? []}
+              readers={m.id === lastSeenMineId ? readsByMessage.get(m.id) ?? [] : []}
               onReply={() => setReplyTo(m)}
+              onReact={(emoji) => void submit(emoji, null, m.id)}
             />
           ),
         )}
@@ -250,7 +269,9 @@ export function SquadChat({
               : `${typingNames.length} people are typing...`}
           </div>
         ) : null}
+        </div>
       </div>
+
 
       {replyTo ? (
         <div className="mx-4 mb-2 flex items-start gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur">
@@ -272,26 +293,6 @@ export function SquadChat({
       ) : null}
 
       <div className="relative border-t border-white/10 bg-white/[0.03] p-3">
-        <div className="group/dock relative mb-2">
-          <button
-            type="button"
-            className="tap-target rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:border-emerald-400/40"
-          >
-            React 😀
-          </button>
-          <div className="pointer-events-none absolute bottom-full left-0 mb-2 flex gap-1.5 rounded-full border border-white/10 bg-neutral-900/95 p-1.5 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-150 group-focus-within/dock:pointer-events-auto group-focus-within/dock:translate-y-0 group-focus-within/dock:opacity-100 group-hover/dock:pointer-events-auto group-hover/dock:translate-y-0 group-hover/dock:opacity-100 translate-y-1">
-            {QUICK.map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => void submit(e)}
-                className="rounded-full px-2 py-1 text-lg transition hover:scale-125 hover:bg-emerald-400/10"
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
@@ -361,15 +362,17 @@ function Bubble({
   isHost,
   readers,
   onReply,
+  onReact,
 }: {
   msg: Msg;
   mine: boolean;
   isHost: boolean;
   readers: Read[];
   onReply: () => void;
+  onReact: (emoji: string) => void;
 }) {
   return (
-    <div className={cn("flex items-end gap-2", mine && "flex-row-reverse")}>
+    <div className={cn("group/msg flex items-end gap-2", mine && "flex-row-reverse")}>
       {!mine ? (
         <Avatar
           url={msg.profiles?.avatar_url}
@@ -389,6 +392,24 @@ function Bubble({
             ) : null}
           </p>
         ) : null}
+        <div className="relative">
+        <div
+          className={cn(
+            "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-white/10 bg-neutral-900/95 p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
+            mine ? "right-0" : "left-0",
+          )}
+        >
+          {QUICK.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => onReact(e)}
+              className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-emerald-400/10"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onDoubleClick={onReply}
@@ -418,6 +439,7 @@ function Bubble({
           ) : null}
           {msg.content ? <span className="whitespace-pre-wrap break-words">{msg.content}</span> : null}
         </button>
+        </div>
         <p className="px-1 text-[10px] text-white/35">
           {time(msg.created_at)}
           {mine ? <span className="ml-1">{readers.length > 0 ? "✓✓" : "✓"}</span> : null}
@@ -450,27 +472,25 @@ function Bubble({
 function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => void }) {
   const meta = (msg.meta ?? {}) as { emoji?: string; title?: string; cost?: string };
   const isPlan = msg.system_type === "plan_created";
-  const icon = meta.emoji ?? (isPlan ? "⚡" : msg.system_type === "ride_update" ? "🚗" : "🔒");
+  const icon = meta.emoji ?? (isPlan ? "⚽" : msg.system_type === "ride_update" ? "🚗" : "🔒");
+  const tag = isPlan
+    ? "⚡ New plan proposal"
+    : msg.system_type === "ride_update"
+      ? "🚗 Ride update"
+      : "🔒 Plan locked in";
+  const title = meta.title ?? msg.content;
   return (
-    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 shadow-xl backdrop-blur">
-      <div className="flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-400/15 text-xl ring-1 ring-emerald-400/30">
-          {icon}
+    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 text-center shadow-xl backdrop-blur">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">{tag}</p>
+      <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-emerald-50">
+        <span>{icon}</span>
+        <span className="truncate">{title}</span>
+      </p>
+      {meta.cost ? (
+        <span className="mt-2 inline-block rounded-full bg-black/25 px-2.5 py-0.5 text-[11px] text-emerald-100/80">
+          {meta.cost}
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300/80">
-            {isPlan ? "New plan launched" : msg.system_type === "ride_update" ? "Ride update" : "Plan locked in"}
-          </p>
-          <p className="truncate text-sm font-semibold text-emerald-50">
-            {meta.title ?? msg.content}
-          </p>
-          {meta.cost ? (
-            <span className="mt-1 inline-block rounded-full bg-black/25 px-2 py-0.5 text-[11px] text-emerald-100/80">
-              {meta.cost}
-            </span>
-          ) : null}
-        </div>
-      </div>
+      ) : null}
       {isPlan && msg.plan_id ? (
         <Button className="mt-3 w-full py-2 text-xs" onClick={() => onVote(msg.plan_id!)}>
           Vote Now ⚡
