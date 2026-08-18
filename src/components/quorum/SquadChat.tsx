@@ -368,9 +368,10 @@ function Bubble({
   isHost: boolean;
   readers: Read[];
   onReply: () => void;
+  onReact: (emoji: string) => void;
 }) {
   return (
-    <div className={cn("flex items-end gap-2", mine && "flex-row-reverse")}>
+    <div className={cn("group/msg flex items-end gap-2", mine && "flex-row-reverse")}>
       {!mine ? (
         <Avatar
           url={msg.profiles?.avatar_url}
