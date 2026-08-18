@@ -133,6 +133,8 @@ export const respondToApproval = createServerFn({ method: "POST" })
 
 export type ParentSummary = {
   planId: string;
+  childName: string;
+  returnTime: string | null;
   title: string;
   category: string;
   status: string;
@@ -313,8 +315,19 @@ export const getParentSummary = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
+    // Expected return home = end time + the host's drive home.
+    const host = roster.find((r) => r.host) ?? roster[0] ?? null;
+    let returnTime: string | null = null;
+    if (endTime) {
+      const extra = host?.distanceMiles != null ? milesToDriveMinutes(host.distanceMiles) : 0;
+      const total = (mins(endTime) + extra) % 1440;
+      returnTime = `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+    }
+
     return {
       planId: plan.id,
+      childName: host?.name ?? "your child",
+      returnTime,
       title: plan.title,
       category: plan.category,
       status: plan.status,
