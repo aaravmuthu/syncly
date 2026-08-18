@@ -671,6 +671,7 @@ function PlanPage() {
                 const link = `${window.location.origin}/approve/${planId}`;
                 void navigator.clipboard.writeText(link);
                 setApprovalLink(link);
+                toast.success("Parent link copied", { description: link });
               }}
             >
               Share parent summary link
