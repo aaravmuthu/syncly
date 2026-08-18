@@ -237,8 +237,9 @@ export function SquadChat({
               msg={m}
               mine={m.sender_id === me}
               isHost={Boolean(hostId && m.sender_id === hostId)}
-              readers={readsByMessage.get(m.id) ?? []}
+              readers={m.id === lastSeenMineId ? readsByMessage.get(m.id) ?? [] : []}
               onReply={() => setReplyTo(m)}
+              onReact={(emoji) => void submit(emoji, null, m.id)}
             />
           ),
         )}
