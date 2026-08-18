@@ -64,7 +64,7 @@ function GuardianHub() {
 
   const link = useMutation({
     mutationFn: useServerFn(linkTeen),
-    onSuccess: (r) => {
+    onSuccess: (r: { teenName: string }) => {
       setCode("");
       void qc.invalidateQueries({ queryKey: ["guardian-hub"] });
       toast.success(`Linked to ${r.teenName}`);
@@ -317,8 +317,8 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
               />
             </Field>
             <AddressPicker
-              value=""
-              onChange={() => undefined}
+              value={zoneLabel}
+              placeholder="Search the address"
               onPick={(p) => setZonePoint({ lat: p.lat, lon: p.lon })}
             />
             <div className="flex flex-wrap gap-2">
