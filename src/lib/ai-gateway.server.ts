@@ -68,7 +68,7 @@ export const GEMINI_MODEL = "gemini-flash-latest";
 /**
  * Primary AI model. Reads GEMINI_API_KEY at call time (never module scope) and
  * talks straight to Google's REST endpoint:
- * https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=...
+ * https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=...
  * Falls back to the Lovable AI Gateway when no Gemini key is configured.
  * Throws a friendly error when neither is available so callers can degrade.
  */
