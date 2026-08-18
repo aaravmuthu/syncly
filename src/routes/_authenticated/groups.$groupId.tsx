@@ -104,16 +104,8 @@ function GroupPage() {
                 </Card>
               ) : null}
 
-              {plans.map((p) => (
-                <Link key={p.id} to="/plans/$planId" params={{ planId: p.id }}>
-                  <Card className="flex items-center justify-between transition hover:border-primary/40 active:scale-[0.99]">
-                    <div>
-                      <p className="font-display font-semibold">{p.title}</p>
-                      <p className="text-xs capitalize text-muted-foreground">{p.category}</p>
-                    </div>
-                    <Pill tone={p.status === "finalized" ? "good" : "accent"}>{p.status}</Pill>
-                  </Card>
-                </Link>
+              {(plans as unknown as GroupPlan[]).map((p) => (
+                <PlanCard key={p.id} plan={p} />
               ))}
             </section>
           ) : null}
