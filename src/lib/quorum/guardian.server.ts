@@ -388,7 +388,12 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
     const myPlans = (plans ?? [])
       .filter((p) => myPlanIds.has(p.id as string))
       .map((p) => {
-        const rec = p.recommendation as unknown as Record<string, unknown> | null;
+        const rec =
+          ((recs ?? []).find((r) => r.id === p.selected_recommendation_id) as unknown as Record<
+            string,
+            unknown
+          > | null) ?? null;
+
         const planRides = (rides ?? [])
           .filter((r) => r.plan_id === p.id)
           .map((r) => {
