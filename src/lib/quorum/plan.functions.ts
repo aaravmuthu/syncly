@@ -73,6 +73,10 @@ export const saveProfile = createServerFn({ method: "POST" })
       "home_address",
       "home_lat",
       "home_lon",
+      "account_type",
+      "phone",
+      "share_contact_with_parents",
+      "location_sharing_enabled",
     ] as const;
     const nullable = new Set([
       "curfew_time",
@@ -87,6 +91,7 @@ export const saveProfile = createServerFn({ method: "POST" })
       "bio",
       "school",
       "grad_year",
+      "phone",
     ]);
     const patch: Record<string, unknown> = {};
     for (const k of allowed) {
@@ -401,7 +406,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         supabase
           .from("transport_assignments")
           .select(
-            "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
+            "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, vehicle_desc, vehicle_color, vehicle_plate, departed_at, eta_minutes, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
           )
           .in("plan_id", ids),
       ]);
@@ -795,5 +800,18 @@ export const requestParentApproval = createServerFn({ method: "POST" })
       .select("id, token")
       .single();
     if (error) throw new Error(error.message);
+    const { alertGuardians } = await import("./guardian.server");
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("title")
+      .eq("id", data.planId)
+      .maybeSingle();
+    await alertGuardians(me, {
+      type: "approval_requested",
+      title: `Approval needed: ${plan?.title ?? "a new plan"}`,
+      body: "Open the Family hub to see the venue, cost, rides and timing.",
+      planId: data.planId,
+      priority: "high",
+    });
     return row;
   });

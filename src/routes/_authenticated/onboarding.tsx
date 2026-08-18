@@ -34,6 +34,7 @@ function Onboarding() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, unknown>>({
     avatar_emoji: "🙂",
+    account_type: "teen",
     preferred_categories: [] as string[],
     parent_features_enabled: false,
     transport_features_enabled: true,
@@ -50,7 +51,7 @@ function Onboarding() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["me"] });
       toast.success("You're all set", { description: "Your defaults will pre-fill every questionnaire." });
-      void navigate({ to: "/home" });
+      void navigate({ to: form["account_type"] === "guardian" ? "/guardian" : "/home" });
     },
     onError: (e: unknown) =>
       toast.error("Couldn't save your setup", {
@@ -67,6 +68,27 @@ function Onboarding() {
       caption: "Just a name and a face for your groups.",
       body: (
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { id: "teen", label: "I'm planning with friends", icon: "🎒" },
+              { id: "guardian", label: "I'm a parent", icon: "🛡️" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => set("account_type", opt.id)}
+                className={cn(
+                  "rounded-2xl border px-3 py-3 text-left text-sm font-medium transition",
+                  form["account_type"] === opt.id
+                    ? "border-primary/50 bg-primary/10"
+                    : "border-border hover:bg-secondary",
+                )}
+              >
+                <span className="mr-1.5">{opt.icon}</span>
+                {opt.label}
+              </button>
+            ))}
+          </div>
           <Field label="Display name">
             <input
               className={inputClass}

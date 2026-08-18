@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Sparkles, KeyRound } from "lucide-react";
 import { AppShell } from "@/components/quorum/AppShell";
+import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
@@ -157,6 +158,10 @@ function HomePage() {
             </Link>
           </div>
         ) : null}
+        {me.data && me.data.account_type !== "guardian" ? (
+          <TeenSafetyBar sharing={Boolean(me.data.location_sharing_enabled)} />
+        ) : null}
+
         <WeekStrip
           weekStart={weekStart}
           selected={selectedDay}

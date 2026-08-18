@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/quorum/AppShell";
+import { CarpoolShield } from "@/components/quorum/guardian/CarpoolShield";
 import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsights";
 import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
 import {
@@ -203,6 +204,12 @@ function PlanPage() {
           approvalStatus={latestApproval}
         />
       ) : null}
+
+      <CarpoolShield
+        planId={data.plan.id}
+        rides={data.transport}
+        meProfileId={data.meProfileId}
+      />
 
       {data.plan.created_by === data.meProfileId ? (
         <Card className="border-primary/25 bg-primary/[0.06]">

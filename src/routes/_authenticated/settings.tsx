@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { TimePicker } from "@/components/quorum/TimePicker";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
+import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -283,6 +284,80 @@ function SettingsPage() {
           </Field>
         </div>
       </Card>
+
+      <Card className="mt-4 space-y-4">
+        <div>
+          <span className="text-sm font-medium">I use Quorum as</span>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Parents get the Family hub. Teens get the pairing code and safety tools.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { id: "teen", label: "Teen", icon: "🎒" },
+            { id: "guardian", label: "Parent", icon: "🛡️" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => {
+                set("account_type", opt.id);
+                save.mutate({ data: { account_type: opt.id } });
+              }}
+              className={cn(
+                "rounded-2xl border px-3 py-2.5 text-sm font-medium transition",
+                (form["account_type"] ?? "teen") === opt.id
+                  ? "border-primary/50 bg-primary/10"
+                  : "border-border hover:bg-secondary",
+              )}
+            >
+              <span className="mr-1.5">{opt.icon}</span>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <Field label="Phone" hint="Only shared with linked parents if you allow it below.">
+          <input
+            className={inputClass}
+            value={String(form["phone"] ?? "")}
+            placeholder="(555) 555-5555"
+            onChange={(e) => set("phone", e.target.value)}
+            onBlur={() => save.mutate({ data: { phone: form["phone"] } })}
+          />
+        </Field>
+        <label className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
+          <span className="text-sm font-medium">Share my number with parents on the plan</span>
+          <input
+            type="checkbox"
+            className="size-5 accent-emerald-500"
+            checked={Boolean(form["share_contact_with_parents"])}
+            onChange={(e) => {
+              set("share_contact_with_parents", e.target.checked);
+              save.mutate({ data: { share_contact_with_parents: e.target.checked } });
+            }}
+          />
+        </label>
+      </Card>
+
+      {(form["account_type"] ?? "teen") === "guardian" ? (
+        <Card className="mt-4 space-y-3">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Family hub</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Link your teens with their 6-digit code to see plans, rides and safe arrivals.
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => void navigate({ to: "/guardian" })}>
+            Open the Family hub
+          </Button>
+        </Card>
+      ) : (
+        <div className="mt-4">
+          <GuardianSyncCard sharing={Boolean(form["location_sharing_enabled"])} />
+        </div>
+      )}
+
+
 
       <Card className="mt-4">
         <span className="text-sm font-medium">Appearance</span>

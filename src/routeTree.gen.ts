@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedGuardianRouteImport } from './routes/_authenticated/guardian'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -53,6 +54,11 @@ const DemoRoute = DemoRouteImport.update({
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGuardianRoute = AuthenticatedGuardianRouteImport.update({
+  id: '/guardian',
+  path: '/guardian',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/auth-callback': typeof AuthCallbackRoute
   '/demo': typeof DemoRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/guardian': typeof AuthenticatedGuardianRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/auth-callback': typeof AuthCallbackRoute
   '/demo': typeof DemoRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/guardian': typeof AuthenticatedGuardianRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/auth-callback': typeof AuthCallbackRoute
   '/demo': typeof DemoRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/guardian': typeof AuthenticatedGuardianRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth-callback'
     | '/demo'
     | '/activity'
+    | '/guardian'
     | '/home'
     | '/onboarding'
     | '/settings'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/auth-callback'
     | '/demo'
     | '/activity'
+    | '/guardian'
     | '/home'
     | '/onboarding'
     | '/settings'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/auth-callback'
     | '/demo'
     | '/_authenticated/activity'
+    | '/_authenticated/guardian'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
     | '/_authenticated/settings'
@@ -270,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/guardian': {
+      id: '/_authenticated/guardian'
+      path: '/guardian'
+      fullPath: '/guardian'
+      preLoaderRoute: typeof AuthenticatedGuardianRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -347,6 +366,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedGuardianRoute: typeof AuthenticatedGuardianRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -358,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedGuardianRoute: AuthenticatedGuardianRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
