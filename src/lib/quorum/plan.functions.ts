@@ -789,17 +789,22 @@ export const requestParentApproval = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) throw new Error("Profile missing");
-    const { data: row, error } = await supabase
+    // The token is a bearer credential: it is generated here and handed back
+    // exactly once. Clients can no longer read the token column at all.
+    const token = crypto.randomUUID().replace(/-/g, "");
+    const { data: inserted, error } = await supabase
       .from("parent_approvals")
       .insert({
         plan_id: data.planId,
         profile_id: me,
+        token,
         parent_name: data.parentName ?? null,
         parent_email: data.parentEmail ?? null,
       })
-      .select("id, token")
+      .select("id")
       .single();
     if (error) throw new Error(error.message);
+    const row = { id: inserted.id, token };
     const { alertGuardians } = await import("./guardian.server");
     const { data: plan } = await supabase
       .from("plans")
