@@ -377,7 +377,7 @@ export const getDashboard = createServerFn({ method: "GET" })
     if (list.length === 0) return { myProfileId: myId ?? null, plans: [] };
 
     const ids = list.map((p) => p.id as string);
-    const [{ data: parts }, { data: votes }, { data: recs }, { data: conflicts }] =
+    const [{ data: parts }, { data: votes }, { data: recs }, { data: conflicts }, { data: rides }] =
       await Promise.all([
         supabase
           .from("plan_participants")
@@ -398,7 +398,14 @@ export const getDashboard = createServerFn({ method: "GET" })
           .select("id, plan_id, kind, detail")
           .in("plan_id", ids)
           .eq("resolved", false),
+        supabase
+          .from("transport_assignments")
+          .select(
+            "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
+          )
+          .in("plan_id", ids),
       ]);
+
 
     return {
       myProfileId: (myId as string | null) ?? null,
@@ -438,6 +445,19 @@ export const getDashboard = createServerFn({ method: "GET" })
             kind: c.kind as string,
             detail: (c.detail as string | null) ?? null,
           })),
+          rides: (rides ?? [])
+            .filter((r) => r.plan_id === p.id)
+            .map((r) => ({
+              id: r.id as string,
+              car_label: (r.car_label as string) ?? "Car",
+              leg: (r.leg as string) ?? "there",
+              seats_taken: ((r.passenger_profile_ids as string[] | null) ?? []).length,
+              driver_name:
+                ((r.driver as unknown as { display_name?: string } | null)?.display_name ??
+                  (r.driver_label as string | null)) ||
+                null,
+            })),
+
           alternatives: alternatives.map((r) => ({
             id: r.id as string,
             title: r.title as string,
