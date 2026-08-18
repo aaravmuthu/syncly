@@ -130,14 +130,21 @@ export async function runRlsProbe(userClient: AnyClient, myProfileId: string): P
     const me = myProfileId;
     const { data: tokenRows, error: tokenErr } = await userClient
       .from("parent_approvals")
-      .select("token")
-      .neq("profile_id", me)
-      .limit(5);
-    const leaked = (tokenRows ?? []).filter(Boolean).length;
+      .select("id, token")
+      .limit(20);
+    const ids = (tokenRows ?? []).map((r: { id: string }) => r.id);
+    const { data: ownerRows } = ids.length
+      ? await admin.from("parent_approvals").select("id, profile_id").in("id", ids)
+      : { data: [] as { id: string; profile_id: string }[] };
+    const leaked = (ownerRows ?? []).filter(
+      (r: { profile_id: string }) => r.profile_id !== me,
+    ).length;
     add(
       "parent_approvals · token exposure",
       Boolean(tokenErr) || leaked === 0,
-      tokenErr ? `blocked (${tokenErr.code ?? "error"})` : `${leaked} tokens readable`,
+      tokenErr
+        ? `blocked (${tokenErr.code ?? "error"})`
+        : `${leaked} of ${ids.length} readable rows belong to someone else`,
     );
 
     // 7. group messages owned by others cannot be edited or removed
