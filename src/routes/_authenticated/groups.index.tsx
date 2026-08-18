@@ -83,7 +83,7 @@ function GroupsPage() {
         </div>
       }
     >
-      <div className="sticky top-2 z-20 -mx-1 mb-5 flex gap-2 overflow-x-auto px-1 py-1">
+      <div className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1">
         {FILTERS.map((f) => (
           <button
             key={f.id}
