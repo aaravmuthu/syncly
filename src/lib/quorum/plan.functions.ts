@@ -293,6 +293,11 @@ export const joinGroup = createServerFn({ method: "POST" })
       type: "member_joined",
       message: "A new member joined the group",
     });
+    const { postSystemEvent } = await import("./chat.server");
+    await postSystemEvent(data.groupId, plan.id, {
+      type: "plan_created",
+      content: `New plan launched: ${plan.title}`,
+    });
     const { notifyGroupMembers } = await import("./notify.server");
     await notifyGroupMembers(group.id, {
       type: "member_joined",
@@ -715,6 +720,18 @@ export const finalizePlan = createServerFn({ method: "POST" })
       body: "Check the plan hub for time, place, cost and rides.",
     });
     if (plan?.group_id) {
+      const { data: rec } = await supabase
+        .from("recommendations")
+        .select("title, location_name, suggested_start")
+        .eq("id", data.recommendationId)
+        .maybeSingle();
+      const where = rec?.location_name ?? rec?.title ?? "the chosen spot";
+      const when = rec?.suggested_start ? ` at ${String(rec.suggested_start).slice(0, 5)}` : "";
+      const { postSystemEvent } = await import("./chat.server");
+      await postSystemEvent(plan.group_id, data.planId, {
+        type: "plan_locked",
+        content: `${plan.title ?? "The plan"} is locked in — ${where}${when}`,
+      });
       const { refreshGroupMemory } = await import("./memory.server");
       await refreshGroupMemory(plan.group_id);
     }
