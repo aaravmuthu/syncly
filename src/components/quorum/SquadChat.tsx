@@ -208,11 +208,15 @@ export function SquadChat({
   return (
     <div
       className={cn(
-        "flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/70 shadow-2xl backdrop-blur-xl",
+        "relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/85 shadow-2xl backdrop-blur-xl",
         className,
       )}
     >
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(16,185,129,0.16),transparent_65%)]"
+      />
+      <div ref={scrollRef} className="relative flex-1 space-y-3 overflow-y-auto p-4">
         {q.isLoading ? (
           <div className="flex justify-center py-8">
             <Spinner />
@@ -267,18 +271,26 @@ export function SquadChat({
         </div>
       ) : null}
 
-      <div className="border-t border-white/10 bg-white/[0.03] p-3">
-        <div className="mb-2 flex gap-1.5">
-          {QUICK.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => void submit(e)}
-              className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-sm transition hover:border-emerald-400/40 hover:bg-emerald-400/10"
-            >
-              {e}
-            </button>
-          ))}
+      <div className="relative border-t border-white/10 bg-white/[0.03] p-3">
+        <div className="group/dock relative mb-2">
+          <button
+            type="button"
+            className="tap-target rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:border-emerald-400/40"
+          >
+            React 😀
+          </button>
+          <div className="pointer-events-none absolute bottom-full left-0 mb-2 flex gap-1.5 rounded-full border border-white/10 bg-neutral-900/95 p-1.5 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-150 group-focus-within/dock:pointer-events-auto group-focus-within/dock:translate-y-0 group-focus-within/dock:opacity-100 group-hover/dock:pointer-events-auto group-hover/dock:translate-y-0 group-hover/dock:opacity-100 translate-y-1">
+            {QUICK.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => void submit(e)}
+                className="rounded-full px-2 py-1 text-lg transition hover:scale-125 hover:bg-emerald-400/10"
+              >
+                {e}
+              </button>
+            ))}
+          </div>
         </div>
         <form
           className="flex items-end gap-2"
@@ -382,10 +394,10 @@ function Bubble({
           onDoubleClick={onReply}
           onClick={onReply}
           className={cn(
-            "block w-full rounded-2xl border px-3.5 py-2 text-left text-sm transition",
+            "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
             mine
-              ? "border-emerald-400/25 bg-emerald-500/15 text-emerald-50"
-              : "border-white/10 bg-white/[0.06] text-white/90 hover:bg-white/10",
+              ? "rounded-tr-none bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
+              : "rounded-tl-none border border-white/10 bg-neutral-800/80 text-neutral-100 hover:bg-neutral-800",
           )}
         >
           {msg.reply_to ? (
@@ -436,20 +448,35 @@ function Bubble({
 }
 
 function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => void }) {
-  const icon =
-    msg.system_type === "plan_created" ? "⚡" : msg.system_type === "ride_update" ? "🚗" : "🔒";
+  const meta = (msg.meta ?? {}) as { emoji?: string; title?: string; cost?: string };
+  const isPlan = msg.system_type === "plan_created";
+  const icon = meta.emoji ?? (isPlan ? "⚡" : msg.system_type === "ride_update" ? "🚗" : "🔒");
   return (
-    <div className="mx-auto w-full max-w-md rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.07] px-4 py-3 text-center backdrop-blur">
-      <p className="text-sm text-emerald-100">
-        <span className="mr-1.5">{icon}</span>
-        {msg.content}
-      </p>
-      {msg.system_type === "plan_created" && msg.plan_id ? (
-        <Button className="mt-2.5 px-4 py-1.5 text-xs" onClick={() => onVote(msg.plan_id!)}>
-          Vote now
+    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 shadow-xl backdrop-blur">
+      <div className="flex items-start gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-400/15 text-xl ring-1 ring-emerald-400/30">
+          {icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300/80">
+            {isPlan ? "New plan launched" : msg.system_type === "ride_update" ? "Ride update" : "Plan locked in"}
+          </p>
+          <p className="truncate text-sm font-semibold text-emerald-50">
+            {meta.title ?? msg.content}
+          </p>
+          {meta.cost ? (
+            <span className="mt-1 inline-block rounded-full bg-black/25 px-2 py-0.5 text-[11px] text-emerald-100/80">
+              {meta.cost}
+            </span>
+          ) : null}
+        </div>
+      </div>
+      {isPlan && msg.plan_id ? (
+        <Button className="mt-3 w-full py-2 text-xs" onClick={() => onVote(msg.plan_id!)}>
+          Vote Now ⚡
         </Button>
       ) : null}
-      <p className="mt-1 text-[10px] text-white/35">{time(msg.created_at)}</p>
+      <p className="mt-2 text-[10px] text-white/35">{time(msg.created_at)}</p>
     </div>
   );
 }
