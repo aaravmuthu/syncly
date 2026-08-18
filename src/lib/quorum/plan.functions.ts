@@ -800,5 +800,18 @@ export const requestParentApproval = createServerFn({ method: "POST" })
       .select("id, token")
       .single();
     if (error) throw new Error(error.message);
+    const { alertGuardians } = await import("./guardian.server");
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("title")
+      .eq("id", data.planId)
+      .maybeSingle();
+    await alertGuardians(me, {
+      type: "approval_requested",
+      title: `Approval needed: ${plan?.title ?? "a new plan"}`,
+      body: "Open the Family hub to see the venue, cost, rides and timing.",
+      planId: data.planId,
+      priority: "high",
+    });
     return row;
   });
