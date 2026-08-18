@@ -1,5 +1,6 @@
 // Server-only. Lovable AI Gateway provider for the AI SDK.
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
 
@@ -61,8 +62,25 @@ export function createLovableAiGatewayProvider(lovableApiKey: string, initialRun
 /** The one chat model Quorum uses. */
 export const QUORUM_AI_MODEL = "google/gemini-3.6-flash";
 
-/** Throws a friendly error when the key is missing so callers can degrade. */
+/** Direct Google Gemini model id used for every AI feature. */
+export const GEMINI_MODEL = "gemini-flash-latest";
+
+/**
+ * Primary AI model. Reads GEMINI_API_KEY at call time (never module scope) and
+ * talks straight to Google's REST endpoint:
+ * https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=...
+ * Falls back to the Lovable AI Gateway when no Gemini key is configured.
+ * Throws a friendly error when neither is available so callers can degrade.
+ */
 export function lovableAiModel() {
+  const geminiKey = process.env["GEMINI_API_KEY"];
+  if (geminiKey) {
+    const google = createGoogleGenerativeAI({
+      apiKey: geminiKey,
+      baseURL: "https://generativelanguage.googleapis.com/v1beta",
+    });
+    return google(GEMINI_MODEL);
+  }
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured");
   return createLovableAiGatewayProvider(key)(QUORUM_AI_MODEL);
