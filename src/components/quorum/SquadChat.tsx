@@ -439,6 +439,7 @@ function Bubble({
           ) : null}
           {msg.content ? <span className="whitespace-pre-wrap break-words">{msg.content}</span> : null}
         </button>
+        </div>
         <p className="px-1 text-[10px] text-white/35">
           {time(msg.created_at)}
           {mine ? <span className="ml-1">{readers.length > 0 ? "✓✓" : "✓"}</span> : null}
