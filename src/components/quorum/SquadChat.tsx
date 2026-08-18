@@ -252,7 +252,9 @@ export function SquadChat({
               : `${typingNames.length} people are typing...`}
           </div>
         ) : null}
+        </div>
       </div>
+
 
       {replyTo ? (
         <div className="mx-4 mb-2 flex items-start gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur">
