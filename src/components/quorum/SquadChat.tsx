@@ -392,6 +392,24 @@ function Bubble({
             ) : null}
           </p>
         ) : null}
+        <div className="relative">
+        <div
+          className={cn(
+            "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-white/10 bg-neutral-900/95 p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
+            mine ? "right-0" : "left-0",
+          )}
+        >
+          {QUICK.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => onReact(e)}
+              className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-emerald-400/10"
+            >
+              {e}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onDoubleClick={onReply}
