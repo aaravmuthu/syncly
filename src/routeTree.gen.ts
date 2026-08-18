@@ -18,6 +18,7 @@ import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedGuardianRouteImport } from './routes/_authenticated/guardian'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedRlsCheckRouteImport } from './routes/_authenticated/rls-check'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
@@ -69,6 +70,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRlsCheckRoute = AuthenticatedRlsCheckRouteImport.update({
+  id: '/rls-check',
+  path: '/rls-check',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/guardian': typeof AuthenticatedGuardianRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/rls-check': typeof AuthenticatedRlsCheckRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/join/$code': typeof JoinCodeRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/guardian': typeof AuthenticatedGuardianRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/rls-check': typeof AuthenticatedRlsCheckRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/join/$code': typeof JoinCodeRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/_authenticated/guardian': typeof AuthenticatedGuardianRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/rls-check': typeof AuthenticatedRlsCheckRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/join/$code': typeof JoinCodeRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/guardian'
     | '/home'
     | '/onboarding'
+    | '/rls-check'
     | '/settings'
     | '/approve/$token'
     | '/join/$code'
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/guardian'
     | '/home'
     | '/onboarding'
+    | '/rls-check'
     | '/settings'
     | '/approve/$token'
     | '/join/$code'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/_authenticated/guardian'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
+    | '/_authenticated/rls-check'
     | '/_authenticated/settings'
     | '/approve/$token'
     | '/join/$code'
@@ -305,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/rls-check': {
+      id: '/_authenticated/rls-check'
+      path: '/rls-check'
+      fullPath: '/rls-check'
+      preLoaderRoute: typeof AuthenticatedRlsCheckRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -369,6 +388,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGuardianRoute: typeof AuthenticatedGuardianRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedRlsCheckRoute: typeof AuthenticatedRlsCheckRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
   AuthenticatedPlansPlanIdRoute: typeof AuthenticatedPlansPlanIdRoute
@@ -381,6 +401,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGuardianRoute: AuthenticatedGuardianRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedRlsCheckRoute: AuthenticatedRlsCheckRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
   AuthenticatedPlansPlanIdRoute: AuthenticatedPlansPlanIdRoute,
