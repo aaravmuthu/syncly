@@ -9,13 +9,17 @@ import { ThemeToggle } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
 import { getMe } from "@/lib/quorum/plan.functions";
 
-const NAV = [
+const BASE_NAV = [
   { to: "/home", label: "Home", icon: "🏠" },
   { to: "/groups", label: "Groups", icon: "👥" },
   { to: "/plans", label: "Plans", icon: "⚡" },
   { to: "/activity", label: "Activity", icon: "💬" },
   { to: "/settings", label: "Profile", icon: "👤" },
 ] as const;
+
+const FAMILY_TAB = { to: "/guardian", label: "Family", icon: "🛡️" } as const;
+
+type NavItem = { to: string; label: string; icon: string };
 
 export function AppShell({
   children,
@@ -31,6 +35,11 @@ export function AppShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
+  // Parents swap the Groups tab for their Family hub — the rest stays identical.
+  const NAV: NavItem[] =
+    me.data?.account_type === "guardian"
+      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[4]]
+      : [...BASE_NAV];
 
 
   return (

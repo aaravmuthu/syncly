@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { TimePicker } from "@/components/quorum/TimePicker";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
+import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
