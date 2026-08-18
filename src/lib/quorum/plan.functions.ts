@@ -406,7 +406,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         supabase
           .from("transport_assignments")
           .select(
-            "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
+            "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, vehicle_desc, vehicle_color, vehicle_plate, departed_at, eta_minutes, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
           )
           .in("plan_id", ids),
       ]);
