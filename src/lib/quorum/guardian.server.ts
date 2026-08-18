@@ -319,7 +319,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
       ? db
           .from("plans")
           .select(
-            "id, group_id, title, category, status, window_start, window_end, est_cost_min, est_cost_max, adult_supervised, supervision_note, selected_recommendation_id, groups(name, emoji), recommendation:recommendations!plans_selected_recommendation_id_fkey(title, location_name, address, lat, lon, suggested_start, suggested_end)",
+            "id, group_id, title, category, status, window_start, window_end, est_cost_min, est_cost_max, adult_supervised, supervision_note, selected_recommendation_id, groups(name, emoji)",
           )
           .in("id", planIds)
       : Promise.resolve({ data: [] as never[] }),
