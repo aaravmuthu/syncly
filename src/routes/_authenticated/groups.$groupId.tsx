@@ -16,6 +16,7 @@ import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { CreatePlanPanel } from "@/components/quorum/CreatePlanPanel";
 import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
+import { SquadChat } from "@/components/quorum/SquadChat";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
@@ -40,6 +41,7 @@ function GroupPage() {
   });
 
   const [creating, setCreating] = useState(false);
+  const [tab, setTab] = useState<"plans" | "chat">("plans");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<PlanCategory>("dinner");
   const [windowStart, setWindowStart] = useState("");
@@ -103,6 +105,29 @@ function GroupPage() {
         <CreatePlanPanel groupId={groupId} memberIds={memberIds} inviteCode={group.invite_code} />
       ) : null}
 
+      <section className="mt-6 space-y-3">
+        <div className="flex gap-2">
+          {(["plans", "chat"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition " +
+                (tab === t
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground")
+              }
+            >
+              {t === "plans" ? "Plans" : "Squad Chat 💬"}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {tab === "chat" ? (
+        <SquadChat groupId={groupId} className="mt-4 h-[65vh]" />
+      ) : (
       <section className="space-y-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Plans
@@ -124,6 +149,7 @@ function GroupPage() {
           </Link>
         ))}
       </section>
+      )}
 
       <section className="mt-8">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
