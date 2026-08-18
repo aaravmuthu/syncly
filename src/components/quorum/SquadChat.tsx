@@ -287,26 +287,6 @@ export function SquadChat({
       ) : null}
 
       <div className="relative border-t border-white/10 bg-white/[0.03] p-3">
-        <div className="group/dock relative mb-2">
-          <button
-            type="button"
-            className="tap-target rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition hover:border-emerald-400/40"
-          >
-            React 😀
-          </button>
-          <div className="pointer-events-none absolute bottom-full left-0 mb-2 flex gap-1.5 rounded-full border border-white/10 bg-neutral-900/95 p-1.5 opacity-0 shadow-2xl backdrop-blur-xl transition-all duration-150 group-focus-within/dock:pointer-events-auto group-focus-within/dock:translate-y-0 group-focus-within/dock:opacity-100 group-hover/dock:pointer-events-auto group-hover/dock:translate-y-0 group-hover/dock:opacity-100 translate-y-1">
-            {QUICK.map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => void submit(e)}
-                className="rounded-full px-2 py-1 text-lg transition hover:scale-125 hover:bg-emerald-400/10"
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        </div>
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
