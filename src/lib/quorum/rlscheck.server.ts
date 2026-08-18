@@ -12,7 +12,7 @@ type AnyClient = SupabaseClient<any, any, any>;
  * must affect zero rows or error. Nothing real is ever touched, and the probe
  * rows are removed afterwards with the service role.
  */
-export async function runRlsProbe(userClient: AnyClient): Promise<RlsCheck[]> {
+export async function runRlsProbe(userClient: AnyClient, myProfileId: string): Promise<RlsCheck[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const admin = supabaseAdmin as unknown as AnyClient;
   const checks: RlsCheck[] = [];
@@ -127,7 +127,7 @@ export async function runRlsProbe(userClient: AnyClient): Promise<RlsCheck[]> {
     );
 
     // 6. parent approval tokens must never leak to non-owners
-    const me = await currentProfileId(userClient);
+    const me = myProfileId;
     const { data: tokenRows, error: tokenErr } = await userClient
       .from("parent_approvals")
       .select("token")
@@ -168,7 +168,3 @@ export async function runRlsProbe(userClient: AnyClient): Promise<RlsCheck[]> {
   return checks;
 }
 
-async function currentProfileId(userClient: AnyClient): Promise<string> {
-  const { data } = await userClient.rpc("my_profile_id");
-  return (data as string | null) ?? "00000000-0000-0000-0000-000000000000";
-}
