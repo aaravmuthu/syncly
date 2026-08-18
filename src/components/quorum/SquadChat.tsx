@@ -472,27 +472,25 @@ function Bubble({
 function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => void }) {
   const meta = (msg.meta ?? {}) as { emoji?: string; title?: string; cost?: string };
   const isPlan = msg.system_type === "plan_created";
-  const icon = meta.emoji ?? (isPlan ? "⚡" : msg.system_type === "ride_update" ? "🚗" : "🔒");
+  const icon = meta.emoji ?? (isPlan ? "⚽" : msg.system_type === "ride_update" ? "🚗" : "🔒");
+  const tag = isPlan
+    ? "⚡ New plan proposal"
+    : msg.system_type === "ride_update"
+      ? "🚗 Ride update"
+      : "🔒 Plan locked in";
+  const title = meta.title ?? msg.content;
   return (
-    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 shadow-xl backdrop-blur">
-      <div className="flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-400/15 text-xl ring-1 ring-emerald-400/30">
-          {icon}
+    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 text-center shadow-xl backdrop-blur">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">{tag}</p>
+      <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-emerald-50">
+        <span>{icon}</span>
+        <span className="truncate">{title}</span>
+      </p>
+      {meta.cost ? (
+        <span className="mt-2 inline-block rounded-full bg-black/25 px-2.5 py-0.5 text-[11px] text-emerald-100/80">
+          {meta.cost}
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-300/80">
-            {isPlan ? "New plan launched" : msg.system_type === "ride_update" ? "Ride update" : "Plan locked in"}
-          </p>
-          <p className="truncate text-sm font-semibold text-emerald-50">
-            {meta.title ?? msg.content}
-          </p>
-          {meta.cost ? (
-            <span className="mt-1 inline-block rounded-full bg-black/25 px-2 py-0.5 text-[11px] text-emerald-100/80">
-              {meta.cost}
-            </span>
-          ) : null}
-        </div>
-      </div>
+      ) : null}
       {isPlan && msg.plan_id ? (
         <Button className="mt-3 w-full py-2 text-xs" onClick={() => onVote(msg.plan_id!)}>
           Vote Now ⚡
