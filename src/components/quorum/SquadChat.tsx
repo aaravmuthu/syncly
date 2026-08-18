@@ -362,6 +362,7 @@ function Bubble({
   isHost,
   readers,
   onReply,
+  onReact,
 }: {
   msg: Msg;
   mine: boolean;
