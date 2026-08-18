@@ -528,9 +528,15 @@ export const createPlan = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     const ids = new Set([me, ...(data.participantIds ?? [])]);
-    await supabase
-      .from("plan_participants")
-      .insert([...ids].map((profile_id) => ({ plan_id: plan.id, profile_id })));
+    await supabase.from("plan_participants").insert(
+      [...ids].map((profile_id) => ({
+        plan_id: plan.id,
+        profile_id,
+        // The host is automatically in — they organized it.
+        responded: profile_id === me,
+        attending: profile_id === me,
+      })),
+    );
     await supabase.from("activity_events").insert({
       group_id: data.groupId,
       plan_id: plan.id,
