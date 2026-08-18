@@ -172,13 +172,19 @@ export function SquadChat({
     });
   }, [me, myName]);
 
-  async function submit(content: string, mediaUrl?: string | null) {
+  async function submit(content: string, mediaUrl?: string | null, replyToId?: string | null) {
     const body = content.trim();
     if (!body && !mediaUrl) return;
     setBusy(true);
     try {
       await send({
-        data: { groupId, planId, content: body, mediaUrl: mediaUrl ?? null, replyToId: replyTo?.id ?? null },
+        data: {
+          groupId,
+          planId,
+          content: body,
+          mediaUrl: mediaUrl ?? null,
+          replyToId: replyToId ?? replyTo?.id ?? null,
+        },
       });
       setText("");
       setReplyTo(null);
