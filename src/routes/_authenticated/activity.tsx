@@ -251,7 +251,7 @@ function ActivityPage() {
         </div>
       ) : null}
 
-      <div className="sticky top-0 z-10 -mx-1 mb-4 flex gap-2 overflow-x-auto px-1 py-2 backdrop-blur-md">
+      <div className="scrollbar-none sticky top-0 z-10 -mx-1 mb-4 flex snap-x gap-2 overflow-x-auto px-1 py-2 backdrop-blur-md">
         {FILTERS.map((f) => (
           <button
             key={f.id}
