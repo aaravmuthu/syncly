@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/quorum/Avatar";
-import { Button, Card, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
+import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import {
   getMyGuardians,
   getMySyncCode,
@@ -129,8 +129,6 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
           })
         )}
       </div>
-
-      <input type="hidden" className={inputClass} />
     </Card>
   );
 }
