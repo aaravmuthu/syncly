@@ -341,7 +341,18 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
       : Promise.resolve({ data: [] as never[] }),
   ]);
 
+  const recIds = (plans ?? [])
+    .map((p) => p.selected_recommendation_id as string | null)
+    .filter((x): x is string => Boolean(x));
+  const { data: recs } = recIds.length
+    ? await db
+        .from("recommendations")
+        .select("id, title, location_name, address, lat, lon, suggested_start, suggested_end")
+        .in("id", recIds)
+    : { data: [] as never[] };
+
   // Parent-to-parent network: guardians of everyone attending the same plans.
+
   const attendeeIds = [...new Set((roster ?? []).map((r) => r.profile_id as string))];
   const { data: otherLinks } = attendeeIds.length
     ? await db
