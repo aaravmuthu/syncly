@@ -51,7 +51,7 @@ function Onboarding() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["me"] });
       toast.success("You're all set", { description: "Your defaults will pre-fill every questionnaire." });
-      void navigate({ to: "/home" });
+      void navigate({ to: form["account_type"] === "guardian" ? "/guardian" : "/home" });
     },
     onError: (e: unknown) =>
       toast.error("Couldn't save your setup", {
