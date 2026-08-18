@@ -293,11 +293,6 @@ export const joinGroup = createServerFn({ method: "POST" })
       type: "member_joined",
       message: "A new member joined the group",
     });
-    const { postSystemEvent } = await import("./chat.server");
-    await postSystemEvent(data.groupId, plan.id, {
-      type: "plan_created",
-      content: `New plan launched: ${plan.title}`,
-    });
     const { notifyGroupMembers } = await import("./notify.server");
     await notifyGroupMembers(group.id, {
       type: "member_joined",
