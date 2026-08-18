@@ -550,6 +550,13 @@ export const createPlan = createServerFn({ method: "POST" })
     await postSystemEvent(data.groupId, plan.id, {
       type: "plan_created",
       content: `New plan launched: ${plan.title}`,
+      meta: {
+        title: plan.title,
+        cost:
+          plan.est_cost_min != null || plan.est_cost_max != null
+            ? `💵 $${plan.est_cost_min ?? plan.est_cost_max}–$${plan.est_cost_max ?? plan.est_cost_min}/person`
+            : undefined,
+      },
     });
     const { notifyGroupMembers } = await import("./notify.server");
     await notifyGroupMembers(data.groupId, {

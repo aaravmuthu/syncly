@@ -112,7 +112,7 @@ function GroupPage() {
             </section>
           ) : null}
 
-          {tab === "chat" ? <SquadChat groupId={groupId} className="h-[70vh]" /> : null}
+          {tab === "chat" ? <SquadChat groupId={groupId} className="h-[calc(100dvh-18rem)] min-h-[440px]" /> : null}
 
           {tab === "settings" ? (
             <section className="space-y-6">
