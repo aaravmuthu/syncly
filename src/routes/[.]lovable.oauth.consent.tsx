@@ -73,9 +73,9 @@ function Consent() {
   return (
     <main className="min-h-dvh grid place-items-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
-        <h1 className="text-xl font-semibold">Connect {clientName} to AuraHAC</h1>
+        <h1 className="text-xl font-semibold">Connect {clientName} to Quorum</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {clientName} will be able to call AuraHAC&apos;s tools while you are signed in.
+          {clientName} will be able to call Quorum&apos;s tools while you are signed in.
         </p>
         {email ? (
           <p className="mt-3 text-xs text-muted-foreground">Signed in as {email}</p>
@@ -84,9 +84,10 @@ function Consent() {
           <p className="mt-3 text-xs text-muted-foreground">Requested access: {details.scope}</p>
         ) : null}
         <p className="mt-3 text-xs text-muted-foreground">
-          This does not bypass AuraHAC&apos;s permissions. Your Home Access Center credentials and
-          grades stay encrypted on your own device and are never exposed to connected apps.
+          This does not bypass Quorum&apos;s permissions. Your private constraints stay hidden from
+          the group and are never exposed to connected apps.
         </p>
+
         {error ? (
           <p role="alert" className="mt-3 text-sm text-destructive">
             {error}
