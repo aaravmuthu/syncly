@@ -1,18 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-/** Resolve the caller's profile row id from their auth session. */
-async function myProfileId(supabase: { rpc: (fn: "my_profile_id") => unknown }) {
-  const { data } = (await supabase.rpc("my_profile_id")) as { data: string | null };
-  if (!data) throw new Error("Profile missing");
-  return data;
-}
+import { resolveMyProfileId } from "./me";
 
 
 export const getMySyncCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { ensureSyncCode } = await import("./guardian.server");
     return { code: await ensureSyncCode(me) };
   });
@@ -21,7 +15,7 @@ export const linkTeen = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { code: string }) => d)
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { linkTeenByCode } = await import("./guardian.server");
     return linkTeenByCode(me, data.code);
   });
@@ -41,7 +35,7 @@ export const unlinkGuardian = createServerFn({ method: "POST" })
 export const getMyGuardians = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { data, error } = await context.supabase
       .from("guardian_links")
       .select(
@@ -55,7 +49,7 @@ export const getMyGuardians = createServerFn({ method: "GET" })
 export const getGuardianHub = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { buildGuardianDashboard } = await import("./guardian.server");
     return buildGuardianDashboard(me);
   });
@@ -64,7 +58,7 @@ export const setLocationSharing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { enabled: boolean }) => d)
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { error } = await context.supabase
       .from("profiles")
       .update({ location_sharing_enabled: data.enabled })
@@ -86,7 +80,7 @@ export const pushLocation = createServerFn({ method: "POST" })
     }) => d,
   )
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { data: prof } = await context.supabase
       .from("profiles")
       .select("location_sharing_enabled")
@@ -110,7 +104,7 @@ export const addSafeZone = createServerFn({ method: "POST" })
     }) => d,
   )
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { assertLinked } = await import("./guardian.server");
     await assertLinked(me, data.teenProfileId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -146,7 +140,7 @@ export const decidePlanApproval = createServerFn({ method: "POST" })
     }) => d,
   )
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { decideApproval } = await import("./guardian.server");
     return decideApproval(me, data.approvalId, data.decision, data.condition ?? null);
   });
@@ -155,7 +149,7 @@ export const askForCheckin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { teenProfileId: string; note?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { requestCheckin } = await import("./guardian.server");
     return requestCheckin(me, data.teenProfileId, data.note ?? null);
   });
@@ -166,7 +160,7 @@ export const respondToCheckin = createServerFn({ method: "POST" })
     (d: { id: string; lat?: number | null; lon?: number | null; placeLabel?: string | null }) => d,
   )
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { answerCheckin } = await import("./guardian.server");
     return answerCheckin(me, data);
   });
@@ -174,7 +168,7 @@ export const respondToCheckin = createServerFn({ method: "POST" })
 export const getMyCheckins = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { data, error } = await context.supabase
       .from("checkin_requests")
       .select("id, status, note, created_at")
@@ -189,7 +183,7 @@ export const sendDelay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { planId?: string | null; reason: string; minutes: number }) => d)
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { sendDelayPing } = await import("./guardian.server");
     return sendDelayPing(me, data);
   });
@@ -198,7 +192,7 @@ export const raiseSos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { lat?: number | null; lon?: number | null; note?: string | null }) => d)
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { alertGuardians, recordPing } = await import("./guardian.server");
     if (data.lat != null && data.lon != null) {
       await recordPing(me, { lat: data.lat, lon: data.lon, statusLabel: "SOS" });
@@ -221,7 +215,7 @@ export const markRideLeaving = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { assignmentId: string }) => d)
   .handler(async ({ data, context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { markRideDeparted } = await import("./guardian.server");
     return markRideDeparted(me, data.assignmentId);
   });
@@ -254,7 +248,7 @@ export const saveVehicleDetails = createServerFn({ method: "POST" })
 export const markAlertsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const me = await myProfileId(context.supabase);
+    const me = await resolveMyProfileId(context.supabase);
     const { error } = await context.supabase
       .from("guardian_alerts")
       .update({ read: true })
