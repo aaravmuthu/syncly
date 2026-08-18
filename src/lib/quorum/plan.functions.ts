@@ -73,6 +73,10 @@ export const saveProfile = createServerFn({ method: "POST" })
       "home_address",
       "home_lat",
       "home_lon",
+      "account_type",
+      "phone",
+      "share_contact_with_parents",
+      "location_sharing_enabled",
     ] as const;
     const nullable = new Set([
       "curfew_time",
@@ -87,6 +91,7 @@ export const saveProfile = createServerFn({ method: "POST" })
       "bio",
       "school",
       "grad_year",
+      "phone",
     ]);
     const patch: Record<string, unknown> = {};
     for (const k of allowed) {
