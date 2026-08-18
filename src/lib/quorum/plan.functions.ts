@@ -322,7 +322,9 @@ export const getGroup = createServerFn({ method: "GET" })
       .eq("group_id", data.groupId);
     const { data: plans } = await supabase
       .from("plans")
-      .select("*")
+      .select(
+        "*, plan_participants(profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)), plan_conflicts(id, resolved)",
+      )
       .eq("group_id", data.groupId)
       .order("created_at", { ascending: false });
     const { data: activity } = await supabase
