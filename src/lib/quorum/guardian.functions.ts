@@ -2,13 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Resolve the caller's profile row id from their auth session. */
-async function myProfileId(supabase: {
-  rpc: (fn: "my_profile_id") => Promise<{ data: string | null }>;
-}) {
-  const { data } = await supabase.rpc("my_profile_id");
+async function myProfileId(supabase: { rpc: (fn: "my_profile_id") => unknown }) {
+  const { data } = (await supabase.rpc("my_profile_id")) as { data: string | null };
   if (!data) throw new Error("Profile missing");
   return data;
 }
+
 
 export const getMySyncCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
