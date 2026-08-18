@@ -40,10 +40,17 @@ describe("avatars storage object policies (avatars_no_delete_check_used_select_o
     }
   });
 
-  it("exposes no client-side INSERT/UPDATE/DELETE policies on avatars", () => {
-    const writes = list.filter((p) => ["INSERT", "UPDATE", "DELETE", "ALL"].includes(p.cmd));
-    expect(writes.map((p) => p.policyname)).toEqual([]);
+  it("scopes every write policy (insert/update/delete) to the user's own folder", () => {
+    for (const cmd of ["INSERT", "UPDATE", "DELETE"]) {
+      const rows = byCmd(list, cmd);
+      expect(rows.length, `${cmd} policy missing`).toBe(1);
+      const expr = norm(`${rows[0]!.qual} ${rows[0]!.with_check}`);
+      expect(expr).toContain("storage.foldername(name))[1]");
+      expect(expr).toContain("auth.uid()");
+    }
+    expect(byCmd(list, "ALL")).toEqual([]);
   });
+
 });
 
 describe("group_messages policies (group_messages_no_update_delete_policy)", () => {
