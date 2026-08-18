@@ -63,7 +63,7 @@ export function createLovableAiGatewayProvider(lovableApiKey: string, initialRun
 export const QUORUM_AI_MODEL = "google/gemini-3.6-flash";
 
 /** Direct Google Gemini model id used for every AI feature. */
-export const GEMINI_MODEL = "gemini-2.0-flash";
+export const GEMINI_MODEL = "gemini-flash-latest";
 
 /**
  * Primary AI model. Reads GEMINI_API_KEY at call time (never module scope) and
