@@ -1,5 +1,5 @@
 import { VenueMap, type MapVenue } from "@/components/quorum/VenueMap";
-import type { TeenCard } from "@/lib/quorum/guardian.server";
+import type { TeenCard } from "@/lib/quorum/guardian.types";
 
 /**
  * Live radar for one teen: their last known ping, their safe zones and the
