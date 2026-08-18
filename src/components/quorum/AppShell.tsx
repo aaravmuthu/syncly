@@ -34,8 +34,8 @@ export function AppShell({
 
 
   return (
-    <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 backdrop-blur-xl">
+    <div className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl">
+      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link to="/home" className="flex items-center gap-2">
             <Wordmark className="h-6" />
