@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://vpaiqsanmtllcqxsgflv.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "quorum",
+      "version": "0.1.0",
+      "title": "Quorum"
+    },
+    "tools": [
+      {
+        "name": "list_circles",
+        "title": "List my circles",
+        "description": "List the Quorum circles (groups) the signed-in member belongs to, with their invite kind and role.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_plans",
+        "title": "List my plans",
+        "description": "List Quorum plans visible to the signed-in member, newest first. Optionally filter by circle id or plan status.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "circleId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Only return plans in this circle."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "collecting",
+                "recommending",
+                "voting",
+                "finalized",
+                "cancelled",
+                "completed"
+              ],
+              "description": "Only return plans with this status."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_plan",
+        "title": "Get plan details",
+        "description": "Get one Quorum plan: timing, status, who is attending, the shortlisted options with vote counts, and ride assignments.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "planId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The plan id."
+            }
+          },
+          "required": [
+            "planId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_plan",
+        "title": "Create a plan",
+        "description": "Create a new Quorum plan in one of the signed-in member's circles and mark them as the attending host.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "circleId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The circle the plan belongs to."
+            },
+            "title": {
+              "type": "string",
+              "description": "Short plan title, e.g. 'Friday dinner'."
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "food",
+                "outdoors",
+                "entertainment",
+                "sports",
+                "study",
+                "other"
+              ],
+              "description": "Plan category."
+            },
+            "windowStart": {
+              "type": "string",
+              "description": "ISO timestamp for the start of the plan window."
+            },
+            "windowEnd": {
+              "type": "string",
+              "description": "ISO timestamp for the end of the plan window."
+            },
+            "locationArea": {
+              "type": "string",
+              "description": "Rough area, e.g. 'Frisco, TX'."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Anything the group should know."
+            }
+          },
+          "required": [
+            "circleId",
+            "title",
+            "category"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "rsvp_plan",
+        "title": "RSVP to a plan",
+        "description": "Set whether the signed-in member is attending a Quorum plan.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "planId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The plan to respond to."
+            },
+            "attending": {
+              "type": "boolean",
+              "description": "True if going, false if not."
+            }
+          },
+          "required": [
+            "planId",
+            "attending"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "send_circle_message",
+        "title": "Send a circle message",
+        "description": "Post a message into a Quorum circle's squad chat as the signed-in member.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "circleId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The circle to post in."
+            },
+            "content": {
+              "type": "string",
+              "description": "The message text."
+            },
+            "planId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Attach the message to a specific plan thread."
+            }
+          },
+          "required": [
+            "circleId",
+            "content"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
