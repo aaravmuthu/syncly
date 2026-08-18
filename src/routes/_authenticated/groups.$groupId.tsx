@@ -11,6 +11,8 @@ import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { getGroup } from "@/lib/quorum/plan.functions";
 import { PlanWizard } from "@/components/quorum/PlanWizard";
 import { SquadChat } from "@/components/quorum/SquadChat";
+import { categoryMeta } from "@/lib/quorum/types";
+import { estCostLabel } from "@/lib/quorum/estcost";
 
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
@@ -206,5 +208,122 @@ function SquadStats({ plans }: { plans: { status: string; location_area?: string
       {done.length} hangout{done.length === 1 ? "" : "s"} completed
       {top ? ` • Most frequent spot: ${top}` : ""}
     </p>
+  );
+}
+
+type GroupPlan = {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  window_start: string | null;
+  location_area: string | null;
+  est_cost_min: number | null;
+  est_cost_max: number | null;
+  plan_participants?: {
+    profile_id: string;
+    responded: boolean;
+    attending: boolean;
+    profiles?: {
+      display_name?: string | null;
+      avatar_emoji?: string | null;
+      avatar_url?: string | null;
+    } | null;
+  }[];
+  plan_conflicts?: { id: string; resolved: boolean }[];
+};
+
+const STATUS_PILL: Record<string, { label: string; tone: "good" | "accent" | "warn" }> = {
+  finalized: { label: "🔒 Locked In", tone: "good" },
+  completed: { label: "✨ Completed", tone: "good" },
+  voting: { label: "⚡ Voting Active", tone: "accent" },
+  recommending: { label: "⚡ Voting Active", tone: "accent" },
+  collecting: { label: "⚡ Voting Active", tone: "accent" },
+  draft: { label: "📝 Draft", tone: "warn" },
+  cancelled: { label: "✕ Cancelled", tone: "warn" },
+};
+
+function whenLabel(iso: string | null) {
+  if (!iso) return "⏰ Time TBD";
+  const d = new Date(iso);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const day = sameDay
+    ? "Today"
+    : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  return `⏰ ${day} @ ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+}
+
+/** Rich, tappable plan card for the group Plans tab. */
+function PlanCard({ plan }: { plan: GroupPlan }) {
+  const meta = categoryMeta(plan.category);
+  const status = STATUS_PILL[plan.status] ?? { label: plan.status, tone: "accent" as const };
+  const going = (plan.plan_participants ?? []).filter((p) => p.responded && p.attending);
+  const conflicts = (plan.plan_conflicts ?? []).filter((c) => !c.resolved).length;
+  const cost = estCostLabel(plan.est_cost_min, plan.est_cost_max);
+  const names = going.map((g) => g.profiles?.display_name ?? "Member");
+
+  return (
+    <Link to="/plans/$planId" params={{ planId: plan.id }} className="block">
+      <div className="rounded-2xl border border-white/10 bg-neutral-900/90 p-4 shadow-lg transition-all hover:border-emerald-500/30 active:scale-[0.99]">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-lg ring-1 ring-primary/25">
+              {meta.emoji}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate font-display font-semibold">{plan.title}</p>
+              <p className="truncate text-xs capitalize text-muted-foreground">
+                {meta.label}
+                {plan.location_area ? ` · ${plan.location_area}` : ""}
+              </p>
+            </div>
+          </div>
+          <Pill tone={status.tone}>{status.label}</Pill>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span className="rounded-full bg-secondary/70 px-2.5 py-1">{cost ?? "💵 Cost TBD"}</span>
+          <span className="rounded-full bg-secondary/70 px-2.5 py-1">
+            {whenLabel(plan.window_start)}
+          </span>
+          {conflicts === 0 && plan.window_start ? (
+            <span className="rounded-full bg-success/12 px-2.5 py-1 text-success">
+              Compliant with all curfews
+            </span>
+          ) : null}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex -space-x-2">
+              {going.slice(0, 4).map((g) => (
+                <Avatar
+                  key={g.profile_id}
+                  url={g.profiles?.avatar_url}
+                  emoji={g.profiles?.avatar_emoji}
+                  name={g.profiles?.display_name}
+                  size={24}
+                  className="ring-2 ring-neutral-900"
+                />
+              ))}
+            </div>
+            <span className="truncate text-xs text-muted-foreground">
+              {going.length === 0
+                ? "No responses yet"
+                : `👍 ${names[0]}${going.length > 1 ? ` + ${going.length - 1} other${going.length > 2 ? "s" : ""}` : ""}`}
+            </span>
+            {conflicts > 0 ? (
+              <span className="shrink-0 rounded-full bg-amber-400/12 px-2 py-0.5 text-[11px] font-medium text-amber-500">
+                ✋ {conflicts} Conflict{conflicts === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </div>
+          <span className="shrink-0 rounded-xl bg-primary/15 px-3 py-2 text-xs font-semibold text-primary ring-1 ring-primary/30">
+            View Plan & Carpools →
+          </span>
+        </div>
+      </div>
+    </Link>
   );
 }
