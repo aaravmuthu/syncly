@@ -556,6 +556,51 @@ export type Database = {
           },
         ]
       }
+      location_shares: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          mode: string
+          owner_profile_id: string
+          updated_at: string
+          viewer_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          mode: string
+          owner_profile_id: string
+          updated_at?: string
+          viewer_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          mode?: string
+          owner_profile_id?: string
+          updated_at?: string
+          viewer_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_shares_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_shares_viewer_profile_id_fkey"
+            columns: ["viewer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reads: {
         Row: {
           message_id: string
@@ -936,6 +981,8 @@ export type Database = {
           id: string
           independence_level: string | null
           is_demo: boolean
+          location_pause_indefinite: boolean
+          location_paused_until: string | null
           location_sharing_enabled: boolean
           needs_transportation: boolean
           notifications_enabled: boolean
@@ -972,6 +1019,8 @@ export type Database = {
           id?: string
           independence_level?: string | null
           is_demo?: boolean
+          location_pause_indefinite?: boolean
+          location_paused_until?: string | null
           location_sharing_enabled?: boolean
           needs_transportation?: boolean
           notifications_enabled?: boolean
@@ -1008,6 +1057,8 @@ export type Database = {
           id?: string
           independence_level?: string | null
           is_demo?: boolean
+          location_pause_indefinite?: boolean
+          location_paused_until?: string | null
           location_sharing_enabled?: boolean
           needs_transportation?: boolean
           notifications_enabled?: boolean
