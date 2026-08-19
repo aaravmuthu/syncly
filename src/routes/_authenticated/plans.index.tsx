@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   ArrowRight,
+  BellOff,
   Car,
   CheckCircle2,
   Clock,
@@ -12,6 +14,7 @@ import {
   DollarSign,
   Lock,
   MapPin,
+  ThumbsUp,
   Users,
   XCircle,
   Zap,
@@ -19,9 +22,17 @@ import {
 import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Empty, Pill, Skeleton, Button } from "@/components/quorum/ui";
+import {
+  Magnetic,
+  PullToRefresh,
+  SpotlightCard,
+  SwipeRow,
+} from "@/components/quorum/interactions";
 import { getDashboard } from "@/lib/quorum/plan.functions";
+import { confirmAttendance } from "@/lib/quorum/conflict.functions";
 import { categoryIcon } from "@/lib/quorum/icons";
 import { estCostLabel } from "@/lib/quorum/estcost";
+
 
 export const Route = createFileRoute("/_authenticated/plans/")({
   head: () => ({
