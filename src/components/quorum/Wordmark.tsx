@@ -1,17 +1,11 @@
-import { Zap } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
+import { LogoMark } from "@/components/quorum/Logo";
 
 export function Mark({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        "inline-flex size-8 items-center justify-center rounded-[0.7rem] bg-primary text-primary-foreground shadow-[0_0_22px_-6px_hsl(var(--primary)/0.9)]",
-        className,
-      )}
-      aria-hidden
-    >
-      <Zap className="size-4.5" strokeWidth={2.4} fill="currentColor" />
+    <span className={cn("inline-flex size-8 items-center justify-center", className)} aria-hidden>
+      <LogoMark size={32} className="size-full rounded-[22%]" />
     </span>
   );
 }
