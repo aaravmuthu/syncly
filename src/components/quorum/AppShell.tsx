@@ -117,26 +117,39 @@ export function AppShell({
               <Link
                 key={n.to}
                 to={n.to}
-                className={cn(
-                  "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium transition-transform duration-100 ease-out active:scale-95",
-                  active ? "scale-105 text-primary" : "text-muted-foreground",
-                )}
+                onClick={() => haptic("select")}
+                className="flex flex-1"
               >
-                {active ? (
-                  <span className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500" />
-                ) : null}
-                <span className="relative leading-none">
-                  <n.icon className="h-5 w-5" aria-hidden />
-                  {n.to === "/activity" && unread > 0 ? (
-                    <span className="absolute -right-2 -top-1 size-2 rounded-full bg-primary" />
+                <motion.span
+                  whileTap={{ scale: 0.9 }}
+                  animate={{ scale: active ? 1.06 : 1, y: active ? -1 : 0 }}
+                  transition={{ type: "spring", stiffness: 460, damping: 24 }}
+                  className={cn(
+                    "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium",
+                    active ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {active ? (
+                    <motion.span
+                      layoutId="tab-indicator"
+                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500"
+                    />
                   ) : null}
-                </span>
-                {n.label}
+                  <span className="relative leading-none">
+                    <n.icon className="h-5 w-5" aria-hidden />
+                    {n.to === "/activity" && unread > 0 ? (
+                      <span className="absolute -right-2 -top-1 size-2 rounded-full bg-primary" />
+                    ) : null}
+                  </span>
+                  {n.label}
+                </motion.span>
               </Link>
             );
           })}
         </div>
       </nav>
+
     </div>
   );
 }
