@@ -35,6 +35,7 @@ export type DashPlan = {
   participant_count: number;
   vote_count: number;
   i_responded: boolean;
+  i_attending?: boolean | null;
   i_voted: boolean;
   selected_recommendation: {
     id: string;
