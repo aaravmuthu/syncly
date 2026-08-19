@@ -80,7 +80,7 @@ export async function setShare(ownerProfileId: string, viewerProfileId: string, 
     .maybeSingle();
   await db.from("notifications").insert({
     profile_id: viewerProfileId,
-    type: "member_joined",
+    type: "location_share",
     title: `${me?.display_name ?? "A friend"} is sharing their location with you`,
     body:
       mode === "indefinite"
@@ -359,7 +359,7 @@ export async function nudgeFriend(fromProfileId: string, toProfileId: string) {
     .maybeSingle();
   await db.from("notifications").insert({
     profile_id: toProfileId,
-    type: "member_joined",
+    type: "nudge",
     title: `${me?.display_name ?? "A friend"} nudged you 📍`,
     body: "They're nearby — want to hang out?",
   });
