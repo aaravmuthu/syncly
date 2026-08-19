@@ -244,11 +244,13 @@ export const launchAiPlan = createServerFn({ method: "POST" })
     const { parseMagicPrompt } = await import("./ai.server");
     const draft = await parseMagicPrompt(prompt, new Date().toISOString().slice(0, 10));
 
-    const { data: mine } = await supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: mine } = await supabaseAdmin
       .from("profiles")
       .select("zip_code, curfew_time")
       .eq("id", me)
       .maybeSingle();
+
 
     const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } =
       await import("./fairpoint.server");
