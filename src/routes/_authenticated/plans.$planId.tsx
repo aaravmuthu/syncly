@@ -99,10 +99,12 @@ function PlanConflictBanner({
   );
 }
 
+import { useFriends } from "@/lib/quorum/nicknames";
 import { ConflictCard } from "@/components/quorum/ConflictCard";
 import { getPlanConflicts } from "@/lib/quorum/conflict.functions";
 function PlanPage() {
   const { planId } = Route.useParams();
+  const { alias, openFriend } = useFriends();
   const qc = useQueryClient();
   const fetchPlan = useServerFn(getPlan);
   const q = useQuery({
