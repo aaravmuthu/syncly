@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -52,6 +52,11 @@ export const Route = createFileRoute("/_authenticated/radar")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+  }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    ...(typeof s.lat === "number" ? { lat: s.lat } : {}),
+    ...(typeof s.lon === "number" ? { lon: s.lon } : {}),
+    ...(typeof s.label === "string" ? { label: s.label } : {}),
   }),
   component: RadarPage,
 });
@@ -108,6 +113,8 @@ function speedLabel(pos: GeolocationPosition) {
 }
 
 function RadarPage() {
+  const navigate = useNavigate();
+  const focus = Route.useSearch();
   const hub = useQuery({
     queryKey: ["guardian-hub"],
     queryFn: useServerFn(getGuardianHub),
@@ -180,7 +187,29 @@ function RadarPage() {
     zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: 200 });
   }
 
+  // A chat card can hand us a pin to fly to (?lat&lon&label).
+  if (focus.lat != null && focus.lon != null) {
+    places.unshift({
+      id: "chat-focus",
+      title: focus.label ?? "Shared pin",
+      subtitle: "Shared in chat",
+      lat: focus.lat,
+      lon: focus.lon,
+      active: true,
+    });
+    people.unshift({
+      id: "chat-focus-pin",
+      name: focus.label ?? "Shared pin",
+      initials: "📍",
+      lat: focus.lat,
+      lon: focus.lon,
+      motion: "Shared in chat",
+      state: "arrived",
+    });
+  }
+
   const hasPins = people.length > 0 || zones.length > 0;
+
 
   return (
     <AppShell title="Radar">
@@ -212,7 +241,11 @@ function RadarPage() {
                 places={places}
                 className="h-[58vh] min-h-80 w-full"
                 onPing={(p) => toast(`Nudge sent to ${p.name}`)}
-                onMessage={(p) => toast(`Opening chat with ${p.name}`)}
+                onMessage={(p) =>
+                  p.id === "me"
+                    ? toast("That's you 🙂")
+                    : navigate({ to: "/messages", search: { peer: p.id } })
+                }
               />
             ) : null}
             <FindMyFriends />

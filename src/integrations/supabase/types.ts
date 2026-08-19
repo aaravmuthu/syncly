@@ -165,6 +165,165 @@ export type Database = {
           },
         ]
       }
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          kind: string
+          media_url: string | null
+          meta: Json
+          sender_id: string | null
+          thread_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          meta?: Json
+          sender_id?: string | null
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          media_url?: string | null
+          meta?: Json
+          sender_id?: string | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_reactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_reads: {
+        Row: {
+          last_read_at: string
+          profile_id: string
+          thread_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          profile_id: string
+          thread_id: string
+        }
+        Update: {
+          last_read_at?: string
+          profile_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_reads_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_reads_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_threads: {
+        Row: {
+          a_profile_id: string
+          b_profile_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+        }
+        Insert: {
+          a_profile_id: string
+          b_profile_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+        }
+        Update: {
+          a_profile_id?: string
+          b_profile_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_threads_a_profile_id_fkey"
+            columns: ["a_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_threads_b_profile_id_fkey"
+            columns: ["b_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       geofence_events: {
         Row: {
           created_at: string
@@ -1374,6 +1533,7 @@ export type Database = {
       is_my_guardian: { Args: { _guardian: string }; Returns: boolean }
       is_my_teen: { Args: { _teen: string }; Returns: boolean }
       is_plan_owner: { Args: { _plan_id: string }; Returns: boolean }
+      is_thread_member: { Args: { _thread_id: string }; Returns: boolean }
       my_profile_id: { Args: never; Returns: string }
       shares_group_with_me: { Args: { _profile_id: string }; Returns: boolean }
     }

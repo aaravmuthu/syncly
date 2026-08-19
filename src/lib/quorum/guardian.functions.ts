@@ -91,8 +91,34 @@ export const pushLocation = createServerFn({ method: "POST" })
 
     if (!prof?.location_sharing_enabled) return { ok: false, reason: "sharing_off" as const };
     const { recordPing } = await import("./guardian.server");
-    return recordPing(me, data);
+    const result = await recordPing(me, data);
+    const { broadcastDmSystemEvent } = await import("./dm.server");
+    const { data: who } = await supabaseAdmin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", me)
+      .maybeSingle();
+    const name = who?.display_name ?? "They";
+    if (typeof data.batteryPct === "number" && data.batteryPct <= 20) {
+      await broadcastDmSystemEvent(me, {
+        tag: "battery",
+        content: `⚠️ ${name}'s battery is low (${data.batteryPct}%)`,
+        lat: data.lat,
+        lon: data.lon,
+        label: name,
+      });
+    } else if (/driv|walk|way|en route/i.test(data.statusLabel ?? "")) {
+      await broadcastDmSystemEvent(me, {
+        tag: "enroute",
+        content: `🚗 ${name} started en route`,
+        lat: data.lat,
+        lon: data.lon,
+        label: name,
+      });
+    }
+    return result;
   });
+
 
 export const addSafeZone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -354,5 +380,14 @@ export const arrivedSafely = createServerFn({ method: "POST" })
       body: data.placeLabel ? `At ${data.placeLabel}` : "Location shared with you.",
       priority: "normal",
     });
+    const { broadcastDmSystemEvent } = await import("./dm.server");
+    await broadcastDmSystemEvent(me, {
+      tag: "arrived",
+      content: `📍 ${prof?.display_name ?? "They"} arrived safely${data.placeLabel ? ` at ${data.placeLabel}` : ""}`,
+      lat: data.lat ?? null,
+      lon: data.lon ?? null,
+      label: data.placeLabel ?? null,
+    });
     return { ok: true };
   });
+

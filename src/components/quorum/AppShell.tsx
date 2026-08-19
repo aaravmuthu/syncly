@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  Bell,
   House,
   MessageCircle,
   Radar,
@@ -27,7 +28,8 @@ const BASE_NAV = [
   { to: "/groups", label: "Groups", icon: Users },
   { to: "/radar", label: "Radar", icon: Radar },
   { to: "/plans", label: "Plans", icon: Zap },
-  { to: "/activity", label: "Activity", icon: MessageCircle },
+  { to: "/messages", label: "Chats", icon: MessageCircle },
+  { to: "/activity", label: "Activity", icon: Bell },
   { to: "/settings", label: "Profile", icon: UserRound },
 ] as const;
 
@@ -52,7 +54,7 @@ export function AppShell({
   // Parents swap the Groups tab for their Family hub — the rest stays identical.
   const NAV: NavItem[] =
     me.data?.account_type === "guardian"
-      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[5]]
+      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[6]]
       : [...BASE_NAV];
 
 
