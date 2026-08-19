@@ -12,7 +12,10 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { motion } from "motion/react";
+import { haptic } from "@/lib/quorum/haptics";
 import { Wordmark } from "./Wordmark";
+
 import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
