@@ -18,7 +18,7 @@ const sizes = {
 export function Logo({ className, size = "md", showText = true, href, onClick }: LogoProps) {
   const s = sizes[size];
   const sharedMotion = {
-    whileHover: { scale: 1.06, transition: { type: "spring", stiffness: 260, damping: 16 } },
+    whileHover: { scale: 1.06, transition: { type: "spring" as const, stiffness: 260, damping: 16 } },
     whileTap: { scale: 0.96 },
   };
 
