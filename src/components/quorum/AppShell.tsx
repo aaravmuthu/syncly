@@ -2,6 +2,16 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import {
+  House,
+  MessageCircle,
+  Radar,
+  ShieldCheck,
+  UserRound,
+  Users,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { Wordmark } from "./Wordmark";
 import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
@@ -10,16 +20,17 @@ import { useNotifications } from "@/lib/quorum/useNotifications";
 import { getMe } from "@/lib/quorum/plan.functions";
 
 const BASE_NAV = [
-  { to: "/home", label: "Home", icon: "🏠" },
-  { to: "/groups", label: "Groups", icon: "👥" },
-  { to: "/plans", label: "Plans", icon: "⚡" },
-  { to: "/activity", label: "Activity", icon: "💬" },
-  { to: "/settings", label: "Profile", icon: "👤" },
+  { to: "/home", label: "Home", icon: House },
+  { to: "/groups", label: "Groups", icon: Users },
+  { to: "/radar", label: "Radar", icon: Radar },
+  { to: "/plans", label: "Plans", icon: Zap },
+  { to: "/activity", label: "Activity", icon: MessageCircle },
+  { to: "/settings", label: "Profile", icon: UserRound },
 ] as const;
 
-const FAMILY_TAB = { to: "/guardian", label: "Family", icon: "🛡️" } as const;
+const FAMILY_TAB = { to: "/guardian", label: "Family", icon: ShieldCheck } as const;
 
-type NavItem = { to: string; label: string; icon: string };
+type NavItem = { to: string; label: string; icon: LucideIcon };
 
 export function AppShell({
   children,
@@ -38,7 +49,7 @@ export function AppShell({
   // Parents swap the Groups tab for their Family hub — the rest stays identical.
   const NAV: NavItem[] =
     me.data?.account_type === "guardian"
-      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[4]]
+      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[5]]
       : [...BASE_NAV];
 
 
@@ -114,8 +125,8 @@ export function AppShell({
                 {active ? (
                   <span className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500" />
                 ) : null}
-                <span className="relative text-base leading-none">
-                  {n.icon}
+                <span className="relative leading-none">
+                  <n.icon className="h-5 w-5" aria-hidden />
                   {n.to === "/activity" && unread > 0 ? (
                     <span className="absolute -right-2 -top-1 size-2 rounded-full bg-primary" />
                   ) : null}
