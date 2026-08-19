@@ -120,6 +120,45 @@ export type Database = {
           },
         ]
       }
+      contact_nicknames: {
+        Row: {
+          created_at: string
+          nickname: string
+          owner_profile_id: string
+          target_profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          nickname: string
+          owner_profile_id: string
+          target_profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          nickname?: string
+          owner_profile_id?: string
+          target_profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_nicknames_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_nicknames_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delay_pings: {
         Row: {
           created_at: string
@@ -719,6 +758,7 @@ export type Database = {
         Row: {
           created_at: string
           expires_at: string | null
+          hidden: boolean
           id: string
           mode: string
           owner_profile_id: string
@@ -728,6 +768,7 @@ export type Database = {
         Insert: {
           created_at?: string
           expires_at?: string | null
+          hidden?: boolean
           id?: string
           mode: string
           owner_profile_id: string
@@ -737,6 +778,7 @@ export type Database = {
         Update: {
           created_at?: string
           expires_at?: string | null
+          hidden?: boolean
           id?: string
           mode?: string
           owner_profile_id?: string
