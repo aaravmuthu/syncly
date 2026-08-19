@@ -59,8 +59,8 @@ export function createLovableAiGatewayProvider(lovableApiKey: string, initialRun
   });
 }
 
-/** The one chat model Quorum uses. */
-export const QUORUM_AI_MODEL = "google/gemini-3.6-flash";
+/** The one chat model Syncly uses. */
+export const SYNCLY_AI_MODEL = "google/gemini-3.6-flash";
 
 /** Direct Google Gemini model id used for every AI feature. */
 export const GEMINI_MODEL = "gemini-flash-latest";
@@ -83,5 +83,5 @@ export function lovableAiModel() {
   }
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured");
-  return createLovableAiGatewayProvider(key)(QUORUM_AI_MODEL);
+  return createLovableAiGatewayProvider(key)(SYNCLY_AI_MODEL);
 }

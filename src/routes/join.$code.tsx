@@ -13,12 +13,12 @@ export const Route = createFileRoute("/join/$code")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Join a group — Quorum" },
+      { title: "Join a group — Syncly" },
       {
         name: "description",
-        content: "You've been invited to plan with a group on Quorum. Everyone answers privately.",
+        content: "You've been invited to plan with a group on Syncly. Everyone answers privately.",
       },
-      { property: "og:title", content: "Join a group — Quorum" },
+      { property: "og:title", content: "Join a group — Syncly" },
       { property: "og:description", content: "Plan together without sharing anyone's private limits." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

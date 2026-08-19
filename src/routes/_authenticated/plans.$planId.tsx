@@ -38,13 +38,13 @@ import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 export const Route = createFileRoute("/_authenticated/plans/$planId")({
   head: () => ({
     meta: [
-      { title: "Plan — Quorum" },
+      { title: "Plan — Syncly" },
       {
         name: "description",
         content:
           "Answer privately, then see only the options that genuinely work for everyone in the group.",
       },
-      { property: "og:title", content: "Plan — Quorum" },
+      { property: "og:title", content: "Plan — Syncly" },
       { property: "og:description", content: "Private answers in, one workable plan out." },
     ],
   }),
@@ -656,7 +656,7 @@ function PlanPage() {
 
           <p className="px-1 text-xs text-muted-foreground">
             Only options that clear everyone's distance, curfew, and opening-hours limits are shown.
-            Quorum never reveals whose constraint ruled an option out.
+            Syncly never reveals whose constraint ruled an option out.
           </p>
         </section>
       ) : null}

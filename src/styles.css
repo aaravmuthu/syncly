@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Quorum design system.
+ * Syncly design system.
  * Warm paper light-mode first, one confident evergreen accent, ink typography.
  * Components reference tokens only — never raw hex.
  */

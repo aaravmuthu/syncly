@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export type ThemeChoice = "light" | "dark" | "system";
 
-const STORAGE_KEY = "quorum-theme";
+const STORAGE_KEY = "syncly-theme";
 
 type Ctx = {
   theme: ThemeChoice;

@@ -45,8 +45,8 @@ export function InviteCard({ code, groupName }: { code: string; groupName: strin
           variant="outline"
           onClick={() =>
             void shareOrCopy({
-              title: `Join ${groupName} on Quorum`,
-              text: `Join ${groupName} on Quorum with code ${code}`,
+              title: `Join ${groupName} on Syncly`,
+              text: `Join ${groupName} on Syncly with code ${code}`,
               url: link,
             }).then((r) => {
               if (r === "copied") toast.success("Invite link copied");

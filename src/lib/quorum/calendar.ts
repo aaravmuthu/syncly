@@ -53,7 +53,7 @@ export function icsFile(ev: CalendarEvent) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Quorum//Plan//EN",
+    "PRODID:-//Syncly//Plan//EN",
     "BEGIN:VEVENT",
     `UID:${Math.random().toString(36).slice(2)}@quorum`,
     `DTSTAMP:${stampUtc(new Date())}`,
@@ -97,6 +97,6 @@ export function planSummaryText(input: {
   ];
   if (input.attendees.length) lines.push(`👥 ${input.attendees.join(", ")}`);
   for (const c of input.cars) lines.push(`🚗 ${c.label}: ${c.driver} driving`);
-  lines.push("Planned with Quorum");
+  lines.push("Planned with Syncly");
   return lines.join("\n");
 }

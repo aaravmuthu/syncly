@@ -18,10 +18,10 @@ import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 
 
-const TITLE = "Quorum — Plans that actually work for everyone";
+const TITLE = "Syncly — Squad Planning & Hangouts";
 const DESCRIPTION =
   "Private, smart group planning with privacy protection, keyless location discovery, and voting.";
-const OG_IMAGE = "https://quorumapp.lovable.app/og-image.png?v=3";
+const OG_IMAGE = "https://syncly.website/og-image.png?v=4";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,8 +35,8 @@ export const Route = createFileRoute("/")({
       { property: "og:image:type", content: "image/png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Quorum — private plans, group answers" },
-      { property: "og:url", content: "https://quorumapp.lovable.app/" },
+      { property: "og:image:alt", content: "Syncly — private plans, group answers" },
+      { property: "og:url", content: "https://syncly.website/" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: TITLE },

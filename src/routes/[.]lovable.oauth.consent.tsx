@@ -73,9 +73,9 @@ function Consent() {
   return (
     <main className="min-h-dvh grid place-items-center p-6">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
-        <h1 className="text-xl font-semibold">Connect {clientName} to Quorum</h1>
+        <h1 className="text-xl font-semibold">Connect {clientName} to Syncly</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {clientName} will be able to call Quorum&apos;s tools while you are signed in.
+          {clientName} will be able to call Syncly&apos;s tools while you are signed in.
         </p>
         {email ? (
           <p className="mt-3 text-xs text-muted-foreground">Signed in as {email}</p>
@@ -84,7 +84,7 @@ function Consent() {
           <p className="mt-3 text-xs text-muted-foreground">Requested access: {details.scope}</p>
         ) : null}
         <p className="mt-3 text-xs text-muted-foreground">
-          This does not bypass Quorum&apos;s permissions. Your private constraints stay hidden from
+          This does not bypass Syncly&apos;s permissions. Your private constraints stay hidden from
           the group and are never exposed to connected apps.
         </p>
 

@@ -13,12 +13,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({
     meta: [
-      { title: "Activity — Quorum" },
+      { title: "Activity — Syncly" },
       {
         name: "description",
         content: "A running feed of what your groups planned, answered, voted on, and locked in.",
       },
-      { property: "og:title", content: "Activity — Quorum" },
+      { property: "og:title", content: "Activity — Syncly" },
       { property: "og:description", content: "What changed across your groups and plans." },
     ],
   }),

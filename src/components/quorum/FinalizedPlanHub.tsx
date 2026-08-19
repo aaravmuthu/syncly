@@ -66,7 +66,7 @@ export function FinalizedPlanHub({
 
   const event = {
     title: `${planTitle} — ${rec.title}`,
-    description: `${rec.subtitle ?? ""}\nAbout ${perPerson} per person. Planned with Quorum.`.trim(),
+    description: `${rec.subtitle ?? ""}\nAbout ${perPerson} per person. Planned with Syncly.`.trim(),
     location: b.venue?.address ?? rec.location_name ?? rec.title,
     date: windowStart,
     start: rec.suggested_start,
@@ -138,7 +138,7 @@ export function FinalizedPlanHub({
           </li>
         </ul>
         <p className="mt-2 text-xs text-muted-foreground">
-          Estimates only. Quorum never shows whether this fits anyone's private budget.
+          Estimates only. Syncly never shows whether this fits anyone's private budget.
         </p>
       </div>
 

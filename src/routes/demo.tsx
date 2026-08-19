@@ -11,7 +11,7 @@ import { CATEGORIES, type ConstraintPayload, type PlanCategory } from "@/lib/quo
 
 const TITLE = `Try ${BRAND.name} — interactive demo, no account needed`;
 const DESCRIPTION =
-  "Play with a sample group: change private budgets, curfews, rides and diets and watch Quorum re-rank plans that work for everyone.";
+  "Play with a sample group: change private budgets, curfews, rides and diets and watch Syncly re-rank plans that work for everyone.";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({

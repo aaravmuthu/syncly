@@ -9,13 +9,13 @@ export const Route = createFileRoute("/_authenticated/rls-check")({
   component: RlsCheckPage,
   head: () => ({
     meta: [
-      { title: "Security self-check · Quorum" },
+      { title: "Security self-check · Syncly" },
       {
         name: "description",
         content:
-          "Run a live check that Quorum's database rules still block edits and deletes on other people's data.",
+          "Run a live check that Syncly's database rules still block edits and deletes on other people's data.",
       },
-      { property: "og:title", content: "Security self-check · Quorum" },
+      { property: "og:title", content: "Security self-check · Syncly" },
       {
         property: "og:description",
         content: "Verify that other members can never edit or delete your plans, profile or alerts.",

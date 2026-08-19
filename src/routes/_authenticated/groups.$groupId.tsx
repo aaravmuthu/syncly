@@ -17,9 +17,9 @@ import { estCostLabel } from "@/lib/quorum/estcost";
 export const Route = createFileRoute("/_authenticated/groups/$groupId")({
   head: () => ({
     meta: [
-      { title: "Group — Quorum" },
-      { name: "description", content: "Members, invite code, and plans for this Quorum group." },
-      { property: "og:title", content: "Group — Quorum" },
+      { title: "Group — Syncly" },
+      { name: "description", content: "Members, invite code, and plans for this Syncly group." },
+      { property: "og:title", content: "Group — Syncly" },
       { property: "og:description", content: "Members, invite code, and plans for this group." },
     ],
   }),

@@ -1,6 +1,6 @@
 /** Invite-code helpers shared by the join flow. */
 
-const KEY = "quorum:pending-invite";
+const KEY = "syncly:pending-invite";
 export const CODE_ALPHABET = /^[A-Z0-9]{4,8}$/;
 
 export function normalizeCode(raw: string) {

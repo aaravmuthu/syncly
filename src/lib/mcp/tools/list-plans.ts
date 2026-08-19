@@ -6,7 +6,7 @@ export default defineTool({
   name: "list_plans",
   title: "List my plans",
   description:
-    "List Quorum plans visible to the signed-in member, newest first. Optionally filter by circle id or plan status.",
+    "List Syncly plans visible to the signed-in member, newest first. Optionally filter by circle id or plan status.",
   inputSchema: {
     circleId: z.string().uuid().optional().describe("Only return plans in this circle."),
     status: z

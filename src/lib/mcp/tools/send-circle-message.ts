@@ -5,7 +5,7 @@ import { errorResult, myProfileId, supabaseForUser, textResult } from "../supaba
 export default defineTool({
   name: "send_circle_message",
   title: "Send a circle message",
-  description: "Post a message into a Quorum circle's squad chat as the signed-in member.",
+  description: "Post a message into a Syncly circle's squad chat as the signed-in member.",
   inputSchema: {
     circleId: z.string().uuid().describe("The circle to post in."),
     content: z.string().trim().describe("The message text."),

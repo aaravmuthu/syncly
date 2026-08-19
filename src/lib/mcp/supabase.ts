@@ -58,13 +58,13 @@ export function supabaseForUser(ctx: ToolContext) {
   });
 }
 
-/** Resolves the caller's Quorum profile row id from their token. */
+/** Resolves the caller's Syncly profile row id from their token. */
 export async function myProfileId(
   supabase: ReturnType<typeof supabaseForUser>,
 ): Promise<string> {
   const { data, error } = await supabase.rpc("my_profile_id");
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("No Quorum profile exists for this account yet. Finish onboarding in the app first.");
+  if (!data) throw new Error("No Syncly profile exists for this account yet. Finish onboarding in the app first.");
   return data as string;
 }
 
