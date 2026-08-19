@@ -21,6 +21,10 @@ import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/guardian")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    invite:
+      typeof search.invite === "string" ? search.invite.replace(/\D/g, "").slice(0, 6) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Family hub — Syncly" },
