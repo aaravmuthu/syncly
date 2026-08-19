@@ -19,6 +19,12 @@ import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
 import { VenueMap, type MapVenue } from "@/components/quorum/VenueMap";
 import {
+  SquadMap,
+  type MapPerson,
+  type MapPlace,
+  type MapZone,
+} from "@/components/quorum/map/SquadMap";
+import {
   arrivedSafely,
   getGuardianHub,
   getMyRadar,
