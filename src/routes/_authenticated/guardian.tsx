@@ -195,22 +195,25 @@ function GuardianHub() {
           </div>
 
           {activeTeen === "__add" ? (
-            <Card className="space-y-3">
-              <div className="text-sm font-semibold">Link another teen</div>
-              <div className="flex gap-2">
-                <input
-                  className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                />
-                <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
-                  Link
-                </Button>
-              </div>
-            </Card>
+            <div className="space-y-4">
+              <Card className="space-y-3">
+                <div className="text-sm font-semibold">Link another teen</div>
+                <div className="flex gap-2">
+                  <input
+                    className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  />
+                  <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
+                    Link
+                  </Button>
+                </div>
+              </Card>
+              <GuardianInvite />
+            </div>
           ) : teen ? (
             <TeenPanel teen={teen} />
           ) : null}
