@@ -40,12 +40,20 @@ export function QuickResponse({
   compact = false,
   className,
   answered = null,
+  variant = "pair",
+  alwaysShowButtons = false,
+  onAnswered,
 }: {
   planId: string;
   compact?: boolean;
   className?: string;
   /** true = confirmed, false = conflict raised, null = not answered yet. */
   answered?: boolean | null;
+  /** "stacked" = full-width primary action with a subtle secondary link. */
+  variant?: "pair" | "stacked";
+  /** Skip the built-in answered badge; the parent renders its own state. */
+  alwaysShowButtons?: boolean;
+  onAnswered?: (attending: boolean) => void;
 }) {
   const qc = useQueryClient();
   const [picking, setPicking] = useState(false);
@@ -53,11 +61,12 @@ export function QuickResponse({
   const [editing, setEditing] = useState(false);
 
   const state = local ?? answered;
-  const showButtons = editing || state === null || state === undefined;
+  const showButtons = alwaysShowButtons || editing || state === null || state === undefined;
 
   /** Instantly reflect the answer in the cached dashboard so cards move now. */
   const optimistic = (attending: boolean) => {
     setLocal(attending);
+    onAnswered?.(attending);
     setEditing(false);
     qc.setQueryData(["dashboard"], (old: DashCache | undefined) => {
       if (!old?.plans) return old;
@@ -131,7 +140,12 @@ export function QuickResponse({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={spring}
-            className={cn("grid grid-cols-2 gap-2", className)}
+            className={cn(
+              variant === "stacked"
+                ? "flex flex-col items-stretch gap-2"
+                : "grid grid-cols-2 gap-2",
+              className,
+            )}
           >
             <motion.button
               type="button"
@@ -141,8 +155,11 @@ export function QuickResponse({
               transition={spring}
               onClick={() => confirm.mutate({ data: { planId, attending: true } })}
               className={cn(
-                "inline-flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-500/15 font-semibold text-emerald-500 ring-1 ring-emerald-400/30 backdrop-blur-xl transition-colors hover:bg-emerald-500/25 disabled:opacity-60",
-                compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base",
+                "inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
+                variant === "stacked"
+                  ? "w-full bg-emerald-500 py-3.5 text-base text-black hover:bg-emerald-400"
+                  : "bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-400/30 backdrop-blur-xl hover:bg-emerald-500/25",
+                variant === "pair" && (compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base"),
               )}
             >
               <Check className="h-4 w-4" aria-hidden /> I&apos;m In
@@ -155,11 +172,20 @@ export function QuickResponse({
               transition={spring}
               onClick={() => setPicking(true)}
               className={cn(
-                "inline-flex items-center justify-center gap-1.5 rounded-2xl bg-amber-400/12 font-semibold text-amber-500 ring-1 ring-amber-400/30 backdrop-blur-xl transition-colors hover:bg-amber-400/20 disabled:opacity-60",
-                compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base",
+                "inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
+                variant === "stacked"
+                  ? "w-full py-2 text-sm text-muted-foreground hover:text-foreground"
+                  : "bg-amber-400/12 text-amber-500 ring-1 ring-amber-400/30 backdrop-blur-xl hover:bg-amber-400/20",
+                variant === "pair" && (compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base"),
               )}
             >
-              <X className="h-4 w-4" aria-hidden /> Doesn&apos;t Work For Me
+              {variant === "stacked" ? (
+                "Can't make it"
+              ) : (
+                <>
+                  <X className="h-4 w-4" aria-hidden /> Doesn&apos;t Work For Me
+                </>
+              )}
             </motion.button>
           </motion.div>
         ) : (
@@ -199,11 +225,13 @@ export function QuickResponse({
         )}
       </AnimatePresence>
 
-      <Modal open={picking} onClose={() => setPicking(false)} title="What's the blocker?">
-        <p className="text-sm text-muted-foreground">
-          One tap. We tell the host what to fix without sharing your private details.
-        </p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <Modal
+        open={picking}
+        onClose={() => setPicking(false)}
+        title="What's the blocker?"
+        description="One tap. We tell the host what to fix without sharing your private details."
+      >
+        <div className="grid gap-2">
           {CONFLICT_REASONS.map((r) => {
             const Icon = REASON_ICONS[r.id] ?? CalendarX;
             return (

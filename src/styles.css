@@ -80,26 +80,27 @@
 }
 
 .dark {
-  --background: oklch(0.19 0.008 80);
-  --surface: oklch(0.23 0.008 80);
-  --foreground: oklch(0.96 0.006 95);
-  --card: oklch(0.235 0.009 80);
-  --card-foreground: oklch(0.96 0.006 95);
-  --popover: oklch(0.245 0.009 80);
+  /* Apple-style pitch-dark canvas with layered vibrant surfaces. */
+  --background: oklch(0.06 0.002 270);
+  --surface: oklch(0.145 0.004 270);
+  --foreground: oklch(0.985 0.002 270);
+  --card: oklch(0.155 0.004 270);
+  --card-foreground: oklch(0.985 0.002 270);
+  --popover: oklch(0.17 0.004 270);
   --popover-foreground: oklch(0.96 0.006 95);
   --primary: oklch(0.72 0.11 168);
   --primary-foreground: oklch(0.18 0.02 168);
-  --secondary: oklch(0.28 0.01 80);
-  --secondary-foreground: oklch(0.96 0.006 95);
-  --muted: oklch(0.27 0.008 80);
-  --muted-foreground: oklch(0.7 0.012 85);
+  --secondary: oklch(0.22 0.004 270);
+  --secondary-foreground: oklch(0.985 0.002 270);
+  --muted: oklch(0.2 0.004 270);
+  --muted-foreground: oklch(0.72 0.006 270);
   --accent: oklch(0.78 0.12 62);
   --accent-foreground: oklch(0.2 0.02 60);
   --success: oklch(0.72 0.13 155);
   --warning: oklch(0.8 0.13 75);
   --destructive: oklch(0.64 0.18 27);
-  --border: oklch(0.97 0.006 95 / 0.12);
-  --input: oklch(0.97 0.006 95 / 0.16);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.12);
   --ring: oklch(0.72 0.11 168);
 }
 
@@ -154,6 +155,14 @@
   select {
     font-size: 16px;
   }
+}
+
+/* Primary iOS material used by Card and sheets. */
+@utility surface {
+  background: color-mix(in oklab, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(180%);
 }
 
 @utility card-surface {
@@ -437,11 +446,10 @@
 
 /* iOS-style liquid frosted glass. */
 @utility glass-card {
-  background: color-mix(in oklab, var(--card) 62%, transparent);
-  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
-  border-radius: 1.5rem;
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  background: color-mix(in oklab, var(--card) 55%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(180%);
   box-shadow:
     0 24px 60px -32px color-mix(in oklab, var(--foreground) 55%, transparent),
     inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent);

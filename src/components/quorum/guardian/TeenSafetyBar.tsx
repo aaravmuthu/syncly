@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "@/components/quorum/ui";
+import { CheckCircle2, MapPin, Share2 } from "lucide-react";
 import {
+  arrivedSafely,
   getMyCheckins,
   pushLocation,
   raiseSos,
@@ -49,6 +51,7 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
   const qc = useQueryClient();
   const [delayOpen, setDelayOpen] = useState(false);
   const [sosArmed, setSosArmed] = useState(false);
+  const [arrival, setArrival] = useState<{ place: string; at: string } | null>(null);
 
   const ping = useServerFn(pushLocation);
   const checkins = useQuery({
@@ -78,6 +81,24 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
       toast.success("SOS sent", { description: "Your parents were alerted right away." });
     },
   });
+
+  const arrive = useMutation({
+    mutationFn: useServerFn(arrivedSafely),
+    onSuccess: () => {
+      setArrival({
+        place: "your destination",
+        at: new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
+      });
+      toast.success("Arrival shared with your parents");
+    },
+  });
+
+  /** Opens the native SMS sheet pre-filled with a live session link. */
+  const shareLiveSession = () => {
+    const url = `${window.location.origin}/radar`;
+    const body = encodeURIComponent(`I'm sharing my live location on Syncly: ${url}`);
+    window.location.href = `sms:?&body=${body}`;
+  };
 
   const sendPing = useCallback(async () => {
     const pos = await currentPosition();
@@ -139,7 +160,33 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
         <Pill tone={sharing ? "good" : "neutral"}>{sharing ? "Live" : "Private"}</Pill>
       </div>
 
+      {arrival ? (
+        <div className="flex items-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-400">
+          <CheckCircle2 className="h-4 w-4" aria-hidden />
+          Arrived safely at {arrival.place} • {arrival.at}
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
+        <Button
+          loading={arrive.isPending}
+          onClick={async () => {
+            const pos = await currentPosition();
+            arrive.mutate({
+              data: {
+                lat: pos?.coords.latitude ?? null,
+                lon: pos?.coords.longitude ?? null,
+                batteryPct: await batteryPct(),
+                placeLabel: "my destination",
+              },
+            });
+          }}
+        >
+          <MapPin className="h-4 w-4" aria-hidden /> I arrived safely
+        </Button>
+        <Button variant="outline" onClick={shareLiveSession}>
+          <Share2 className="h-4 w-4" aria-hidden /> Share live session
+        </Button>
         <Button variant="outline" onClick={() => setDelayOpen((v) => !v)}>
           Running late
         </Button>
