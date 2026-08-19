@@ -9,6 +9,8 @@ import { useNotifications, useMarkNotificationsRead } from "@/lib/quorum/useNoti
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { LongPress, PullToRefresh, SpotlightCard, SwipeRow } from "@/components/quorum/interactions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/activity")({
   head: () => ({
@@ -98,7 +100,8 @@ type FeedItem = {
 function ActivityCard({ item }: { item: FeedItem }) {
   const k = KIND[item.kind];
   return (
-    <article
+    <SpotlightCard
+      as="article"
       className={cn(
         "group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/70 p-4 shadow-lg backdrop-blur-md transition-all",
         k.hover,
@@ -160,7 +163,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
           </Link>
         ) : null}
       </div>
-    </article>
+    </SpotlightCard>
   );
 }
 
@@ -178,6 +181,7 @@ function ActivityPage() {
   const [perm, setPerm] = useState<string>("unsupported");
   const [dismissed, setDismissed] = useState(false);
   const [filter, setFilter] = useState<"all" | Kind>("all");
+  const [hidden, setHidden] = useState<string[]>([]);
 
   useEffect(() => {
     setPerm(pushPermission());
@@ -211,7 +215,7 @@ function ActivityPage() {
 
   const actionCount = items.filter((i) => i.kind === "action" || i.kind === "conflict").length;
   const visible = items.filter((i) =>
-    filter === "all" ? true : filter === "action" ? i.kind === "action" || i.kind === "conflict" : i.kind === filter,
+    hidden.includes(i.id) ? false : filter === "all" ? true : filter === "action" ? i.kind === "action" || i.kind === "conflict" : i.kind === filter,
   );
 
   return (
@@ -289,11 +293,43 @@ function ActivityPage() {
         />
       ) : null}
 
-      <div className="space-y-2.5">
-        {visible.map((item) => (
-          <ActivityCard key={item.id} item={item} />
-        ))}
-      </div>
+      <PullToRefresh onRefresh={() => feed.refetch()}>
+        <div className="space-y-2.5">
+          {visible.map((item) => (
+            <SwipeRow
+              key={item.id}
+              left={
+                item.plan_id
+                  ? {
+                      label: "I'm in",
+                      tone: "primary",
+                      onAction: () => toast.success("Marked as interested"),
+                    }
+                  : undefined
+              }
+              right={{
+                label: hidden.includes(item.id) ? "Muted" : "Ignore",
+                tone: "muted",
+                onAction: () => setHidden((h) => (h.includes(item.id) ? h : [...h, item.id])),
+              }}
+            >
+              <LongPress
+                title={item.title}
+                actions={[
+                  { label: "Mark as read", onSelect: () => item.onOpen?.() },
+                  {
+                    label: "Hide this update",
+                    destructive: true,
+                    onSelect: () => setHidden((h) => [...h, item.id]),
+                  },
+                ]}
+              >
+                <ActivityCard item={item} />
+              </LongPress>
+            </SwipeRow>
+          ))}
+        </div>
+      </PullToRefresh>
     </AppShell>
   );
 }
