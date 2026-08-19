@@ -121,31 +121,49 @@ function GuardianHub() {
           →
         </span>
       </Link>
+      {invite ? (
+        <Card className="mb-4 border-primary/40">
+          <div className="text-sm font-semibold">
+            {link.isPending ? "Linking your account…" : "Invite from your teen"}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Code {invite} · once linked you'll see their live radar, plans and check-ins here.
+          </p>
+          {!link.isPending && link.isError ? (
+            <Button className="mt-3" onClick={() => link.mutate({ data: { code: invite } })}>
+              Try linking again
+            </Button>
+          ) : null}
+        </Card>
+      ) : null}
       {hub.isLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-24 rounded-3xl" />
           <Skeleton className="h-64 rounded-3xl" />
         </div>
       ) : teens.length === 0 ? (
-        <Card className="space-y-4">
-          <Empty
-            title="Link your first teen"
-            body="Ask them to open Syncly → Profile → Parent pairing and read you the 6-digit code."
-          />
-          <div className="flex gap-2">
-            <input
-              className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        <div className="space-y-4">
+          <Card className="space-y-4">
+            <Empty
+              title="Link your first teen"
+              body="Open your teen's invite link, or type the 6-digit code from their Syncly profile."
             />
-            <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
-              Link
-            </Button>
-          </div>
-        </Card>
+            <div className="flex gap-2">
+              <input
+                className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="000000"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+              <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
+                Link
+              </Button>
+            </div>
+          </Card>
+          <GuardianInvite />
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
