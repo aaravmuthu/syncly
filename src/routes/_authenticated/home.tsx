@@ -247,40 +247,75 @@ function HomePage() {
           </Section>
         ) : null}
 
-        {needsAction.length > 0 ? (
-          <Section title="Needs your action" accent="text-emerald-500">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {needsAction.map((p) => (
-                <div key={p.id} className="flex h-full flex-col gap-2">
-                  <div className="flex-1">
-                    <ActionCard plan={p} />
-                  </div>
-                  <QuickActions planId={p.id} />
+        <LayoutGroup>
+          <AnimatePresence initial={false} mode="popLayout">
+            {needsAction.length > 0 ? (
+              <MotionSection key="needs" title="Needs your action" accent="text-emerald-500">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {needsAction.map((p) => (
+                      <MotionCard key={p.id}>
+                        <div className="flex h-full flex-col gap-2">
+                          <div className="flex-1">
+                            <ActionCard plan={p} />
+                          </div>
+                          <QuickActions planId={p.id} answered={p.i_attending ?? null} />
+                        </div>
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
                 </div>
-              ))}
-            </div>
-          </Section>
-        ) : null}
+              </MotionSection>
+            ) : null}
 
-        {confirmed.length > 0 ? (
-          <Section title="Upcoming confirmed plans" accent="text-indigo-400">
-            <div className="grid gap-3">
-              {confirmed.map((p) => (
-                <ConfirmedCard key={p.id} plan={p} />
-              ))}
-            </div>
-          </Section>
-        ) : null}
+            {answeredActive.length > 0 ? (
+              <MotionSection key="answered" title="Your confirmed plans" accent="text-emerald-400">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {answeredActive.map((p) => (
+                      <MotionCard key={p.id}>
+                        <div className="flex h-full flex-col gap-2">
+                          <div className="flex-1">
+                            <ActionCard plan={p} />
+                          </div>
+                          <QuickActions planId={p.id} answered={p.i_attending ?? null} />
+                        </div>
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </MotionSection>
+            ) : null}
 
-        {otherActive.length > 0 ? (
-          <Section title="Waiting on the group" accent="text-amber-500">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {otherActive.map((p) => (
-                <ActionCard key={p.id} plan={p} />
-              ))}
-            </div>
-          </Section>
-        ) : null}
+            {confirmed.length > 0 ? (
+              <MotionSection key="locked" title="Locked in with the group" accent="text-indigo-400">
+                <div className="grid gap-3">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {confirmed.map((p) => (
+                      <MotionCard key={p.id}>
+                        <ConfirmedCard plan={p} />
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </MotionSection>
+            ) : null}
+
+            {otherActive.length > 0 ? (
+              <MotionSection key="waiting" title="Waiting on the group" accent="text-amber-500">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {otherActive.map((p) => (
+                      <MotionCard key={p.id}>
+                        <ActionCard plan={p} />
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </MotionSection>
+            ) : null}
+          </AnimatePresence>
+        </LayoutGroup>
 
         {groupList.length > 0 ? (
           <Section title="Active circles">
