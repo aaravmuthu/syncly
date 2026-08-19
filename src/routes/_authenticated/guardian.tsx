@@ -94,6 +94,15 @@ function GuardianHub() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hub.data?.unreadAlerts]);
 
+  // Arriving from a teen's invite link: link the account automatically, once.
+  const autoLinked = useRef(false);
+  useEffect(() => {
+    if (!invite || invite.length !== 6 || autoLinked.current || hub.isLoading) return;
+    autoLinked.current = true;
+    link.mutate({ data: { code: invite } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invite, hub.isLoading]);
+
   const teen = teens.find((t) => t.id === activeTeen) ?? teens[0] ?? null;
 
   return (
