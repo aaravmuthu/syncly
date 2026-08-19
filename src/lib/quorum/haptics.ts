@@ -18,7 +18,7 @@ export function haptic(kind: HapticKind = "tap") {
   const vibrate = (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }).vibrate;
   if (!vibrate) return;
   try {
-    vibrate.call(navigator, PATTERNS[kind]);
+    vibrate.call(navigator, PATTERNS[kind] as number[]);
   } catch {
     /* ignore — unsupported or blocked by the user gesture policy */
   }
