@@ -157,6 +157,14 @@
   }
 }
 
+/* Primary iOS material used by Card and sheets. */
+@utility surface {
+  background: color-mix(in oklab, var(--card) 60%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  border-radius: 28px;
+  backdrop-filter: blur(40px) saturate(180%);
+}
+
 @utility card-surface {
   background: var(--card);
   border: 1px solid var(--border);
