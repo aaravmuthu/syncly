@@ -141,7 +141,9 @@ export function QuickResponse({
             exit={{ opacity: 0, scale: 0.97 }}
             transition={spring}
             className={cn(
-              variant === "stacked" ? "flex flex-col items-stretch gap-2" : "grid grid-cols-2 gap-2",
+              variant === "stacked"
+                ? "flex flex-col items-stretch gap-2"
+                : "grid grid-cols-2 gap-2",
               className,
             )}
           >

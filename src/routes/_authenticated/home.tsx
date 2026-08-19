@@ -294,7 +294,9 @@ function HomePage() {
                   className="flex items-center gap-3 rounded-[28px] border border-white/5 bg-card/30 px-4 py-3 backdrop-blur-3xl"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-muted-foreground">{p.title}</p>
+                    <p className="truncate text-sm font-semibold text-muted-foreground">
+                      {p.title}
+                    </p>
                     <p className="truncate text-xs font-medium text-muted-foreground/70">
                       {formatWhen(p.window_start)} · {p.groups?.name ?? "Group"}
                     </p>
