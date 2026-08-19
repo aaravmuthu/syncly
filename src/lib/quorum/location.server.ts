@@ -15,7 +15,7 @@ export async function geocodeZipServer(zipRaw: string): Promise<ZipLocation | nu
     )}&country=us&format=json&limit=1&addressdetails=1`;
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "Quorum group planner (https://quorumapp.lovable.app)",
+        "User-Agent": "Syncly group planner (https://syncly.website)",
         Accept: "application/json",
       },
     });

@@ -15,12 +15,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/groups/")({
   head: () => ({
     meta: [
-      { title: "Squad hub — Quorum" },
+      { title: "Squad hub — Syncly" },
       {
         name: "description",
         content: "Your squads at a glance: live votes, member stacks, invite codes, and one-tap plan launches.",
       },
-      { property: "og:title", content: "Squad hub — Quorum" },
+      { property: "og:title", content: "Squad hub — Syncly" },
       { property: "og:description", content: "Live squads, active votes, and one-tap plan launches." },
     ],
   }),

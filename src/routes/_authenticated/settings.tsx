@@ -20,12 +20,12 @@ import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard"
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "Your profile — Quorum" },
+      { title: "Your profile — Syncly" },
       {
         name: "description",
-        content: "Control your defaults, which features you see, and what Quorum remembers about you.",
+        content: "Control your defaults, which features you see, and what Syncly remembers about you.",
       },
-      { property: "og:title", content: "Your profile — Quorum" },
+      { property: "og:title", content: "Your profile — Syncly" },
       { property: "og:description", content: "Control your defaults and privacy settings." },
     ],
   }),
@@ -287,7 +287,7 @@ function SettingsPage() {
 
       <Card className="mt-4 space-y-4">
         <div>
-          <span className="text-sm font-medium">I use Quorum as</span>
+          <span className="text-sm font-medium">I use Syncly as</span>
           <p className="mt-1 text-xs text-muted-foreground">
             Parents get the Family hub. Teens get the pairing code and safety tools.
           </p>

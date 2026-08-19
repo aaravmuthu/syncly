@@ -6,7 +6,7 @@ export default defineTool({
   name: "create_plan",
   title: "Create a plan",
   description:
-    "Create a new Quorum plan in one of the signed-in member's circles and mark them as the attending host.",
+    "Create a new Syncly plan in one of the signed-in member's circles and mark them as the attending host.",
   inputSchema: {
     circleId: z.string().uuid().describe("The circle the plan belongs to."),
     title: z.string().trim().describe("Short plan title, e.g. 'Friday dinner'."),

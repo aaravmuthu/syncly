@@ -205,7 +205,7 @@ export const raiseSos = createServerFn({ method: "POST" })
     await alertGuardians(me, {
       type: "sos",
       title: `${prof?.display_name ?? "Your teen"} needs help now`,
-      body: data.note ?? "SOS sent from Quorum. Call them right away.",
+      body: data.note ?? "SOS sent from Syncly. Call them right away.",
       priority: "high",
     });
     return { ok: true };

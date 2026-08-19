@@ -5,7 +5,7 @@ import { errorResult, myProfileId, supabaseForUser, textResult } from "../supaba
 export default defineTool({
   name: "rsvp_plan",
   title: "RSVP to a plan",
-  description: "Set whether the signed-in member is attending a Quorum plan.",
+  description: "Set whether the signed-in member is attending a Syncly plan.",
   inputSchema: {
     planId: z.string().uuid().describe("The plan to respond to."),
     attending: z.boolean().describe("True if going, false if not."),

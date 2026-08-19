@@ -17,7 +17,7 @@ function safeNext(next: string | undefined) {
 
 const TITLE = `Sign in — ${BRAND.name}`;
 const DESCRIPTION =
-  "Log in or create a Quorum account to plan with your group while keeping your budget, schedule, and rules private.";
+  "Log in or create a Syncly account to plan with your group while keeping your budget, schedule, and rules private.";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,

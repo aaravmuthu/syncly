@@ -6,7 +6,7 @@ export default defineTool({
   name: "get_plan",
   title: "Get plan details",
   description:
-    "Get one Quorum plan: timing, status, who is attending, the shortlisted options with vote counts, and ride assignments.",
+    "Get one Syncly plan: timing, status, who is attending, the shortlisted options with vote counts, and ride assignments.",
   inputSchema: { planId: z.string().uuid().describe("The plan id.") },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ planId }, ctx) => {

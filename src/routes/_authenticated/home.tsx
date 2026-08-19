@@ -31,13 +31,13 @@ import { getMe, getDashboard, listGroups } from "@/lib/quorum/plan.functions";
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
     meta: [
-      { title: "Your week — Quorum" },
+      { title: "Your week — Syncly" },
       {
         name: "description",
         content:
           "A weekly timeline of your group plans: what needs your private answer, what's up for a vote, and what's already locked in.",
       },
-      { property: "og:title", content: "Your week — Quorum" },
+      { property: "og:title", content: "Your week — Syncly" },
       {
         property: "og:description",
         content: "Group plans that work for everyone, privately.",
@@ -142,7 +142,7 @@ function HomePage() {
   return (
     <AppShell
       title={me.data ? `Hey, ${String(me.data.display_name).split(" ")[0]}` : "Home"}
-      subtitle="Everyone answers privately. Quorum only shows what works for the whole group."
+      subtitle="Everyone answers privately. Syncly only shows what works for the whole group."
     >
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
 

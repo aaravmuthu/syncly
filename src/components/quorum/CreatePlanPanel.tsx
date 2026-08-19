@@ -502,7 +502,7 @@ export function CreatePlanPanel({
               variant="outline"
               onClick={() =>
                 void shareOrCopy({
-                  title: "Join my Quorum group",
+                  title: "Join my Syncly group",
                   text: `Join with code ${inviteCode}`,
                   url: inviteLink(inviteCode),
                 }).then((r) => {

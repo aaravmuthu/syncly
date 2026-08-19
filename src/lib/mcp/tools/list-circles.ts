@@ -4,7 +4,7 @@ import { errorResult, myProfileId, supabaseForUser, textResult } from "../supaba
 export default defineTool({
   name: "list_circles",
   title: "List my circles",
-  description: "List the Quorum circles (groups) the signed-in member belongs to, with their invite kind and role.",
+  description: "List the Syncly circles (groups) the signed-in member belongs to, with their invite kind and role.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {

@@ -12,10 +12,10 @@ export const Route = createFileRoute("/auth-callback")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Signing you in — Quorum" },
-      { name: "description", content: "Finishing your Quorum sign-in and loading your groups." },
-      { property: "og:title", content: "Signing you in — Quorum" },
-      { property: "og:description", content: "Finishing your Quorum sign-in." },
+      { title: "Signing you in — Syncly" },
+      { name: "description", content: "Finishing your Syncly sign-in and loading your groups." },
+      { property: "og:title", content: "Signing you in — Syncly" },
+      { property: "og:description", content: "Finishing your Syncly sign-in." },
     ],
   }),
   component: AuthCallback,

@@ -16,9 +16,9 @@ import { AddressPicker } from "@/components/quorum/AddressPicker";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Get set up — Quorum" },
-      { name: "description", content: "A few defaults so Quorum can pre-fill your private answers." },
-      { property: "og:title", content: "Get set up — Quorum" },
+      { title: "Get set up — Syncly" },
+      { name: "description", content: "A few defaults so Syncly can pre-fill your private answers." },
+      { property: "og:title", content: "Get set up — Syncly" },
       { property: "og:description", content: "A few defaults so planning takes seconds." },
     ],
   }),
@@ -255,7 +255,7 @@ function Onboarding() {
               }
               const zip = String(form["zip_code"] ?? "").trim();
               if (last && (form["home_lat"] == null || form["home_lon"] == null)) {
-                return toast.error("Pick your home address so Quorum can measure real distances");
+                return toast.error("Pick your home address so Syncly can measure real distances");
               }
               if (last && zip && !isValidZip(zip)) {
                 return toast.error("Enter a valid 5-digit ZIP code");

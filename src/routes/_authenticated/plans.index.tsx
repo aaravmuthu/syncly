@@ -26,12 +26,12 @@ import { estCostLabel } from "@/lib/quorum/estcost";
 export const Route = createFileRoute("/_authenticated/plans/")({
   head: () => ({
     meta: [
-      { title: "All plans — Quorum" },
+      { title: "All plans — Syncly" },
       {
         name: "description",
         content: "Every plan across your groups: collecting answers, open for votes, or locked in.",
       },
-      { property: "og:title", content: "All plans — Quorum" },
+      { property: "og:title", content: "All plans — Syncly" },
       { property: "og:description", content: "Every plan across your groups in one place." },
     ],
   }),

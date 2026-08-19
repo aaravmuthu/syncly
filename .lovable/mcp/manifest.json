@@ -13,13 +13,13 @@
     "server": {
       "name": "quorum",
       "version": "0.1.0",
-      "title": "Quorum"
+      "title": "Syncly"
     },
     "tools": [
       {
         "name": "list_circles",
         "title": "List my circles",
-        "description": "List the Quorum circles (groups) the signed-in member belongs to, with their invite kind and role.",
+        "description": "List the Syncly circles (groups) the signed-in member belongs to, with their invite kind and role.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -35,7 +35,7 @@
       {
         "name": "list_plans",
         "title": "List my plans",
-        "description": "List Quorum plans visible to the signed-in member, newest first. Optionally filter by circle id or plan status.",
+        "description": "List Syncly plans visible to the signed-in member, newest first. Optionally filter by circle id or plan status.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -71,7 +71,7 @@
       {
         "name": "get_plan",
         "title": "Get plan details",
-        "description": "Get one Quorum plan: timing, status, who is attending, the shortlisted options with vote counts, and ride assignments.",
+        "description": "Get one Syncly plan: timing, status, who is attending, the shortlisted options with vote counts, and ride assignments.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -97,7 +97,7 @@
       {
         "name": "create_plan",
         "title": "Create a plan",
-        "description": "Create a new Quorum plan in one of the signed-in member's circles and mark them as the attending host.",
+        "description": "Create a new Syncly plan in one of the signed-in member's circles and mark them as the attending host.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -157,7 +157,7 @@
       {
         "name": "rsvp_plan",
         "title": "RSVP to a plan",
-        "description": "Set whether the signed-in member is attending a Quorum plan.",
+        "description": "Set whether the signed-in member is attending a Syncly plan.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,
@@ -189,7 +189,7 @@
       {
         "name": "send_circle_message",
         "title": "Send a circle message",
-        "description": "Post a message into a Quorum circle's squad chat as the signed-in member.",
+        "description": "Post a message into a Syncly circle's squad chat as the signed-in member.",
         "annotations": {
           "readOnlyHint": false,
           "destructiveHint": false,

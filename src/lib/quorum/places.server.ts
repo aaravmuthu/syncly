@@ -110,7 +110,7 @@ export async function suggestPlacesServer(
       `&viewbox=${prox.lon - 1.5},${prox.lat + 1.5},${prox.lon + 1.5},${prox.lat - 1.5}`;
     const res = await fetch(url, {
       headers: {
-        "User-Agent": "Quorum group planner (https://quorumapp.lovable.app)",
+        "User-Agent": "Syncly group planner (https://syncly.website)",
         Accept: "application/json",
       },
     });
@@ -368,7 +368,7 @@ export async function reverseZipServer(lat: number, lon: number): Promise<string
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`,
       {
         headers: {
-          "User-Agent": "Quorum group planner (https://quorumapp.lovable.app)",
+          "User-Agent": "Syncly group planner (https://syncly.website)",
           Accept: "application/json",
         },
       },

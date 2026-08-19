@@ -11,13 +11,13 @@ export const Route = createFileRoute("/approve/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Approve a plan — Quorum" },
+      { title: "Approve a plan — Syncly" },
       {
         name: "description",
         content:
           "Review the plan details, timing, and ride arrangements, then approve, add a condition, or decline.",
       },
-      { property: "og:title", content: "Approve a plan — Quorum" },
+      { property: "og:title", content: "Approve a plan — Syncly" },
       { property: "og:description", content: "Review the plan and respond. No account needed." },
     ],
   }),

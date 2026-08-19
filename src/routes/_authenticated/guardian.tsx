@@ -23,13 +23,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/guardian")({
   head: () => ({
     meta: [
-      { title: "Family hub — Quorum" },
+      { title: "Family hub — Syncly" },
       {
         name: "description",
         content:
           "See every plan, ride and safe-zone update for your teens in one calm dashboard — approvals, carpool details and check-ins included.",
       },
-      { property: "og:title", content: "Family hub — Quorum" },
+      { property: "og:title", content: "Family hub — Syncly" },
       {
         property: "og:description",
         content: "Plans, rides, safe zones and check-ins for your teens in one place.",
@@ -98,7 +98,7 @@ function GuardianHub() {
         <Card className="space-y-4">
           <Empty
             title="Link your first teen"
-            body="Ask them to open Quorum → Profile → Parent pairing and read you the 6-digit code."
+            body="Ask them to open Syncly → Profile → Parent pairing and read you the 6-digit code."
           />
           <div className="flex gap-2">
             <input
