@@ -11,6 +11,8 @@ import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
 import { LiveActivityCard } from "@/components/quorum/LiveActivityCard";
 import { FindMySquad } from "@/components/quorum/FindMySquad";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
+import { PullToRefresh, SpotlightCard } from "@/components/quorum/interactions";
+
 import {
   ActionCard,
   AvatarStack,
