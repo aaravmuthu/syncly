@@ -44,11 +44,16 @@ export const browseSpots = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<BrowseSpotsResult> => {
     const { supabase, userId } = context;
-    const { data: profile } = await supabase
+    // Private location columns are not readable by the user role — read the
+    // caller's own row through the trusted server client, scoped to their id.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("id, home_address, home_lat, home_lon, zip_code, home_area")
       .eq("user_id", userId)
       .maybeSingle();
+    void supabase;
+
 
     const { geocodeZipServer } = await import("./location.server");
     const { searchVenuesGeoapify } = await import("./places.server");
