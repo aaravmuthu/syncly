@@ -108,6 +108,12 @@ export function ConflictCard({
 }
 
 /** 1-tap timeline actions: confirm attendance or raise a conflict. */
-export function QuickActions({ planId }: { planId: string }) {
-  return <QuickResponse planId={planId} compact />;
+export function QuickActions({
+  planId,
+  answered = null,
+}: {
+  planId: string;
+  answered?: boolean | null;
+}) {
+  return <QuickResponse planId={planId} compact answered={answered} />;
 }
