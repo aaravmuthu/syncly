@@ -497,7 +497,7 @@ export const listActivity = createServerFn({ method: "GET" })
     const { data } = await context.supabase
       .from("activity_events")
       .select(
-        "id, type, message, created_at, plan_id, group_id, actor:profiles!activity_events_actor_profile_id_fkey(display_name, avatar_url, avatar_emoji)",
+        "id, type, message, created_at, plan_id, group_id, actor_profile_id, actor:profiles!activity_events_actor_profile_id_fkey(display_name, avatar_url, avatar_emoji)",
       )
       .not("group_id", "is", null)
       .order("created_at", { ascending: false })
@@ -515,6 +515,7 @@ export const listActivity = createServerFn({ method: "GET" })
         created_at: row.created_at,
         plan_id: row.plan_id,
         group_id: row.group_id,
+        actorId: (row as { actor_profile_id: string | null }).actor_profile_id,
         actorName: actor?.display_name ?? null,
         actorAvatarUrl: actor?.avatar_url ?? null,
         actorEmoji: actor?.avatar_emoji ?? null,

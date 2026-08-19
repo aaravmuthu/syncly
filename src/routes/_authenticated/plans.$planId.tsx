@@ -99,10 +99,12 @@ function PlanConflictBanner({
   );
 }
 
+import { useFriends } from "@/lib/quorum/nicknames";
 import { ConflictCard } from "@/components/quorum/ConflictCard";
 import { getPlanConflicts } from "@/lib/quorum/conflict.functions";
 function PlanPage() {
   const { planId } = Route.useParams();
+  const { alias, openFriend } = useFriends();
   const qc = useQueryClient();
   const fetchPlan = useServerFn(getPlan);
   const q = useQuery({
@@ -176,7 +178,9 @@ function PlanPage() {
   const headcount = Math.max(total, 1);
   const attendeeNames = data.participants
     .filter((p) => p.attending !== false)
-    .map((p) => (p.profiles as { display_name?: string } | null)?.display_name ?? "Member");
+    .map((p) =>
+      alias(p.profile_id, (p.profiles as { display_name?: string } | null)?.display_name ?? "Member"),
+    );
   const cars = data.transport.map((t) => ({
     label: t.car_label,
     driver: t.driver_label ?? "A driver",
@@ -308,11 +312,13 @@ function PlanPage() {
                 <Avatar
                   url={prof?.avatar_url}
                   emoji={prof?.avatar_emoji}
-                  name={prof?.display_name}
+                  name={alias(p.profile_id, prof?.display_name)}
                   size={18}
                   className="bg-transparent"
                 />
-                {prof?.display_name ?? "Member"}
+                <button type="button" onClick={() => openFriend(p.profile_id)}>
+                  {alias(p.profile_id, prof?.display_name)}
+                </button>
                 <span className="opacity-75">
                   · {p.responded ? (selected ? "Ready" : "Answered") : "Pending"}
                 </span>

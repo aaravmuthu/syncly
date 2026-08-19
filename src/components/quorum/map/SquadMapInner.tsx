@@ -23,6 +23,7 @@ type Props = SquadMapData & {
   token: string;
   className?: string;
   onMessage?: (person: MapPerson) => void;
+  onProfile?: (person: MapPerson) => void;
   onPing?: (person: MapPerson) => void;
 };
 
@@ -53,6 +54,7 @@ export default function SquadMapInner({
   showMidpoint = true,
   className,
   onMessage,
+  onProfile,
   onPing,
 }: Props) {
   const container = useRef<HTMLDivElement>(null);
@@ -360,7 +362,13 @@ export default function SquadMapInner({
               aria-hidden
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold tracking-tight">{focus.name}</p>
+              <button
+                type="button"
+                onClick={() => onProfile?.(focus)}
+                className="block max-w-full truncate text-left text-sm font-bold tracking-tight underline-offset-4 hover:underline"
+              >
+                {focus.name}
+              </button>
               <p className="truncate text-xs font-medium text-muted-foreground">
                 {focus.address ?? focus.motion ?? "Location shared"}
               </p>

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { Avatar } from "@/components/quorum/Avatar";
+import { useFriends } from "@/lib/quorum/nicknames";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
 import {
   SquadMap,
@@ -114,6 +115,7 @@ function speedLabel(pos: GeolocationPosition) {
 
 function RadarPage() {
   const navigate = useNavigate();
+  const { openFriend } = useFriends();
   const focus = Route.useSearch();
   const hub = useQuery({
     queryKey: ["guardian-hub"],
@@ -240,6 +242,7 @@ function RadarPage() {
                 zones={zones}
                 places={places}
                 className="h-[58vh] min-h-80 w-full"
+                onProfile={(p) => (p.id === "me" || p.id === "chat-focus-pin" ? null : openFriend(p.id))}
                 onPing={(p) => toast(`Nudge sent to ${p.name}`)}
                 onMessage={(p) =>
                   p.id === "me"

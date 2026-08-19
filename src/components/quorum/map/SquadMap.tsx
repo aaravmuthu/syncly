@@ -17,11 +17,13 @@ export function SquadMap({
   className,
   onMessage,
   onPing,
+  onProfile,
   ...data
 }: SquadMapData & {
   className?: string;
   onMessage?: (p: MapPerson) => void;
   onPing?: (p: MapPerson) => void;
+  onProfile?: (p: MapPerson) => void;
 }) {
   const fetchToken = useServerFn(getMapToken);
   const token = useQuery({
@@ -49,6 +51,7 @@ export function SquadMap({
             {...data}
             {...(onMessage ? { onMessage } : {})}
             {...(onPing ? { onPing } : {})}
+            {...(onProfile ? { onProfile } : {})}
           />
         </Suspense>
       </ClientOnly>

@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
 import { getMe } from "@/lib/quorum/plan.functions";
+import { FriendProvider } from "@/lib/quorum/nicknames";
+import { FriendProfileSheet } from "./friend/FriendProfileSheet";
 
 const BASE_NAV = [
   { to: "/home", label: "Home", icon: House },
@@ -59,6 +61,7 @@ export function AppShell({
 
 
   return (
+    <FriendProvider>
     <div className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl">
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
@@ -155,6 +158,8 @@ export function AppShell({
         </div>
       </nav>
 
+      <FriendProfileSheet />
     </div>
+    </FriendProvider>
   );
 }
