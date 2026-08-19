@@ -331,10 +331,14 @@ function PlanCard({
       ) : null}
 
       <Link to="/plans/$planId" params={{ planId: plan.id }} className="mt-4 block">
-        <Button className="w-full active:scale-95">
-          Open plan dashboard <ArrowRight className="size-4" />
-        </Button>
+        <Magnetic className="w-full">
+          <Button className="w-full">
+            Open plan dashboard <ArrowRight className="size-4" />
+          </Button>
+        </Magnetic>
       </Link>
-    </motion.article>
+      </motion.div>
+    </SpotlightCard>
+
   );
 }
