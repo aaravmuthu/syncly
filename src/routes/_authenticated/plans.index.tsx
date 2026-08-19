@@ -95,8 +95,19 @@ function curfewState(endIso: string | null | undefined) {
 
 function PlansPage() {
   const dash = useQuery({ queryKey: ["dashboard"], queryFn: useServerFn(getDashboard) });
+  const qc = useQueryClient();
   const now = useNow();
   const plans = dash.data?.plans ?? [];
+  const [muted, setMuted] = useState<string[]>([]);
+
+  const attend = useMutation({
+    mutationFn: useServerFn(confirmAttendance),
+    onSuccess: () => {
+      toast.success("You're in 🎉");
+      void qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   return (
     <AppShell title="Plans" subtitle="Everything your groups are working out right now.">
@@ -116,16 +127,51 @@ function PlansPage() {
         />
       ) : null}
 
-      <div className="mx-auto w-full max-w-4xl space-y-4">
-        {plans.map((p, i) => (
-          <PlanCard key={p.id} plan={p} now={now} index={i} />
-        ))}
-      </div>
+      <PullToRefresh onRefresh={() => dash.refetch()}>
+        <div className="mx-auto w-full max-w-4xl space-y-4">
+          {plans.map((p, i) => (
+            <SwipeRow
+              key={p.id}
+              disabled={p.status === "finalized" || p.status === "completed"}
+              left={{
+                label: "I'm in",
+                icon: <ThumbsUp className="size-4" />,
+                tone: "primary",
+                onAction: () => attend.mutate({ data: { planId: p.id, attending: true } }),
+              }}
+              right={{
+                label: "Mute",
+                icon: <BellOff className="size-4" />,
+                tone: "muted",
+                onAction: () => {
+                  setMuted((m) => (m.includes(p.id) ? m : [...m, p.id]));
+                  toast("Muted — you won't get pings for this plan");
+                },
+              }}
+            >
+              <PlanCard plan={p} now={now} index={i} muted={muted.includes(p.id)} />
+            </SwipeRow>
+          ))}
+        </div>
+      </PullToRefresh>
+      <p className="mt-4 text-center text-xs text-muted-foreground md:hidden">
+        Swipe a plan right to join · left to mute
+      </p>
     </AppShell>
   );
 }
 
-function PlanCard({ plan, now, index }: { plan: DashPlan; now: number; index: number }) {
+function PlanCard({
+  plan,
+  now,
+  index,
+  muted = false,
+}: {
+  plan: DashPlan;
+  now: number;
+  index: number;
+  muted?: boolean;
+}) {
   const Icon = categoryIcon(plan.category);
   const group = plan.groups as { name?: string; emoji?: string } | null;
   const finalized = plan.status === "finalized" || plan.status === "completed";
@@ -141,13 +187,20 @@ function PlanCard({ plan, now, index }: { plan: DashPlan; now: number; index: nu
   const curfew = curfewState(plan.window_end);
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 26, delay: Math.min(index, 6) * 0.04 }}
-      className="surface rounded-3xl border border-border/70 p-5 shadow-xl backdrop-blur-xl transition-colors hover:border-primary/40"
+    <SpotlightCard
+      as="article"
+      tilt
+      className={`surface rounded-3xl border border-border/70 p-5 shadow-xl backdrop-blur-xl transition-colors hover:border-primary/40 ${
+        muted ? "opacity-60" : ""
+      }`}
     >
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 260, damping: 26, delay: Math.min(index, 6) * 0.04 }}
+      >
       {/* Top bar */}
+
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
