@@ -158,6 +158,8 @@ export function AppShell({
         </div>
       </nav>
 
+      <FriendProfileSheet />
     </div>
+    </FriendProvider>
   );
 }
