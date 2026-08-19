@@ -5,18 +5,12 @@ export function Mark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-[0.7rem] bg-primary text-primary-foreground",
+        "inline-flex size-8 items-center justify-center rounded-[0.7rem] bg-primary text-primary-foreground shadow-[0_0_22px_-6px_hsl(var(--primary)/0.9)]",
         className,
       )}
       aria-hidden
     >
-      <svg viewBox="0 0 24 24" className="size-4.5" fill="none">
-        <circle cx="12" cy="12" r="7.2" stroke="currentColor" strokeWidth="1.9" />
-        <circle cx="12" cy="12" r="2.4" fill="currentColor" />
-        <circle cx="12" cy="3.2" r="1.7" fill="currentColor" />
-        <circle cx="19.6" cy="16.4" r="1.7" fill="currentColor" />
-        <circle cx="4.4" cy="16.4" r="1.7" fill="currentColor" />
-      </svg>
+      <Zap className="size-4.5" strokeWidth={2.4} fill="currentColor" />
     </span>
   );
 }
