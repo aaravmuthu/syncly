@@ -42,6 +42,7 @@ import {
   type ShareMode,
   type SharePeer,
 } from "@/lib/quorum/sharing";
+import { useFriends } from "@/lib/quorum/nicknames";
 import { cn } from "@/lib/utils";
 
 const initials = (name: string) =>
@@ -65,6 +66,7 @@ const ago = (iso: string) => {
  */
 export function FindMyFriends() {
   const qc = useQueryClient();
+  const { alias, openFriend } = useFriends();
   const pins = useQuery({
     queryKey: ["friend-pins"],
     queryFn: useServerFn(getFriendPins),
@@ -132,8 +134,8 @@ export function FindMyFriends() {
     () =>
       list.map((p) => ({
         id: p.profileId,
-        name: p.name,
-        initials: initials(p.name),
+        name: alias(p.profileId, p.name),
+        initials: initials(alias(p.profileId, p.name)),
         avatarUrl: p.avatarUrl,
         lat: p.lat,
         lon: p.lon,
@@ -144,7 +146,7 @@ export function FindMyFriends() {
         lastSeen: p.lastSeen,
         state: p.atHome ? "arrived" : /driv|walk/i.test(p.motion ?? "") ? "enroute" : "idle",
       })),
-    [list],
+    [list, alias],
   );
 
   const gh = state.data?.ghost;
@@ -185,20 +187,26 @@ export function FindMyFriends() {
         <Skeleton className="h-64 rounded-3xl" />
       ) : list.length ? (
         <>
-          <SquadMap people={people} showMidpoint={false} className="h-[380px]" />
+          <SquadMap
+            people={people}
+            showMidpoint={false}
+            className="h-[380px]"
+            onProfile={(p) => openFriend(p.id)}
+            onMessage={(p) => openFriend(p.id)}
+          />
           <div className="space-y-2">
             {list.map((p) => (
               <motion.button
                 key={p.profileId}
                 type="button"
                 whileTap={{ scale: 0.985 }}
-                onClick={() => setFocus(p)}
+                onClick={() => openFriend(p.profileId)}
                 className="glass-card flex w-full items-center gap-3 p-3.5 text-left"
               >
-                <Avatar url={p.avatarUrl} emoji={p.emoji} name={p.name} size={44} />
+                <Avatar url={p.avatarUrl} emoji={p.emoji} name={alias(p.profileId, p.name)} size={44} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
-                    <span className="truncate text-sm font-semibold">{p.name}</span>
+                    <span className="truncate text-sm font-semibold">{alias(p.profileId, p.name)}</span>
                     <span aria-hidden>{p.statusEmoji}</span>
                   </span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">
@@ -247,9 +255,15 @@ export function FindMyFriends() {
           ) : null}
           {(peers.data ?? []).map((peer) => (
             <div key={peer.profileId} className="surface flex items-center gap-3 rounded-2xl p-3">
-              <Avatar url={peer.avatarUrl} emoji={peer.emoji} name={peer.name} size={40} />
+              <Avatar url={peer.avatarUrl} emoji={peer.emoji} name={alias(peer.profileId, peer.name)} size={40} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{peer.name}</p>
+                <button
+                  type="button"
+                  onClick={() => openFriend(peer.profileId)}
+                  className="block max-w-full truncate text-left text-sm font-semibold"
+                >
+                  {alias(peer.profileId, peer.name)}
+                </button>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {peer.sharingWithThem ? (
                     <Pill tone="good">
@@ -283,7 +297,7 @@ export function FindMyFriends() {
       <Modal
         open={Boolean(durationFor)}
         onClose={() => setDurationFor(null)}
-        title={durationFor ? `Share with ${durationFor.name}` : "Share location"}
+        title={durationFor ? `Share with ${alias(durationFor.profileId, durationFor.name)}` : "Share location"}
         description="You can stop at any time."
       >
         <div className="space-y-2">

@@ -55,6 +55,7 @@ const stamp = (iso?: string | null) => {
 
 function MessagesPage() {
   const search = Route.useSearch();
+  const { alias } = useFriends();
   const navigate = useNavigate();
   const fetchInbox = useServerFn(listInbox);
   const fetchContacts = useServerFn(listContacts);
@@ -88,9 +89,12 @@ function MessagesPage() {
   const threads = useMemo(
     () =>
       (inbox.data?.threads ?? []).filter(
-        (t) => !q || (t.peer?.display_name ?? "").toLowerCase().includes(q),
+        (t) =>
+          !q ||
+          alias(t.peer?.id, t.peer?.display_name).toLowerCase().includes(q) ||
+          (t.peer?.display_name ?? "").toLowerCase().includes(q),
       ),
-    [inbox.data, q],
+    [inbox.data, q, alias],
   );
   const squads = useMemo(
     () => (inbox.data?.squads ?? []).filter((s) => !q || s.name.toLowerCase().includes(q)),
