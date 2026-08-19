@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /approve/
+Disallow: /join/
+Disallow: /auth-callback
+
+Sitemap: https://syncly.website/sitemap.xml
