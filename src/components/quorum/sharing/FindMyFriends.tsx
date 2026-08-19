@@ -192,7 +192,6 @@ export function FindMyFriends() {
             showMidpoint={false}
             className="h-[380px]"
             onProfile={(p) => openFriend(p.id)}
-            onMessage={(p) => openFriend(p.id)}
           />
           <div className="space-y-2">
             {list.map((p) => (
