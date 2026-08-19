@@ -18,8 +18,8 @@
     </filter>
   </defs>
 
-  <path d="M256 0C97.6 0 32 20.9 32 106.7v298.6C32 491.1 97.6 512 256 512s224-20.9 224-106.7V106.7C480 20.9 414.4 0 256 0Z" fill="url(#tile)"/>
-  <path d="M256 0C97.6 0 32 20.9 32 106.7v298.6C32 491.1 97.6 512 256 512s224-20.9 224-106.7V106.7C480 20.9 414.4 0 256 0Z" fill="url(#gloss)"/>
+  <rect x="8" y="8" width="496" height="496" rx="115" fill="url(#tile)"/>
+  <rect x="8" y="8" width="496" height="496" rx="115" fill="url(#gloss)"/>
 
   <g opacity="0.5" stroke="#ffffff" fill="none" stroke-linecap="round">
     <circle cx="256" cy="256" r="176" stroke-opacity="0.16" stroke-width="10"/>
