@@ -257,3 +257,97 @@ export const markAlertsRead = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Everything the teen-facing radar screen needs about themselves. */
+export const getMyRadar = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const me = await resolveMyProfileId(context.supabase);
+    const [{ data: prof }, { data: zones }, { data: pings }, { data: guardians }] =
+      await Promise.all([
+        context.supabase
+          .from("profiles")
+          .select("display_name, avatar_emoji, avatar_url, curfew_time, location_sharing_enabled")
+          .eq("id", me)
+          .maybeSingle(),
+        context.supabase
+          .from("safe_zones")
+          .select("id, label, kind, lat, lon, radius_m")
+          .eq("teen_profile_id", me),
+        context.supabase
+          .from("location_pings")
+          .select("lat, lon, accuracy_m, battery_pct, status_label, created_at")
+          .eq("profile_id", me)
+          .order("created_at", { ascending: false })
+          .limit(1),
+        context.supabase
+          .from("guardian_links")
+          .select("id, guardian:profiles!guardian_links_guardian_profile_id_fkey(display_name)")
+          .eq("teen_profile_id", me),
+      ]);
+
+    const ping = (pings ?? [])[0] ?? null;
+    return {
+      me: {
+        id: me,
+        name: (prof?.display_name as string) ?? "You",
+        emoji: (prof?.avatar_emoji as string | null) ?? null,
+        avatar_url: (prof?.avatar_url as string | null) ?? null,
+        curfew: (prof?.curfew_time as string | null) ?? null,
+        sharing: Boolean(prof?.location_sharing_enabled),
+      },
+      zones: (zones ?? []) as {
+        id: string;
+        label: string;
+        kind: string;
+        lat: number;
+        lon: number;
+        radius_m: number;
+      }[],
+      lastPing: ping as {
+        lat: number;
+        lon: number;
+        accuracy_m: number | null;
+        battery_pct: number | null;
+        status_label: string | null;
+        created_at: string;
+      } | null,
+      guardians: (guardians ?? []).length,
+    };
+  });
+
+/** One-tap "I arrived safely" beacon: records the ping and pings guardians. */
+export const arrivedSafely = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      lat?: number | null;
+      lon?: number | null;
+      batteryPct?: number | null;
+      placeLabel?: string | null;
+    }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const me = await resolveMyProfileId(context.supabase);
+    const { alertGuardians, recordPing } = await import("./guardian.server");
+    if (data.lat != null && data.lon != null) {
+      await recordPing(me, {
+        lat: data.lat,
+        lon: data.lon,
+        batteryPct: data.batteryPct ?? null,
+        statusLabel: "Arrived safely",
+      });
+    }
+    const { data: prof } = await context.supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", me)
+      .maybeSingle();
+    await alertGuardians(me, {
+      type: "checkin",
+      title: `${prof?.display_name ?? "Your teen"} arrived safely`,
+      body: data.placeLabel ? `At ${data.placeLabel}` : "Location shared with you.",
+      priority: "normal",
+    });
+    return { ok: true };
+  });

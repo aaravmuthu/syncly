@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Sparkles, KeyRound } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
@@ -101,12 +102,20 @@ function HomePage() {
   const needsAction = dayFiltered.filter(
     (p) =>
       !conflicted.includes(p) &&
+      p.i_attending == null &&
       ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
+  );
+  const answeredActive = dayFiltered.filter(
+    (p) =>
+      (p.status === "collecting" || p.status === "voting") &&
+      p.i_attending != null &&
+      !conflicted.includes(p),
   );
   const otherActive = dayFiltered.filter(
     (p) =>
       (p.status === "collecting" || p.status === "voting") &&
       !needsAction.includes(p) &&
+      !answeredActive.includes(p) &&
       !conflicted.includes(p),
   );
   const confirmed = dayFiltered
@@ -239,40 +248,75 @@ function HomePage() {
           </Section>
         ) : null}
 
-        {needsAction.length > 0 ? (
-          <Section title="Needs your action" accent="text-emerald-500">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {needsAction.map((p) => (
-                <div key={p.id} className="flex h-full flex-col gap-2">
-                  <div className="flex-1">
-                    <ActionCard plan={p} />
-                  </div>
-                  <QuickActions planId={p.id} />
+        <LayoutGroup>
+          <AnimatePresence initial={false} mode="popLayout">
+            {needsAction.length > 0 ? (
+              <MotionSection key="needs" title="Needs your action" accent="text-emerald-500">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {needsAction.map((p) => (
+                      <MotionCard key={p.id}>
+                        <div className="flex h-full flex-col gap-2">
+                          <div className="flex-1">
+                            <ActionCard plan={p} />
+                          </div>
+                          <QuickActions planId={p.id} answered={p.i_attending ?? null} />
+                        </div>
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
                 </div>
-              ))}
-            </div>
-          </Section>
-        ) : null}
+              </MotionSection>
+            ) : null}
 
-        {confirmed.length > 0 ? (
-          <Section title="Upcoming confirmed plans" accent="text-indigo-400">
-            <div className="grid gap-3">
-              {confirmed.map((p) => (
-                <ConfirmedCard key={p.id} plan={p} />
-              ))}
-            </div>
-          </Section>
-        ) : null}
+            {answeredActive.length > 0 ? (
+              <MotionSection key="answered" title="Your confirmed plans" accent="text-emerald-400">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {answeredActive.map((p) => (
+                      <MotionCard key={p.id}>
+                        <div className="flex h-full flex-col gap-2">
+                          <div className="flex-1">
+                            <ActionCard plan={p} />
+                          </div>
+                          <QuickActions planId={p.id} answered={p.i_attending ?? null} />
+                        </div>
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </MotionSection>
+            ) : null}
 
-        {otherActive.length > 0 ? (
-          <Section title="Waiting on the group" accent="text-amber-500">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {otherActive.map((p) => (
-                <ActionCard key={p.id} plan={p} />
-              ))}
-            </div>
-          </Section>
-        ) : null}
+            {confirmed.length > 0 ? (
+              <MotionSection key="locked" title="Locked in with the group" accent="text-indigo-400">
+                <div className="grid gap-3">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {confirmed.map((p) => (
+                      <MotionCard key={p.id}>
+                        <ConfirmedCard plan={p} />
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </MotionSection>
+            ) : null}
+
+            {otherActive.length > 0 ? (
+              <MotionSection key="waiting" title="Waiting on the group" accent="text-amber-500">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {otherActive.map((p) => (
+                      <MotionCard key={p.id}>
+                        <ActionCard plan={p} />
+                      </MotionCard>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </MotionSection>
+            ) : null}
+          </AnimatePresence>
+        </LayoutGroup>
 
         {groupList.length > 0 ? (
           <Section title="Active circles">
@@ -281,6 +325,51 @@ function HomePage() {
         ) : null}
       </div>
     </AppShell>
+  );
+}
+
+const cardSpring = { type: "spring", stiffness: 300, damping: 25 } as const;
+
+function MotionSection({
+  title,
+  accent,
+  children,
+}: {
+  title: string;
+  accent?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.section
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={cardSpring}
+      className="space-y-3"
+    >
+      <h2
+        className={`text-xs font-semibold uppercase tracking-wide ${accent ?? "text-muted-foreground"}`}
+      >
+        {title}
+      </h2>
+      {children}
+    </motion.section>
+  );
+}
+
+function MotionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={cardSpring}
+      className="h-full"
+    >
+      {children}
+    </motion.div>
   );
 }
 

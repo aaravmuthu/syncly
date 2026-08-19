@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
+import { AnimatePresence, motion } from "motion/react";
+import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
@@ -49,33 +51,44 @@ export function Modal({
     );
   }
 
-  if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <button
-        type="button"
-        aria-label="Close"
-        className="absolute inset-0 bg-foreground/35 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="surface relative w-full max-w-md rounded-3xl p-5"
-      >
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-display text-base font-semibold">{title}</h2>
-          <button
+    <AnimatePresence>
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <motion.button
             type="button"
+            aria-label="Close"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-foreground/35 backdrop-blur-sm"
             onClick={onClose}
-            className="tap-target rounded-xl px-2 py-1 text-sm text-muted-foreground hover:bg-secondary"
+          />
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title}
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="glass-card relative w-full max-w-md p-5"
           >
-            ✕
-          </button>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="font-display text-base font-semibold">{title}</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="tap-target rounded-xl px-2 py-1 text-muted-foreground hover:bg-secondary"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            {children}
+          </motion.div>
         </div>
-        {children}
-      </div>
-    </div>
+      ) : null}
+    </AnimatePresence>
   );
 }

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -89,6 +89,20 @@ function GuardianHub() {
 
   return (
     <AppShell title="Family hub" subtitle="Plans, rides and safe arrivals — no group chatter.">
+      <Link
+        to="/radar"
+        className="glass-card mb-4 flex items-center justify-between gap-3 p-4 text-sm transition hover:border-primary/40"
+      >
+        <span>
+          <span className="block font-semibold">Open live radar</span>
+          <span className="block text-xs text-muted-foreground">
+            Live pins, battery levels and curfew countdowns for every teen.
+          </span>
+        </span>
+        <span className="text-primary" aria-hidden>
+          →
+        </span>
+      </Link>
       {hub.isLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-24 rounded-3xl" />

@@ -35,10 +35,10 @@ export type ConflictReason = "budget" | "curfew" | "distance" | "schedule" | "ma
 
 /** Quick-pill copy for the 1-tap "doesn't work for me" overlay. */
 export const CONFLICT_REASONS: { id: ConflictReason; label: string; detail: string }[] = [
-  { id: "budget", label: "Too Expensive 💸", detail: "This is over someone's budget" },
-  { id: "curfew", label: "Past Curfew ⏰", detail: "This runs past someone's curfew" },
-  { id: "distance", label: "Too Far 🚗", detail: "This is outside someone's travel range" },
-  { id: "schedule", label: "Time Conflict 📅", detail: "Someone is busy at this time" },
+  { id: "budget", label: "Too Expensive", detail: "This is over someone's budget" },
+  { id: "curfew", label: "Past Curfew", detail: "This runs past someone's curfew" },
+  { id: "distance", label: "Too Far", detail: "This is outside someone's travel range" },
+  { id: "schedule", label: "Time Conflict", detail: "Someone is busy at this time" },
 ];
 
 /**

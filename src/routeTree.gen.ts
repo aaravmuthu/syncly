@@ -21,6 +21,7 @@ import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedGuardianRouteImport } from './routes/_authenticated/guardian'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedRlsCheckRouteImport } from './routes/_authenticated/rls-check'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
@@ -93,6 +94,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRadarRoute = AuthenticatedRadarRouteImport.update({
+  id: '/radar',
+  path: '/radar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRlsCheckRoute = AuthenticatedRlsCheckRouteImport.update({
   id: '/rls-check',
   path: '/rls-check',
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/guardian': typeof AuthenticatedGuardianRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/radar': typeof AuthenticatedRadarRoute
   '/rls-check': typeof AuthenticatedRlsCheckRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/guardian': typeof AuthenticatedGuardianRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/radar': typeof AuthenticatedRadarRoute
   '/rls-check': typeof AuthenticatedRlsCheckRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_authenticated/guardian': typeof AuthenticatedGuardianRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/rls-check': typeof AuthenticatedRlsCheckRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/guardian'
     | '/home'
     | '/onboarding'
+    | '/radar'
     | '/rls-check'
     | '/settings'
     | '/approve/$token'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/guardian'
     | '/home'
     | '/onboarding'
+    | '/radar'
     | '/rls-check'
     | '/settings'
     | '/approve/$token'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/_authenticated/guardian'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
+    | '/_authenticated/radar'
     | '/_authenticated/rls-check'
     | '/_authenticated/settings'
     | '/approve/$token'
@@ -393,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/radar': {
+      id: '/_authenticated/radar'
+      path: '/radar'
+      fullPath: '/radar'
+      preLoaderRoute: typeof AuthenticatedRadarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rls-check': {
       id: '/_authenticated/rls-check'
       path: '/rls-check'
@@ -471,6 +490,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGuardianRoute: typeof AuthenticatedGuardianRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
   AuthenticatedRlsCheckRoute: typeof AuthenticatedRlsCheckRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
@@ -484,6 +504,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGuardianRoute: AuthenticatedGuardianRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedRadarRoute: AuthenticatedRadarRoute,
   AuthenticatedRlsCheckRoute: AuthenticatedRlsCheckRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
