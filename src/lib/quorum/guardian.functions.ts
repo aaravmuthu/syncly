@@ -380,5 +380,14 @@ export const arrivedSafely = createServerFn({ method: "POST" })
       body: data.placeLabel ? `At ${data.placeLabel}` : "Location shared with you.",
       priority: "normal",
     });
+    const { broadcastDmSystemEvent } = await import("./dm.server");
+    await broadcastDmSystemEvent(me, {
+      tag: "arrived",
+      content: `📍 ${prof?.display_name ?? "They"} arrived safely${data.placeLabel ? ` at ${data.placeLabel}` : ""}`,
+      lat: data.lat ?? null,
+      lon: data.lon ?? null,
+      label: data.placeLabel ?? null,
+    });
     return { ok: true };
   });
+
