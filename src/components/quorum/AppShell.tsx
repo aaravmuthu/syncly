@@ -54,7 +54,7 @@ export function AppShell({
   // Parents swap the Groups tab for their Family hub — the rest stays identical.
   const NAV: NavItem[] =
     me.data?.account_type === "guardian"
-      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[4], BASE_NAV[6]]
+      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[6]]
       : [...BASE_NAV];
 
 
