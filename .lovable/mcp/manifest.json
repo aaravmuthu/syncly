@@ -11,7 +11,7 @@
   },
   "mcp": {
     "server": {
-      "name": "quorum",
+      "name": "syncly",
       "version": "0.1.0",
       "title": "Syncly"
     },

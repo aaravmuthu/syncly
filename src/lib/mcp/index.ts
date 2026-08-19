@@ -11,7 +11,7 @@ import sendCircleMessageTool from "./tools/send-circle-message";
 const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
 export default defineMcp({
-  name: "quorum",
+  name: "syncly",
   title: "Syncly",
   version: "0.1.0",
   instructions:
