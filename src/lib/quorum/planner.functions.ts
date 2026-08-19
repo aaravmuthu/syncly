@@ -48,13 +48,17 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
       .limit(1);
     if (!membership?.length) throw new Error("Forbidden");
 
-    const { data: mine } = await supabase
+    // Private location columns are user-role-restricted; read the caller's own
+    // row through the trusted server client, scoped to their profile id.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: mine } = await supabaseAdmin
       .from("profiles")
       .select(
         "id, display_name, zip_code, home_area, home_address, home_lat, home_lon, curfew_time, budget_preference, preferred_categories",
       )
       .eq("id", myId ?? "")
       .maybeSingle();
+
 
     const { loadMemberBases, fairPointFor } = await import("./fairpoint.server");
     const bases = await loadMemberBases(data.groupId);
