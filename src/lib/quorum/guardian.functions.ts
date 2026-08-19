@@ -81,11 +81,14 @@ export const pushLocation = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
-    const { data: prof } = await context.supabase
+    // Sharing flags are private columns — read own row via the server client.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select("location_sharing_enabled")
       .eq("id", me)
       .maybeSingle();
+
     if (!prof?.location_sharing_enabled) return { ok: false, reason: "sharing_off" as const };
     const { recordPing } = await import("./guardian.server");
     return recordPing(me, data);
