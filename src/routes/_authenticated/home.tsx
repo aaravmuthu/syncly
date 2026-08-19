@@ -8,6 +8,8 @@ import { AppShell } from "@/components/quorum/AppShell";
 import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
+import { LiveActivityCard } from "@/components/quorum/LiveActivityCard";
+import { FindMySquad } from "@/components/quorum/FindMySquad";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import {
   ActionCard,
@@ -126,15 +128,19 @@ function HomePage() {
         new Date(b.window_start ?? b.created_at).getTime(),
     );
 
-  // Up next: soonest confirmed plan, else the most urgent thing waiting on you.
-  const upNext =
-    confirmed.find(
-      (p) => new Date(p.window_start ?? p.created_at).getTime() >= Date.now() - 864e5,
-    ) ??
-    needsAction[0] ??
-    confirmed[0] ??
-    otherActive[0] ??
-    null;
+  const isPast = (p: DashPlan) =>
+    new Date(p.window_start ?? p.created_at).getTime() < Date.now() - 6 * 3600e3;
+  const todayKey = dayKey(new Date().toISOString());
+
+  // Live Activity carousel: anything needing you, answered-but-live, or happening today.
+  const activeNow = [
+    ...needsAction,
+    ...answeredActive,
+    ...otherActive,
+    ...confirmed.filter((p) => p.window_start && dayKey(p.window_start) === todayKey),
+  ];
+  const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
+  const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
 
   const groupList = (groups.data ?? []).map((raw) => {
     const g = raw as unknown as Record<string, unknown>;
@@ -210,8 +216,6 @@ function HomePage() {
           />
         ) : null}
 
-        {upNext ? <UpNextHero plan={upNext} /> : null}
-
         {selectedDay && dayFiltered.length === 0 ? (
           <Glass className="text-center text-sm text-muted-foreground">
             Nothing scheduled on{" "}
@@ -232,7 +236,7 @@ function HomePage() {
         ) : null}
 
         {conflicted.length > 0 ? (
-          <Section title="Conflict — quick re-vote" accent="text-amber-500">
+          <Section title="Conflicts" accent="text-amber-400">
             <div className="grid gap-3">
               {conflicted.map((p) => (
                 <ConflictCard
@@ -249,74 +253,57 @@ function HomePage() {
         ) : null}
 
         <LayoutGroup>
-          <AnimatePresence initial={false} mode="popLayout">
-            {needsAction.length > 0 ? (
-              <MotionSection key="needs" title="Needs your action" accent="text-emerald-500">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {needsAction.map((p) => (
-                      <MotionCard key={p.id}>
-                        <div className="flex h-full flex-col gap-2">
-                          <div className="flex-1">
-                            <ActionCard plan={p} />
-                          </div>
-                          <QuickActions planId={p.id} answered={p.i_attending ?? null} />
-                        </div>
-                      </MotionCard>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </MotionSection>
-            ) : null}
-
-            {answeredActive.length > 0 ? (
-              <MotionSection key="answered" title="Your confirmed plans" accent="text-emerald-400">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {answeredActive.map((p) => (
-                      <MotionCard key={p.id}>
-                        <div className="flex h-full flex-col gap-2">
-                          <div className="flex-1">
-                            <ActionCard plan={p} />
-                          </div>
-                          <QuickActions planId={p.id} answered={p.i_attending ?? null} />
-                        </div>
-                      </MotionCard>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </MotionSection>
-            ) : null}
-
-            {confirmed.length > 0 ? (
-              <MotionSection key="locked" title="Locked in with the group" accent="text-indigo-400">
-                <div className="grid gap-3">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {confirmed.map((p) => (
-                      <MotionCard key={p.id}>
-                        <ConfirmedCard plan={p} />
-                      </MotionCard>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </MotionSection>
-            ) : null}
-
-            {otherActive.length > 0 ? (
-              <MotionSection key="waiting" title="Waiting on the group" accent="text-amber-500">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {otherActive.map((p) => (
-                      <MotionCard key={p.id}>
-                        <ActionCard plan={p} />
-                      </MotionCard>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </MotionSection>
-            ) : null}
-          </AnimatePresence>
+          {activeNow.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-xl font-bold tracking-tight">Active right now</h2>
+              <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {activeNow.map((p) => (
+                    <motion.div
+                      key={p.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={cardSpring}
+                      className="w-[88%] shrink-0 snap-start sm:w-[420px]"
+                    >
+                      <LiveActivityCard plan={p} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </section>
+          ) : null}
         </LayoutGroup>
+
+        <FindMySquad />
+
+        {upcoming.length > 0 || memories.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-xl font-bold tracking-tight">Upcoming &amp; memories</h2>
+            <div className="grid gap-3">
+              {upcoming.map((p) => (
+                <ConfirmedCard key={p.id} plan={p} />
+              ))}
+              {memories.map((p) => (
+                <Link
+                  key={p.id}
+                  to="/plans/$planId"
+                  params={{ planId: p.id }}
+                  className="flex items-center gap-3 rounded-[28px] border border-white/5 bg-card/30 px-4 py-3 backdrop-blur-3xl"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-muted-foreground">{p.title}</p>
+                    <p className="truncate text-xs font-medium text-muted-foreground/70">
+                      {formatWhen(p.window_start)} · {p.groups?.name ?? "Group"}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {groupList.length > 0 ? (
           <Section title="Active circles">
@@ -392,83 +379,4 @@ function Section({
       {children}
     </section>
   );
-}
-
-function UpNextHero({ plan }: { plan: DashPlan }) {
-  const rec = plan.selected_recommendation;
-  const cta =
-    plan.status === "voting"
-      ? plan.i_voted
-        ? "See the tally"
-        : "Cast vote"
-      : plan.status === "collecting"
-        ? plan.i_responded
-          ? "View plan"
-          : "Answer privately"
-        : "View plan";
-  const tag =
-    plan.status === "finalized" && rec?.suggested_start
-      ? `Confirmed ${formatTime(rec.suggested_start)}`
-      : undefined;
-
-  return (
-    <Glass className="relative overflow-hidden p-5">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--primary)_35%,transparent),transparent_70%)] blur-2xl"
-      />
-      <div className="relative space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            Up next
-          </p>
-          <StatusTag status={plan.status} label={tag} />
-        </div>
-
-        <div className="flex gap-4">
-          <div className="min-w-0 flex-1 space-y-1">
-            <p className="truncate text-xs text-muted-foreground">
-              {plan.groups?.emoji ?? "✨"} {plan.groups?.name ?? "Group"}
-            </p>
-            <h2 className="font-display text-2xl font-semibold leading-tight">{plan.title}</h2>
-            <p className="text-sm text-muted-foreground">
-              {formatWhen(plan.window_start)}
-              {rec?.location_name
-                ? ` · ${rec.location_name}`
-                : plan.location_area
-                  ? ` · ${plan.location_area}`
-                  : ""}
-            </p>
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              <WeatherChip planId={plan.id} />
-              <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} />
-            </div>
-          </div>
-          <MapThumb lat={rec?.lat} lon={rec?.lon} className="hidden h-28 w-40 shrink-0 sm:block" />
-        </div>
-
-        {plan.status !== "finalized" ? (
-          <Progress
-            done={plan.status === "voting" ? plan.vote_count : plan.responded_count}
-            total={Math.max(plan.participant_count, 1)}
-          />
-        ) : null}
-
-        <div className="flex items-center justify-between gap-3">
-          <AvatarStack people={plan.participants} max={5} />
-          <Link to="/plans/$planId" params={{ planId: plan.id }}>
-            <Button>{cta}</Button>
-          </Link>
-        </div>
-      </div>
-    </Glass>
-  );
-}
-
-function formatTime(t: string) {
-  const [h = "0", m = "00"] = t.split(":");
-  const hour = Number(h);
-  const suffix = hour >= 12 ? "PM" : "AM";
-  const display = hour % 12 === 0 ? 12 : hour % 12;
-  return `${display}:${m} ${suffix}`;
 }
