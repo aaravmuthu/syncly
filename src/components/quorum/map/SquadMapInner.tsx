@@ -32,8 +32,16 @@ const M_PER_MILE = 1609.34;
 const haloFor = (state: MapPerson["state"]) =>
   state === "arrived" ? "#34d399" : state === "enroute" ? "#fbbf24" : "#a1a1aa";
 
-function fc(features: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
-  return { type: "FeatureCollection", features };
+type AnyFeature = {
+  type: "Feature";
+  properties: Record<string, unknown>;
+  geometry: { type: "Polygon" | "LineString"; coordinates: unknown };
+};
+
+function fc(features: AnyFeature[]) {
+  return { type: "FeatureCollection", features } as unknown as Parameters<
+    mapboxgl.GeoJSONSource["setData"]
+  >[0];
 }
 
 /** Browser-only Apple-Maps-style engine. Rendered lazily behind <ClientOnly>. */
@@ -173,7 +181,7 @@ export default function SquadMapInner({
     src("q-zones")?.setData(
       fc(
         (showZones ? zones : []).map((z) => ({
-          type: "Feature",
+          type: "Feature" as const,
           properties: { label: z.label },
           geometry: { type: "Polygon", coordinates: [circlePolygon(z.lat, z.lon, z.radiusM)] },
         })),
