@@ -266,13 +266,15 @@ export const getMyRadar = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const me = await resolveMyProfileId(context.supabase);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: prof }, { data: zones }, { data: pings }, { data: guardians }] =
       await Promise.all([
-        context.supabase
+        supabaseAdmin
           .from("profiles")
           .select("display_name, avatar_emoji, avatar_url, curfew_time, location_sharing_enabled")
           .eq("id", me)
           .maybeSingle(),
+
         context.supabase
           .from("safe_zones")
           .select("id, label, kind, lat, lon, radius_m")
