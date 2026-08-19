@@ -30,7 +30,9 @@ import {
   pushLocation,
 } from "@/lib/quorum/guardian.functions";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
+import { FindMyFriends } from "@/components/quorum/sharing/FindMyFriends";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
