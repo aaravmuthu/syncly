@@ -16,7 +16,15 @@ export type { MapVenue };
  * Dark Mapbox map of the candidate venues. Degrades to a plain list-only view
  * when no map token is configured or the map fails to load.
  */
-export function VenueMap({ venues, onSelect }: { venues: MapVenue[]; onSelect?: (id: string) => void }) {
+export function VenueMap({
+  venues,
+  onSelect,
+  mapClassName,
+}: {
+  venues: MapVenue[];
+  onSelect?: (id: string) => void;
+  mapClassName?: string;
+}) {
   const fetchToken = useServerFn(getMapToken);
   const token = useQuery({
     queryKey: ["map-token"],
@@ -36,7 +44,7 @@ export function VenueMap({ venues, onSelect }: { venues: MapVenue[]; onSelect?: 
       <ErrorBoundary label="venue-map" fallback={null}>
         <ClientOnly fallback={<Skeleton className="h-64 rounded-2xl" />}>
           <Suspense fallback={<Skeleton className="h-64 rounded-2xl" />}>
-            <Inner token={token.data} venues={venues} onSelect={onSelect} />
+            <Inner token={token.data} venues={venues} onSelect={onSelect} className={mapClassName} />
           </Suspense>
         </ClientOnly>
       </ErrorBoundary>

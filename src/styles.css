@@ -382,6 +382,41 @@
   background: color-mix(in oklab, var(--foreground) 16%, transparent);
   border: 1px solid color-mix(in oklab, var(--foreground) 30%, transparent);
 }
+.q-map-pin-person {
+  height: 38px;
+  width: 38px;
+  background: color-mix(in oklab, var(--primary) 88%, white 12%);
+  color: var(--primary-foreground);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 22%, transparent);
+}
+.q-map-pin-initials {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.q-map-pin-pulse {
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
+  animation: q-radar-pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@keyframes q-radar-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+.q-map-pin-zone {
+  height: 24px;
+  width: 24px;
+  background: color-mix(in oklab, var(--foreground) 12%, transparent);
+  border: 1px dashed color-mix(in oklab, var(--primary) 55%, transparent);
+}
 .q-map-pin-fair {
   height: 30px;
   width: 30px;
