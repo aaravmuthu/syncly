@@ -207,8 +207,10 @@ function RadarPage() {
                 onMessage={(p) => toast(`Opening chat with ${p.name}`)}
               />
             ) : null}
+            <FindMyFriends />
             {teens.length > 0 ? <FamilyRadar teens={teens} /> : null}
             {mine.data ? <MyRadar data={mine.data} /> : null}
+
             {teens.length === 0 && !mine.data?.lastPing ? (
               <Empty
                 title="No live pins yet"
