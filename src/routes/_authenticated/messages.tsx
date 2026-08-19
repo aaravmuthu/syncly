@@ -6,6 +6,7 @@ import { MessageCircle, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
+import { useFriends } from "@/lib/quorum/nicknames";
 import { Empty, Skeleton } from "@/components/quorum/ui";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { ChatSheet } from "@/components/quorum/dm/ChatSheet";
@@ -148,11 +149,11 @@ function MessagesPage() {
                         <Avatar
                           url={t.peer?.avatar_url}
                           emoji={t.peer?.avatar_emoji}
-                          name={t.peer?.display_name}
+                          name={alias(t.peer?.id, t.peer?.display_name)}
                           size={44}
                         />
                       }
-                      title={t.peer?.display_name ?? "Member"}
+                      title={alias(t.peer?.id, t.peer?.display_name)}
                       preview={
                         t.last ? `${t.last.mine ? "You: " : ""}${t.last.content}` : "Start the conversation"
                       }

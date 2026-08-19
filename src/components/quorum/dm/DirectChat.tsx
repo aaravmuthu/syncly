@@ -7,6 +7,7 @@ import { BatteryLow, BatteryFull, MapPin, Mic, Navigation, Square } from "lucide
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/quorum/Avatar";
+import { useFriends } from "@/lib/quorum/nicknames";
 import { Button, Spinner } from "@/components/quorum/ui";
 import { haptic } from "@/lib/quorum/haptics";
 import {
@@ -53,6 +54,7 @@ export function DirectChat({
 }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { alias, openFriend } = useFriends();
   const fetchThread = useServerFn(getThread);
   const send = useServerFn(sendDirect);
   const mark = useServerFn(markThreadRead);
@@ -213,6 +215,8 @@ export function DirectChat({
     }
   }
 
+  const peerName = alias(peer?.id, peer?.display_name);
+
   const flyTo = (lat: number, lon: number, label?: string) =>
     navigate({ to: "/radar", search: { lat, lon, label: label ?? "Shared pin" } });
 
@@ -220,19 +224,28 @@ export function DirectChat({
     <div className={cn("flex min-h-0 flex-col bg-zinc-950/90 backdrop-blur-2xl", className)}>
       {/* context banner ------------------------------------------------ */}
       <header className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
-        <span className="relative">
-          <Avatar url={peer?.avatar_url} emoji={peer?.avatar_emoji} name={peer?.display_name} size={40} />
+        <button
+          type="button"
+          className="relative"
+          aria-label="Open profile"
+          onClick={() => peer?.id && openFriend(peer.id)}
+        >
+          <Avatar url={peer?.avatar_url} emoji={peer?.avatar_emoji} name={peerName} size={40} />
           <span
             className={cn(
               "absolute -bottom-0.5 -right-0.5 size-3 rounded-full ring-2 ring-zinc-950",
               peerOnline ? "bg-emerald-400" : "bg-zinc-500",
             )}
           />
-        </span>
+        </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">
-            {peer?.display_name ?? "Direct message"}
-          </p>
+          <button
+            type="button"
+            onClick={() => peer?.id && openFriend(peer.id)}
+            className="block max-w-full truncate text-left text-sm font-semibold text-white"
+          >
+            {peer ? peerName : "Direct message"}
+          </button>
           <p className="flex items-center gap-1.5 truncate text-[11px] text-white/55">
             {telemetry ? (
               <>
@@ -257,7 +270,7 @@ export function DirectChat({
         {telemetry ? (
           <button
             type="button"
-            onClick={() => flyTo(telemetry.lat, telemetry.lon, peer?.display_name ?? "Pin")}
+            onClick={() => flyTo(telemetry.lat, telemetry.lon, peerName)}
             className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 transition active:scale-95"
           >
             <Navigation className="h-3.5 w-3.5" aria-hidden /> View on Map
@@ -309,7 +322,7 @@ export function DirectChat({
 
         {peerTyping ? (
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
-            <Dots /> {peer?.display_name ?? "They"} is typing…
+            <Dots /> {peer ? peerName : "They"} is typing…
           </div>
         ) : null}
 
@@ -367,7 +380,7 @@ export function DirectChat({
           <textarea
             value={text}
             rows={1}
-            placeholder={`Message ${peer?.display_name?.split(" ")[0] ?? ""}…`}
+            placeholder={`Message ${peerName.split(" ")[0]}…`}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               broadcastTyping();
