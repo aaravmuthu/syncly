@@ -39,14 +39,38 @@ export function LogoMark({
       role="img"
       aria-label={`${BRAND.name} logo`}
     >
-      <rect x="8" y="8" width="496" height="496" rx="115" fill="#10B981" />
+      <defs>
+        <linearGradient id="sy-tile" x1="96" y1="16" x2="416" y2="496" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#3BE8B0" />
+          <stop offset="0.45" stopColor="#12B48A" />
+          <stop offset="1" stopColor="#046B57" />
+        </linearGradient>
+        <linearGradient id="sy-rim" x1="256" y1="8" x2="256" y2="504" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
+          <stop offset="0.35" stopColor="#ffffff" stopOpacity="0.06" />
+          <stop offset="1" stopColor="#000000" stopOpacity="0.28" />
+        </linearGradient>
+        <radialGradient id="sy-sheen" cx="0.28" cy="0.12" r="0.95">
+          <stop offset="0" stopColor="#ffffff" stopOpacity="0.3" />
+          <stop offset="0.55" stopColor="#ffffff" stopOpacity="0.04" />
+          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="sy-glyph" x1="180" y1="120" x2="330" y2="392" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="1" stopColor="#E3FFF6" />
+        </linearGradient>
+      </defs>
+
+      <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#sy-tile)" />
+      <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#sy-sheen)" />
+      <rect x="17.5" y="17.5" width="477" height="477" rx="110.5" fill="none" stroke="url(#sy-rim)" strokeWidth="3" />
+
       <path
-        d="M332 168c-14-22-40-34-72-34-42 0-72 22-72 56 0 32 26 46 66 56 44 11 74 26 74 62 0 38-34 62-80 62-36 0-64-13-80-38"
-        stroke="#ffffff"
-        strokeWidth="46"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M325 176c-13.5-22-38-34.5-69-34.5-40 0-67.5 20.5-67.5 51.5 0 29 22.5 42.5 63 52.5 45 11 76 26.5 76 62.5 0 38-34 63.5-81 63.5-35.5 0-63-13.5-79-38.5"
         fill="none"
+        stroke="url(#sy-glyph)"
+        strokeWidth="34"
+        strokeLinecap="round"
       />
     </svg>
   );
