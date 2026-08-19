@@ -24,7 +24,9 @@ export const Route = createFileRoute("/demo")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: TITLE },
       { name: "twitter:description", content: DESCRIPTION },
+      { property: "og:url", content: "https://syncly.website/demo" },
     ],
+    links: [{ rel: "canonical", href: "https://syncly.website/demo" }],
   }),
   component: DemoPage,
 });
