@@ -7,6 +7,7 @@ import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { TeenRadarMap } from "@/components/quorum/guardian/TeenRadarMap";
+import { GuardianInvite } from "@/components/quorum/guardian/GuardianInvite";
 import {
   addSafeZone,
   askForCheckin,
