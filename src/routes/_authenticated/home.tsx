@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Sparkles, KeyRound } from "lucide-react";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
@@ -324,6 +325,51 @@ function HomePage() {
         ) : null}
       </div>
     </AppShell>
+  );
+}
+
+const cardSpring = { type: "spring", stiffness: 300, damping: 25 } as const;
+
+function MotionSection({
+  title,
+  accent,
+  children,
+}: {
+  title: string;
+  accent?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.section
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={cardSpring}
+      className="space-y-3"
+    >
+      <h2
+        className={`text-xs font-semibold uppercase tracking-wide ${accent ?? "text-muted-foreground"}`}
+      >
+        {title}
+      </h2>
+      {children}
+    </motion.section>
+  );
+}
+
+function MotionCard({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={cardSpring}
+      className="h-full"
+    >
+      {children}
+    </motion.div>
   );
 }
 
