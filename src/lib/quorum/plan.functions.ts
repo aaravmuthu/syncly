@@ -443,6 +443,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           participant_count: mine.length,
           vote_count: planVotes.length,
           i_responded: Boolean(meRow?.responded),
+          i_attending: meRow?.attending == null ? null : Boolean(meRow.attending),
           i_voted: planVotes.some((v) => v.profile_id === myId),
           selected_recommendation: selected,
           conflicts: planConflicts.map((c) => ({
