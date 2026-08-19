@@ -276,8 +276,11 @@ function HomePage() {
                       transition={cardSpring}
                       className="w-[88%] shrink-0 snap-start sm:w-[420px]"
                     >
-                      <LiveActivityCard plan={p} />
+                      <SpotlightCard tilt className="rounded-[28px]">
+                        <LiveActivityCard plan={p} />
+                      </SpotlightCard>
                     </motion.div>
+
                   ))}
                 </AnimatePresence>
               </div>
