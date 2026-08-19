@@ -58,20 +58,25 @@ const ago = (iso: string) => {
 
 function GuardianHub() {
   const qc = useQueryClient();
+  const { invite } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const hub = useQuery({
     queryKey: ["guardian-hub"],
     queryFn: useServerFn(getGuardianHub),
     refetchInterval: 60_000,
   });
   const [activeTeen, setActiveTeen] = useState<string | null>(null);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(invite ?? "");
 
   const link = useMutation({
     mutationFn: useServerFn(linkTeen),
     onSuccess: (r: { teenName: string }) => {
       setCode("");
+      void navigate({ search: {}, replace: true });
       void qc.invalidateQueries({ queryKey: ["guardian-hub"] });
-      toast.success(`Linked to ${r.teenName}`);
+      toast.success(`Linked to ${r.teenName}`, {
+        description: "Their live radar is now on your family hub.",
+      });
     },
     onError: (e: unknown) =>
       toast.error("Couldn't link that code", {
