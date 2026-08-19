@@ -10,7 +10,9 @@ export type MapVenue = {
   rank?: number;
   selected?: boolean;
   /** Chooses the pin icon: food spots vs entertainment/activity spots. */
-  kind?: "food" | "activity" | "home" | "fair";
+  kind?: "food" | "activity" | "home" | "fair" | "person" | "zone";
+  /** Short label rendered inside person pins (initials). */
+  initials?: string;
 };
 
 /** Browser-only. Rendered lazily behind <ClientOnly> — never imported by SSR. */
@@ -18,10 +20,12 @@ export default function VenueMapInner({
   token,
   venues,
   onSelect,
+  className,
 }: {
   token: string;
   venues: MapVenue[];
   onSelect?: (id: string) => void;
+  className?: string;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -78,18 +82,32 @@ export default function VenueMapInner({
           (v.selected ? " q-map-pin-active" : "") +
           (v.kind === "home"
             ? " q-map-pin-home"
-            : v.kind === "fair"
-              ? " q-map-pin-fair"
-              : v.kind === "activity"
-                ? " q-map-pin-activity"
-                : " q-map-pin-food");
+            : v.kind === "person"
+              ? " q-map-pin-person"
+              : v.kind === "zone"
+                ? " q-map-pin-zone"
+                : v.kind === "fair"
+                  ? " q-map-pin-fair"
+                  : v.kind === "activity"
+                    ? " q-map-pin-activity"
+                    : " q-map-pin-food");
         const icon =
-          v.kind === "home" ? "🏠" : v.kind === "fair" ? "🎯" : v.kind === "activity" ? "🎟️" : "🍽️";
+          v.kind === "home"
+            ? "\u2302"
+            : v.kind === "zone"
+              ? "\u25CE"
+              : v.kind === "fair"
+                ? "\u25C9"
+                : v.kind === "activity"
+                  ? "\u2726"
+                  : "\u25CF";
         el.innerHTML =
-          `<span class="q-map-pin-icon">${icon}</span>` +
-          (v.kind === "home" || v.kind === "fair"
-            ? ""
-            : `<span class="q-map-pin-rank">${v.rank ?? "•"}</span>`);
+          v.kind === "person"
+            ? `<span class="q-map-pin-pulse"></span><span class="q-map-pin-initials">${v.initials ?? "?"}</span>`
+            : `<span class="q-map-pin-icon">${icon}</span>` +
+              (v.kind === "home" || v.kind === "fair" || v.kind === "zone"
+                ? ""
+                : `<span class="q-map-pin-rank">${v.rank ?? "\u2022"}</span>`);
         el.setAttribute("aria-label", v.title);
         el.addEventListener("click", () => onSelect?.(v.id));
         const marker = new mapboxgl.Marker({ element: el })
@@ -108,5 +126,5 @@ export default function VenueMapInner({
   }, [venues, onSelect, ready]);
 
 
-  return <div ref={container} className="h-64 w-full rounded-2xl sm:h-80" />;
+  return <div ref={container} className={className ?? "h-64 w-full rounded-2xl sm:h-80"} />;
 }
