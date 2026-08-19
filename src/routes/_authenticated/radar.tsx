@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
+import { PullToRefresh } from "@/components/quorum/interactions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
 import {
@@ -183,6 +184,11 @@ function RadarPage() {
 
   return (
     <AppShell title="Radar">
+      <PullToRefresh
+        onRefresh={async () => {
+          await Promise.all([hub.refetch(), mine.refetch()]);
+        }}
+      >
       <div className="space-y-5">
         <header className="glass-card p-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -222,6 +228,7 @@ function RadarPage() {
           </>
         )}
       </div>
+      </PullToRefresh>
     </AppShell>
   );
 }

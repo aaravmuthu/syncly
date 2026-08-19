@@ -11,6 +11,8 @@ import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
 import { LiveActivityCard } from "@/components/quorum/LiveActivityCard";
 import { FindMySquad } from "@/components/quorum/FindMySquad";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
+import { PullToRefresh, SpotlightCard } from "@/components/quorum/interactions";
+
 import {
   ActionCard,
   AvatarStack,
@@ -161,7 +163,13 @@ function HomePage() {
     >
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
 
+      <PullToRefresh
+        onRefresh={async () => {
+          await Promise.all([dash.refetch(), groups.refetch()]);
+        }}
+      >
       <div className="space-y-6">
+
         {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
             <p className="text-sm">
@@ -268,8 +276,11 @@ function HomePage() {
                       transition={cardSpring}
                       className="w-[88%] shrink-0 snap-start sm:w-[420px]"
                     >
-                      <LiveActivityCard plan={p} />
+                      <SpotlightCard tilt className="rounded-[28px]">
+                        <LiveActivityCard plan={p} />
+                      </SpotlightCard>
                     </motion.div>
+
                   ))}
                 </AnimatePresence>
               </div>
@@ -313,7 +324,9 @@ function HomePage() {
           </Section>
         ) : null}
       </div>
+      </PullToRefresh>
     </AppShell>
+
   );
 }
 

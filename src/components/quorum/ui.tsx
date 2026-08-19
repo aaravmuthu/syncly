@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
+import { motion } from "motion/react";
+import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
+
+
 
 export function Card({
   children,
@@ -59,20 +63,28 @@ export function Button({
     danger: "bg-destructive text-destructive-foreground hover:opacity-92",
   };
   return (
-    <button
-      {...rest}
+    <motion.button
+      {...(rest as Record<string, unknown>)}
+      onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => {
+        if (!rest.disabled && !loading) haptic("tap");
+        rest.onPointerDown?.(e);
+      }}
+      whileHover={rest.disabled || loading ? undefined : { scale: 1.02, y: -2 }}
+      whileTap={rest.disabled || loading ? undefined : { scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
       disabled={rest.disabled || loading}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all duration-150 ease-out hover:scale-[1.02] active:scale-95 disabled:opacity-55 disabled:hover:scale-100",
+        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-out disabled:opacity-55",
         variants[variant],
         className,
       )}
     >
       {loading ? <Spinner /> : null}
       {children}
-    </button>
+    </motion.button>
   );
 }
+
 
 export function Spinner({ className }: { className?: string }) {
   return (
