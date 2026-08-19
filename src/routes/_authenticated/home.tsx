@@ -319,7 +319,9 @@ function HomePage() {
           </Section>
         ) : null}
       </div>
+      </PullToRefresh>
     </AppShell>
+
   );
 }
 
