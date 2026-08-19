@@ -101,12 +101,20 @@ function HomePage() {
   const needsAction = dayFiltered.filter(
     (p) =>
       !conflicted.includes(p) &&
+      p.i_attending == null &&
       ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
+  );
+  const answeredActive = dayFiltered.filter(
+    (p) =>
+      (p.status === "collecting" || p.status === "voting") &&
+      p.i_attending != null &&
+      !conflicted.includes(p),
   );
   const otherActive = dayFiltered.filter(
     (p) =>
       (p.status === "collecting" || p.status === "voting") &&
       !needsAction.includes(p) &&
+      !answeredActive.includes(p) &&
       !conflicted.includes(p),
   );
   const confirmed = dayFiltered
