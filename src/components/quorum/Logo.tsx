@@ -87,7 +87,7 @@ export function Logo({ className, size = "md", showText = true, href, onClick }:
       <LogoMark size={s.icon} className="rounded-[22%]" />
       {showText ? (
         <span
-          className={cn("ml-2.5 font-display font-semibold tracking-tight text-foreground", s.text)}
+          className={cn("ml-2.5 font-brand tracking-[-0.01em] text-foreground", s.text)}
         >
           {BRAND.name}
         </span>
