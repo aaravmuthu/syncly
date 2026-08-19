@@ -1,3 +1,4 @@
+import { Zap } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
