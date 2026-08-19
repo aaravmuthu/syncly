@@ -1,37 +1,63 @@
-import { VenueMap, type MapVenue } from "@/components/quorum/VenueMap";
+import { SquadMap, type MapPerson, type MapPlace, type MapZone } from "@/components/quorum/map/SquadMap";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 
 /**
- * Live radar for one teen: their last known ping, their safe zones and the
- * venue for the plan they're on, all on the same dark map.
+ * Parent-side mirror of the squad radar: the teen's live avatar pin with
+ * telemetry, their geofenced safe zones and the venue for the active plan.
  */
 export function TeenRadarMap({ teen }: { teen: TeenCard }) {
-  const pins: MapVenue[] = [];
+  const people: MapPerson[] = [];
+  const zones: MapZone[] = [];
+  const places: MapPlace[] = [];
 
   if (teen.location) {
-    pins.push({
-      id: `teen-${teen.id}`,
-      title: `${teen.name} — ${teen.status.label}`,
+    people.push({
+      id: teen.id,
+      name: teen.name,
+      initials:
+        teen.name
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((w) => w[0] ?? "")
+          .join("")
+          .toUpperCase() || "?",
+      avatarUrl: teen.avatar_url,
       lat: teen.location.lat,
       lon: teen.location.lon,
-      selected: true,
-      kind: "fair",
-    });
-  }
-  for (const z of teen.zones) {
-    pins.push({ id: `zone-${z.id}`, title: z.label, lat: z.lat, lon: z.lon, kind: "home" });
-  }
-  const nextPlan = teen.plans.find((p) => p.lat != null && p.lon != null);
-  if (nextPlan?.lat != null && nextPlan.lon != null) {
-    pins.push({
-      id: `plan-${nextPlan.id}`,
-      title: nextPlan.venue ?? nextPlan.title,
-      lat: nextPlan.lat,
-      lon: nextPlan.lon,
-      kind: "activity",
+      batteryPct: teen.location.battery_pct,
+      motion: teen.status.label,
+      state: /arriv|home|at /i.test(teen.status.label)
+        ? "arrived"
+        : /driv|walk|way|mov/i.test(teen.status.label)
+          ? "enroute"
+          : "idle",
+      lastSeen: teen.location.at,
     });
   }
 
-  if (pins.length === 0) return null;
-  return <VenueMap venues={pins} />;
+  for (const z of teen.zones) {
+    zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: z.radius_m });
+  }
+
+  const plan = teen.plans.find((p) => p.lat != null && p.lon != null);
+  if (plan?.lat != null && plan.lon != null) {
+    places.push({
+      id: plan.id,
+      title: plan.venue ?? plan.title,
+      subtitle: plan.group_name,
+      lat: plan.lat,
+      lon: plan.lon,
+      active: true,
+    });
+  }
+
+  return (
+    <SquadMap
+      people={people}
+      zones={zones}
+      places={places}
+      showMidpoint={false}
+      className="h-72 w-full sm:h-80"
+    />
+  );
 }

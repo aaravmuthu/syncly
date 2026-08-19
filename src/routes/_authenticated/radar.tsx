@@ -17,7 +17,12 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
-import { VenueMap, type MapVenue } from "@/components/quorum/VenueMap";
+import {
+  SquadMap,
+  type MapPerson,
+  type MapPlace,
+  type MapZone,
+} from "@/components/quorum/map/SquadMap";
 import {
   arrivedSafely,
   getGuardianHub,
@@ -114,6 +119,66 @@ function RadarPage() {
   const teens = (hub.data?.teens ?? []) as TeenCard[];
   const loading = hub.isLoading || mine.isLoading;
 
+  const people: MapPerson[] = [];
+  const zones: MapZone[] = [];
+  const places: MapPlace[] = [];
+
+  for (const t of teens) {
+    if (t.location) {
+      people.push({
+        id: t.id,
+        name: t.name,
+        initials: initials(t.name),
+        avatarUrl: t.avatar_url,
+        lat: t.location.lat,
+        lon: t.location.lon,
+        batteryPct: t.location.battery_pct,
+        motion: t.status.label,
+        state: /arriv|home|at /i.test(t.status.label)
+          ? "arrived"
+          : /driv|walk|way|mov/i.test(t.status.label)
+            ? "enroute"
+            : "idle",
+        lastSeen: t.location.at,
+      });
+    }
+    for (const z of t.zones) {
+      zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: z.radius_m });
+    }
+    const plan = t.plans.find((p) => p.lat != null && p.lon != null);
+    if (plan?.lat != null && plan.lon != null) {
+      places.push({
+        id: plan.id,
+        title: plan.venue ?? plan.title,
+        subtitle: plan.group_name,
+        lat: plan.lat,
+        lon: plan.lon,
+        active: true,
+      });
+    }
+  }
+
+  const me = mine.data;
+  if (me?.lastPing) {
+    people.push({
+      id: "me",
+      name: me.me.name,
+      initials: initials(me.me.name),
+      avatarUrl: me.me.avatar_url,
+      lat: me.lastPing.lat,
+      lon: me.lastPing.lon,
+      batteryPct: me.lastPing.battery_pct,
+      motion: me.lastPing.status_label ?? "Sharing",
+      state: /driv|walk/i.test(me.lastPing.status_label ?? "") ? "enroute" : "idle",
+      lastSeen: me.lastPing.created_at,
+    });
+  }
+  for (const z of me?.zones ?? []) {
+    zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: 200 });
+  }
+
+  const hasPins = people.length > 0 || zones.length > 0;
+
   return (
     <AppShell title="Radar">
       <div className="space-y-5">
@@ -132,6 +197,16 @@ function RadarPage() {
           <Skeleton className="h-72 rounded-3xl" />
         ) : (
           <>
+            {hasPins ? (
+              <SquadMap
+                people={people}
+                zones={zones}
+                places={places}
+                className="h-[58vh] min-h-80 w-full"
+                onPing={(p) => toast(`Nudge sent to ${p.name}`)}
+                onMessage={(p) => toast(`Opening chat with ${p.name}`)}
+              />
+            ) : null}
             {teens.length > 0 ? <FamilyRadar teens={teens} /> : null}
             {mine.data ? <MyRadar data={mine.data} /> : null}
             {teens.length === 0 && !mine.data?.lastPing ? (
@@ -148,29 +223,11 @@ function RadarPage() {
 }
 
 function FamilyRadar({ teens }: { teens: TeenCard[] }) {
-  const pins: MapVenue[] = [];
-  for (const t of teens) {
-    if (t.location) {
-      pins.push({
-        id: `t-${t.id}`,
-        title: `${t.name} — ${t.status.label}`,
-        lat: t.location.lat,
-        lon: t.location.lon,
-        kind: "person",
-        initials: initials(t.name),
-      });
-    }
-    for (const z of t.zones) {
-      pins.push({ id: `z-${z.id}`, title: z.label, lat: z.lat, lon: z.lon, kind: "zone" });
-    }
-  }
-
   return (
     <section className="space-y-3">
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Family radar
       </h2>
-      {pins.length > 0 ? <VenueMap venues={pins} mapClassName="h-80 w-full sm:h-[26rem]" /> : null}
       <div className="grid gap-3 sm:grid-cols-2">
         {teens.map((t) => (
           <TeenWidget key={t.id} teen={t} />
@@ -179,6 +236,7 @@ function FamilyRadar({ teens }: { teens: TeenCard[] }) {
     </section>
   );
 }
+
 
 function TeenWidget({ teen }: { teen: TeenCard }) {
   const Icon = motionIcon(teen.status.label);
@@ -295,21 +353,6 @@ function MyRadar({ data }: { data: MyRadarData }) {
     return () => clearInterval(t);
   }, [data.me.sharing, send]);
 
-  const pins: MapVenue[] = [];
-  if (data.lastPing) {
-    pins.push({
-      id: "me",
-      title: `${data.me.name} — ${status}`,
-      lat: data.lastPing.lat,
-      lon: data.lastPing.lon,
-      kind: "person",
-      initials: initials(data.me.name),
-    });
-  }
-  for (const z of data.zones) {
-    pins.push({ id: `z-${z.id}`, title: z.label, lat: z.lat, lon: z.lon, kind: "zone" });
-  }
-
   const Icon = motionIcon(status);
 
   return (
@@ -317,7 +360,6 @@ function MyRadar({ data }: { data: MyRadarData }) {
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Your live status
       </h2>
-      {pins.length > 0 ? <VenueMap venues={pins} mapClassName="h-72 w-full sm:h-80" /> : null}
 
       <Card className="flex items-center gap-3">
         <Avatar

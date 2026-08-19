@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BatteryFull, BatteryLow, Car, ChevronRight, MapPin, PersonStanding } from "lucide-react";
 import { Avatar } from "./Avatar";
-import { VenueMap, type MapVenue } from "./VenueMap";
+import { SquadMap, type MapPerson, type MapZone } from "./map/SquadMap";
 import { Skeleton } from "./ui";
 import { getGuardianHub, getMyRadar } from "@/lib/quorum/guardian.functions";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
@@ -51,34 +51,47 @@ export function FindMySquad() {
 
   const teens = (hub.data?.teens ?? []) as TeenCard[];
   const me = mine.data;
-  const pins: MapVenue[] = [];
+  const people: MapPerson[] = [];
+  const zones: MapZone[] = [];
 
   for (const t of teens) {
     if (!t.location) continue;
-    pins.push({
-      id: `t-${t.id}`,
-      title: `${t.name} — ${t.status.label}`,
+    people.push({
+      id: t.id,
+      name: t.name,
+      initials: initials(t.name),
+      avatarUrl: t.avatar_url,
       lat: t.location.lat,
       lon: t.location.lon,
-      kind: "person",
-      initials: initials(t.name),
+      batteryPct: t.location.battery_pct,
+      motion: t.status.label,
+      state: /arriv|home|at /i.test(t.status.label)
+        ? "arrived"
+        : /driv|walk|way|mov/i.test(t.status.label)
+          ? "enroute"
+          : "idle",
+      lastSeen: t.location.at,
     });
   }
   if (me?.lastPing) {
-    pins.push({
+    people.push({
       id: "me",
-      title: `${me.me.name} — ${me.lastPing.status_label ?? "Sharing"}`,
+      name: me.me.name,
+      initials: initials(me.me.name),
+      avatarUrl: me.me.avatar_url,
       lat: me.lastPing.lat,
       lon: me.lastPing.lon,
-      kind: "person",
-      initials: initials(me.me.name),
+      batteryPct: me.lastPing.battery_pct,
+      motion: me.lastPing.status_label ?? "Sharing",
+      state: /driv|walk/i.test(me.lastPing.status_label ?? "") ? "enroute" : "idle",
+      lastSeen: me.lastPing.created_at,
     });
   }
   for (const z of me?.zones ?? []) {
-    pins.push({ id: `z-${z.id}`, title: z.label, lat: z.lat, lon: z.lon, kind: "zone" });
+    zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: 200 });
   }
 
-  if (pins.length === 0) return null;
+  if (people.length === 0) return null;
 
   return (
     <section className="space-y-3">
@@ -92,7 +105,7 @@ export function FindMySquad() {
         </Link>
       </div>
 
-      <VenueMap venues={pins} mapClassName="h-56 w-full" />
+      <SquadMap people={people} zones={zones} className="h-60 w-full" />
 
       <div className="chip-row">
         {teens.map((t) => (
