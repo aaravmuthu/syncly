@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { Avatar } from "@/components/quorum/Avatar";
+import { useFriends } from "@/lib/quorum/nicknames";
 import { listActivity } from "@/lib/quorum/plan.functions";
 import { useNotifications, useMarkNotificationsRead } from "@/lib/quorum/useNotifications";
 import { pushPermission, requestPush } from "@/lib/quorum/push";
@@ -91,6 +92,7 @@ type FeedItem = {
   created_at: string;
   plan_id: string | null;
   unread?: boolean;
+  actorId?: string | null;
   actorName?: string | null;
   actorAvatarUrl?: string | null;
   actorEmoji?: string | null;
@@ -99,6 +101,8 @@ type FeedItem = {
 
 function ActivityCard({ item }: { item: FeedItem }) {
   const k = KIND[item.kind];
+  const { alias, openFriend } = useFriends();
+  const actorName = item.actorId ? alias(item.actorId, item.actorName) : item.actorName;
   return (
     <SpotlightCard
       as="article"
@@ -117,11 +121,16 @@ function ActivityCard({ item }: { item: FeedItem }) {
         )}
       />
       <div className="relative flex items-start gap-3">
-        <span className="relative shrink-0">
+        <span
+          className="relative shrink-0"
+          role={item.actorId ? "button" : undefined}
+          tabIndex={item.actorId ? 0 : undefined}
+          onClick={() => item.actorId && openFriend(item.actorId)}
+        >
           <Avatar
             url={item.actorAvatarUrl}
             emoji={item.actorEmoji}
-            name={item.actorName}
+            name={actorName}
             size={40}
             className="ring-1 ring-white/10"
           />
@@ -141,7 +150,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
             <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p>
           ) : null}
           <p className="mt-1 text-xs text-muted-foreground">
-            {item.actorName ? `${item.actorName} • ` : ""}
+            {actorName ? `${actorName} • ` : ""}
             {timeAgo(item.created_at)}
           </p>
         </div>
@@ -204,6 +213,7 @@ function ActivityPage() {
       title: e.message,
       created_at: e.created_at,
       plan_id: e.plan_id,
+      actorId: e.actorId,
       actorName: e.actorName,
       actorAvatarUrl: e.actorAvatarUrl,
       actorEmoji: e.actorEmoji,
