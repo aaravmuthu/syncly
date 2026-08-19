@@ -1370,6 +1370,7 @@ export type Database = {
       gen_sync_code: { Args: never; Returns: string }
       is_group_admin: { Args: { _group_id: string }; Returns: boolean }
       is_group_member: { Args: { _group_id: string }; Returns: boolean }
+      is_group_owner: { Args: { _group_id: string }; Returns: boolean }
       is_my_guardian: { Args: { _guardian: string }; Returns: boolean }
       is_my_teen: { Args: { _teen: string }; Returns: boolean }
       is_plan_owner: { Args: { _plan_id: string }; Returns: boolean }
