@@ -14,8 +14,12 @@ const REAL_NAME = (n: unknown) =>
 export const getMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data } = await supabase
+    const { userId } = context;
+    // The profile's contact/location columns are not readable by the user
+    // role (co-members must never see them), so the caller's own full row is
+    // read through the trusted server client, always scoped to their user id.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
@@ -24,7 +28,7 @@ export const getMe = createServerFn({ method: "GET" })
       // A profile that already carries a real display name is set up — never
       // send that person back through onboarding.
       if (!data.onboarded && REAL_NAME(data.display_name)) {
-        const { data: fixed } = await supabase
+        const { data: fixed } = await supabaseAdmin
           .from("profiles")
           .update({ onboarded: true })
           .eq("user_id", userId)
@@ -34,7 +38,7 @@ export const getMe = createServerFn({ method: "GET" })
       }
       return data;
     }
-    const { data: created, error } = await supabase
+    const { data: created, error } = await supabaseAdmin
       .from("profiles")
       .upsert({ user_id: userId, display_name: "New member" }, { onConflict: "user_id" })
       .select("*")
@@ -42,6 +46,7 @@ export const getMe = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return created;
   });
+
 
 export const saveProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
