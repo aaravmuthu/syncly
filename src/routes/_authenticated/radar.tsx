@@ -187,7 +187,29 @@ function RadarPage() {
     zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: 200 });
   }
 
+  // A chat card can hand us a pin to fly to (?lat&lon&label).
+  if (focus.lat != null && focus.lon != null) {
+    places.unshift({
+      id: "chat-focus",
+      title: focus.label ?? "Shared pin",
+      subtitle: "Shared in chat",
+      lat: focus.lat,
+      lon: focus.lon,
+      active: true,
+    });
+    people.unshift({
+      id: "chat-focus-pin",
+      name: focus.label ?? "Shared pin",
+      initials: "📍",
+      lat: focus.lat,
+      lon: focus.lon,
+      motion: "Shared in chat",
+      state: "arrived",
+    });
+  }
+
   const hasPins = people.length > 0 || zones.length > 0;
+
 
   return (
     <AppShell title="Radar">
