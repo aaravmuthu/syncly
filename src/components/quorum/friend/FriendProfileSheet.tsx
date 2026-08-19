@@ -114,7 +114,7 @@ export function FriendProfileSheet() {
   });
   const ghost = useMutation({
     mutationFn: useServerFn(setContactGhost),
-    onSuccess: (r) => {
+    onSuccess: (r: { hidden: boolean }) => {
       haptic("warn");
       toast.success(r.hidden ? "Hidden from this contact 👻" : "Visible again");
       refresh();

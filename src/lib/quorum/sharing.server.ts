@@ -20,6 +20,7 @@ type ShareRow = {
   viewer_profile_id: string;
   mode: ShareMode;
   expires_at: string | null;
+  hidden?: boolean | null;
 };
 
 const isLive = (r: { expires_at: string | null }) =>
@@ -44,7 +45,7 @@ export async function activeOwnersFor(viewerProfileId: string): Promise<ShareRow
   const db = await admin();
   const { data } = await db
     .from("location_shares")
-    .select("owner_profile_id, viewer_profile_id, mode, expires_at")
+    .select("owner_profile_id, viewer_profile_id, mode, expires_at, hidden")
     .eq("viewer_profile_id", viewerProfileId);
   return ((data ?? []) as ShareRow[]).filter(isLive);
 }
@@ -54,7 +55,7 @@ export async function myOutgoingShares(ownerProfileId: string): Promise<ShareRow
   const db = await admin();
   const { data } = await db
     .from("location_shares")
-    .select("owner_profile_id, viewer_profile_id, mode, expires_at")
+    .select("owner_profile_id, viewer_profile_id, mode, expires_at, hidden")
     .eq("owner_profile_id", ownerProfileId);
   return ((data ?? []) as ShareRow[]).filter(isLive);
 }
@@ -262,6 +263,8 @@ export async function buildFriendPins(viewerProfileId: string): Promise<FriendPi
     if (!p || !ping) continue;
     // Ghost Mode hides friend pins; guardian radar is a separate read path.
     if (ghostActive(p)) continue;
+    // Per-contact ghosting: hidden from me specifically.
+    if (share.hidden) continue;
 
     const atHome =
       p.home_lat != null &&
