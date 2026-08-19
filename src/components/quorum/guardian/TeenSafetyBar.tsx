@@ -84,10 +84,9 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
 
   const arrive = useMutation({
     mutationFn: useServerFn(arrivedSafely),
-    onSuccess: (_r, vars) => {
-      const place = (vars as { data?: { placeLabel?: string | null } }).data?.placeLabel;
+    onSuccess: () => {
       setArrival({
-        place: place ?? "your destination",
+        place: "your destination",
         at: new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
       });
       toast.success("Arrival shared with your parents");
