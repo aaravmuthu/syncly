@@ -71,6 +71,10 @@ export async function linkTeenByCode(guardianProfileId: string, rawCode: string)
     );
   if (error) throw new Error(error.message);
 
+  // Guardian links imply indefinite visibility so the safety radar never gaps.
+  const { ensureGuardianShare } = await import("./sharing.server");
+  await ensureGuardianShare(teen.id, guardianProfileId);
+
   await db.from("notifications").insert({
     profile_id: teen.id,
     type: "parent_response",

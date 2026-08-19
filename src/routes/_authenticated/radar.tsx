@@ -30,7 +30,9 @@ import {
   pushLocation,
 } from "@/lib/quorum/guardian.functions";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
+import { FindMyFriends } from "@/components/quorum/sharing/FindMyFriends";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/_authenticated/radar")({
   head: () => ({
@@ -207,8 +209,10 @@ function RadarPage() {
                 onMessage={(p) => toast(`Opening chat with ${p.name}`)}
               />
             ) : null}
+            <FindMyFriends />
             {teens.length > 0 ? <FamilyRadar teens={teens} /> : null}
             {mine.data ? <MyRadar data={mine.data} /> : null}
+
             {teens.length === 0 && !mine.data?.lastPing ? (
               <Empty
                 title="No live pins yet"
