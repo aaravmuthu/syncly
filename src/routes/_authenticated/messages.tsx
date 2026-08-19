@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageCircle, Search, Users } from "lucide-react";
+import { MessageCircle, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -290,4 +290,3 @@ function Row({
   );
 }
 
-export { Users };
