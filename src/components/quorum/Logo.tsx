@@ -17,10 +17,10 @@ const sizes = {
 };
 
 /**
- * App mark: dark glass squircle with a glowing emerald rounded "S" and a
+ * App mark (dark): dark glass squircle with a glowing emerald rounded "S" and a
  * radar pulse at its core. Matches /icon.svg exactly.
  */
-export function LogoMark({
+export function LogoMarkDark({
   size = 36,
   className,
 }: {
