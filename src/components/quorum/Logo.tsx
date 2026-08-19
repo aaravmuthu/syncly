@@ -51,14 +51,8 @@ export function LogoMark({
         </linearGradient>
       </defs>
 
-      <path
-        d="M256 0C97.6 0 32 20.9 32 106.7v298.6C32 491.1 97.6 512 256 512s224-20.9 224-106.7V106.7C480 20.9 414.4 0 256 0Z"
-        fill="url(#sy-tile)"
-      />
-      <path
-        d="M256 0C97.6 0 32 20.9 32 106.7v298.6C32 491.1 97.6 512 256 512s224-20.9 224-106.7V106.7C480 20.9 414.4 0 256 0Z"
-        fill="url(#sy-gloss)"
-      />
+      <rect x="8" y="8" width="496" height="496" rx="115" fill="url(#sy-tile)" />
+      <rect x="8" y="8" width="496" height="496" rx="115" fill="url(#sy-gloss)" />
 
       <g fill="none" stroke="#ffffff" strokeLinecap="round">
         <circle cx="256" cy="256" r="176" strokeOpacity="0.16" strokeWidth="10" />
