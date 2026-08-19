@@ -46,6 +46,7 @@
   --color-chart-5: var(--chart-5);
   --font-display: "Bricolage Grotesque", ui-serif, Georgia, serif;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-brand: "Gloock", ui-serif, Georgia, serif;
 }
 
 :root {
