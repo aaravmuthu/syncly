@@ -18,10 +18,10 @@ import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 
 
-const TITLE = "Syncly — Plans that actually work for everyone";
+const TITLE = "Syncly — Squad Planning & Hangouts";
 const DESCRIPTION =
   "Private, smart group planning with privacy protection, keyless location discovery, and voting.";
-const OG_IMAGE = "https://syncly.website/og-image.png?v=3";
+const OG_IMAGE = "https://syncly.website/og-image.png?v=4";
 
 export const Route = createFileRoute("/")({
   head: () => ({
