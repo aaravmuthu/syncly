@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
-import { VenueMap, type MapVenue } from "@/components/quorum/VenueMap";
 import {
   SquadMap,
   type MapPerson,
@@ -354,21 +353,6 @@ function MyRadar({ data }: { data: MyRadarData }) {
     return () => clearInterval(t);
   }, [data.me.sharing, send]);
 
-  const pins: MapVenue[] = [];
-  if (data.lastPing) {
-    pins.push({
-      id: "me",
-      title: `${data.me.name} — ${status}`,
-      lat: data.lastPing.lat,
-      lon: data.lastPing.lon,
-      kind: "person",
-      initials: initials(data.me.name),
-    });
-  }
-  for (const z of data.zones) {
-    pins.push({ id: `z-${z.id}`, title: z.label, lat: z.lat, lon: z.lon, kind: "zone" });
-  }
-
   const Icon = motionIcon(status);
 
   return (
@@ -376,7 +360,6 @@ function MyRadar({ data }: { data: MyRadarData }) {
       <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Your live status
       </h2>
-      {pins.length > 0 ? <VenueMap venues={pins} mapClassName="h-72 w-full sm:h-80" /> : null}
 
       <Card className="flex items-center gap-3">
         <Avatar
