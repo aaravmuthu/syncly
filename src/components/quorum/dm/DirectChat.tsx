@@ -141,7 +141,7 @@ export function DirectChat({
       setText("");
       await qc.invalidateQueries({ queryKey: key });
       void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
-      haptic("light");
+      haptic("tap");
     } catch (e) {
       toast.error("Message not sent", {
         description: e instanceof Error ? e.message : "Please try again.",
@@ -207,7 +207,7 @@ export function DirectChat({
       rec.start();
       recorderRef.current = rec;
       setRecording(true);
-      haptic("medium");
+      haptic("select");
     } catch {
       toast.error("Microphone access is blocked");
     }
@@ -298,7 +298,7 @@ export function DirectChat({
               reactions={reactionsFor(m.id)}
               myId={me}
               onReact={async (emoji) => {
-                haptic("light");
+                haptic("tap");
                 await react({ data: { messageId: m.id, emoji } });
                 void qc.invalidateQueries({ queryKey: key });
               }}
@@ -326,7 +326,7 @@ export function DirectChat({
               key={p}
               type="button"
               onClick={() => {
-                haptic("light");
+                haptic("tap");
                 if (p.includes("live location")) void shareMyLocation();
                 else void submit({ threadId, content: p });
               }}
@@ -461,12 +461,12 @@ function DmBubble({
           whileTap={{ scale: 0.97 }}
           onContextMenu={(e) => {
             e.preventDefault();
-            haptic("medium");
+            haptic("select");
             setOpen((v) => !v);
           }}
           onPointerDown={() => {
             pressTimer.current = setTimeout(() => {
-              haptic("medium");
+              haptic("select");
               setOpen(true);
             }, 380);
           }}
