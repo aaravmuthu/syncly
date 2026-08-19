@@ -14,8 +14,12 @@ const REAL_NAME = (n: unknown) =>
 export const getMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data } = await supabase
+    const { userId } = context;
+    // The profile's contact/location columns are not readable by the user
+    // role (co-members must never see them), so the caller's own full row is
+    // read through the trusted server client, always scoped to their user id.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
@@ -24,7 +28,7 @@ export const getMe = createServerFn({ method: "GET" })
       // A profile that already carries a real display name is set up — never
       // send that person back through onboarding.
       if (!data.onboarded && REAL_NAME(data.display_name)) {
-        const { data: fixed } = await supabase
+        const { data: fixed } = await supabaseAdmin
           .from("profiles")
           .update({ onboarded: true })
           .eq("user_id", userId)
@@ -34,7 +38,7 @@ export const getMe = createServerFn({ method: "GET" })
       }
       return data;
     }
-    const { data: created, error } = await supabase
+    const { data: created, error } = await supabaseAdmin
       .from("profiles")
       .upsert({ user_id: userId, display_name: "New member" }, { onConflict: "user_id" })
       .select("*")
@@ -43,11 +47,12 @@ export const getMe = createServerFn({ method: "GET" })
     return created;
   });
 
+
 export const saveProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: Record<string, unknown>) => d)
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { userId } = context;
     const allowed = [
       "display_name",
       "avatar_emoji",
@@ -111,8 +116,11 @@ export const saveProfile = createServerFn({ method: "POST" })
       patch[k] = v;
     }
     if (REAL_NAME(patch["display_name"])) patch["onboarded"] = true;
+    // Own-row reads/writes go through the trusted server client because the
+    // private contact/location columns are not readable by the user role.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (Object.keys(patch).length === 0) {
-      const { data: current } = await supabase
+      const { data: current } = await supabaseAdmin
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
@@ -121,11 +129,12 @@ export const saveProfile = createServerFn({ method: "POST" })
     }
     // Upsert so a first-time save creates the row instead of silently matching
     // zero rows.
-    const { data: row, error } = await supabase
+    const { data: row, error } = await supabaseAdmin
       .from("profiles")
       .upsert({ ...patch, user_id: userId } as never, { onConflict: "user_id" })
       .select("*")
       .single();
+
     if (error) throw new Error(error.message);
     return row;
   });
