@@ -116,8 +116,11 @@ export const saveProfile = createServerFn({ method: "POST" })
       patch[k] = v;
     }
     if (REAL_NAME(patch["display_name"])) patch["onboarded"] = true;
+    // Own-row reads/writes go through the trusted server client because the
+    // private contact/location columns are not readable by the user role.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (Object.keys(patch).length === 0) {
-      const { data: current } = await supabase
+      const { data: current } = await supabaseAdmin
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
@@ -126,11 +129,12 @@ export const saveProfile = createServerFn({ method: "POST" })
     }
     // Upsert so a first-time save creates the row instead of silently matching
     // zero rows.
-    const { data: row, error } = await supabase
+    const { data: row, error } = await supabaseAdmin
       .from("profiles")
       .upsert({ ...patch, user_id: userId } as never, { onConflict: "user_id" })
       .select("*")
       .single();
+
     if (error) throw new Error(error.message);
     return row;
   });
