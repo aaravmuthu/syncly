@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { TeenRadarMap } from "@/components/quorum/guardian/TeenRadarMap";
+import { GuardianInvite } from "@/components/quorum/guardian/GuardianInvite";
 import {
   addSafeZone,
   askForCheckin,
@@ -21,6 +22,10 @@ import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/guardian")({
+  validateSearch: (search: Record<string, unknown>): { invite?: string } =>
+    typeof search.invite === "string"
+      ? { invite: search.invite.replace(/\D/g, "").slice(0, 6) }
+      : {},
   head: () => ({
     meta: [
       { title: "Family hub — Syncly" },
@@ -54,20 +59,25 @@ const ago = (iso: string) => {
 
 function GuardianHub() {
   const qc = useQueryClient();
+  const { invite } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const hub = useQuery({
     queryKey: ["guardian-hub"],
     queryFn: useServerFn(getGuardianHub),
     refetchInterval: 60_000,
   });
   const [activeTeen, setActiveTeen] = useState<string | null>(null);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(invite ?? "");
 
   const link = useMutation({
     mutationFn: useServerFn(linkTeen),
     onSuccess: (r: { teenName: string }) => {
       setCode("");
+      void navigate({ search: {}, replace: true });
       void qc.invalidateQueries({ queryKey: ["guardian-hub"] });
-      toast.success(`Linked to ${r.teenName}`);
+      toast.success(`Linked to ${r.teenName}`, {
+        description: "Their live radar is now on your family hub.",
+      });
     },
     onError: (e: unknown) =>
       toast.error("Couldn't link that code", {
@@ -84,6 +94,15 @@ function GuardianHub() {
     if (hub.data?.unreadAlerts) readAlerts.mutate(undefined as never);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hub.data?.unreadAlerts]);
+
+  // Arriving from a teen's invite link: link the account automatically, once.
+  const autoLinked = useRef(false);
+  useEffect(() => {
+    if (!invite || invite.length !== 6 || autoLinked.current || hub.isLoading) return;
+    autoLinked.current = true;
+    link.mutate({ data: { code: invite } });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invite, hub.isLoading]);
 
   const teen = teens.find((t) => t.id === activeTeen) ?? teens[0] ?? null;
 
@@ -103,31 +122,49 @@ function GuardianHub() {
           →
         </span>
       </Link>
+      {invite ? (
+        <Card className="mb-4 border-primary/40">
+          <div className="text-sm font-semibold">
+            {link.isPending ? "Linking your account…" : "Invite from your teen"}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Code {invite} · once linked you'll see their live radar, plans and check-ins here.
+          </p>
+          {!link.isPending && link.isError ? (
+            <Button className="mt-3" onClick={() => link.mutate({ data: { code: invite } })}>
+              Try linking again
+            </Button>
+          ) : null}
+        </Card>
+      ) : null}
       {hub.isLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-24 rounded-3xl" />
           <Skeleton className="h-64 rounded-3xl" />
         </div>
       ) : teens.length === 0 ? (
-        <Card className="space-y-4">
-          <Empty
-            title="Link your first teen"
-            body="Ask them to open Syncly → Profile → Parent pairing and read you the 6-digit code."
-          />
-          <div className="flex gap-2">
-            <input
-              className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+        <div className="space-y-4">
+          <Card className="space-y-4">
+            <Empty
+              title="Link your first teen"
+              body="Open your teen's invite link, or type the 6-digit code from their Syncly profile."
             />
-            <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
-              Link
-            </Button>
-          </div>
-        </Card>
+            <div className="flex gap-2">
+              <input
+                className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="000000"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+              <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
+                Link
+              </Button>
+            </div>
+          </Card>
+          <GuardianInvite />
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
@@ -158,22 +195,25 @@ function GuardianHub() {
           </div>
 
           {activeTeen === "__add" ? (
-            <Card className="space-y-3">
-              <div className="text-sm font-semibold">Link another teen</div>
-              <div className="flex gap-2">
-                <input
-                  className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                />
-                <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
-                  Link
-                </Button>
-              </div>
-            </Card>
+            <div className="space-y-4">
+              <Card className="space-y-3">
+                <div className="text-sm font-semibold">Link another teen</div>
+                <div className="flex gap-2">
+                  <input
+                    className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  />
+                  <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
+                    Link
+                  </Button>
+                </div>
+              </Card>
+              <GuardianInvite />
+            </div>
           ) : teen ? (
             <TeenPanel teen={teen} />
           ) : null}
