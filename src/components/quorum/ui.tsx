@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
+import { haptic } from "@/lib/quorum/haptics";
+
 
 export function Card({
   children,
