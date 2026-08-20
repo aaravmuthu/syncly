@@ -108,6 +108,7 @@ export function AddressPicker({
     setItems([]);
     setLocked(true);
     skipNextSearch.current = true;
+    lastLocal.current = s.label;
     setText(s.label);
     const base = {
       address: s.label,
@@ -136,6 +137,7 @@ export function AddressPicker({
           .then((zip) => {
             const label = zip ? `Current location · ${zip}` : "Current location";
             skipNextSearch.current = true;
+            lastLocal.current = label;
             setText(label);
             setOpen(false);
             setItems([]);
@@ -171,6 +173,7 @@ export function AddressPicker({
           }}
           onChange={(e) => {
             setLocked(false);
+            lastLocal.current = e.target.value;
             setText(e.target.value);
             onTextChange?.(e.target.value);
           }}
