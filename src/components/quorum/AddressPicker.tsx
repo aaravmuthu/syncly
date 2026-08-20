@@ -54,7 +54,13 @@ export function AddressPicker({
   const toZip = useServerFn(reverseZip);
   const boxRef = useRef<HTMLDivElement>(null);
 
+  // Only sync from the parent when it pushes a genuinely different value
+  // (e.g. a loaded profile). Echoes of our own onTextChange must not reset
+  // state, or the suggestion dropdown closes on every keystroke.
+  const lastLocal = useRef(value);
   useEffect(() => {
+    if (value === lastLocal.current) return;
+    lastLocal.current = value;
     skipNextSearch.current = true;
     setText(value);
   }, [value]);
