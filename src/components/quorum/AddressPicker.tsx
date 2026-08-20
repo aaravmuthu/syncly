@@ -54,7 +54,13 @@ export function AddressPicker({
   const toZip = useServerFn(reverseZip);
   const boxRef = useRef<HTMLDivElement>(null);
 
+  // Only sync from the parent when it pushes a genuinely different value
+  // (e.g. a loaded profile). Echoes of our own onTextChange must not reset
+  // state, or the suggestion dropdown closes on every keystroke.
+  const lastLocal = useRef(value);
   useEffect(() => {
+    if (value === lastLocal.current) return;
+    lastLocal.current = value;
     skipNextSearch.current = true;
     setText(value);
   }, [value]);
@@ -102,6 +108,7 @@ export function AddressPicker({
     setItems([]);
     setLocked(true);
     skipNextSearch.current = true;
+    lastLocal.current = s.label;
     setText(s.label);
     const base = {
       address: s.label,
@@ -130,6 +137,7 @@ export function AddressPicker({
           .then((zip) => {
             const label = zip ? `Current location · ${zip}` : "Current location";
             skipNextSearch.current = true;
+            lastLocal.current = label;
             setText(label);
             setOpen(false);
             setItems([]);
@@ -165,6 +173,7 @@ export function AddressPicker({
           }}
           onChange={(e) => {
             setLocked(false);
+            lastLocal.current = e.target.value;
             setText(e.target.value);
             onTextChange?.(e.target.value);
           }}
