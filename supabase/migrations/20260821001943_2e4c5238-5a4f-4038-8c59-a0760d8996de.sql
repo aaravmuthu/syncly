@@ -1,0 +1,12 @@
+REVOKE ALL ON FUNCTION public.enforce_profile_insert_defaults() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.lock_checkin_fields() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.lock_message_history() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.lock_parent_approval_fields() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.prevent_role_escalation() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.can_see_plan(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.is_group_member(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.is_my_guardian(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.is_my_teen(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.is_thread_member(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.my_profile_id() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION app_private.shares_group_with_me(uuid) FROM PUBLIC, anon, authenticated;
