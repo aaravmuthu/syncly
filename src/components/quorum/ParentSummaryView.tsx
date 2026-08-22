@@ -9,7 +9,7 @@ import { estCostLabel } from "@/lib/quorum/estcost";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { getParentSummary, parentRespondToPlan } from "@/lib/quorum/approval.functions";
 
-export function ParentSummaryView({ planId }: { planId: string }) {
+export function ParentSummaryView({ planId, token }: { planId: string; token?: string }) {
   const qc = useQueryClient();
   const fetchSummary = useServerFn(getParentSummary);
   const q = useQuery({
@@ -82,13 +82,17 @@ export function ParentSummaryView({ planId }: { planId: string }) {
               <p className="mt-2 text-sm text-muted-foreground">Your note: {s.parentDecision.note}</p>
             ) : null}
           </div>
+        ) : !token ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            To approve or add a note, open the personal approval link that was sent to you.
+          </p>
         ) : (
           <div className="mt-4 space-y-3">
             <div className="flex flex-wrap gap-2">
               <Button
                 className="flex-1"
                 loading={respond.isPending}
-                onClick={() => respond.mutate({ data: { planId, decision: "approved" } })}
+                onClick={() => respond.mutate({ data: { token, decision: "approved" } })}
               >
                 Approve Plan 💚
               </Button>
@@ -109,7 +113,7 @@ export function ParentSummaryView({ planId }: { planId: string }) {
                   className="w-full"
                   disabled={!note.trim() || respond.isPending}
                   onClick={() =>
-                    respond.mutate({ data: { planId, decision: "approved_with_condition", note } })
+                    respond.mutate({ data: { token, decision: "approved_with_condition", note } })
                   }
                 >
                   Send note
@@ -120,6 +124,7 @@ export function ParentSummaryView({ planId }: { planId: string }) {
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>
         )}
+
         <p className="mt-3 text-xs text-muted-foreground">
           You're seeing only this plan's logistics. Nothing else about the group is shared.
         </p>

@@ -352,40 +352,51 @@ export const getParentSummary = createServerFn({ method: "GET" })
     };
   });
 
-/** Public one-tap parent action from the shared plan link. */
+/**
+ * One-tap parent action. Gated on the unguessable per-request token that was
+ * emailed/messaged to the guardian — a plan id alone is never enough, since
+ * every member of a plan knows it and could otherwise self-approve.
+ */
 export const parentRespondToPlan = createServerFn({ method: "POST" })
-  .inputValidator((d: { planId: string; decision: "approved" | "approved_with_condition"; note?: string }) => d)
+  .inputValidator(
+    (d: { token: string; decision: "approved" | "approved_with_condition"; note?: string }) => d,
+  )
   .handler(async ({ data }) => {
+    const token = data.token?.trim();
+    if (!token || token.length < 16) throw new Error("This plan link is not valid");
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: plan } = await supabaseAdmin
-      .from("plans")
-      .select("id, created_by, title")
-      .eq("id", data.planId)
+    const { data: approval } = await supabaseAdmin
+      .from("parent_approvals")
+      .select("id, plan_id, profile_id, status, expires_at")
+      .eq("token", token)
       .maybeSingle();
-    if (!plan) throw new Error("This plan link is not valid");
+    if (!approval) throw new Error("This plan link is not valid");
+    if (approval.expires_at && new Date(approval.expires_at) < new Date())
+      throw new Error("This link has expired");
+    if (approval.status !== "pending") throw new Error("This request was already answered");
 
     const note = data.note?.trim() || null;
-    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14).toISOString();
-    const { error } = await supabaseAdmin.from("parent_approvals").insert({
-      plan_id: plan.id,
-      profile_id: plan.created_by,
-      token: crypto.randomUUID().replace(/-/g, ""),
-      status: data.decision,
-      condition_text: note,
-      responded_at: new Date().toISOString(),
-      expires_at: expires,
-    });
+    const { error } = await supabaseAdmin
+      .from("parent_approvals")
+      .update({
+        status: data.decision,
+        condition_text: note,
+        responded_at: new Date().toISOString(),
+      })
+      .eq("id", approval.id)
+      .eq("status", "pending");
     if (error) throw new Error(error.message);
 
     const { notifyPlanParticipants } = await import("./notify.server");
-    await notifyPlanParticipants(plan.id, {
+    await notifyPlanParticipants(approval.plan_id, {
       type: "parent_response",
       title: note ? "A parent approved with a note" : "A parent approved this plan",
       ...(note ? { body: note } : {}),
     });
 
     await supabaseAdmin.from("activity_events").insert({
-      plan_id: plan.id,
+      plan_id: approval.plan_id,
       group_id: null,
       type: "parent_response",
       message: note ? "A parent approved with a note" : "A parent approved this plan",
@@ -393,3 +404,4 @@ export const parentRespondToPlan = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
