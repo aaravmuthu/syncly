@@ -633,6 +633,14 @@ export async function markRideDeparted(actorProfileId: string, assignmentId: str
     .maybeSingle();
   if (!ride) throw new Error("That ride no longer exists");
 
+  // Only the driver or a listed passenger may announce a departure — otherwise
+  // anyone with an assignment id could push false alerts to a teen's guardians.
+  const riders = (ride.passenger_profile_ids ?? []) as string[];
+  if (ride.driver_profile_id !== actorProfileId && !riders.includes(actorProfileId)) {
+    throw new Error("Only people in this car can mark it as leaving");
+  }
+
+
   const { data: plan } = await db
     .from("plans")
     .select("title, selected_recommendation_id")
