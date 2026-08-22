@@ -9,7 +9,7 @@ import { estCostLabel } from "@/lib/quorum/estcost";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { getParentSummary, parentRespondToPlan } from "@/lib/quorum/approval.functions";
 
-export function ParentSummaryView({ planId }: { planId: string }) {
+export function ParentSummaryView({ planId, token }: { planId: string; token?: string }) {
   const qc = useQueryClient();
   const fetchSummary = useServerFn(getParentSummary);
   const q = useQuery({
