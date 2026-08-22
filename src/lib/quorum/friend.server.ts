@@ -246,6 +246,22 @@ export async function buildFriendProfile(
   ]);
   if (!prof) throw new Error("Member not found");
 
+  const guardianLinked = Boolean(
+    (
+      await db
+        .from("guardian_links")
+        .select("id")
+        .or(
+          `and(guardian_profile_id.eq.${viewerProfileId},teen_profile_id.eq.${targetProfileId}),and(guardian_profile_id.eq.${targetProfileId},teen_profile_id.eq.${viewerProfileId})`,
+        )
+        .limit(1)
+    ).data?.length,
+  );
+
+  // No shared circle and no guardian link means no relationship: reveal nothing.
+  if (!circles.length && !guardianLinked) throw new Error("Member not found");
+
+
   const [{ data: shares }, nicks, plans] = await Promise.all([
     db
       .from("location_shares")
