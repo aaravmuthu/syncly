@@ -24,27 +24,40 @@ export const getMe = createServerFn({ method: "GET" })
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
-    if (data) {
+
+    let profile = data;
+    if (profile) {
       // A profile that already carries a real display name is set up — never
       // send that person back through onboarding.
-      if (!data.onboarded && REAL_NAME(data.display_name)) {
+      if (!profile.onboarded && REAL_NAME(profile.display_name)) {
         const { data: fixed } = await supabaseAdmin
           .from("profiles")
           .update({ onboarded: true })
           .eq("user_id", userId)
           .select("*")
           .maybeSingle();
-        return fixed ?? { ...data, onboarded: true };
+        profile = fixed ?? { ...profile, onboarded: true };
       }
-      return data;
+    } else {
+      const { data: created, error } = await supabaseAdmin
+        .from("profiles")
+        .upsert({ user_id: userId, display_name: "New member" }, { onConflict: "user_id" })
+        .select("*")
+        .single();
+      if (error) throw new Error(error.message);
+      profile = created;
     }
-    const { data: created, error } = await supabaseAdmin
-      .from("profiles")
-      .upsert({ user_id: userId, display_name: "New member" }, { onConflict: "user_id" })
-      .select("*")
-      .single();
-    if (error) throw new Error(error.message);
-    return created;
+
+    // Whether Family Hub is available at all -- the source of truth for this
+    // is an actual guardian_links row, not the self-reported account_type
+    // (which only decides the *onboarding* path, per the routing model).
+    const { data: linkRow } = await supabaseAdmin
+      .from("guardian_links")
+      .select("id")
+      .eq("guardian_profile_id", profile.id)
+      .limit(1);
+
+    return { ...profile, hasLinkedTeens: Boolean(linkRow?.length) };
   });
 
 

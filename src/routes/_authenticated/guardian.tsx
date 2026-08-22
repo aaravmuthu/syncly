@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/quorum/AppShell";
+import { GuardianShell } from "@/components/quorum/GuardianShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { TeenRadarMap } from "@/components/quorum/guardian/TeenRadarMap";
@@ -107,7 +107,7 @@ function GuardianHub() {
   const teen = teens.find((t) => t.id === activeTeen) ?? teens[0] ?? null;
 
   return (
-    <AppShell title="Family hub" subtitle="Plans, rides and safe arrivals — no group chatter.">
+    <GuardianShell title="Family hub" subtitle="Plans, rides and safe arrivals — no group chatter.">
       <Link
         to="/radar"
         className="glass-card mb-4 flex items-center justify-between gap-3 p-4 text-sm transition hover:border-primary/40"
@@ -242,7 +242,7 @@ function GuardianHub() {
           ) : null}
         </div>
       )}
-    </AppShell>
+    </GuardianShell>
   );
 }
 

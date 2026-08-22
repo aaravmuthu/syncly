@@ -7,7 +7,6 @@ import {
   House,
   MessageCircle,
   Radar,
-  ShieldCheck,
   UserRound,
   Users,
   Zap,
@@ -16,6 +15,7 @@ import {
 import { motion } from "motion/react";
 import { haptic } from "@/lib/quorum/haptics";
 import { Wordmark } from "./Wordmark";
+import { ContextSwitcher } from "./ContextSwitcher";
 
 import { Avatar } from "./Avatar";
 import { cn } from "@/lib/utils";
@@ -35,8 +35,6 @@ const BASE_NAV = [
   { to: "/settings", label: "Profile", icon: UserRound },
 ] as const;
 
-const FAMILY_TAB = { to: "/guardian", label: "Family", icon: ShieldCheck } as const;
-
 type NavItem = { to: string; label: string; icon: LucideIcon };
 
 export function AppShell({
@@ -53,11 +51,10 @@ export function AppShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
-  // Parents swap the Groups tab for their Family hub — the rest stays identical.
-  const NAV: NavItem[] =
-    me.data?.account_type === "guardian"
-      ? [BASE_NAV[0], FAMILY_TAB, BASE_NAV[2], BASE_NAV[3], BASE_NAV[6]]
-      : [...BASE_NAV];
+  // AppShell is the "My Squad" experience for everyone -- Family Hub now has
+  // its own shell (GuardianShell) and is reached via the ContextSwitcher, not
+  // a swapped nav tab here.
+  const NAV: NavItem[] = [...BASE_NAV];
 
 
   return (
@@ -90,6 +87,7 @@ export function AppShell({
               </Link>
             ))}
           </nav>
+          <ContextSwitcher />
           <ThemeToggle />
           <Link to="/settings" aria-label="Your profile" className="pressable active:pressable-active">
             <Avatar

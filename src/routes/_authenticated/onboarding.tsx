@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button, Card, Field, inputClass } from "@/components/quorum/ui";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
+import { linkTeen } from "@/lib/quorum/guardian.functions";
 import { CATEGORIES } from "@/lib/quorum/types";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
@@ -51,7 +52,9 @@ function Onboarding() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["me"] });
       toast.success("You're all set", { description: "Your defaults will pre-fill every questionnaire." });
-      void navigate({ to: form["account_type"] === "guardian" ? "/guardian" : "/home" });
+      // Which shell (teen home vs. Family Hub) this lands on is decided
+      // centrally by _authenticated/route.tsx's beforeLoad, not here.
+      void navigate({ to: "/home" });
     },
     onError: (e: unknown) =>
       toast.error("Couldn't save your setup", {
@@ -59,12 +62,22 @@ function Onboarding() {
       }),
   });
 
+  const [linkCode, setLinkCode] = useState("");
+  const link = useMutation({
+    mutationFn: useServerFn(linkTeen),
+    onSuccess: () => save.mutate({ data: { ...form, onboarded: true } }),
+    onError: (e: unknown) =>
+      toast.error("Couldn't link that code", {
+        description: e instanceof Error ? e.message : "Check the code and try again, or skip for now.",
+      }),
+  });
+
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
   const cats = (form["preferred_categories"] as string[]) ?? [];
+  const isGuardian = form["account_type"] === "guardian";
 
-  const steps = [
-    {
-      title: "Who are you here as?",
+  const whoStep = {
+    title: "Who are you here as?",
       caption: "Just a name and a face for your groups.",
       body: (
         <div className="space-y-4">
@@ -117,9 +130,10 @@ function Onboarding() {
           </div>
         </div>
       ),
-    },
-    {
-      title: "What do you plan most?",
+  };
+
+  const categoriesStep = {
+    title: "What do you plan most?",
       caption: "This only decides which questionnaires appear first.",
       body: (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -144,9 +158,10 @@ function Onboarding() {
           })}
         </div>
       ),
-    },
-    {
-      title: "A couple of defaults",
+  };
+
+  const defaultsStep = {
+    title: "A couple of defaults",
       caption: "These pre-fill your private answers. You can change them per plan.",
       body: (
         <div className="space-y-4">
@@ -216,8 +231,31 @@ function Onboarding() {
           })}
         </div>
       ),
-    },
-  ];
+  };
+
+  const linkTeenStep = {
+    title: "Link your first teen",
+    caption: "Enter the 6-digit code from your teen's Syncly profile. You can always do this later.",
+    body: (
+      <div className="space-y-4">
+        <Field label="Teen's sync code">
+          <input
+            className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="000000"
+            value={linkCode}
+            onChange={(e) => setLinkCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          />
+        </Field>
+        <p className="text-xs text-muted-foreground">
+          Don&apos;t have it yet? Skip this — you can link a teen anytime from Family Hub.
+        </p>
+      </div>
+    ),
+  };
+
+  const steps = isGuardian ? [whoStep, linkTeenStep] : [whoStep, categoriesStep, defaultsStep];
 
   const current = steps[step]!;
   const last = step === steps.length - 1;
@@ -241,17 +279,26 @@ function Onboarding() {
           <button
             type="button"
             className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-            onClick={() =>
-              step === 0 ? save.mutate({ data: { ...form, onboarded: true } }) : setStep(step - 1)
-            }
+            onClick={() => {
+              if (step === 0 || (isGuardian && last)) {
+                return save.mutate({ data: { ...form, onboarded: true } });
+              }
+              setStep(step - 1);
+            }}
           >
-            {step === 0 ? "Skip" : "Back"}
+            {step === 0 ? "Skip" : isGuardian && last ? "Skip — link later" : "Back"}
           </button>
           <Button
-            loading={save.isPending}
+            loading={save.isPending || link.isPending}
             onClick={() => {
               if (step === 0 && !String(form["display_name"] ?? "").trim()) {
                 return toast.error("Add a display name so your group knows who you are");
+              }
+              if (isGuardian && last) {
+                if (linkCode.length !== 6) {
+                  return toast.error("Enter your teen's 6-digit code, or tap Skip");
+                }
+                return link.mutate({ data: { code: linkCode } });
               }
               const zip = String(form["zip_code"] ?? "").trim();
               if (last && (form["home_lat"] == null || form["home_lon"] == null)) {
@@ -264,7 +311,13 @@ function Onboarding() {
               else setStep(step + 1);
             }}
           >
-            {save.isPending ? "Saving…" : last ? "Start planning" : "Continue"}
+            {save.isPending || link.isPending
+              ? "Saving…"
+              : last
+                ? isGuardian
+                  ? "Link & finish"
+                  : "Start planning"
+                : "Continue"}
           </Button>
         </div>
       </Card>
