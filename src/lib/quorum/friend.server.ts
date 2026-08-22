@@ -236,15 +236,29 @@ export async function buildFriendProfile(
   if (viewerProfileId === targetProfileId) throw new Error("That's you");
   const db = await admin();
 
-  const [circles, { data: prof }] = await Promise.all([
+  const [circles, { data: prof }, guardianLinkRow] = await Promise.all([
     mutualCircles(viewerProfileId, targetProfileId),
     db
       .from("profiles")
       .select("id, display_name, avatar_emoji, avatar_url, bio, school, grad_year")
       .eq("id", targetProfileId)
       .maybeSingle(),
+    db
+      .from("guardian_links")
+      .select("id")
+      .or(
+        `and(guardian_profile_id.eq.${viewerProfileId},teen_profile_id.eq.${targetProfileId}),and(guardian_profile_id.eq.${targetProfileId},teen_profile_id.eq.${viewerProfileId})`,
+      )
+      .limit(1),
   ]);
   if (!prof) throw new Error("Member not found");
+  const guardianLinked = Boolean(guardianLinkRow.data?.length);
+  // The whole profile is gated on an actual relationship, not just telemetry:
+  // no shared circle and no guardian link means this viewer has no business
+  // seeing this member's bio/school/grad_year at all.
+  if (!circles.length && !guardianLinked) {
+    throw new Error("You don't share a circle with this member");
+  }
 
   const [{ data: shares }, nicks, plans] = await Promise.all([
     db
@@ -262,18 +276,6 @@ export async function buildFriendProfile(
   );
   const incoming = (shares ?? []).find(
     (s) => s.owner_profile_id === targetProfileId && live(s),
-  );
-
-  const guardianLinked = Boolean(
-    (
-      await db
-        .from("guardian_links")
-        .select("id")
-        .or(
-          `and(guardian_profile_id.eq.${viewerProfileId},teen_profile_id.eq.${targetProfileId}),and(guardian_profile_id.eq.${targetProfileId},teen_profile_id.eq.${viewerProfileId})`,
-        )
-        .limit(1)
-    ).data?.length,
   );
 
   const visible = Boolean(incoming && !incoming.hidden) || guardianLinked;

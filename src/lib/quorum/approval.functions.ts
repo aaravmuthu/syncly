@@ -172,10 +172,18 @@ export type ParentSummary = {
   parentDecision: { status: string; note: string | null } | null;
 };
 
-/** Public, plan-scoped: only the logistics a parent needs, nothing private. */
+/**
+ * Public, plan-scoped: only the logistics a parent needs, nothing private.
+ * `sig` is required and verified against the plan id -- see
+ * summary-link.server.ts. Without it, a bare plan id (which is not secret;
+ * every group member can see it) would let anyone read every participant's
+ * curfew and home-distance.
+ */
 export const getParentSummary = createServerFn({ method: "GET" })
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator((d: { planId: string; sig: string }) => d)
   .handler(async ({ data }): Promise<ParentSummary | null> => {
+    const { verifyPlanSummarySig } = await import("./summary-link.server");
+    if (!verifyPlanSummarySig(data.planId, data.sig)) return null;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: plan } = await supabaseAdmin
       .from("plans")
@@ -352,10 +360,19 @@ export const getParentSummary = createServerFn({ method: "GET" })
     };
   });
 
-/** Public one-tap parent action from the shared plan link. */
+/**
+ * Public one-tap parent action from the shared plan link. `sig` is required
+ * and verified against the plan id (see getParentSummary above) -- without
+ * it, this would let anyone who can see a plan id insert an already-decided
+ * "approved" row for it, with no verification of who they are at all.
+ */
 export const parentRespondToPlan = createServerFn({ method: "POST" })
-  .inputValidator((d: { planId: string; decision: "approved" | "approved_with_condition"; note?: string }) => d)
+  .inputValidator(
+    (d: { planId: string; sig: string; decision: "approved" | "approved_with_condition"; note?: string }) => d,
+  )
   .handler(async ({ data }) => {
+    const { verifyPlanSummarySig } = await import("./summary-link.server");
+    if (!verifyPlanSummarySig(data.planId, data.sig)) throw new Error("This plan link is not valid");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: plan } = await supabaseAdmin
       .from("plans")

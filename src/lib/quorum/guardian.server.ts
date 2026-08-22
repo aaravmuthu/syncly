@@ -632,6 +632,9 @@ export async function markRideDeparted(actorProfileId: string, assignmentId: str
     .eq("id", assignmentId)
     .maybeSingle();
   if (!ride) throw new Error("That ride no longer exists");
+  const passengers = (ride.passenger_profile_ids as string[] | null) ?? [];
+  const isRider = ride.driver_profile_id === actorProfileId || passengers.includes(actorProfileId);
+  if (!isRider) throw new Error("You're not part of this ride");
 
   const { data: plan } = await db
     .from("plans")

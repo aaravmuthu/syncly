@@ -26,6 +26,7 @@ import {
   finalizePlan,
   generateRecommendations,
   getPlan,
+  getSummaryShareLink,
   requestParentApproval,
   submitConstraints,
 } from "@/lib/quorum/plan.functions";
@@ -151,6 +152,20 @@ function PlanPage() {
     mutationFn: useServerFn(requestParentApproval),
     onSuccess: (row) =>
       setApprovalLink(`${window.location.origin}/approve/${(row as { token: string }).token}`),
+  });
+  const shareSummary = useMutation({
+    mutationFn: useServerFn(getSummaryShareLink),
+    onSuccess: (row) => {
+      const { planId: sharedPlanId, sig } = row as { planId: string; sig: string };
+      const link = `${window.location.origin}/approve/${sharedPlanId}.${sig}`;
+      void navigator.clipboard.writeText(link);
+      setApprovalLink(link);
+      toast.success("Parent link copied", { description: link });
+    },
+    onError: (e: unknown) =>
+      toast.error("Couldn't create the link", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
   });
 
   const data = q.data;
@@ -702,14 +717,10 @@ function PlanPage() {
               {askParent.isPending ? "Creating…" : "Create approval link"}
             </Button>
             <Button
-              onClick={() => {
-                const link = `${window.location.origin}/approve/${planId}`;
-                void navigator.clipboard.writeText(link);
-                setApprovalLink(link);
-                toast.success("Parent link copied", { description: link });
-              }}
+              disabled={shareSummary.isPending}
+              onClick={() => shareSummary.mutate({ data: { planId } })}
             >
-              Share parent summary link
+              {shareSummary.isPending ? "Creating…" : "Share parent summary link"}
             </Button>
             {approvalLink ? (
               <button

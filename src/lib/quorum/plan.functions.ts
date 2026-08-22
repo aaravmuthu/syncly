@@ -831,3 +831,19 @@ export const requestParentApproval = createServerFn({ method: "POST" })
     });
     return row;
   });
+
+/**
+ * Mints the signature for the "share parent summary link" flow
+ * (/approve/<planId>.<sig>). Only a caller who can already see this plan
+ * (a group member) can mint one -- the resulting link is what makes it safe
+ * to hand to someone with no Syncly account, not the plan id by itself.
+ */
+export const getSummaryShareLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { planId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
+    if (!allowed) throw new Error("Forbidden");
+    const { signPlanSummary } = await import("./summary-link.server");
+    return { planId: data.planId, sig: signPlanSummary(data.planId) };
+  });

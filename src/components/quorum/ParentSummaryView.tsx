@@ -9,12 +9,12 @@ import { estCostLabel } from "@/lib/quorum/estcost";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { getParentSummary, parentRespondToPlan } from "@/lib/quorum/approval.functions";
 
-export function ParentSummaryView({ planId }: { planId: string }) {
+export function ParentSummaryView({ planId, sig }: { planId: string; sig: string }) {
   const qc = useQueryClient();
   const fetchSummary = useServerFn(getParentSummary);
   const q = useQuery({
-    queryKey: ["parent-summary", planId],
-    queryFn: () => fetchSummary({ data: { planId } }),
+    queryKey: ["parent-summary", planId, sig],
+    queryFn: () => fetchSummary({ data: { planId, sig } }),
     retry: false,
   });
   const [note, setNote] = useState("");
@@ -88,7 +88,7 @@ export function ParentSummaryView({ planId }: { planId: string }) {
               <Button
                 className="flex-1"
                 loading={respond.isPending}
-                onClick={() => respond.mutate({ data: { planId, decision: "approved" } })}
+                onClick={() => respond.mutate({ data: { planId, sig, decision: "approved" } })}
               >
                 Approve Plan 💚
               </Button>
@@ -109,7 +109,9 @@ export function ParentSummaryView({ planId }: { planId: string }) {
                   className="w-full"
                   disabled={!note.trim() || respond.isPending}
                   onClick={() =>
-                    respond.mutate({ data: { planId, decision: "approved_with_condition", note } })
+                    respond.mutate({
+                      data: { planId, sig, decision: "approved_with_condition", note },
+                    })
                   }
                 >
                   Send note

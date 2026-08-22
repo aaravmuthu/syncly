@@ -26,14 +26,19 @@ export const Route = createFileRoute("/approve/$token")({
 
 function ApprovePage() {
   const { token } = Route.useParams();
-  // A plan id (uuid, contains dashes) renders the full parent summary; an
-  // approval token (dashless hex) renders the per-member permission request.
-  const isPlanId = token.includes("-");
-  if (isPlanId) {
+  // "<planId>.<sig>" (a signed link from getSummaryShareLink) renders the
+  // full parent summary; a bare dashless-hex approval token renders the
+  // per-member permission request. The signature is what makes the plan-id
+  // branch safe -- a plan id alone is not a secret (every group member can
+  // see it), so it's never trusted without a valid sig.
+  const dot = token.indexOf(".");
+  if (dot > 0) {
+    const planId = token.slice(0, dot);
+    const sig = token.slice(dot + 1);
     return (
       <main className="mx-auto min-h-dvh max-w-lg px-4 py-10">
         <Wordmark className="mx-auto mb-8 h-7" />
-        <ParentSummaryView planId={token} />
+        <ParentSummaryView planId={planId} sig={sig} />
       </main>
     );
   }
