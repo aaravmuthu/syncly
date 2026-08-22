@@ -280,17 +280,6 @@ export async function buildFriendProfile(
     (s) => s.owner_profile_id === targetProfileId && live(s),
   );
 
-  const guardianLinked = Boolean(
-    (
-      await db
-        .from("guardian_links")
-        .select("id")
-        .or(
-          `and(guardian_profile_id.eq.${viewerProfileId},teen_profile_id.eq.${targetProfileId}),and(guardian_profile_id.eq.${targetProfileId},teen_profile_id.eq.${viewerProfileId})`,
-        )
-        .limit(1)
-    ).data?.length,
-  );
 
   const visible = Boolean(incoming && !incoming.hidden) || guardianLinked;
 
