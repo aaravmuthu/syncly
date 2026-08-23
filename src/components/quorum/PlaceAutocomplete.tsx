@@ -65,7 +65,6 @@ export function PlaceAutocomplete({
     };
   }, [text, search]);
 
-
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
       if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
@@ -171,7 +170,7 @@ export function PlaceAutocomplete({
             <li key={s.id}>
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left text-sm hover:bg-secondary"
+                className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-secondary active:bg-secondary"
                 onClick={() => commit(s)}
               >
                 <span className="font-medium">{s.label}</span>
@@ -181,7 +180,6 @@ export function PlaceAutocomplete({
           ))}
         </ul>
       ) : null}
-
     </div>
   );
 }

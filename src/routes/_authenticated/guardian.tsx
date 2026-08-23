@@ -47,7 +47,9 @@ export const Route = createFileRoute("/_authenticated/guardian")({
 });
 
 const fmtTime = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "TBD";
+  iso
+    ? new Date(iso).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })
+    : "TBD";
 
 const ago = (iso: string) => {
   const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
@@ -110,7 +112,7 @@ function GuardianHub() {
     <GuardianShell title="Family hub" subtitle="Plans, rides and safe arrivals — no group chatter.">
       <Link
         to="/radar"
-        className="glass-card mb-4 flex items-center justify-between gap-3 p-4 text-sm transition hover:border-primary/40"
+        className="glass-card mb-4 flex items-center justify-between gap-3 p-4 text-sm transition hover:border-primary/40 active:scale-[0.99]"
       >
         <span>
           <span className="block font-semibold">Open live radar</span>
@@ -279,9 +281,7 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
   const [zonePoint, setZonePoint] = useState<{ lat: number; lon: number } | null>(null);
   const [zoneRadius, setZoneRadius] = useState(200);
 
-  const pendingApprovals = teen.plans.filter(
-    (p) => p.approval && p.approval.status === "pending",
-  );
+  const pendingApprovals = teen.plans.filter((p) => p.approval && p.approval.status === "pending");
 
   return (
     <div className="space-y-4">
@@ -311,9 +311,7 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                   🔋 {teen.location.battery_pct}%
                 </Pill>
               ) : null}
-              {teen.location.accuracy_m != null ? (
-                <span>±{teen.location.accuracy_m}m</span>
-              ) : null}
+              {teen.location.accuracy_m != null ? <span>±{teen.location.accuracy_m}m</span> : null}
             </>
           ) : (
             <span>{teen.sharing ? "Waiting for the first ping" : "Location sharing is off"}</span>
@@ -443,7 +441,9 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                     ~${Math.round(p.est_cost_min ?? 0)}–{Math.round(p.est_cost_max)}
                   </Pill>
                 ) : null}
-                {p.drive_minutes != null ? <Pill tone="neutral">{p.drive_minutes} min away</Pill> : null}
+                {p.drive_minutes != null ? (
+                  <Pill tone="neutral">{p.drive_minutes} min away</Pill>
+                ) : null}
                 <Pill tone={p.adult_supervised ? "good" : "warn"}>
                   {p.adult_supervised ? "Adult supervised" : "No adult listed"}
                 </Pill>
@@ -532,7 +532,9 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                   Estimated tab ~${Math.round(p.est_cost_min ?? 0)}–{Math.round(p.est_cost_max)}
                 </Pill>
               ) : null}
-              {p.drive_minutes != null ? <Pill tone="neutral">{p.drive_minutes} min drive</Pill> : null}
+              {p.drive_minutes != null ? (
+                <Pill tone="neutral">{p.drive_minutes} min drive</Pill>
+              ) : null}
               {p.approval ? (
                 <Pill
                   tone={
@@ -558,7 +560,9 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                     key={r.id}
                     className={cn(
                       "rounded-2xl border px-3 py-2 text-sm",
-                      r.carries_my_teen ? "border-emerald-500/40 bg-emerald-500/5" : "border-border",
+                      r.carries_my_teen
+                        ? "border-emerald-500/40 bg-emerald-500/5"
+                        : "border-border",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">

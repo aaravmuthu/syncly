@@ -212,7 +212,7 @@ export function SpotBrowser({
                   src={venuePhoto(s)}
                   alt={`${s.title} — ${s.cuisine ?? s.subtitle}`}
                   loading="lazy"
-                  className="h-28 w-full object-cover transition hover:scale-[1.02]"
+                  className="h-28 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                 />
                 <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
                   <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">

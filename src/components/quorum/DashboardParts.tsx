@@ -227,7 +227,7 @@ export function WeekStrip({
         <button
           type="button"
           onClick={() => onShift(-1)}
-          className="rounded-lg px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
+          className="tap-target rounded-lg px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground active:bg-secondary active:text-foreground"
           aria-label="Previous week"
         >
           ‹
@@ -238,7 +238,7 @@ export function WeekStrip({
         <button
           type="button"
           onClick={() => onShift(1)}
-          className="rounded-lg px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
+          className="tap-target rounded-lg px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground active:bg-secondary active:text-foreground"
           aria-label="Next week"
         >
           ›

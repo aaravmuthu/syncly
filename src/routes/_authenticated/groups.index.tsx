@@ -146,7 +146,7 @@ function SquadCard({ squad }: { squad: Squad }) {
   const extra = Math.max(0, squad.member_count - squad.members.length);
 
   return (
-    <article className="surface group overflow-hidden transition-all hover:border-primary/40">
+    <article className="surface group overflow-hidden transition-all hover:border-primary/40 active:scale-[0.99]">
       <Link to="/groups/$groupId" params={{ groupId: squad.id }} className="block">
         <div className={cn("relative h-24", theme.banner)}>
           <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />

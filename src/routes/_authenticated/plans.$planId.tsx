@@ -194,7 +194,10 @@ function PlanPage() {
   const attendeeNames = data.participants
     .filter((p) => p.attending !== false)
     .map((p) =>
-      alias(p.profile_id, (p.profiles as { display_name?: string } | null)?.display_name ?? "Member"),
+      alias(
+        p.profile_id,
+        (p.profiles as { display_name?: string } | null)?.display_name ?? "Member",
+      ),
     );
   const cars = data.transport.map((t) => ({
     label: t.car_label,
@@ -224,11 +227,7 @@ function PlanPage() {
         />
       ) : null}
 
-      <CarpoolShield
-        planId={data.plan.id}
-        rides={data.transport}
-        meProfileId={data.meProfileId}
-      />
+      <CarpoolShield planId={data.plan.id} rides={data.transport} meProfileId={data.meProfileId} />
 
       {data.plan.created_by === data.meProfileId ? (
         <Card className="border-primary/25 bg-primary/[0.06]">
@@ -277,7 +276,6 @@ function PlanPage() {
         </Card>
       )}
 
-
       {editing ? (
         <div className="mt-4">
           <ConstraintForm
@@ -307,7 +305,6 @@ function PlanPage() {
           >
             {generate.isPending ? "Finding fair spots…" : "Find options"}
           </Button>
-
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           {data.participants.map((p) => {
@@ -441,7 +438,7 @@ function PlanPage() {
                           })}
                           alt={`${r.title} — ${b.venue?.cuisine ?? r.category}`}
                           loading="lazy"
-                          className="h-32 w-full object-cover transition hover:scale-[1.02]"
+                          className="h-32 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                         />
                         <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
                           <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
