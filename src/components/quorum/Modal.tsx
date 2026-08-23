@@ -19,7 +19,11 @@ export function Modal({
   children: ReactNode;
 }) {
   return (
-    <DrawerPrimitive.Root open={open} onOpenChange={(v) => (v ? null : onClose())}>
+    <DrawerPrimitive.Root
+      open={open}
+      onOpenChange={(v) => (v ? null : onClose())}
+      shouldScaleBackground
+    >
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md" />
         <DrawerPrimitive.Content
