@@ -400,7 +400,7 @@ function AppPreview() {
   return (
     <motion.div
       style={{ scale, opacity, rotateX, transformPerspective: 1200 }}
-      className="dark mx-auto w-full max-w-[640px]"
+      className="dark mx-auto w-full max-w-[760px]"
     >
       {/* Device bezel — fixed near-black regardless of site theme, like a
           real phone's casing. Not app UI, so it deliberately sits outside
@@ -413,6 +413,42 @@ function AppPreview() {
               <Users className="size-3.5" /> 6
             </span>
           </div>
+
+          {/* Group progress — the actual first step of planning in the app:
+              everyone answers privately before any option is ranked. Mirrors
+              plans.$planId.tsx's real "Group progress" card (status line +
+              per-member response chips) instead of jumping straight to a
+              result, so the preview reads as a process, not a screenshot. */}
+          <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-foreground">Group progress</p>
+              <span className="text-xs text-muted-foreground">Waiting on 1 more person</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {[
+                { name: "Maya", responded: true },
+                { name: "Jordan", responded: true },
+                { name: "Sam", responded: true },
+                { name: "Riley", responded: true },
+                { name: "Chris", responded: true },
+                { name: "Alex", responded: false },
+              ].map((m) => (
+                <span
+                  key={m.name}
+                  className={
+                    "rounded-full px-2.5 py-1 text-xs " +
+                    (m.responded
+                      ? "bg-success/15 text-success"
+                      : "bg-secondary text-muted-foreground")
+                  }
+                >
+                  {m.responded ? "✓ " : ""}
+                  {m.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-3 rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
               <p className="font-semibold text-foreground">TopGolf</p>
