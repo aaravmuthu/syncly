@@ -385,9 +385,23 @@ function AppPreview() {
     [0, RESOLVE_DISTANCE],
     prefersReducedMotion ? [1, 1] : [0.4, 1],
   );
+  // Starts tilted back in 3D (top edge leaning away, like a laptop screen
+  // not fully opened) and arches down to flat as it resolves — same scroll
+  // range as scale/opacity, so all three settle together. rotateX is a
+  // transform property like scale, so this stays within "transform/opacity
+  // only" for performance; transformPerspective gives the rotation actual
+  // 3D depth instead of just squashing the panel vertically.
+  const rotateX = useTransform(
+    scrollY,
+    [0, RESOLVE_DISTANCE],
+    prefersReducedMotion ? [0, 0] : [12, 0],
+  );
 
   return (
-    <motion.div style={{ scale, opacity }} className="dark mx-auto w-full max-w-[330px]">
+    <motion.div
+      style={{ scale, opacity, rotateX, transformPerspective: 1200 }}
+      className="dark mx-auto w-full max-w-[330px]"
+    >
       {/* Device bezel — fixed near-black regardless of site theme, like a
           real phone's casing. Not app UI, so it deliberately sits outside
           the token system (same call as the map's HUD chrome elsewhere). */}
