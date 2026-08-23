@@ -359,17 +359,32 @@ function AppPreview() {
   // on a normal desktop width the panel sits high enough beside the hero
   // text that it was already past the "resolved" threshold at scroll
   // position zero, before the page even finished loading, so there was
-  // nothing left to animate. Resolves over the first ~300px of scroll on
-  // any viewport instead.
+  // nothing left to animate.
   const { scrollY } = useScroll();
+  // Resolve distance: measured how far the panel stays visible before
+  // scrolling off the top of the viewport on a real desktop layout (it
+  // starts leaving around scrollY ~580px) and picked 480px -- comfortably
+  // inside that window, but wide enough that a normal scroll gesture (a
+  // 300px window resolves almost instantly with trackpad momentum, reading
+  // as "nothing happened" rather than an animation) actually shows the
+  // transition happening in real time.
+  const RESOLVE_DISTANCE = 480;
   // Reduced motion: pin both to a constant 1 so the element is always fully
   // visible at rest, regardless of scroll position — no scale, and nothing
   // scroll-linked. Kept as motion values (rather than swapping the `style`
   // prop to `undefined`) because useReducedMotion() resolves to null/false
   // for the first render, and a motion value written to `style` once
   // persists as a raw inline style even after the prop is later omitted.
-  const scale = useTransform(scrollY, [0, 300], prefersReducedMotion ? [1, 1] : [0.85, 1]);
-  const opacity = useTransform(scrollY, [0, 300], prefersReducedMotion ? [1, 1] : [0.4, 1]);
+  const scale = useTransform(
+    scrollY,
+    [0, RESOLVE_DISTANCE],
+    prefersReducedMotion ? [1, 1] : [0.85, 1],
+  );
+  const opacity = useTransform(
+    scrollY,
+    [0, RESOLVE_DISTANCE],
+    prefersReducedMotion ? [1, 1] : [0.4, 1],
+  );
 
   return (
     <motion.div style={{ scale, opacity }} className="dark mx-auto w-full max-w-[330px]">
