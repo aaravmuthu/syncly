@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useRef } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import {
   ArrowRight,
   CalendarCheck,
@@ -351,10 +353,27 @@ function FeatureRow({
 }
 
 function PhoneMock() {
+  const ref = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.85", "start 0.4"],
+  });
+  const scale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [0.4, 1]);
+
   return (
-    <div className="animate-rise mx-auto w-full max-w-[330px]">
+    <motion.div
+      ref={ref}
+      style={prefersReducedMotion ? undefined : { scale, opacity }}
+      initial={prefersReducedMotion ? { opacity: 0 } : undefined}
+      whileInView={prefersReducedMotion ? { opacity: 1 } : undefined}
+      viewport={prefersReducedMotion ? { once: true, amount: 0.4 } : undefined}
+      transition={prefersReducedMotion ? { duration: 0.5, ease: "easeOut" } : undefined}
+      className="dark mx-auto w-full max-w-[330px]"
+    >
       <div className="rounded-[2.4rem] border border-border bg-card p-3 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.45)]">
-        <div className="rounded-[1.9rem] bg-surface p-4">
+        <div className="rounded-[1.9rem] border border-white/10 bg-card/60 p-4 backdrop-blur-2xl">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Saturday Night Out</span>
             <span className="inline-flex items-center gap-1">
@@ -396,6 +415,6 @@ function PhoneMock() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
