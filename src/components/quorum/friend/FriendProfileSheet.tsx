@@ -194,7 +194,7 @@ export function FriendProfileSheet() {
                   type="button"
                   onClick={closeFriend}
                   aria-label="Close"
-                  className="rounded-full bg-white/8 p-2 text-white/70 transition active:scale-90"
+                  className="tap-target grid shrink-0 place-items-center rounded-full bg-white/8 p-2 text-white/70 transition active:scale-90"
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
@@ -209,13 +209,20 @@ export function FriendProfileSheet() {
                     maxLength={40}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder={`Nickname for ${friend.name}`}
-                    className={cn(inputClass, "border-white/15 bg-white/5 text-white placeholder:text-white/35")}
+                    className={cn(
+                      inputClass,
+                      "border-white/15 bg-white/5 text-white placeholder:text-white/35",
+                    )}
                   />
                   <p className="mt-2 text-[11px] text-white/40">
                     Only you see this. It replaces their name on your map, chats, plans and feed.
                   </p>
                   <div className="mt-3 flex justify-end gap-2">
-                    <Button variant="ghost" className="text-white/70" onClick={() => setEditing(false)}>
+                    <Button
+                      variant="ghost"
+                      className="text-white/70"
+                      onClick={() => setEditing(false)}
+                    >
                       Cancel
                     </Button>
                     <Button
@@ -265,7 +272,8 @@ export function FriendProfileSheet() {
                   label="Directions"
                   disabled={!tele}
                   onClick={() =>
-                    tele && window.open(directionsUrl(tele.lat, tele.lon, shown), "_blank", "noopener")
+                    tele &&
+                    window.open(directionsUrl(tele.lat, tele.lon, shown), "_blank", "noopener")
                   }
                 />
               </div>
@@ -310,15 +318,15 @@ export function FriendProfileSheet() {
                         }
                       >
                         <Ghost className="h-4 w-4" aria-hidden />
-                        {friend.sharingWithThem.hidden ? "Unghost contact" : "Ghost this contact 👻"}
+                        {friend.sharingWithThem.hidden
+                          ? "Unghost contact"
+                          : "Ghost this contact 👻"}
                       </Button>
                       <Button
                         variant="ghost"
                         className="text-white/70"
                         loading={stop.isPending}
-                        onClick={() =>
-                          stop.mutate({ data: { viewerProfileId: friend.profileId } })
-                        }
+                        onClick={() => stop.mutate({ data: { viewerProfileId: friend.profileId } })}
                       >
                         <X className="h-4 w-4" aria-hidden /> Stop sharing
                       </Button>
@@ -364,8 +372,12 @@ export function FriendProfileSheet() {
                           <span className="block text-sm font-semibold">{opt.label}</span>
                           <span className="block text-xs text-white/45">{opt.detail}</span>
                         </span>
-                        {opt.mode === "hour" ? <Clock className="h-4 w-4 opacity-60" aria-hidden /> : null}
-                        {opt.mode === "end_of_day" ? <Moon className="h-4 w-4 opacity-60" aria-hidden /> : null}
+                        {opt.mode === "hour" ? (
+                          <Clock className="h-4 w-4 opacity-60" aria-hidden />
+                        ) : null}
+                        {opt.mode === "end_of_day" ? (
+                          <Moon className="h-4 w-4 opacity-60" aria-hidden />
+                        ) : null}
                         {opt.mode === "indefinite" ? (
                           <InfinityIcon className="h-4 w-4 opacity-60" aria-hidden />
                         ) : null}
@@ -385,9 +397,7 @@ export function FriendProfileSheet() {
                     {tele.statusEmoji} {tele.address ?? tele.motion}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Pill tone="accent">
-                      {tele.atHome ? "At Home" : tele.motion}
-                    </Pill>
+                    <Pill tone="accent">{tele.atHome ? "At Home" : tele.motion}</Pill>
                     {tele.batteryPct != null ? (
                       <Pill tone={tele.batteryPct <= 20 ? "bad" : "neutral"}>
                         {tele.batteryPct <= 20 ? (

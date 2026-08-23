@@ -94,7 +94,12 @@ export function DirectChat({
       .channel(`dm:${threadId}`, { config: { broadcast: { self: false }, presence: { key: me } } })
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "direct_messages", filter: `thread_id=eq.${threadId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "direct_messages",
+          filter: `thread_id=eq.${threadId}`,
+        },
         () => void qc.invalidateQueries({ queryKey: key }),
       )
       .on("postgres_changes", { event: "*", schema: "public", table: "direct_reactions" }, () =>
@@ -332,7 +337,7 @@ export function DirectChat({
       </div>
 
       {/* quick pills + composer ---------------------------------------- */}
-      <div className="border-t border-white/10 bg-white/[0.03] p-3">
+      <div className="border-t border-white/10 bg-white/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
         <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
           {CONTEXT_PILLS.map((p) => (
             <button
@@ -360,7 +365,7 @@ export function DirectChat({
             type="button"
             onClick={() => void shareMyLocation()}
             aria-label="Send my location"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition active:scale-95 hover:bg-white/10"
+            className="tap-target grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition active:scale-95 hover:bg-white/10"
           >
             <MapPin className="h-4 w-4" aria-hidden />
           </button>
@@ -369,13 +374,17 @@ export function DirectChat({
             onClick={() => void toggleRecording()}
             aria-label={recording ? "Stop recording" : "Record a voice note"}
             className={cn(
-              "grid h-10 w-10 shrink-0 place-items-center rounded-2xl border text-white/70 transition active:scale-95",
+              "tap-target grid h-10 w-10 shrink-0 place-items-center rounded-2xl border text-white/70 transition active:scale-95",
               recording
                 ? "animate-pulse border-rose-400/50 bg-rose-500/20 text-rose-200"
                 : "border-white/10 bg-white/5 hover:bg-white/10",
             )}
           >
-            {recording ? <Square className="h-4 w-4" aria-hidden /> : <Mic className="h-4 w-4" aria-hidden />}
+            {recording ? (
+              <Square className="h-4 w-4" aria-hidden />
+            ) : (
+              <Mic className="h-4 w-4" aria-hidden />
+            )}
           </button>
           <textarea
             value={text}

@@ -134,7 +134,12 @@ export default function SquadMapInner({
           id: "q-iso-line",
           type: "line",
           source: "q-iso",
-          paint: { "line-color": "#22d3ee", "line-opacity": 0.35, "line-width": 1, "line-dasharray": [2, 3] },
+          paint: {
+            "line-color": "#22d3ee",
+            "line-opacity": 0.35,
+            "line-width": 1,
+            "line-dasharray": [2, 3],
+          },
         });
         m.addLayer({
           id: "q-zones-fill",
@@ -306,7 +311,12 @@ export default function SquadMapInner({
     if (!m) return;
     const next = !tilted;
     setTilted(next);
-    m.easeTo({ pitch: next ? 55 : 0, bearing: next ? -20 : 0, zoom: next ? 15 : 13, duration: 900 });
+    m.easeTo({
+      pitch: next ? 55 : 0,
+      bearing: next ? -20 : 0,
+      zoom: next ? 15 : 13,
+      duration: 900,
+    });
   }, [tilted]);
 
   const focus = people.find((p) => p.id === selected) ?? null;
@@ -327,7 +337,12 @@ export default function SquadMapInner({
             className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
           />
           {query ? (
-            <button type="button" onClick={() => setQuery("")} aria-label="Clear search">
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="-m-3.5 grid shrink-0 place-items-center p-3.5"
+            >
               <X className="h-4 w-4 text-muted-foreground" aria-hidden />
             </button>
           ) : null}
@@ -388,7 +403,12 @@ export default function SquadMapInner({
                 ) : null}
               </div>
             </div>
-            <button type="button" onClick={() => setSelected(null)} aria-label="Close">
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              aria-label="Close"
+              className="tap-target grid shrink-0 place-items-center"
+            >
               <X className="h-4 w-4 text-muted-foreground" aria-hidden />
             </button>
           </div>
@@ -424,7 +444,7 @@ function HudButton({
       aria-label={label}
       aria-pressed={active ?? undefined}
       className={cn(
-        "grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-zinc-900/60 backdrop-blur-2xl transition-transform active:scale-95",
+        "tap-target grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-zinc-900/60 backdrop-blur-2xl transition-transform active:scale-95",
         active ? "text-primary" : "text-foreground/80",
       )}
     >

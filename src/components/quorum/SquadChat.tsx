@@ -32,7 +32,11 @@ type Msg = {
 type Read = {
   message_id: string;
   profile_id: string;
-  profiles?: { display_name: string; avatar_emoji: string | null; avatar_url: string | null } | null;
+  profiles?: {
+    display_name: string;
+    avatar_emoji: string | null;
+    avatar_url: string | null;
+  } | null;
 };
 
 const QUICK = ["🔥", "😂", "👍", "🙏", "😭", "🎉"];
@@ -75,8 +79,7 @@ export function SquadChat({
   const reads = (q.data?.reads ?? []) as unknown as Read[];
   const me = q.data?.me ?? null;
   const hostId = q.data?.hostId ?? null;
-  const myName =
-    messages.find((m) => m.sender_id === me)?.profiles?.display_name ?? "Someone";
+  const myName = messages.find((m) => m.sender_id === me)?.profiles?.display_name ?? "Someone";
 
   const readsByMessage = useMemo(() => {
     const map = new Map<string, Read[]>();
@@ -91,7 +94,12 @@ export function SquadChat({
   const lastSeenMineId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
-      if (m && m.sender_id === me && !m.system_type && (readsByMessage.get(m.id)?.length ?? 0) > 0) {
+      if (
+        m &&
+        m.sender_id === me &&
+        !m.system_type &&
+        (readsByMessage.get(m.id)?.length ?? 0) > 0
+      ) {
         return m.id;
       }
     }
@@ -106,7 +114,12 @@ export function SquadChat({
       })
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "group_messages", filter: `group_id=eq.${groupId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "group_messages",
+          filter: `group_id=eq.${groupId}`,
+        },
         () => void qc.invalidateQueries({ queryKey: key }),
       )
       .on(
@@ -233,45 +246,51 @@ export function SquadChat({
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(16,185,129,0.16),transparent_65%)]"
       />
-      <div ref={scrollRef} className="relative flex flex-1 flex-col justify-end overflow-y-auto p-4">
+      <div
+        ref={scrollRef}
+        className="relative flex flex-1 flex-col justify-end overflow-y-auto p-4"
+      >
         <div className="mt-auto space-y-3">
-        {q.isLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
-        ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-white/45">
-            No messages yet — say something to the squad 💬
-          </p>
-        ) : null}
+          {q.isLoading ? (
+            <div className="flex justify-center py-8">
+              <Spinner />
+            </div>
+          ) : messages.length === 0 ? (
+            <p className="py-10 text-center text-sm text-white/45">
+              No messages yet — say something to the squad 💬
+            </p>
+          ) : null}
 
-        {messages.map((m) =>
-          m.system_type ? (
-            <SystemCard key={m.id} msg={m} onVote={(id) => navigate({ to: "/plans/$planId", params: { planId: id } })} />
-          ) : (
-            <Bubble
-              key={m.id}
-              msg={m}
-              mine={m.sender_id === me}
-              isHost={Boolean(hostId && m.sender_id === hostId)}
-              readers={m.id === lastSeenMineId ? readsByMessage.get(m.id) ?? [] : []}
-              onReply={() => setReplyTo(m)}
-              onReact={(emoji) => void submit(emoji, null, m.id)}
-            />
-          ),
-        )}
+          {messages.map((m) =>
+            m.system_type ? (
+              <SystemCard
+                key={m.id}
+                msg={m}
+                onVote={(id) => navigate({ to: "/plans/$planId", params: { planId: id } })}
+              />
+            ) : (
+              <Bubble
+                key={m.id}
+                msg={m}
+                mine={m.sender_id === me}
+                isHost={Boolean(hostId && m.sender_id === hostId)}
+                readers={m.id === lastSeenMineId ? (readsByMessage.get(m.id) ?? []) : []}
+                onReply={() => setReplyTo(m)}
+                onReact={(emoji) => void submit(emoji, null, m.id)}
+              />
+            ),
+          )}
 
-        {typingNames.length > 0 ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 backdrop-blur">
-            <Dots />
-            {typingNames.length === 1
-              ? `${typingNames[0]} is typing...`
-              : `${typingNames.length} people are typing...`}
-          </div>
-        ) : null}
+          {typingNames.length > 0 ? (
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 backdrop-blur">
+              <Dots />
+              {typingNames.length === 1
+                ? `${typingNames[0]} is typing...`
+                : `${typingNames.length} people are typing...`}
+            </div>
+          ) : null}
         </div>
       </div>
-
 
       {replyTo ? (
         <div className="mx-4 mb-2 flex items-start gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur">
@@ -292,7 +311,7 @@ export function SquadChat({
         </div>
       ) : null}
 
-      <div className="relative border-t border-white/10 bg-white/[0.03] p-3">
+      <div className="relative border-t border-white/10 bg-white/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
@@ -315,7 +334,7 @@ export function SquadChat({
             type="button"
             onClick={() => fileRef.current?.click()}
             aria-label="Add photo"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-base hover:bg-white/10"
+            className="tap-target grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-base hover:bg-white/10"
           >
             📷
           </button>
@@ -393,52 +412,54 @@ function Bubble({
           </p>
         ) : null}
         <div className="relative">
-        <div
-          className={cn(
-            "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-white/10 bg-neutral-900/95 p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
-            mine ? "right-0" : "left-0",
-          )}
-        >
-          {QUICK.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => onReact(e)}
-              className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-emerald-400/10"
-            >
-              {e}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onDoubleClick={onReply}
-          onClick={onReply}
-          className={cn(
-            "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
-            mine
-              ? "rounded-tr-none bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
-              : "rounded-tl-none border border-white/10 bg-neutral-800/80 text-neutral-100 hover:bg-neutral-800",
-          )}
-        >
-          {msg.reply_to ? (
-            <span className="mb-1.5 block rounded-xl border border-white/10 bg-black/25 px-2 py-1 text-[11px] text-white/55">
-              <span className="font-semibold text-white/75">
-                {msg.reply_to.profiles?.display_name ?? "Member"}
+          <div
+            className={cn(
+              "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-white/10 bg-neutral-900/95 p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
+              mine ? "right-0" : "left-0",
+            )}
+          >
+            {QUICK.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => onReact(e)}
+                className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-emerald-400/10"
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onDoubleClick={onReply}
+            onClick={onReply}
+            className={cn(
+              "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
+              mine
+                ? "rounded-tr-none bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
+                : "rounded-tl-none border border-white/10 bg-neutral-800/80 text-neutral-100 hover:bg-neutral-800",
+            )}
+          >
+            {msg.reply_to ? (
+              <span className="mb-1.5 block rounded-xl border border-white/10 bg-black/25 px-2 py-1 text-[11px] text-white/55">
+                <span className="font-semibold text-white/75">
+                  {msg.reply_to.profiles?.display_name ?? "Member"}
+                </span>
+                : {msg.reply_to.content || "Photo"}
               </span>
-              : {msg.reply_to.content || "Photo"}
-            </span>
-          ) : null}
-          {msg.media_url ? (
-            <img
-              src={msg.media_url}
-              alt="Shared in chat"
-              loading="lazy"
-              className="mb-1.5 max-h-60 w-full rounded-xl object-cover"
-            />
-          ) : null}
-          {msg.content ? <span className="whitespace-pre-wrap break-words">{msg.content}</span> : null}
-        </button>
+            ) : null}
+            {msg.media_url ? (
+              <img
+                src={msg.media_url}
+                alt="Shared in chat"
+                loading="lazy"
+                className="mb-1.5 max-h-60 w-full rounded-xl object-cover"
+              />
+            ) : null}
+            {msg.content ? (
+              <span className="whitespace-pre-wrap break-words">{msg.content}</span>
+            ) : null}
+          </button>
         </div>
         <p className="px-1 text-[10px] text-white/35">
           {time(msg.created_at)}
@@ -481,7 +502,9 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
   const title = meta.title ?? msg.content;
   return (
     <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 text-center shadow-xl backdrop-blur">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">{tag}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">
+        {tag}
+      </p>
       <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-emerald-50">
         <span>{icon}</span>
         <span className="truncate">{title}</span>

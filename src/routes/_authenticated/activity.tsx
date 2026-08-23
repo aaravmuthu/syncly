@@ -267,7 +267,7 @@ function ActivityPage() {
           <button
             aria-label="Dismiss"
             onClick={() => setDismissed(true)}
-            className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
+            className="tap-target grid shrink-0 place-items-center rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
           >
             ✕
           </button>

@@ -17,7 +17,7 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
   const ride = useServerFn(postRideUpdate);
 
   return (
-    <div className="fixed bottom-24 right-4 z-[60] flex flex-col items-end gap-2 md:bottom-6">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] right-4 z-[60] flex flex-col items-end gap-2 md:bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
       {open ? (
         <div className="w-[min(92vw,380px)] overflow-hidden rounded-3xl">
           <div className="flex flex-wrap gap-1.5 rounded-t-3xl border border-b-0 border-white/10 bg-neutral-950/80 p-3 backdrop-blur-xl">
