@@ -69,6 +69,7 @@ function JoinPage() {
     <div className="paper-field grid min-h-dvh place-items-center px-6">
       <div className="flex flex-col items-center gap-4 text-center">
         <Wordmark className="h-7" />
+        <h1 className="text-lg font-semibold tracking-tight">Join a Syncly group</h1>
         <Spinner className="h-5 w-5" />
         <p className="text-sm text-muted-foreground">{message}</p>
       </div>
