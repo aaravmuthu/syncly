@@ -204,7 +204,11 @@ function AuthPage() {
             className="pressable active:pressable-active flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
-            {mode === "signin" ? "Log in" : mode === "signup" ? "Create account" : "Send reset link"}
+            {mode === "signin"
+              ? "Log in"
+              : mode === "signup"
+                ? "Create account"
+                : "Send reset link"}
           </button>
         </form>
 
@@ -226,12 +230,28 @@ function AuthPage() {
             </button>
           </div>
           <div>
-            <Link to="/demo" className="underline underline-offset-4 transition-colors hover:text-foreground">
+            <Link
+              to="/demo"
+              className="underline underline-offset-4 transition-colors hover:text-foreground"
+            >
               Just looking? Try the demo without an account
             </Link>
           </div>
         </div>
 
+        {mode === "signup" && (
+          <p className="mt-6 text-xs text-muted-foreground">
+            By creating an account, you agree to Syncly's{" "}
+            <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        )}
       </div>
     </div>
   );

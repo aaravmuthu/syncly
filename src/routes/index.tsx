@@ -17,10 +17,8 @@ import { MagneticButton } from "@/components/quorum/MagneticButton";
 import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 
-
 const TITLE = "Syncly — Squad Planning & Live Radar";
-const DESCRIPTION =
-  "Sync hangouts in seconds with live location radar and smart parent safety.";
+const DESCRIPTION = "Sync hangouts in seconds with live location radar and smart parent safety.";
 const OG_IMAGE = "https://syncly.website/og-preview.png?v=5";
 
 export const Route = createFileRoute("/")({
@@ -53,7 +51,6 @@ function Landing() {
     <div className="paper-field relative min-h-dvh">
       <MouseSpotlight />
       <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
           <Wordmark />
           <div className="flex items-center gap-2">
@@ -142,7 +139,6 @@ function Landing() {
         <TrendingPills />
         <WorksWithMarquee />
 
-
         {/* Problem */}
         <section className="mx-auto max-w-6xl px-5 py-16">
           <h2 className="max-w-2xl text-3xl font-semibold sm:text-4xl">
@@ -151,10 +147,22 @@ function Landing() {
           </h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { t: "\u201cI can't spend that much.\u201d", s: "Budget is the hardest thing to say in a group chat." },
-              { t: "\u201cI need a ride.\u201d", s: "Getting there is half the plan and never gets planned." },
-              { t: "\u201cI have to be home by 10.\u201d", s: "Curfews quietly kill otherwise perfect plans." },
-              { t: "\u201cI can't eat there.\u201d", s: "Dietary needs get remembered at the table, too late." },
+              {
+                t: "\u201cI can't spend that much.\u201d",
+                s: "Budget is the hardest thing to say in a group chat.",
+              },
+              {
+                t: "\u201cI need a ride.\u201d",
+                s: "Getting there is half the plan and never gets planned.",
+              },
+              {
+                t: "\u201cI have to be home by 10.\u201d",
+                s: "Curfews quietly kill otherwise perfect plans.",
+              },
+              {
+                t: "\u201cI can't eat there.\u201d",
+                s: "Dietary needs get remembered at the table, too late.",
+              },
             ].map((c) => (
               <div key={c.t} className="card-surface p-5">
                 <p className="font-semibold">{c.t}</p>
@@ -167,14 +175,28 @@ function Landing() {
         {/* How it works */}
         <section id="how" className="border-y border-border bg-surface/60 py-20">
           <div className="mx-auto max-w-6xl px-5">
-            <p className="text-sm font-semibold tracking-widest text-primary uppercase">How it works</p>
+            <p className="text-sm font-semibold tracking-widest text-primary uppercase">
+              How it works
+            </p>
             <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Four steps. No negotiating.</h2>
             <ol className="mt-10 grid gap-5 md:grid-cols-4">
               {[
                 { n: "01", t: "Create a plan", d: "Pick a category, a date window, and a group." },
-                { n: "02", t: "Everyone answers privately", d: "Budget, timing, rides, food, rules — seen by nobody else." },
-                { n: "03", t: "We compute what's possible", d: "Hard limits filter. Preferences rank. Fairness breaks ties." },
-                { n: "04", t: "Vote on real options", d: "Every option on the ballot already works for everyone." },
+                {
+                  n: "02",
+                  t: "Everyone answers privately",
+                  d: "Budget, timing, rides, food, rules — seen by nobody else.",
+                },
+                {
+                  n: "03",
+                  t: "We compute what's possible",
+                  d: "Hard limits filter. Preferences rank. Fairness breaks ties.",
+                },
+                {
+                  n: "04",
+                  t: "Vote on real options",
+                  d: "Every option on the ballot already works for everyone.",
+                },
               ].map((s) => (
                 <li key={s.n} className="card-surface p-6">
                   <span className="font-display text-2xl text-primary">{s.n}</span>
@@ -226,7 +248,11 @@ function Landing() {
             kicker="Transportation"
             title="Rides are part of the plan, not an afterthought."
             body="Seats, drivers, distance limits and return times get solved together, so nobody finds out at 9pm that they have no way home."
-            bullets={["Car-by-car assignments", "Respects capacity and curfews", "Ride needs stay private"]}
+            bullets={[
+              "Car-by-car assignments",
+              "Respects capacity and curfews",
+              "Ride needs stay private",
+            ]}
           />
         </section>
 
@@ -234,9 +260,15 @@ function Landing() {
         <section className="border-y border-border bg-surface/60 py-20">
           <div className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
             {[
-              { q: "We stopped having the \u201cwhere do you want to go\u201d conversation entirely.", a: "Maya, 17" },
+              {
+                q: "We stopped having the \u201cwhere do you want to go\u201d conversation entirely.",
+                a: "Maya, 17",
+              },
               { q: "I didn't have to tell six people my budget. It just worked.", a: "Dev, 16" },
-              { q: "The approval link answered every question I usually have to ask.", a: "Parent of a junior" },
+              {
+                q: "The approval link answered every question I usually have to ask.",
+                a: "Parent of a junior",
+              },
             ].map((t) => (
               <figure key={t.a} className="card-surface p-6">
                 <blockquote className="font-display text-lg leading-snug">{t.q}</blockquote>
@@ -265,7 +297,17 @@ function Landing() {
       <footer className="border-t border-border py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 text-sm text-muted-foreground sm:flex-row sm:justify-between">
           <Wordmark size="sm" />
-          <p>© {new Date().getFullYear()} {BRAND.name}. Private constraints. Better plans.</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <Link to="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+            <Link to="/terms" className="transition-colors hover:text-foreground">
+              Terms
+            </Link>
+            <p>
+              © {new Date().getFullYear()} {BRAND.name}. Private constraints. Better plans.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
