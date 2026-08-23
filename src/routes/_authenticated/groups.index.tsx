@@ -18,10 +18,14 @@ export const Route = createFileRoute("/_authenticated/groups/")({
       { title: "Squad hub — Syncly" },
       {
         name: "description",
-        content: "Your squads at a glance: live votes, member stacks, invite codes, and one-tap plan launches.",
+        content:
+          "Your squads at a glance: live votes, member stacks, invite codes, and one-tap plan launches.",
       },
       { property: "og:title", content: "Squad hub — Syncly" },
-      { property: "og:description", content: "Live squads, active votes, and one-tap plan launches." },
+      {
+        property: "og:description",
+        content: "Live squads, active votes, and one-tap plan launches.",
+      },
     ],
   }),
   component: GroupsPage,
@@ -65,7 +69,11 @@ function GroupsPage() {
   const shown = useMemo(
     () =>
       squads.filter((g) =>
-        filter === "active" ? Boolean(g.active_plan) : filter === "oneoff" ? g.kind === "temporary" : true,
+        filter === "active"
+          ? Boolean(g.active_plan)
+          : filter === "oneoff"
+            ? g.kind === "temporary"
+            : true,
       ),
     [squads, filter],
   );
@@ -138,7 +146,7 @@ function SquadCard({ squad }: { squad: Squad }) {
   const extra = Math.max(0, squad.member_count - squad.members.length);
 
   return (
-    <article className="group overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/80 shadow-xl backdrop-blur-md transition-all hover:border-emerald-500/40">
+    <article className="surface group overflow-hidden transition-all hover:border-primary/40">
       <Link to="/groups/$groupId" params={{ groupId: squad.id }} className="block">
         <div className={cn("relative h-24", theme.banner)}>
           <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />
@@ -148,7 +156,12 @@ function SquadCard({ squad }: { squad: Squad }) {
           <div className="absolute -bottom-6 left-4 flex items-end gap-3">
             <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-neutral-950/85 text-2xl ring-1 ring-white/15 backdrop-blur">
               {squad.avatar_url ? (
-                <img src={squad.avatar_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                <img
+                  src={squad.avatar_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
               ) : (
                 squad.emoji
               )}
@@ -157,7 +170,7 @@ function SquadCard({ squad }: { squad: Squad }) {
         </div>
 
         <div className="px-5 pb-1 pt-8">
-          <h3 className="font-display text-lg font-semibold text-white">{squad.name}</h3>
+          <h3 className="font-display text-lg font-semibold text-foreground">{squad.name}</h3>
 
           <div className="mt-3 flex items-center gap-3">
             <div className="flex -space-x-2">
@@ -168,12 +181,14 @@ function SquadCard({ squad }: { squad: Squad }) {
                   emoji={m.avatar_emoji}
                   name={m.display_name}
                   size={30}
-                  className="ring-2 ring-neutral-900"
+                  className="ring-2 ring-card"
                 />
               ))}
             </div>
-            <span className="text-xs text-white/60">
-              {extra > 0 ? `+${extra} others` : `${squad.member_count} member${squad.member_count === 1 ? "" : "s"}`}
+            <span className="text-xs text-muted-foreground">
+              {extra > 0
+                ? `+${extra} others`
+                : `${squad.member_count} member${squad.member_count === 1 ? "" : "s"}`}
             </span>
           </div>
 
@@ -182,13 +197,15 @@ function SquadCard({ squad }: { squad: Squad }) {
               "mt-3 inline-flex max-w-full items-center gap-1.5 truncate rounded-full px-3 py-1.5 text-xs font-semibold ring-1",
               squad.active_plan
                 ? "bg-emerald-500/12 text-emerald-300 ring-emerald-400/30"
-                : "bg-white/5 text-white/55 ring-white/10",
+                : "bg-secondary text-muted-foreground ring-border",
             )}
           >
-            {squad.active_plan ? `⚡ Active vote: ${squad.active_plan.title}` : "💤 No active plans"}
+            {squad.active_plan
+              ? `⚡ Active vote: ${squad.active_plan.title}`
+              : "💤 No active plans"}
           </div>
 
-          <p className="mt-3 text-[11px] text-white/45">
+          <p className="mt-3 text-[11px] text-muted-foreground">
             {squad.hangouts_completed} hangout{squad.hangouts_completed === 1 ? "" : "s"} completed
             {squad.top_spot ? ` • Most frequent spot: ${squad.top_spot}` : ""}
           </p>
@@ -210,7 +227,7 @@ function SquadCard({ squad }: { squad: Squad }) {
               .then(() => toast.success("Invite code copied"))
               .catch(() => toast.error("Couldn't copy that code"));
           }}
-          className="pressable rounded-2xl bg-white/5 px-3 py-2.5 text-xs font-semibold text-white/80 ring-1 ring-white/10 transition hover:bg-white/10"
+          className="pressable rounded-2xl bg-secondary px-3 py-2.5 text-xs font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-secondary/70"
         >
           Copy Code {squad.invite_code} 📋
         </button>

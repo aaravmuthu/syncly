@@ -10,7 +10,12 @@ import { useNotifications, useMarkNotificationsRead } from "@/lib/quorum/useNoti
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { LongPress, PullToRefresh, SpotlightCard, SwipeRow } from "@/components/quorum/interactions";
+import {
+  LongPress,
+  PullToRefresh,
+  SpotlightCard,
+  SwipeRow,
+} from "@/components/quorum/interactions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/activity")({
@@ -107,7 +112,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
     <SpotlightCard
       as="article"
       className={cn(
-        "group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/70 p-4 shadow-lg backdrop-blur-md transition-all",
+        "group surface relative overflow-hidden rounded-3xl p-4 transition-all",
         k.hover,
         item.unread ? "ring-1 ring-primary/25" : "",
       )}
@@ -132,11 +137,11 @@ function ActivityCard({ item }: { item: FeedItem }) {
             emoji={item.actorEmoji}
             name={actorName}
             size={40}
-            className="ring-1 ring-white/10"
+            className="ring-1 ring-border"
           />
           <span
             className={cn(
-              "absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full text-[10px] shadow-md ring-2 ring-neutral-900",
+              "absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full text-[10px] shadow-md ring-2 ring-card",
               k.badgeClass,
             )}
             aria-label={k.label}
@@ -146,9 +151,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium leading-snug">{item.title}</p>
-          {item.body ? (
-            <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p>
-          ) : null}
+          {item.body ? <p className="mt-0.5 text-sm text-muted-foreground">{item.body}</p> : null}
           <p className="mt-1 text-xs text-muted-foreground">
             {actorName ? `${actorName} • ` : ""}
             {timeAgo(item.created_at)}
@@ -165,7 +168,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
                 ? "bg-emerald-500 text-black hover:bg-emerald-400"
                 : item.kind === "conflict"
                   ? "bg-amber-400 text-black hover:bg-amber-300"
-                  : "border border-white/15 bg-white/5 text-foreground backdrop-blur hover:bg-white/10",
+                  : "border border-border bg-secondary/70 text-foreground hover:bg-secondary",
             )}
           >
             {k.cta}
@@ -225,7 +228,13 @@ function ActivityPage() {
 
   const actionCount = items.filter((i) => i.kind === "action" || i.kind === "conflict").length;
   const visible = items.filter((i) =>
-    hidden.includes(i.id) ? false : filter === "all" ? true : filter === "action" ? i.kind === "action" || i.kind === "conflict" : i.kind === filter,
+    hidden.includes(i.id)
+      ? false
+      : filter === "all"
+        ? true
+        : filter === "action"
+          ? i.kind === "action" || i.kind === "conflict"
+          : i.kind === filter,
   );
 
   return (
@@ -241,7 +250,7 @@ function ActivityPage() {
       }
     >
       {perm === "default" && !dismissed ? (
-        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-neutral-900/70 px-4 py-3 shadow-lg backdrop-blur-md">
+        <div className="surface mb-4 flex items-center gap-3 px-4 py-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-base">
             🔔
           </span>
@@ -258,7 +267,7 @@ function ActivityPage() {
           <button
             aria-label="Dismiss"
             onClick={() => setDismissed(true)}
-            className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-white/10"
+            className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
           >
             ✕
           </button>
@@ -274,7 +283,7 @@ function ActivityPage() {
               "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all",
               filter === f.id
                 ? "border-emerald-400/40 bg-emerald-500/15 text-foreground"
-                : "border-white/10 bg-neutral-900/60 text-muted-foreground hover:border-white/20",
+                : "border-border bg-secondary/70 text-muted-foreground hover:border-foreground/20",
             )}
           >
             {f.label}

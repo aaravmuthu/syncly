@@ -283,7 +283,7 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
 
   return (
     <Link to="/plans/$planId" params={{ planId: plan.id }} className="block">
-      <div className="rounded-2xl border border-white/10 bg-neutral-900/90 p-4 shadow-lg transition-all hover:border-emerald-500/30 active:scale-[0.99]">
+      <div className="surface p-4 transition-all hover:border-primary/30 active:scale-[0.99]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-lg ring-1 ring-primary/25">
