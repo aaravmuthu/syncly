@@ -400,17 +400,17 @@ function AppPreview() {
   return (
     <motion.div
       style={{ scale, opacity, rotateX, transformPerspective: 1200 }}
-      className="dark mx-auto w-full max-w-[760px]"
+      className="dark mx-auto w-full max-w-[1040px]"
     >
       {/* Device bezel — fixed near-black regardless of site theme, like a
           real phone's casing. Not app UI, so it deliberately sits outside
           the token system (same call as the map's HUD chrome elsewhere). */}
-      <div className="rounded-[2.6rem] bg-neutral-950 p-3 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.55)]">
-        <div className="rounded-[2rem] border border-white/10 bg-card/90 p-4 backdrop-blur-2xl">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="rounded-[2.2rem] bg-neutral-950 p-3 shadow-[0_50px_100px_-40px_rgba(0,0,0,0.6)] sm:p-4">
+        <div className="rounded-[1.6rem] border border-white/10 bg-card/90 p-5 backdrop-blur-2xl sm:p-8">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>Saturday Night Out</span>
-            <span className="inline-flex items-center gap-1">
-              <Users className="size-3.5" /> 6
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="size-4" /> 6
             </span>
           </div>
 
@@ -419,12 +419,12 @@ function AppPreview() {
               plans.$planId.tsx's real "Group progress" card (status line +
               per-member response chips) instead of jumping straight to a
               result, so the preview reads as a process, not a screenshot. */}
-          <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-foreground">Group progress</p>
-              <span className="text-xs text-muted-foreground">Waiting on 1 more person</span>
+              <p className="font-semibold text-foreground">Group progress</p>
+              <span className="text-sm text-muted-foreground">Waiting on 1 more person</span>
             </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex flex-wrap gap-2">
               {[
                 { name: "Maya", responded: true },
                 { name: "Jordan", responded: true },
@@ -436,7 +436,7 @@ function AppPreview() {
                 <span
                   key={m.name}
                   className={
-                    "rounded-full px-2.5 py-1 text-xs " +
+                    "rounded-full px-3 py-1.5 text-sm " +
                     (m.responded
                       ? "bg-success/15 text-success"
                       : "bg-secondary text-muted-foreground")
@@ -449,38 +449,48 @@ function AppPreview() {
             </div>
           </div>
 
-          <div className="mt-3 rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-foreground">TopGolf</p>
-              <span className="rounded-full bg-primary/12 px-2.5 py-1 text-xs font-semibold text-primary">
-                91%
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">$24–$32 · 12 min away</p>
-            <ul className="mt-3 space-y-1.5 text-xs">
-              {["Fits everyone's budget", "Works with every schedule", "Rides cover all seats"].map(
-                (r) => (
+          {/* Results as a two-column layout (winning match + alternatives
+              stack) rather than one vertical column, so the wider tablet
+              frame reads as a genuine dashboard-width screen instead of a
+              phone layout stretched sideways with empty margins. */}
+          <div className="mt-4 grid gap-4 sm:grid-cols-[1.3fr_1fr]">
+            <div className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-semibold text-foreground">TopGolf</p>
+                <span className="rounded-full bg-primary/12 px-3 py-1 text-sm font-semibold text-primary">
+                  91%
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">$24–$32 · 12 min away</p>
+              <ul className="mt-4 space-y-2 text-sm">
+                {[
+                  "Fits everyone's budget",
+                  "Works with every schedule",
+                  "Rides cover all seats",
+                ].map((r) => (
                   <li key={r} className="flex items-center gap-2 text-muted-foreground">
-                    <Check className="size-3.5 text-primary" /> {r}
+                    <Check className="size-4 text-primary" /> {r}
                   </li>
-                ),
-              )}
-            </ul>
-          </div>
-          {[
-            { t: "Bowling + Diner", s: "89%" },
-            { t: "Dinner + Movie", s: "85%" },
-          ].map((o) => (
-            <div
-              key={o.t}
-              className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm"
-            >
-              <span className="text-foreground">{o.t}</span>
-              <span className="text-xs font-semibold text-muted-foreground">{o.s}</span>
+                ))}
+              </ul>
             </div>
-          ))}
-          <div className="mt-3 rounded-2xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-            One option was hidden because it didn't meet every group member's requirements.
+            <div className="flex flex-col gap-2.5">
+              {[
+                { t: "Bowling + Diner", s: "89%" },
+                { t: "Dinner + Movie", s: "85%" },
+              ].map((o) => (
+                <div
+                  key={o.t}
+                  className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5 text-sm"
+                >
+                  <span className="text-foreground">{o.t}</span>
+                  <span className="text-sm font-semibold text-muted-foreground">{o.s}</span>
+                </div>
+              ))}
+              <div className="flex-1 rounded-2xl border border-dashed border-border px-4 py-3.5 text-sm text-muted-foreground">
+                One option was hidden because it didn't meet every group member's requirements.
+              </div>
+            </div>
           </div>
         </div>
       </div>
