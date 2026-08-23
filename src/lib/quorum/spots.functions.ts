@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/** How many spots survive the group-midpoint shortlist (see browseSpots below). */
+const GROUP_SHORTLIST_SIZE = 9;
+
 export type BrowseSpot = {
   key: string;
   title: string;
@@ -121,8 +124,9 @@ export const browseSpots = createServerFn({ method: "POST" })
       };
     });
 
-    // Strict rule of 3: when the group is known, keep only the three spots of
-    // this kind nearest the group's geographic midpoint.
+    // When the group is known, keep the spots of this kind nearest the
+    // group's geographic midpoint (was a stricter top-3; widened so the
+    // browser feels populated instead of nearly empty).
     const based = members.filter((m) => m.lat != null && m.lon != null);
     let midpoint: { lat: number; lon: number } | null = null;
     let shortlist = spots;
@@ -138,7 +142,7 @@ export const browseSpots = createServerFn({ method: "POST" })
             haversineMiles(mid, { lat: a.lat, lon: a.lon }) -
             haversineMiles(mid, { lat: b.lat, lon: b.lon }),
         )
-        .slice(0, 3);
+        .slice(0, GROUP_SHORTLIST_SIZE);
     }
 
     return { origin, midpoint, needsHome: false, spots: shortlist };
