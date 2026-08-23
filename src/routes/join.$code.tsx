@@ -19,7 +19,10 @@ export const Route = createFileRoute("/join/$code")({
         content: "You've been invited to plan with a group on Syncly. Everyone answers privately.",
       },
       { property: "og:title", content: "Join a group — Syncly" },
-      { property: "og:description", content: "Plan together without sharing anyone's private limits." },
+      {
+        property: "og:description",
+        content: "Plan together without sharing anyone's private limits.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -42,10 +45,10 @@ function JoinPage() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
         setPendingInvite(code);
-        setMessage("Sign in to join this group…");
+        setMessage("Create an account to join this group…");
         void navigate({
           to: "/auth",
-          search: { next: undefined, mode: "signin" as const },
+          search: { next: undefined, mode: "signup" as const },
           replace: true,
         });
         return;

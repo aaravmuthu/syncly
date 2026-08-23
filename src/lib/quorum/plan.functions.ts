@@ -60,7 +60,6 @@ export const getMe = createServerFn({ method: "GET" })
     return { ...profile, hasLinkedTeens: Boolean(linkRow?.length) };
   });
 
-
 export const saveProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: Record<string, unknown>) => d)
@@ -280,9 +279,10 @@ export const createGroup = createServerFn({ method: "POST" })
       .select("*")
       .single();
     if (error) throw new Error(error.message);
-    await supabase
+    const { error: memberError } = await supabase
       .from("group_members")
       .insert({ group_id: group.id, profile_id: me, role: "owner" });
+    if (memberError) throw new Error(memberError.message);
     await supabase.from("activity_events").insert({
       group_id: group.id,
       actor_profile_id: me,
@@ -291,7 +291,6 @@ export const createGroup = createServerFn({ method: "POST" })
     });
     return group;
   });
-
 
 export const joinGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -308,12 +307,13 @@ export const joinGroup = createServerFn({ method: "POST" })
       .eq("invite_code", code)
       .maybeSingle();
     if (!group) throw new Error("That invite code doesn't match a group");
-    await supabaseAdmin
+    const { error: memberError } = await supabaseAdmin
       .from("group_members")
       .upsert(
         { group_id: group.id, profile_id: me, role: "member" },
         { onConflict: "group_id,profile_id" },
       );
+    if (memberError) throw new Error(memberError.message);
     await supabaseAdmin.from("activity_events").insert({
       group_id: group.id,
       actor_profile_id: me,
@@ -432,7 +432,6 @@ export const getDashboard = createServerFn({ method: "GET" })
           )
           .in("plan_id", ids),
       ]);
-
 
     return {
       myProfileId: (myId as string | null) ?? null,

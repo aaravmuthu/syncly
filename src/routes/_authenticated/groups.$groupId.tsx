@@ -57,6 +57,11 @@ function GroupPage() {
   const { group, members, plans, myProfileId } = q.data;
   const memberIds = members.map((m) => m.profile_id);
   const myRole = members.find((m) => m.profile_id === myProfileId)?.role;
+  const myDisplayName = (
+    members.find((m) => m.profile_id === myProfileId)?.profiles as {
+      display_name?: string | null;
+    } | null
+  )?.display_name;
   const canManage = myRole === "owner" || myRole === "admin";
   const activeIndex = TABS.findIndex((t) => t.id === tab);
 
@@ -69,7 +74,10 @@ function GroupPage() {
       <div className="relative mt-1 grid grid-cols-3 gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
         <span
           className="absolute inset-y-1 left-1 rounded-xl bg-primary/15 ring-1 ring-primary/40 transition-transform duration-300 ease-out"
-          style={{ width: "calc((100% - 0.5rem) / 3)", transform: `translateX(${activeIndex * 100}%)` }}
+          style={{
+            width: "calc((100% - 0.5rem) / 3)",
+            transform: `translateX(${activeIndex * 100}%)`,
+          }}
           aria-hidden
         />
         {TABS.map((t) => (
@@ -121,7 +129,12 @@ function GroupPage() {
 
           {tab === "settings" ? (
             <section className="space-y-6">
-              <InviteCard code={group.invite_code} groupName={group.name} />
+              <InviteCard
+                code={group.invite_code}
+                groupName={group.name}
+                groupEmoji={(group as { emoji?: string }).emoji}
+                inviterName={myDisplayName}
+              />
 
               {canManage ? (
                 <GroupAppearance

@@ -5,9 +5,22 @@ import { QrCode } from "./QrCode";
 import { Button, Card } from "./ui";
 import { inviteLink, shareOrCopy } from "@/lib/quorum/invite";
 
-export function InviteCard({ code, groupName }: { code: string; groupName: string }) {
+export function InviteCard({
+  code,
+  groupName,
+  groupEmoji,
+  inviterName,
+}: {
+  code: string;
+  groupName: string;
+  groupEmoji?: string;
+  inviterName?: string | null;
+}) {
   const [qrOpen, setQrOpen] = useState(false);
   const link = inviteLink(code);
+  const shareText = inviterName
+    ? `${inviterName} wants you to join their Syncly group — ${groupEmoji ? `${groupEmoji} ` : ""}${groupName}! Tap to join:`
+    : `Join ${groupEmoji ? `${groupEmoji} ` : ""}${groupName} on Syncly. Tap to join:`;
 
   return (
     <Card className="mb-6">
@@ -46,7 +59,7 @@ export function InviteCard({ code, groupName }: { code: string; groupName: strin
           onClick={() =>
             void shareOrCopy({
               title: `Join ${groupName} on Syncly`,
-              text: `Join ${groupName} on Syncly with code ${code}`,
+              text: shareText,
               url: link,
             }).then((r) => {
               if (r === "copied") toast.success("Invite link copied");

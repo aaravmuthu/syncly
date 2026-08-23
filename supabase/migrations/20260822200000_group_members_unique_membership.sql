@@ -1,0 +1,32 @@
+-- =============================================================================
+-- Syncly — group_members membership uniqueness
+-- =============================================================================
+-- Fixes join-by-invite-code silently failing: group_members has never had a
+-- unique constraint on (group_id, profile_id) — only its own `id` primary
+-- key. joinGroup (plan.functions.ts) upserts the new member row with
+-- `onConflict: "group_id,profile_id"`; with no matching unique/exclusion
+-- constraint, Postgres rejects that ON CONFLICT target with 42P10 on every
+-- call. The app doesn't check that call's error (same silent-failure shape
+-- already flagged for createGroup's self-insert in
+-- 20260820000200_rls_policies_2.sql), so the membership row is simply never
+-- created; the joiner is then correctly denied by
+-- groups_select_member_or_creator (is_group_member() rightly returns false)
+-- and the group page renders "Group not found."
+--
+-- Confirmed live against the linked project, read-only (Postgres validates
+-- the ON CONFLICT target before touching any row, so this was safe even with
+-- dummy UUIDs that satisfy no FK):
+--   POST .../group_members?on_conflict=group_id,profile_id
+--   -> 400 {"code":"42P10","message":"there is no unique or exclusion
+--      constraint matching the ON CONFLICT specification"}
+--
+-- This constraint also guards against duplicate-membership rows generally
+-- (e.g. double-tapping "join"). It doesn't interact with createGroup's plain
+-- (non-upsert) self-insert, and no RLS policy needs to change alongside it —
+-- the join-by-code path runs entirely through supabaseAdmin (service role),
+-- which bypasses RLS; the gap was a plain schema bug, not an access-control
+-- one.
+-- =============================================================================
+
+ALTER TABLE public.group_members
+  ADD CONSTRAINT group_members_group_id_profile_id_key UNIQUE (group_id, profile_id);
