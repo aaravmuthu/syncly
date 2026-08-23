@@ -83,56 +83,56 @@ function Landing() {
       <main className="relative z-10">
         {/* Hero */}
         <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 sm:pt-24">
-          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="animate-rise">
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                <Lock className="size-3.5" /> Private by design
-              </span>
-              <h1 className="mt-5 text-[2.6rem] leading-[1.03] font-semibold sm:text-6xl">
-                Plans that actually work for everyone.
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-                {DESCRIPTION}
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <MagneticButton
-                  to="/auth"
-                  search={{ next: "/home", mode: "signup" }}
-                  className="pressable active:pressable-active inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
-                >
-                  <span className="inline-flex items-center gap-2">
-                    Start planning <ArrowRight className="size-4" />
-                  </span>
-                </MagneticButton>
-                <MagneticButton
-                  to="/demo"
-                  className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
-                >
-                  Try the demo
-                </MagneticButton>
-                <a
-                  href="#how"
-                  className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
-                >
-                  See how it works
-                </a>
-              </div>
-              <div className="mt-6 flex flex-wrap items-center gap-4">
-                <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/5 px-4 py-2.5">
-                  <Zap className="size-4 text-primary" strokeWidth={1.75} />
-                  <div className="leading-tight">
-                    <p className="font-display text-lg font-semibold">&lt;2min</p>
-                    <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
-                      Setup
-                    </p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Stop planning around the loudest person.
-                </p>
-              </div>
+          <div className="animate-rise mx-auto max-w-3xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              <Lock className="size-3.5" /> Private by design
+            </span>
+            <h1 className="mt-5 text-[2.6rem] leading-[1.03] font-semibold sm:text-6xl">
+              Plans that actually work for everyone.
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+              {DESCRIPTION}
+            </p>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <MagneticButton
+                to="/auth"
+                search={{ next: "/home", mode: "signup" }}
+                className="pressable active:pressable-active inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
+              >
+                <span className="inline-flex items-center gap-2">
+                  Start planning <ArrowRight className="size-4" />
+                </span>
+              </MagneticButton>
+              <MagneticButton
+                to="/demo"
+                className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+              >
+                Try the demo
+              </MagneticButton>
+              <a
+                href="#how"
+                className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
+              >
+                See how it works
+              </a>
             </div>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/5 px-4 py-2.5">
+                <Zap className="size-4 text-primary" strokeWidth={1.75} />
+                <div className="leading-tight">
+                  <p className="font-display text-lg font-semibold">&lt;2min</p>
+                  <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
+                    Setup
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Stop planning around the loudest person.
+              </p>
+            </div>
+          </div>
 
+          <div className="mt-16">
             <AppPreview />
           </div>
         </section>
@@ -362,13 +362,13 @@ function AppPreview() {
   // nothing left to animate.
   const { scrollY } = useScroll();
   // Resolve distance: measured how far the panel stays visible before
-  // scrolling off the top of the viewport on a real desktop layout (it
-  // starts leaving around scrollY ~580px) and picked 480px -- comfortably
-  // inside that window, but wide enough that a normal scroll gesture (a
-  // 300px window resolves almost instantly with trackpad momentum, reading
-  // as "nothing happened" rather than an animation) actually shows the
-  // transition happening in real time.
-  const RESOLVE_DISTANCE = 480;
+  // scrolling off the top of the viewport. Now that the panel is much
+  // larger and sits in its own full-width row below the headline (not
+  // beside it), that window is roughly 0-1100px on desktop, well beyond
+  // the previous 580px -- widened to 700px to actually use that room for a
+  // slower, more deliberate reveal, while still settling comfortably
+  // before the panel scrolls out of view.
+  const RESOLVE_DISTANCE = 700;
   // Reduced motion: pin both to a constant 1 so the element is always fully
   // visible at rest, regardless of scroll position — no scale, and nothing
   // scroll-linked. Kept as motion values (rather than swapping the `style`
@@ -400,7 +400,7 @@ function AppPreview() {
   return (
     <motion.div
       style={{ scale, opacity, rotateX, transformPerspective: 1200 }}
-      className="dark mx-auto w-full max-w-[330px]"
+      className="dark mx-auto w-full max-w-[640px]"
     >
       {/* Device bezel — fixed near-black regardless of site theme, like a
           real phone's casing. Not app UI, so it deliberately sits outside
