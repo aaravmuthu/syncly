@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef } from "react";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import {
   ArrowRight,
@@ -353,23 +352,27 @@ function FeatureRow({
 }
 
 function AppPreview() {
-  const ref = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.85", "start 0.4"],
-  });
+  // Tied to raw page scroll distance (not the panel's position relative to
+  // the viewport) so it behaves the same on every screen size. The earlier
+  // target-relative version only ever animated on narrow/mobile layouts —
+  // on a normal desktop width the panel sits high enough beside the hero
+  // text that it was already past the "resolved" threshold at scroll
+  // position zero, before the page even finished loading, so there was
+  // nothing left to animate. Resolves over the first ~300px of scroll on
+  // any viewport instead.
+  const { scrollY } = useScroll();
   // Reduced motion: pin both to a constant 1 so the element is always fully
   // visible at rest, regardless of scroll position — no scale, and nothing
   // scroll-linked. Kept as motion values (rather than swapping the `style`
   // prop to `undefined`) because useReducedMotion() resolves to null/false
   // for the first render, and a motion value written to `style` once
   // persists as a raw inline style even after the prop is later omitted.
-  const scale = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.85, 1]);
-  const opacity = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.4, 1]);
+  const scale = useTransform(scrollY, [0, 300], prefersReducedMotion ? [1, 1] : [0.85, 1]);
+  const opacity = useTransform(scrollY, [0, 300], prefersReducedMotion ? [1, 1] : [0.4, 1]);
 
   return (
-    <motion.div ref={ref} style={{ scale, opacity }} className="dark mx-auto w-full max-w-[330px]">
+    <motion.div style={{ scale, opacity }} className="dark mx-auto w-full max-w-[330px]">
       {/* Device bezel — fixed near-black regardless of site theme, like a
           real phone's casing. Not app UI, so it deliberately sits outside
           the token system (same call as the map's HUD chrome elsewhere). */}
