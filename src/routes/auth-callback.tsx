@@ -63,7 +63,8 @@ function AuthCallback() {
     <div className="paper-field grid min-h-dvh place-items-center px-6">
       <div className="text-center">
         <Wordmark className="mx-auto h-7" />
-        <p className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
+        <h1 className="mt-6 text-lg font-semibold tracking-tight">Finishing your sign-in</h1>
+        <p className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           {message}
         </p>
