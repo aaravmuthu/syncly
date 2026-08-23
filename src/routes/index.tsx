@@ -359,19 +359,17 @@ function PhoneMock() {
     target: ref,
     offset: ["start 0.85", "start 0.4"],
   });
-  const scale = useTransform(scrollYProgress, [0, 1], [0.85, 1]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [0.4, 1]);
+  // Reduced motion: pin both to a constant 1 so the element is always fully
+  // visible at rest, regardless of scroll position — no scale, and nothing
+  // scroll-linked. Kept as motion values (rather than swapping the `style`
+  // prop to `undefined`) because useReducedMotion() resolves to null/false
+  // for the first render, and a motion value written to `style` once
+  // persists as a raw inline style even after the prop is later omitted.
+  const scale = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.85, 1]);
+  const opacity = useTransform(scrollYProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.4, 1]);
 
   return (
-    <motion.div
-      ref={ref}
-      style={prefersReducedMotion ? undefined : { scale, opacity }}
-      initial={prefersReducedMotion ? { opacity: 0 } : undefined}
-      whileInView={prefersReducedMotion ? { opacity: 1 } : undefined}
-      viewport={prefersReducedMotion ? { once: true, amount: 0.4 } : undefined}
-      transition={prefersReducedMotion ? { duration: 0.5, ease: "easeOut" } : undefined}
-      className="dark mx-auto w-full max-w-[330px]"
-    >
+    <motion.div ref={ref} style={{ scale, opacity }} className="dark mx-auto w-full max-w-[330px]">
       <div className="rounded-[2.4rem] border border-border bg-card p-3 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.45)]">
         <div className="rounded-[1.9rem] border border-white/10 bg-card/60 p-4 backdrop-blur-2xl">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -382,7 +380,7 @@ function PhoneMock() {
           </div>
           <div className="mt-3 rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
-              <p className="font-semibold">TopGolf</p>
+              <p className="font-semibold text-foreground">TopGolf</p>
               <span className="rounded-full bg-primary/12 px-2.5 py-1 text-xs font-semibold text-primary">
                 91%
               </span>
@@ -406,7 +404,7 @@ function PhoneMock() {
               key={o.t}
               className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm"
             >
-              <span>{o.t}</span>
+              <span className="text-foreground">{o.t}</span>
               <span className="text-xs font-semibold text-muted-foreground">{o.s}</span>
             </div>
           ))}
