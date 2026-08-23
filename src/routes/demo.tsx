@@ -232,6 +232,7 @@ function DemoPage() {
                   step={5}
                   value={active.constraints.maxSpend ?? 20}
                   onChange={(e) => update({ maxSpend: Number(e.target.value) })}
+                  aria-label={`Max spend — $${active.constraints.maxSpend ?? 0}`}
                   className="w-full accent-[hsl(var(--primary))]"
                 />
               </Field>
@@ -244,6 +245,7 @@ function DemoPage() {
                   step={5}
                   value={active.constraints.maxTravelMinutes ?? 20}
                   onChange={(e) => update({ maxTravelMinutes: Number(e.target.value) })}
+                  aria-label={`Max travel — ${active.constraints.maxTravelMinutes ?? 0} min`}
                   className="w-full accent-[hsl(var(--primary))]"
                 />
               </Field>
