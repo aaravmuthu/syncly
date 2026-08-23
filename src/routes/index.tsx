@@ -370,45 +370,50 @@ function AppPreview() {
 
   return (
     <motion.div ref={ref} style={{ scale, opacity }} className="dark mx-auto w-full max-w-[330px]">
-      <div className="rounded-[28px] border border-white/10 bg-card/90 p-4 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Saturday Night Out</span>
-          <span className="inline-flex items-center gap-1">
-            <Users className="size-3.5" /> 6
-          </span>
-        </div>
-        <div className="mt-3 rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <p className="font-semibold text-foreground">TopGolf</p>
-            <span className="rounded-full bg-primary/12 px-2.5 py-1 text-xs font-semibold text-primary">
-              91%
+      {/* Device bezel — fixed near-black regardless of site theme, like a
+          real phone's casing. Not app UI, so it deliberately sits outside
+          the token system (same call as the map's HUD chrome elsewhere). */}
+      <div className="rounded-[2.6rem] bg-neutral-950 p-3 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.55)]">
+        <div className="rounded-[2rem] border border-white/10 bg-card/90 p-4 backdrop-blur-2xl">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Saturday Night Out</span>
+            <span className="inline-flex items-center gap-1">
+              <Users className="size-3.5" /> 6
             </span>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">$24–$32 · 12 min away</p>
-          <ul className="mt-3 space-y-1.5 text-xs">
-            {["Fits everyone's budget", "Works with every schedule", "Rides cover all seats"].map(
-              (r) => (
-                <li key={r} className="flex items-center gap-2 text-muted-foreground">
-                  <Check className="size-3.5 text-primary" /> {r}
-                </li>
-              ),
-            )}
-          </ul>
-        </div>
-        {[
-          { t: "Bowling + Diner", s: "89%" },
-          { t: "Dinner + Movie", s: "85%" },
-        ].map((o) => (
-          <div
-            key={o.t}
-            className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm"
-          >
-            <span className="text-foreground">{o.t}</span>
-            <span className="text-xs font-semibold text-muted-foreground">{o.s}</span>
+          <div className="mt-3 rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold text-foreground">TopGolf</p>
+              <span className="rounded-full bg-primary/12 px-2.5 py-1 text-xs font-semibold text-primary">
+                91%
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">$24–$32 · 12 min away</p>
+            <ul className="mt-3 space-y-1.5 text-xs">
+              {["Fits everyone's budget", "Works with every schedule", "Rides cover all seats"].map(
+                (r) => (
+                  <li key={r} className="flex items-center gap-2 text-muted-foreground">
+                    <Check className="size-3.5 text-primary" /> {r}
+                  </li>
+                ),
+              )}
+            </ul>
           </div>
-        ))}
-        <div className="mt-3 rounded-2xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
-          One option was hidden because it didn't meet every group member's requirements.
+          {[
+            { t: "Bowling + Diner", s: "89%" },
+            { t: "Dinner + Movie", s: "85%" },
+          ].map((o) => (
+            <div
+              key={o.t}
+              className="mt-2 flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 text-sm"
+            >
+              <span className="text-foreground">{o.t}</span>
+              <span className="text-xs font-semibold text-muted-foreground">{o.s}</span>
+            </div>
+          ))}
+          <div className="mt-3 rounded-2xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+            One option was hidden because it didn't meet every group member's requirements.
+          </div>
         </div>
       </div>
     </motion.div>
