@@ -2,10 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
+import { Download, KeyRound, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
-import { getMe, saveProfile, uploadAvatar } from "@/lib/quorum/plan.functions";
+import { Modal } from "@/components/quorum/Modal";
+import { getMe, saveProfile, uploadAvatar, deleteAccount } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -53,6 +55,34 @@ function SettingsPage() {
 
   const [uploading, setUploading] = useState(false);
   const doUpload = useServerFn(uploadAvatar);
+
+  const [passwordForm, setPasswordForm] = useState({ next: "", confirm: "" });
+  const changePassword = useMutation({
+    mutationFn: async () => {
+      if (passwordForm.next.length < 6) throw new Error("Use at least 6 characters");
+      if (passwordForm.next !== passwordForm.confirm) throw new Error("Passwords don't match");
+      const { error } = await supabase.auth.updateUser({ password: passwordForm.next });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Password updated");
+      setPasswordForm({ next: "", confirm: "" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const removeAccount = useMutation({
+    mutationFn: useServerFn(deleteAccount),
+    onSuccess: async () => {
+      await qc.cancelQueries();
+      qc.clear();
+      await supabase.auth.signOut();
+      void navigate({ to: "/", replace: true });
+    },
+    onError: (e: Error) => toast.error("Couldn't delete your account", { description: e.message }),
+  });
 
   async function onPickAvatar(file?: File) {
     if (!file) return;
@@ -443,6 +473,40 @@ function SettingsPage() {
         </div>
       </Card>
 
+      <Card className="mt-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <KeyRound className="size-4 text-muted-foreground" aria-hidden />
+          <span className="text-sm font-medium">Password</span>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="New password">
+            <input
+              type="password"
+              autoComplete="new-password"
+              className={inputClass}
+              value={passwordForm.next}
+              onChange={(e) => setPasswordForm((f) => ({ ...f, next: e.target.value }))}
+            />
+          </Field>
+          <Field label="Confirm password">
+            <input
+              type="password"
+              autoComplete="new-password"
+              className={inputClass}
+              value={passwordForm.confirm}
+              onChange={(e) => setPasswordForm((f) => ({ ...f, confirm: e.target.value }))}
+            />
+          </Field>
+        </div>
+        <Button
+          variant="outline"
+          loading={changePassword.isPending}
+          disabled={!passwordForm.next || !passwordForm.confirm}
+          onClick={() => changePassword.mutate()}
+        >
+          Update password
+        </Button>
+      </Card>
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Button
@@ -468,7 +532,62 @@ function SettingsPage() {
           <li>Parents see one plan's details, nothing else about you or the group.</li>
           <li>Turning off "Remember my patterns" means nothing is carried between plans.</li>
         </ul>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => {
+            const blob = new Blob([JSON.stringify(me.data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `syncly-data-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          <Download className="size-4" aria-hidden /> Download my data
+        </Button>
       </Card>
+
+      <Card className="mt-4 border-destructive/30">
+        <h2 className="font-display text-base font-semibold text-destructive">Danger zone</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Permanently deletes your profile, plans, and location history. This can't be undone.
+        </p>
+        <Button variant="danger" className="mt-4" onClick={() => setDeleteOpen(true)}>
+          <Trash2 className="size-4" aria-hidden /> Delete my account
+        </Button>
+      </Card>
+
+      <Modal
+        open={deleteOpen}
+        onClose={() => {
+          setDeleteOpen(false);
+          setDeleteConfirm("");
+        }}
+        title="Delete your account?"
+        description="This permanently removes your profile, plans, messages, and location history. There's no undo."
+      >
+        <div className="space-y-4">
+          <Field label='Type "DELETE" to confirm'>
+            <input
+              className={inputClass}
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              autoComplete="off"
+            />
+          </Field>
+          <Button
+            variant="danger"
+            className="w-full"
+            disabled={deleteConfirm !== "DELETE"}
+            loading={removeAccount.isPending}
+            onClick={() => removeAccount.mutate({})}
+          >
+            Permanently delete my account
+          </Button>
+        </div>
+      </Modal>
     </AppShell>
   );
 }

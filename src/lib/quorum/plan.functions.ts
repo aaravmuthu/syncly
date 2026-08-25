@@ -185,6 +185,19 @@ export const uploadAvatar = createServerFn({ method: "POST" })
     return { avatar_url: signed.signedUrl };
   });
 
+/**
+ * Permanently deletes the caller's auth user. `profiles.user_id` cascades on
+ * delete, so the profile row (and everything FK'd to it) goes with it.
+ */
+export const deleteAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
 /* ------------------------------------------------------------------ */
 /* Groups                                                              */
 /* ------------------------------------------------------------------ */
