@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, House, MessageCircle, Radar, Users, Zap, type LucideIcon } from "lucide-react";
+import { Bell, House, MessageCircle, Radar, Settings, Users, Zap, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { haptic } from "@/lib/quorum/haptics";
 import { Wordmark } from "./Wordmark";
@@ -16,9 +16,9 @@ import { getMe } from "@/lib/quorum/plan.functions";
 import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
 
-// Profile lives at the header avatar tap (already links to /settings) and
-// Activity lives at the header bell (below) — keeping the tab bar at 5 items
-// per Apple's HIG guidance instead of the previous 7.
+// Settings/profile lives at the header gear + avatar tap, and Activity lives
+// at the header bell (below) — keeping the tab bar at 5 items per Apple's HIG
+// guidance instead of the previous 7.
 const BASE_NAV = [
   { to: "/home", label: "Home", icon: House },
   { to: "/groups", label: "Groups", icon: Users },
@@ -89,6 +89,13 @@ export function AppShell({
                     {unread > 9 ? "9+" : unread}
                   </span>
                 ) : null}
+              </Link>
+              <Link
+                to="/settings"
+                aria-label="Settings"
+                className="pressable active:pressable-active rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <Settings className="size-5" aria-hidden />
               </Link>
               <Link
                 to="/settings"
