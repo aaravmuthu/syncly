@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Modal } from "@/components/quorum/Modal";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
-import { SquadMap, type MapPerson } from "@/components/quorum/map/SquadMap";
 import {
   getFriendPins,
   getSharePeers,
@@ -130,24 +129,6 @@ export function FindMyFriends() {
   });
 
   const list = pins.data ?? [];
-  const people: MapPerson[] = useMemo(
-    () =>
-      list.map((p) => ({
-        id: p.profileId,
-        name: alias(p.profileId, p.name),
-        initials: initials(alias(p.profileId, p.name)),
-        avatarUrl: p.avatarUrl,
-        lat: p.lat,
-        lon: p.lon,
-        motion: p.motion,
-        batteryPct: p.batteryPct,
-        address: p.address,
-        etaMinutes: p.driveMinutes,
-        lastSeen: p.lastSeen,
-        state: p.atHome ? "arrived" : /driv|walk/i.test(p.motion ?? "") ? "enroute" : "idle",
-      })),
-    [list, alias],
-  );
 
   const gh = state.data?.ghost;
 
@@ -187,12 +168,6 @@ export function FindMyFriends() {
         <Skeleton className="h-64 rounded-3xl" />
       ) : list.length ? (
         <>
-          <SquadMap
-            people={people}
-            showMidpoint={false}
-            className="h-[380px]"
-            onProfile={(p) => openFriend(p.id)}
-          />
           <div className="space-y-2">
             {list.map((p) => (
               <motion.button

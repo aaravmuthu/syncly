@@ -33,6 +33,7 @@ import {
 } from "@/lib/quorum/guardian.functions";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { FindMyFriends } from "@/components/quorum/sharing/FindMyFriends";
+import { getFriendPins } from "@/lib/quorum/sharing.functions";
 import { cn } from "@/lib/utils";
 
 
@@ -115,7 +116,7 @@ function speedLabel(pos: GeolocationPosition) {
 
 function RadarPage() {
   const navigate = useNavigate();
-  const { openFriend } = useFriends();
+  const { alias, openFriend } = useFriends();
   const focus = Route.useSearch();
   const hub = useQuery({
     queryKey: ["guardian-hub"],
@@ -127,13 +128,39 @@ function RadarPage() {
     queryFn: useServerFn(getMyRadar),
     refetchInterval: 60_000,
   });
+  const friendPins = useQuery({
+    queryKey: ["friend-pins"],
+    queryFn: useServerFn(getFriendPins),
+    refetchInterval: 45_000,
+  });
 
   const teens = (hub.data?.teens ?? []) as TeenCard[];
-  const loading = hub.isLoading || mine.isLoading;
+  const loading = hub.isLoading || mine.isLoading || friendPins.isLoading;
 
   const people: MapPerson[] = [];
   const zones: MapZone[] = [];
   const places: MapPlace[] = [];
+
+  // Guardian links imply a location share too, so a linked teen can show up
+  // in both feeds — the teen card below already covers them.
+  const teenIds = new Set(teens.map((t) => t.id));
+  for (const p of friendPins.data ?? []) {
+    if (teenIds.has(p.profileId)) continue;
+    people.push({
+      id: p.profileId,
+      name: alias(p.profileId, p.name),
+      initials: initials(alias(p.profileId, p.name)),
+      avatarUrl: p.avatarUrl,
+      lat: p.lat,
+      lon: p.lon,
+      motion: p.motion,
+      batteryPct: p.batteryPct,
+      address: p.address,
+      etaMinutes: p.driveMinutes,
+      lastSeen: p.lastSeen,
+      state: p.atHome ? "arrived" : /driv|walk/i.test(p.motion ?? "") ? "enroute" : "idle",
+    });
+  }
 
   for (const t of teens) {
     if (t.location) {
@@ -217,7 +244,7 @@ function RadarPage() {
     <AppShell title="Radar">
       <PullToRefresh
         onRefresh={async () => {
-          await Promise.all([hub.refetch(), mine.refetch()]);
+          await Promise.all([hub.refetch(), mine.refetch(), friendPins.refetch()]);
         }}
       >
       <div className="space-y-5">
