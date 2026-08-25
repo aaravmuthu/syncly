@@ -16,6 +16,7 @@ import { Wordmark } from "@/components/quorum/Wordmark";
 import { MouseSpotlight } from "@/components/quorum/MouseSpotlight";
 import { MagneticButton } from "@/components/quorum/MagneticButton";
 import { TrendingPills } from "@/components/quorum/TrendingPills";
+import { Reveal, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
 
 const TITLE = "Syncly — Squad Planning & Live Radar";
@@ -83,17 +84,23 @@ function Landing() {
       <main className="relative z-10">
         {/* Hero */}
         <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 sm:pt-24">
-          <div className="animate-rise mx-auto max-w-3xl text-center">
+          <RevealGroup stagger={0.09} className="mx-auto max-w-3xl text-center">
+            <RevealItem lift={false} className="inline-block">
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <Lock className="size-3.5" /> Private by design
             </span>
-            <h1 className="mt-5 text-[2.6rem] leading-[1.03] font-semibold sm:text-6xl">
-              Plans that actually work for everyone.
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              {DESCRIPTION}
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            </RevealItem>
+            <RevealItem lift={false}>
+              <h1 className="mt-5 text-[2.6rem] leading-[1.03] font-semibold sm:text-6xl">
+                Plans that actually work for everyone.
+              </h1>
+            </RevealItem>
+            <RevealItem lift={false}>
+              <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                {DESCRIPTION}
+              </p>
+            </RevealItem>
+            <RevealItem lift={false} className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <MagneticButton
                 to="/auth"
                 search={{ next: "/home", mode: "signup" }}
@@ -115,8 +122,8 @@ function Landing() {
               >
                 See how it works
               </a>
-            </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            </RevealItem>
+            <RevealItem lift={false} className="mt-6 flex flex-wrap items-center justify-center gap-4">
               <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/5 px-4 py-2.5">
                 <Zap className="size-4 text-primary" strokeWidth={1.75} />
                 <div className="leading-tight">
@@ -129,8 +136,8 @@ function Landing() {
               <p className="text-sm text-muted-foreground">
                 Stop planning around the loudest person.
               </p>
-            </div>
-          </div>
+            </RevealItem>
+          </RevealGroup>
 
           <div className="mt-16">
             <AppPreview />
@@ -142,11 +149,11 @@ function Landing() {
 
         {/* Problem */}
         <section className="mx-auto max-w-6xl px-5 py-16">
-          <h2 className="max-w-2xl text-3xl font-semibold sm:text-4xl">
+          <Reveal as="h2" className="max-w-2xl text-3xl font-semibold sm:text-4xl">
             Group plans don't fail because nobody cares. They fail because of everything nobody
             wants to say out loud.
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          </Reveal>
+          <RevealGroup className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 t: "\u201cI can't spend that much.\u201d",
@@ -165,22 +172,28 @@ function Landing() {
                 s: "Dietary needs get remembered at the table, too late.",
               },
             ].map((c) => (
-              <div key={c.t} className="card-surface p-5">
-                <p className="font-semibold">{c.t}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{c.s}</p>
-              </div>
+              <RevealItem key={c.t}>
+                <SpotlightCard tilt className="card-surface h-full p-5">
+                  <p className="font-semibold">{c.t}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{c.s}</p>
+                </SpotlightCard>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </section>
 
         {/* How it works */}
         <section id="how" className="border-y border-border bg-surface/60 py-20">
           <div className="mx-auto max-w-6xl px-5">
-            <p className="text-sm font-semibold tracking-widest text-primary uppercase">
-              How it works
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">Four steps. No negotiating.</h2>
-            <ol className="mt-10 grid gap-5 md:grid-cols-4">
+            <Reveal>
+              <p className="text-sm font-semibold tracking-widest text-primary uppercase">
+                How it works
+              </p>
+              <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
+                Four steps. No negotiating.
+              </h2>
+            </Reveal>
+            <RevealGroup as="ol" stagger={0.1} className="mt-10 grid gap-5 md:grid-cols-4">
               {[
                 { n: "01", t: "Create a plan", d: "Pick a category, a date window, and a group." },
                 {
@@ -199,13 +212,15 @@ function Landing() {
                   d: "Every option on the ballot already works for everyone.",
                 },
               ].map((s) => (
-                <li key={s.n} className="card-surface p-6">
-                  <span className="font-display text-2xl text-primary">{s.n}</span>
-                  <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
-                </li>
+                <RevealItem as="li" key={s.n}>
+                  <SpotlightCard tilt className="card-surface h-full p-6">
+                    <span className="font-display text-2xl text-primary">{s.n}</span>
+                    <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
+                  </SpotlightCard>
+                </RevealItem>
               ))}
-            </ol>
+            </RevealGroup>
           </div>
         </section>
 
@@ -259,7 +274,7 @@ function Landing() {
 
         {/* Testimonial-ish */}
         <section className="border-y border-border bg-surface/60 py-20">
-          <div className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
+          <RevealGroup className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
             {[
               {
                 q: "We stopped having the \u201cwhere do you want to go\u201d conversation entirely.",
@@ -271,16 +286,18 @@ function Landing() {
                 a: "Parent of a junior",
               },
             ].map((t) => (
-              <figure key={t.a} className="card-surface p-6">
-                <blockquote className="font-display text-lg leading-snug">{t.q}</blockquote>
-                <figcaption className="mt-4 text-sm text-muted-foreground">{t.a}</figcaption>
-              </figure>
+              <RevealItem as="figure" key={t.a}>
+                <SpotlightCard tilt className="card-surface h-full p-6">
+                  <blockquote className="font-display text-lg leading-snug">{t.q}</blockquote>
+                  <figcaption className="mt-4 text-sm text-muted-foreground">{t.a}</figcaption>
+                </SpotlightCard>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </section>
 
         {/* CTA */}
-        <section className="mx-auto max-w-3xl px-5 py-24 text-center">
+        <Reveal as="section" className="mx-auto max-w-3xl px-5 py-24 text-center">
           <h2 className="text-3xl font-semibold sm:text-4xl">Everyone gets a seat at the table.</h2>
           <p className="mt-4 text-muted-foreground">
             Private constraints. Better plans. Free to start with your group.
@@ -292,7 +309,7 @@ function Landing() {
           >
             Start planning <ArrowRight className="size-4" />
           </Link>
-        </section>
+        </Reveal>
       </main>
 
       <footer className="border-t border-border py-10">
@@ -329,7 +346,8 @@ function FeatureRow({
   bullets: string[];
 }) {
   return (
-    <div className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
+    <Reveal>
+      <SpotlightCard className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
           {icon} {kicker}
@@ -347,7 +365,8 @@ function FeatureRow({
           ))}
         </ul>
       </div>
-    </div>
+      </SpotlightCard>
+    </Reveal>
   );
 }
 
