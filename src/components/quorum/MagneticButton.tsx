@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { prefersReducedMotion } from "@/lib/quorum/haptics";
 
 type Props = {
   children: ReactNode;
@@ -19,6 +20,7 @@ export function MagneticButton({ children, className, to, href, search, strength
     if (!el) return;
     // Fine-pointer devices only — no magnetic drift on touch.
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    if (prefersReducedMotion()) return;
     const r = el.getBoundingClientRect();
     const dx = e.clientX - (r.left + r.width / 2);
     const dy = e.clientY - (r.top + r.height / 2);

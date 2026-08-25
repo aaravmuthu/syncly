@@ -284,6 +284,12 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* An infinite animation just clamped to 0.01ms still cycles continuously —
+     stop it outright instead of leaving a near-zero-duration loop running. */
+  .marquee-track {
+    animation: none !important;
+  }
 }
 
 @utility spotlight-orb {
