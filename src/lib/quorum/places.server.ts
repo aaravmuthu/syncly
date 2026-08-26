@@ -39,6 +39,17 @@ export function publicMapToken(): string {
 
 // ---------------------------------------------------------------- autocomplete
 
+/** Drops results whose label repeats one already seen (case/space-insensitive). */
+function dedupeByLabel(results: PlaceSuggestion[]): PlaceSuggestion[] {
+  const seen = new Set<string>();
+  return results.filter((r) => {
+    const key = r.label.trim().toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export async function suggestPlacesServer(
   queryRaw: string,
   opts: SuggestOptions = {},
@@ -47,8 +58,13 @@ export async function suggestPlacesServer(
   if (query.length < 3) return [];
 
   const prox = opts.proximity ?? DEFAULT_PROXIMITY;
+  // Address mode must ask Mapbox for street addresses only — including
+  // "place"/"postcode" here returns extra city/ZIP features alongside the
+  // real address (e.g. querying "...Frisco, TX 75034" also matches a
+  // postcode feature for "Frisco, TX 75034"), which rendered as redundant,
+  // ZIP-only dropdown rows.
   const types = opts.addressOnly
-    ? "address,place,postcode"
+    ? "address"
     : "postcode,place,locality,neighborhood,address";
 
   const token = mapboxToken();
@@ -90,11 +106,12 @@ export async function suggestPlacesServer(
         });
         // Address-mode: surface exact street matches first.
         if (out.length) {
-          return opts.addressOnly
+          const ordered = opts.addressOnly
             ? [...out].sort(
                 (a, b) => Number(b.id.startsWith("address")) - Number(a.id.startsWith("address")),
               )
             : out;
+          return dedupeByLabel(ordered);
         }
       }
     } catch {
@@ -128,15 +145,17 @@ export async function suggestPlacesServer(
         state?: string;
       };
     }[];
-    return json.map((r) => ({
-      id: String(r.place_id),
-      label: r.display_name.replace(/, United States$/, ""),
-      zip: r.address?.postcode && /^\d{5}$/.test(r.address.postcode) ? r.address.postcode : null,
-      city: r.address?.city ?? r.address?.town ?? r.address?.village ?? null,
-      state: r.address?.state ?? null,
-      lat: Number(r.lat),
-      lon: Number(r.lon),
-    }));
+    return dedupeByLabel(
+      json.map((r) => ({
+        id: String(r.place_id),
+        label: r.display_name.replace(/, United States$/, ""),
+        zip: r.address?.postcode && /^\d{5}$/.test(r.address.postcode) ? r.address.postcode : null,
+        city: r.address?.city ?? r.address?.town ?? r.address?.village ?? null,
+        state: r.address?.state ?? null,
+        lat: Number(r.lat),
+        lon: Number(r.lon),
+      })),
+    );
   } catch {
     return [];
   }

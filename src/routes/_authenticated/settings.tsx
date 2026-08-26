@@ -2,7 +2,22 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { Download, KeyRound, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Download,
+  Eye,
+  EyeOff,
+  KeyRound,
+  MapPinned,
+  Palette,
+  ShieldCheck,
+  SlidersHorizontal,
+  Trash2,
+  UserCog,
+  UserRound,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { AppShell } from "@/components/quorum/AppShell";
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
@@ -37,6 +52,84 @@ export const Route = createFileRoute("/_authenticated/settings")({
 const AVATARS = ["🙂", "😎", "🦊", "🐙", "🌵", "🍄", "⚡", "🌙", "🎧", "🧃"];
 const GRAD_YEARS = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i - 1);
 
+/** Icon + title used at the top of every section so the page reads as
+ * distinct groups instead of one undifferentiated scroll. */
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: LucideIcon;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <div>
+        <h2 className="font-display text-base font-semibold">{title}</h2>
+        {subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+/** One preference toggle rendered as its own glass card instead of a flat
+ * list row, matching the rest of the app's surface styling. */
+function ToggleCard({
+  label,
+  hint,
+  on,
+  onToggle,
+  action,
+}: {
+  label: string;
+  hint: string;
+  on: boolean;
+  onToggle?: () => void;
+  action?: React.ReactNode;
+}) {
+  const Wrapper = onToggle ? "button" : "div";
+  return (
+    <Card
+      as="article"
+      className={cn(
+        "flex w-full items-center justify-between gap-4 p-4",
+        onToggle && "text-left transition active:scale-[0.99]",
+      )}
+    >
+      <Wrapper
+        type={onToggle ? "button" : undefined}
+        onClick={onToggle}
+        className="flex flex-1 items-center justify-between gap-4"
+      >
+        <span>
+          <span className="block text-sm font-medium">{label}</span>
+          <span className="block text-xs text-muted-foreground">{hint}</span>
+        </span>
+        {onToggle ? (
+          <span
+            className={cn(
+              "h-6 w-10 shrink-0 rounded-full p-0.5 transition",
+              on ? "bg-primary" : "bg-secondary-foreground/20",
+            )}
+          >
+            <span
+              className={cn(
+                "block h-5 w-5 rounded-full bg-background transition",
+                on ? "translate-x-4" : "translate-x-0",
+              )}
+            />
+          </span>
+        ) : null}
+      </Wrapper>
+      {action}
+    </Card>
+  );
+}
+
 function SettingsPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -57,6 +150,7 @@ function SettingsPage() {
   const doUpload = useServerFn(uploadAvatar);
 
   const [passwordForm, setPasswordForm] = useState({ next: "", confirm: "" });
+  const [showPw, setShowPw] = useState({ next: false, confirm: false });
   const changePassword = useMutation({
     mutationFn: async () => {
       if (passwordForm.next.length < 6) throw new Error("Use at least 6 characters");
@@ -108,9 +202,6 @@ function SettingsPage() {
       setUploading(false);
     }
   }
-
-
-
 
   const save = useMutation({
     mutationFn: useServerFn(saveProfile),
@@ -173,11 +264,13 @@ function SettingsPage() {
     { key: "notifications_enabled", label: "Notify me", hint: "When a plan needs my answers or vote" },
   ];
 
-
+  const isGuardian = (form["account_type"] ?? "teen") === "guardian";
 
   return (
     <AppShell title="You" subtitle="Your defaults travel with you into every questionnaire.">
+      {/* Profile */}
       <Card className="space-y-4">
+        <SectionHeader icon={UserRound} title="Profile" />
         <div className="flex items-center gap-4">
           <Avatar
             url={form["avatar_url"] as string | null}
@@ -244,6 +337,48 @@ function SettingsPage() {
             placeholder="Two lines about you"
           />
         </Field>
+      </Card>
+
+      {/* I use Syncly as — moved right after Profile: it decides whether
+          Family/pairing fields below even apply, so it can't wait until
+          mid-page to be answered. */}
+      <Card className="mt-4 space-y-4">
+        <SectionHeader
+          icon={UserCog}
+          title="I use Syncly as"
+          subtitle="Parents get the Family hub. Teens get the pairing code and safety tools."
+        />
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              { id: "teen", label: "Teen", icon: "🎒" },
+              { id: "guardian", label: "Parent", icon: "🛡️" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => {
+                set("account_type", opt.id);
+                save.mutate({ data: { account_type: opt.id } });
+              }}
+              className={cn(
+                "rounded-2xl border px-3 py-2.5 text-sm font-medium transition",
+                (form["account_type"] ?? "teen") === opt.id
+                  ? "border-primary/50 bg-primary/10"
+                  : "border-border hover:bg-secondary",
+              )}
+            >
+              <span className="mr-1.5">{opt.icon}</span>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* School & location */}
+      <Card className="mt-4 space-y-4">
+        <SectionHeader icon={MapPinned} title="School & location" />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="School" hint="Optional">
             <input
@@ -288,7 +423,6 @@ function SettingsPage() {
               if (p.zip) set("zip_code", p.zip);
             }}
           />
-
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -315,37 +449,25 @@ function SettingsPage() {
         </div>
       </Card>
 
+      {/* Family — the account-type-conditional hub/pairing content, plus the
+          phone fields that only matter once linked to a parent. */}
       <Card className="mt-4 space-y-4">
-        <div>
-          <span className="text-sm font-medium">I use Syncly as</span>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Parents get the Family hub. Teens get the pairing code and safety tools.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {([
-            { id: "teen", label: "Teen", icon: "🎒" },
-            { id: "guardian", label: "Parent", icon: "🛡️" },
-          ] as const).map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => {
-                set("account_type", opt.id);
-                save.mutate({ data: { account_type: opt.id } });
-              }}
-              className={cn(
-                "rounded-2xl border px-3 py-2.5 text-sm font-medium transition",
-                (form["account_type"] ?? "teen") === opt.id
-                  ? "border-primary/50 bg-primary/10"
-                  : "border-border hover:bg-secondary",
-              )}
-            >
-              <span className="mr-1.5">{opt.icon}</span>
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        <SectionHeader
+          icon={Users}
+          title="Family"
+          subtitle={
+            isGuardian
+              ? "Link your teens with their 6-digit code to see plans, rides and safe arrivals."
+              : "Pair with a parent so they can see plans, rides and safe arrivals."
+          }
+        />
+        {isGuardian ? (
+          <Button variant="outline" onClick={() => void navigate({ to: "/guardian" })}>
+            Open the Family hub
+          </Button>
+        ) : (
+          <GuardianSyncCard sharing={Boolean(form["location_sharing_enabled"])} />
+        )}
         <Field label="Phone" hint="Only shared with linked parents if you allow it below.">
           <input
             className={inputClass}
@@ -369,37 +491,21 @@ function SettingsPage() {
         </label>
       </Card>
 
-      {(form["account_type"] ?? "teen") === "guardian" ? (
-        <Card className="mt-4 space-y-3">
-          <div>
-            <h2 className="font-display text-lg font-semibold">Family hub</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Link your teens with their 6-digit code to see plans, rides and safe arrivals.
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => void navigate({ to: "/guardian" })}>
-            Open the Family hub
-          </Button>
-        </Card>
-      ) : (
-        <div className="mt-4">
-          <GuardianSyncCard sharing={Boolean(form["location_sharing_enabled"])} />
-        </div>
-      )}
-
-
-
-      <Card className="mt-4">
-        <span className="text-sm font-medium">Appearance</span>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Follows your device by default. Your choice is saved to this device and your profile.
-        </p>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {([
-            { id: "light", label: "Light", icon: "☀" },
-            { id: "dark", label: "Dark", icon: "☾" },
-            { id: "system", label: "System", icon: "◐" },
-          ] as const).map((opt) => (
+      {/* Appearance */}
+      <Card className="mt-4 space-y-3">
+        <SectionHeader
+          icon={Palette}
+          title="Appearance"
+          subtitle="Follows your device by default. Your choice is saved to this device and your profile."
+        />
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              { id: "light", label: "Light", icon: "☀" },
+              { id: "dark", label: "Dark", icon: "☾" },
+              { id: "system", label: "System", icon: "◐" },
+            ] as const
+          ).map((opt) => (
             <button
               key={opt.id}
               type="button"
@@ -416,97 +522,40 @@ function SettingsPage() {
         </div>
       </Card>
 
-      <Card className="mt-4 divide-y divide-border">
+      {/* Preferences — each toggle is its own glass card (Card/.surface) so
+          they read as distinct settings instead of one flat divided list. */}
+      <div className="mt-4 space-y-3">
+        <SectionHeader icon={SlidersHorizontal} title="Preferences" />
         {toggles.map((t) => {
           const on = Boolean(form[t.key]);
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => set(t.key, !on)}
-              className="flex w-full items-center justify-between gap-4 py-3.5 text-left first:pt-0 last:pb-0"
-            >
-              <span>
-                <span className="block text-sm font-medium">{t.label}</span>
-                <span className="block text-xs text-muted-foreground">{t.hint}</span>
-              </span>
-              <span
-                className={cn(
-                  "h-6 w-10 shrink-0 rounded-full p-0.5 transition",
-                  on ? "bg-primary" : "bg-secondary-foreground/20",
-                )}
-              >
-                <span
-                  className={cn(
-                    "block h-5 w-5 rounded-full bg-background transition",
-                    on ? "translate-x-4" : "translate-x-0",
-                  )}
-                />
-              </span>
-            </button>
-          );
+          return <ToggleCard key={t.key} label={t.label} hint={t.hint} on={on} onToggle={() => set(t.key, !on)} />;
         })}
-
-        <div className="flex items-center justify-between gap-4 py-3.5">
-          <span>
-            <span className="block text-sm font-medium">Browser notifications</span>
-            <span className="block text-xs text-muted-foreground">
-              {pushState === "granted"
-                ? "Enabled on this device"
-                : pushState === "denied"
-                  ? "Blocked in your browser settings"
-                  : pushState === "unsupported"
-                    ? "Not supported on this browser"
-                    : "Get pinged when a plan needs you"}
-            </span>
-          </span>
-          {pushState === "default" ? (
-            <Button
-              variant="outline"
-              onClick={async () => {
-                setPushState(await requestPush());
-              }}
-            >
-              Enable
-            </Button>
-          ) : null}
-        </div>
-      </Card>
-
-      <Card className="mt-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <KeyRound className="size-4 text-muted-foreground" aria-hidden />
-          <span className="text-sm font-medium">Password</span>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="New password">
-            <input
-              type="password"
-              autoComplete="new-password"
-              className={inputClass}
-              value={passwordForm.next}
-              onChange={(e) => setPasswordForm((f) => ({ ...f, next: e.target.value }))}
-            />
-          </Field>
-          <Field label="Confirm password">
-            <input
-              type="password"
-              autoComplete="new-password"
-              className={inputClass}
-              value={passwordForm.confirm}
-              onChange={(e) => setPasswordForm((f) => ({ ...f, confirm: e.target.value }))}
-            />
-          </Field>
-        </div>
-        <Button
-          variant="outline"
-          loading={changePassword.isPending}
-          disabled={!passwordForm.next || !passwordForm.confirm}
-          onClick={() => changePassword.mutate()}
-        >
-          Update password
-        </Button>
-      </Card>
+        <ToggleCard
+          label="Browser notifications"
+          hint={
+            pushState === "granted"
+              ? "Enabled on this device"
+              : pushState === "denied"
+                ? "Blocked in your browser settings"
+                : pushState === "unsupported"
+                  ? "Not supported on this browser"
+                  : "Get pinged when a plan needs you"
+          }
+          on={pushState === "granted"}
+          action={
+            pushState === "default" ? (
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setPushState(await requestPush());
+                }}
+              >
+                Enable
+              </Button>
+            ) : null
+          }
+        />
+      </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Button
@@ -524,9 +573,67 @@ function SettingsPage() {
         </Button>
       </div>
 
-      <Card className="mt-8">
-        <h2 className="font-display text-base font-semibold">How your data is handled</h2>
-        <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+      {/* Account & security */}
+      <Card className="mt-8 space-y-4">
+        <SectionHeader icon={KeyRound} title="Account & security" subtitle="Set or change your password." />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="New password">
+            <div className="relative">
+              <input
+                type={showPw.next ? "text" : "password"}
+                autoComplete="new-password"
+                className={cn(inputClass, "pr-10")}
+                value={passwordForm.next}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, next: e.target.value }))}
+              />
+              <button
+                type="button"
+                aria-label={showPw.next ? "Hide password" : "Show password"}
+                onClick={() => setShowPw((s) => ({ ...s, next: !s.next }))}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPw.next ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+              </button>
+            </div>
+          </Field>
+          <Field label="Confirm password">
+            <div className="relative">
+              <input
+                type={showPw.confirm ? "text" : "password"}
+                autoComplete="new-password"
+                className={cn(inputClass, "pr-10")}
+                value={passwordForm.confirm}
+                onChange={(e) => setPasswordForm((f) => ({ ...f, confirm: e.target.value }))}
+              />
+              <button
+                type="button"
+                aria-label={showPw.confirm ? "Hide password" : "Show password"}
+                onClick={() => setShowPw((s) => ({ ...s, confirm: !s.confirm }))}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPw.confirm ? (
+                  <EyeOff className="size-4" aria-hidden />
+                ) : (
+                  <Eye className="size-4" aria-hidden />
+                )}
+              </button>
+            </div>
+          </Field>
+        </div>
+        <Button
+          variant="outline"
+          loading={changePassword.isPending}
+          disabled={!passwordForm.next || !passwordForm.confirm}
+          onClick={() => changePassword.mutate()}
+        >
+          Update password
+        </Button>
+      </Card>
+
+      {/* Privacy & data */}
+      <Card className="mt-4 space-y-4">
+        <SectionHeader icon={ShieldCheck} title="Privacy & data" />
+        <ul className="space-y-2 text-sm text-muted-foreground">
           <li>Your questionnaire answers are readable only by you — enforced at the database level.</li>
           <li>Groups see compatibility results, never the individual limits behind them.</li>
           <li>Parents see one plan's details, nothing else about you or the group.</li>
@@ -534,7 +641,6 @@ function SettingsPage() {
         </ul>
         <Button
           variant="outline"
-          className="mt-4"
           onClick={() => {
             const blob = new Blob([JSON.stringify(me.data, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -549,15 +655,21 @@ function SettingsPage() {
         </Button>
       </Card>
 
-      <Card className="mt-4 border-destructive/30">
-        <h2 className="font-display text-base font-semibold text-destructive">Danger zone</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Permanently deletes your profile, plans, and location history. This can't be undone.
-        </p>
-        <Button variant="danger" className="mt-4" onClick={() => setDeleteOpen(true)}>
-          <Trash2 className="size-4" aria-hidden /> Delete my account
-        </Button>
-      </Card>
+      {/* Danger zone — pulled well clear of routine settings with a divider
+          and its own top margin, a heavier destructive border, and a tinted
+          background so it never reads as just another card in the list. */}
+      <div className="mt-10">
+        <div className="mb-4 border-t border-dashed border-destructive/25" aria-hidden />
+        <Card className="space-y-3 border-2 border-destructive/40 bg-destructive/[0.04]">
+          <SectionHeader icon={AlertTriangle} title="Danger zone" />
+          <p className="text-sm text-muted-foreground">
+            Permanently deletes your profile, plans, and location history. This can't be undone.
+          </p>
+          <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+            <Trash2 className="size-4" aria-hidden /> Delete my account
+          </Button>
+        </Card>
+      </div>
 
       <Modal
         open={deleteOpen}
@@ -566,9 +678,14 @@ function SettingsPage() {
           setDeleteConfirm("");
         }}
         title="Delete your account?"
-        description="This permanently removes your profile, plans, messages, and location history. There's no undo."
+        description="There's no undo. This permanently removes:"
       >
         <div className="space-y-4">
+          <ul className="space-y-1.5 rounded-2xl border border-destructive/30 bg-destructive/[0.04] px-4 py-3 text-sm text-muted-foreground">
+            <li>Your profile, photo, and preferences</li>
+            <li>Every plan, message, and squad membership</li>
+            <li>Your location history and any active sharing</li>
+          </ul>
           <Field label='Type "DELETE" to confirm'>
             <input
               className={inputClass}
