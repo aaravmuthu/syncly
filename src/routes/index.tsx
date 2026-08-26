@@ -14,7 +14,7 @@ import {
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { MouseSpotlight } from "@/components/quorum/MouseSpotlight";
-import { MagneticButton } from "@/components/quorum/MagneticButton";
+import { GlowButton } from "@/components/quorum/GlowButton";
 import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { Reveal, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
@@ -101,21 +101,23 @@ function Landing() {
               </p>
             </RevealItem>
             <RevealItem lift={false} className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <MagneticButton
+              <GlowButton
                 to="/auth"
                 search={{ next: "/home", mode: "signup" }}
+                glow="primary"
                 className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
               >
                 <span className="inline-flex items-center gap-2">
                   Start planning <ArrowRight className="size-4" />
                 </span>
-              </MagneticButton>
-              <MagneticButton
+              </GlowButton>
+              <GlowButton
                 to="/demo"
+                glow="neutral"
                 className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
               >
                 Try the demo
-              </MagneticButton>
+              </GlowButton>
               <a
                 href="#how"
                 className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
