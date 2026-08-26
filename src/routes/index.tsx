@@ -104,7 +104,7 @@ function Landing() {
               <MagneticButton
                 to="/auth"
                 search={{ next: "/home", mode: "signup" }}
-                className="pressable active:pressable-active inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground"
               >
                 <span className="inline-flex items-center gap-2">
                   Start planning <ArrowRight className="size-4" />
