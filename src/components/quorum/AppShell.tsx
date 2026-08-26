@@ -15,6 +15,7 @@ import { useNotifications } from "@/lib/quorum/useNotifications";
 import { getMe } from "@/lib/quorum/plan.functions";
 import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
+import { PageTransition } from "./interactions/PageTransition";
 
 // Settings/profile lives at the header gear + avatar tap, and Activity lives
 // at the header bell (below) — keeping the tab bar at 5 items per Apple's HIG
@@ -115,16 +116,25 @@ export function AppShell({
         </header>
 
         <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
-          {title ? (
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
-                {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
-              </div>
-              {action}
-            </div>
-          ) : null}
-          {children}
+          <PageTransition>
+            {title ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                className="mb-6 flex items-start justify-between gap-4"
+              >
+                <div>
+                  <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+                  {subtitle ? (
+                    <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+                  ) : null}
+                </div>
+                {action}
+              </motion.div>
+            ) : null}
+            {children}
+          </PageTransition>
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
