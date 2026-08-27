@@ -16,11 +16,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={pathname}
-        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14, scale: 0.985, filter: "blur(6px)" }}
+        // NOTE: no filter/scale here — a persistent non-identity filter or
+        // transform on this wrapper would make it the containing block for
+        // position:fixed descendants (PlanWizard, ChatDrawer, LongPress).
+        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
         animate={
           reduce
             ? { opacity: 1, transition: { duration: 0.18 } }
-            : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: spring }
+            : { opacity: 1, y: 0, transition: spring }
         }
         exit={
           reduce
