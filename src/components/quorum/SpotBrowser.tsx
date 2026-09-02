@@ -114,6 +114,8 @@ export function SpotBrowser({
         </div>
       ) : null}
 
+      <VibeSearch kind={ACTIVITY_TABS.some((t) => t.key === tab) ? "activity" : "food"} />
+
       {/* Category tabs */}
       <div className="space-y-2">
         <TabRow title="Food & dining" tabs={FOOD_TABS} active={tab} onPick={setTab} />
