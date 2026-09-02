@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { VenueMap } from "@/components/quorum/VenueMap";
+import { VibeSearch } from "@/components/quorum/ai/VibeSearch";
 import { directionsUrl } from "@/components/quorum/FairPointVenues";
 import { ACTIVITY_TABS, FOOD_TABS, SPOT_RADII, type SpotTab } from "@/lib/quorum/spotTabs";
 import { addSpotToPlan, browseSpots, type BrowseSpot } from "@/lib/quorum/spots.functions";
