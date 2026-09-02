@@ -20,6 +20,7 @@ import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
 import { VenueMap } from "@/components/quorum/VenueMap";
 import { SpotBrowser } from "@/components/quorum/SpotBrowser";
 import { ChatDrawer } from "@/components/quorum/ChatDrawer";
+import { ConciergeSheet } from "@/components/quorum/ai/ConciergeSheet";
 import { estimateCost, formatRange } from "@/lib/quorum/cost";
 import {
   castVote,
@@ -756,6 +757,7 @@ function PlanPage() {
       </section>
 
       <VenueDetailModal venue={venueDetail} onClose={() => setVenueDetail(null)} />
+      <ConciergeSheet planId={planId} planTitle={data.plan.title} />
       <ChatDrawer groupId={data.plan.group_id} planId={planId} />
     </AppShell>
   );

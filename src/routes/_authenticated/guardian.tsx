@@ -8,6 +8,7 @@ import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { TeenRadarMap } from "@/components/quorum/guardian/TeenRadarMap";
 import { GuardianInvite } from "@/components/quorum/guardian/GuardianInvite";
+import { GuardianAiSummaryCard } from "@/components/quorum/ai/GuardianAiSummary";
 import {
   addSafeZone,
   askForCheckin,
@@ -317,6 +318,8 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
             <span>{teen.sharing ? "Waiting for the first ping" : "Location sharing is off"}</span>
           )}
         </div>
+
+        <GuardianAiSummaryCard teenProfileId={teen.id} />
 
         <TeenRadarMap teen={teen} />
 
