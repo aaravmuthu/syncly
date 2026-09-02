@@ -115,7 +115,7 @@ export function SpotBrowser({
         </div>
       ) : null}
 
-      <VibeSearch kind={ACTIVITY_TABS.some((t) => t.id === tab) ? "activity" : "food"} />
+      <VibeSearch kind={tab.kind} />
 
       {/* Category tabs */}
       <div className="space-y-2">
