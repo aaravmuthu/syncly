@@ -9,6 +9,7 @@ import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
 import { LiveActivityCard } from "@/components/quorum/LiveActivityCard";
+import { SquadDigestCard } from "@/components/quorum/ai/SquadDigest";
 import { FindMySquad } from "@/components/quorum/FindMySquad";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import { PullToRefresh, SpotlightCard } from "@/components/quorum/interactions";
@@ -197,6 +198,8 @@ function HomePage() {
         {me.data && me.data.account_type !== "guardian" ? (
           <TeenSafetyBar sharing={Boolean(me.data.location_sharing_enabled)} />
         ) : null}
+
+        <SquadDigestCard />
 
         <WeekStrip
           weekStart={weekStart}

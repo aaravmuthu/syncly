@@ -13,7 +13,7 @@ import { ThemeToggle } from "@/lib/theme";
 import { getMe } from "@/lib/quorum/plan.functions";
 import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
-import { RouteTransition } from "./RouteTransition";
+import { PageTransition } from "./interactions/PageTransition";
 
 // v1 scope: GuardianShell wraps only /guardian. Radar and Profile are the
 // existing shared routes, rendered via AppShell as they work today -- making
@@ -88,7 +88,7 @@ export function GuardianShell({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-3xl overflow-x-hidden px-4 pb-32 pt-6">
+        <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
           {title ? (
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
@@ -98,7 +98,7 @@ export function GuardianShell({
               {action}
             </div>
           ) : null}
-          <RouteTransition>{children}</RouteTransition>
+          <PageTransition>{children}</PageTransition>
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">

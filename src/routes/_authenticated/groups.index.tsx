@@ -8,9 +8,11 @@ import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { CreateGroupModal } from "@/components/quorum/CreateGroupModal";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
-import { PullToRefresh } from "@/components/quorum/interactions";
 import { coverTheme } from "@/lib/quorum/covers";
 import { listGroups } from "@/lib/quorum/plan.functions";
+import { PullToRefresh, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
+import { motion } from "motion/react";
+import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/groups/")({
@@ -92,12 +94,19 @@ function GroupsPage() {
         </div>
       }
     >
+      <PullToRefresh onRefresh={async () => void (await groups.refetch())}>
       <div className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1">
         {FILTERS.map((f) => (
-          <button
+          <motion.button
             key={f.id}
             type="button"
-            onClick={() => setFilter(f.id)}
+            whileTap={{ scale: 0.94 }}
+            animate={{ scale: filter === f.id ? 1.03 : 1 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26 }}
+            onClick={() => {
+              haptic("select");
+              setFilter(f.id);
+            }}
             className={cn(
               "shrink-0 rounded-full px-4 py-2 text-sm font-semibold backdrop-blur-md transition",
               filter === f.id
@@ -106,7 +115,7 @@ function GroupsPage() {
             )}
           >
             {f.label}
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -117,7 +126,6 @@ function GroupsPage() {
         </div>
       ) : null}
 
-      <PullToRefresh onRefresh={() => groups.refetch()}>
         {!groups.isLoading && shown.length === 0 ? (
           <Empty
             title={squads.length ? "Nothing in this filter" : "No squads yet"}
@@ -130,11 +138,16 @@ function GroupsPage() {
           />
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {shown.map((g) => (
-            <SquadCard key={g.id} squad={g} />
-          ))}
-        </div>
+      <RevealGroup className="grid gap-4 sm:grid-cols-2" stagger={0.07}>
+        {shown.map((g) => (
+          <RevealItem key={g.id}>
+            <SpotlightCard tilt className="rounded-2xl">
+              <SquadCard squad={g} />
+            </SpotlightCard>
+          </RevealItem>
+        ))}
+      </RevealGroup>
+
       </PullToRefresh>
 
       <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} />

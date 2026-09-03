@@ -6,3 +6,4 @@ export { SpotlightCard } from "./Spotlight";
 export { Magnetic } from "./Magnetic";
 export { SpringTooltip } from "./SpringTooltip";
 export { Reveal, RevealGroup, RevealItem } from "./Reveal";
+export { PageTransition } from "./PageTransition";
