@@ -8,6 +8,7 @@ import { VibeSearch } from "@/components/quorum/ai/VibeSearch";
 import { directionsUrl } from "@/components/quorum/FairPointVenues";
 import { ACTIVITY_TABS, FOOD_TABS, SPOT_RADII, type SpotTab } from "@/lib/quorum/spotTabs";
 import { addSpotToPlan, browseSpots, type BrowseSpot } from "@/lib/quorum/spots.functions";
+import type { VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
 import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
 import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 
