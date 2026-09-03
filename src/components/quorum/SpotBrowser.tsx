@@ -61,6 +61,15 @@ export function SpotBrowser({
     },
   });
 
+  const handleVibePick = (s: VibeSearchSpot) => {
+    if (planId && canAdd) {
+      const spot: BrowseSpot = { ...s, members: [] };
+      add.mutate({ planId, spot });
+    } else {
+      setDetail({ ...s, members: [] });
+    }
+  };
+
   const data = spots.data;
   const mapVenues = useMemo(() => {
     if (!data?.origin) return [];
