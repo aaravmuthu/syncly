@@ -125,7 +125,7 @@ export function SpotBrowser({
         </div>
       ) : null}
 
-      <VibeSearch kind={tab.kind} />
+      <VibeSearch kind={tab.kind} onPick={handleVibePick} />
 
       {/* Category tabs */}
       <div className="space-y-2">
