@@ -8,6 +8,7 @@ import { VibeSearch } from "@/components/quorum/ai/VibeSearch";
 import { directionsUrl } from "@/components/quorum/FairPointVenues";
 import { ACTIVITY_TABS, FOOD_TABS, SPOT_RADII, type SpotTab } from "@/lib/quorum/spotTabs";
 import { addSpotToPlan, browseSpots, type BrowseSpot } from "@/lib/quorum/spots.functions";
+import type { VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
 import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
 import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 
@@ -59,6 +60,15 @@ export function SpotBrowser({
       onAdded?.();
     },
   });
+
+  const handleVibePick = (s: VibeSearchSpot) => {
+    if (planId && canAdd) {
+      const spot: BrowseSpot = { ...s, members: [] };
+      add.mutate({ planId, spot });
+    } else {
+      setDetail({ ...s, members: [] });
+    }
+  };
 
   const data = spots.data;
   const mapVenues = useMemo(() => {
@@ -115,7 +125,7 @@ export function SpotBrowser({
         </div>
       ) : null}
 
-      <VibeSearch kind={tab.kind} />
+      <VibeSearch kind={tab.kind} onPick={handleVibePick} />
 
       {/* Category tabs */}
       <div className="space-y-2">
