@@ -6,6 +6,7 @@ import { Avatar } from "./Avatar";
 import { SquadMap, type MapPerson, type MapZone } from "./map/SquadMap";
 import { Skeleton } from "./ui";
 import { getGuardianHub, getMyRadar } from "@/lib/quorum/guardian.functions";
+import { getMe } from "@/lib/quorum/plan.functions";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { cn } from "@/lib/utils";
 
@@ -36,18 +37,29 @@ function since(iso?: string | null) {
  * live pins plus a row of status chips for every linked person.
  */
 export function FindMySquad() {
+  // Shares the ["me"] cache AppShell/HomePage already populate — this never
+  // fires its own request, it just reads flags to decide whether the two
+  // queries below (each an extra round trip, polled forever) are worth
+  // making at all. Most accounts are neither a guardian nor location-sharing,
+  // so this keeps the home feed from perpetually fetching radar data no one
+  // has.
+  const myProfile = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
   const hub = useQuery({
     queryKey: ["guardian-hub"],
     queryFn: useServerFn(getGuardianHub),
     refetchInterval: 60_000,
+    enabled: Boolean(myProfile.data?.hasLinkedTeens),
   });
   const mine = useQuery({
     queryKey: ["my-radar"],
     queryFn: useServerFn(getMyRadar),
     refetchInterval: 90_000,
+    enabled: Boolean(myProfile.data?.location_sharing_enabled),
   });
 
-  if (hub.isLoading || mine.isLoading) return <Skeleton className="h-56 rounded-[28px]" />;
+  if (myProfile.isLoading || hub.isLoading || mine.isLoading) {
+    return <Skeleton className="h-56 rounded-[28px]" />;
+  }
 
   const teens = (hub.data?.teens ?? []) as TeenCard[];
   const me = mine.data;

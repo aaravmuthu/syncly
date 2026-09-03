@@ -74,7 +74,10 @@ function HomePage() {
     if (code) void navigate({ to: "/join/$code", params: { code }, replace: true });
   }, [me.data, navigate]);
 
-  const plans = (dash.data?.plans ?? []) as unknown as DashPlan[];
+  const plans = useMemo(
+    () => (dash.data?.plans ?? []) as unknown as DashPlan[],
+    [dash.data?.plans],
+  );
 
   const weekStart = useMemo(() => {
     const base = startOfWeek(new Date());
@@ -100,59 +103,69 @@ function HomePage() {
     [plans, selectedDay],
   );
 
-  const conflicted = dayFiltered.filter(
-    (p) => (p.conflicts?.length ?? 0) > 0 && (p.alternatives?.length ?? 0) > 0,
-  );
-  const needsAction = dayFiltered.filter(
-    (p) =>
-      !conflicted.includes(p) &&
-      p.i_attending == null &&
-      ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
-  );
-  const answeredActive = dayFiltered.filter(
-    (p) =>
-      (p.status === "collecting" || p.status === "voting") &&
-      p.i_attending != null &&
-      !conflicted.includes(p),
-  );
-  const otherActive = dayFiltered.filter(
-    (p) =>
-      (p.status === "collecting" || p.status === "voting") &&
-      !needsAction.includes(p) &&
-      !answeredActive.includes(p) &&
-      !conflicted.includes(p),
-  );
-  const confirmed = dayFiltered
-    .filter((p) => p.status === "finalized")
-    .sort(
-      (a, b) =>
-        new Date(a.window_start ?? a.created_at).getTime() -
-        new Date(b.window_start ?? b.created_at).getTime(),
-    );
+  const { conflicted, needsAction, answeredActive, otherActive, activeNow, upcoming, memories } =
+    useMemo(() => {
+      const conflicted = dayFiltered.filter(
+        (p) => (p.conflicts?.length ?? 0) > 0 && (p.alternatives?.length ?? 0) > 0,
+      );
+      const needsAction = dayFiltered.filter(
+        (p) =>
+          !conflicted.includes(p) &&
+          p.i_attending == null &&
+          ((p.status === "collecting" && !p.i_responded) ||
+            (p.status === "voting" && !p.i_voted)),
+      );
+      const answeredActive = dayFiltered.filter(
+        (p) =>
+          (p.status === "collecting" || p.status === "voting") &&
+          p.i_attending != null &&
+          !conflicted.includes(p),
+      );
+      const otherActive = dayFiltered.filter(
+        (p) =>
+          (p.status === "collecting" || p.status === "voting") &&
+          !needsAction.includes(p) &&
+          !answeredActive.includes(p) &&
+          !conflicted.includes(p),
+      );
+      const confirmed = dayFiltered
+        .filter((p) => p.status === "finalized")
+        .sort(
+          (a, b) =>
+            new Date(a.window_start ?? a.created_at).getTime() -
+            new Date(b.window_start ?? b.created_at).getTime(),
+        );
 
-  const isPast = (p: DashPlan) =>
-    new Date(p.window_start ?? p.created_at).getTime() < Date.now() - 6 * 3600e3;
-  const todayKey = dayKey(new Date().toISOString());
+      const isPast = (p: DashPlan) =>
+        new Date(p.window_start ?? p.created_at).getTime() < Date.now() - 6 * 3600e3;
+      const todayKey = dayKey(new Date().toISOString());
 
-  // Live Activity carousel: anything needing you, answered-but-live, or happening today.
-  const activeNow = [
-    ...needsAction,
-    ...answeredActive,
-    ...otherActive,
-    ...confirmed.filter((p) => p.window_start && dayKey(p.window_start) === todayKey),
-  ];
-  const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
-  const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
+      // Live Activity carousel: anything needing you, answered-but-live, or happening today.
+      const activeNow = [
+        ...needsAction,
+        ...answeredActive,
+        ...otherActive,
+        ...confirmed.filter((p) => p.window_start && dayKey(p.window_start) === todayKey),
+      ];
+      const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
+      const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
 
-  const groupList = (groups.data ?? []).map((raw) => {
-    const g = raw as unknown as Record<string, unknown>;
-    return {
-      id: String(g["id"]),
-      name: String(g["name"] ?? "Group"),
-      emoji: String(g["emoji"] ?? "✨"),
-      members: Number(g["member_count"] ?? 1),
-    };
-  });
+      return { conflicted, needsAction, answeredActive, otherActive, activeNow, upcoming, memories };
+    }, [dayFiltered]);
+
+  const groupList = useMemo(
+    () =>
+      (groups.data ?? []).map((raw) => {
+        const g = raw as unknown as Record<string, unknown>;
+        return {
+          id: String(g["id"]),
+          name: String(g["name"] ?? "Group"),
+          emoji: String(g["emoji"] ?? "✨"),
+          members: Number(g["member_count"] ?? 1),
+        };
+      }),
+    [groups.data],
+  );
 
   const empty = !dash.isLoading && plans.length === 0;
 
