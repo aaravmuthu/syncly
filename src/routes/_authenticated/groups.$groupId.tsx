@@ -11,6 +11,7 @@ import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { getGroup } from "@/lib/quorum/plan.functions";
 import { PlanWizard } from "@/components/quorum/PlanWizard";
 import { SquadChat } from "@/components/quorum/SquadChat";
+import { PullToRefresh, SwipeBack } from "@/components/quorum/interactions";
 import { categoryMeta } from "@/lib/quorum/types";
 import { estCostLabel } from "@/lib/quorum/estcost";
 
@@ -70,6 +71,7 @@ function GroupPage() {
       title={`${group.emoji} ${group.name}`}
       subtitle={`${members.length} members · invite code ${group.invite_code}`}
     >
+      <SwipeBack>
       {/* Sub-tab bar */}
       <div className="relative mt-1 grid grid-cols-3 gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
         <span
@@ -98,26 +100,28 @@ function GroupPage() {
       <div className="overflow-hidden">
         <div key={tab} className="animate-fade-in mt-4">
           {tab === "plans" ? (
-            <section className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <SquadStats
-                  plans={plans as unknown as { status: string; location_area?: string | null }[]}
-                />
-                <Button onClick={() => setWizard(true)}>+ Launch New Plan</Button>
-              </div>
+            <PullToRefresh onRefresh={() => q.refetch()}>
+              <section className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <SquadStats
+                    plans={plans as unknown as { status: string; location_area?: string | null }[]}
+                  />
+                  <Button onClick={() => setWizard(true)}>+ Launch New Plan</Button>
+                </div>
 
-              {plans.length === 0 ? (
-                <Card>
-                  <p className="text-sm text-muted-foreground">
-                    No plans yet — tap “Launch New Plan” to pick a vibe.
-                  </p>
-                </Card>
-              ) : null}
+                {plans.length === 0 ? (
+                  <Card>
+                    <p className="text-sm text-muted-foreground">
+                      No plans yet — tap “Launch New Plan” to pick a vibe.
+                    </p>
+                  </Card>
+                ) : null}
 
-              {(plans as unknown as GroupPlan[]).map((p) => (
-                <PlanCard key={p.id} plan={p} />
-              ))}
-            </section>
+                {(plans as unknown as GroupPlan[]).map((p) => (
+                  <PlanCard key={p.id} plan={p} />
+                ))}
+              </section>
+            </PullToRefresh>
           ) : null}
 
           {tab === "chat" ? (
@@ -208,6 +212,7 @@ function GroupPage() {
       {wizard ? (
         <PlanWizard groupId={groupId} memberIds={memberIds} onClose={() => setWizard(false)} />
       ) : null}
+      </SwipeBack>
     </AppShell>
   );
 }

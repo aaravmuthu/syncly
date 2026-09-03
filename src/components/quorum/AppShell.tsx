@@ -9,6 +9,8 @@ import { Wordmark } from "./Wordmark";
 import { ContextSwitcher } from "./ContextSwitcher";
 
 import { Avatar } from "./Avatar";
+import { InstallPrompt } from "./InstallPrompt";
+import { RouteTransition } from "./RouteTransition";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
@@ -114,7 +116,8 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
+        <main className="mx-auto w-full max-w-3xl overflow-x-hidden px-4 pb-32 pt-6">
+          <InstallPrompt />
           {title ? (
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
@@ -124,7 +127,7 @@ export function AppShell({
               {action}
             </div>
           ) : null}
-          {children}
+          <RouteTransition>{children}</RouteTransition>
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">

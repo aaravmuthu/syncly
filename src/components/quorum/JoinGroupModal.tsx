@@ -7,6 +7,7 @@ import { Modal } from "./Modal";
 import { Button, inputClass } from "./ui";
 import { isValidCode, normalizeCode } from "@/lib/quorum/invite";
 import { joinGroup } from "@/lib/quorum/plan.functions";
+import { haptic } from "@/lib/quorum/haptics";
 
 export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [code, setCode] = useState("");
@@ -17,14 +18,17 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
     mutationFn: useServerFn(joinGroup),
     onSuccess: (group) => {
       const g = group as { id: string; name: string };
+      haptic("success");
       toast.success(`Joined ${g.name}`);
       setCode("");
       onClose();
       void qc.invalidateQueries({ queryKey: ["groups"] });
       void navigate({ to: "/groups/$groupId", params: { groupId: g.id } });
     },
-    onError: (e: Error) =>
-      toast.error("Couldn't join that group", { description: e.message }),
+    onError: (e: Error) => {
+      haptic("warn");
+      toast.error("Couldn't join that group", { description: e.message });
+    },
   });
 
   return (

@@ -8,6 +8,7 @@ import { Button, Field, inputClass } from "./ui";
 import { createGroup } from "@/lib/quorum/plan.functions";
 import { uploadGroupImage } from "@/lib/quorum/group.functions";
 import { COVER_THEMES, GROUP_EMOJI, GROUP_PRESET_IMAGES, coverTheme } from "@/lib/quorum/covers";
+import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 
 export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -37,13 +38,17 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
     mutationFn: useServerFn(createGroup),
     onSuccess: (group) => {
       const g = group as unknown as { id: string; name: string };
+      haptic("success");
       toast.success(`${g.name} is live`);
       reset();
       onClose();
       void qc.invalidateQueries({ queryKey: ["groups"] });
       void navigate({ to: "/groups/$groupId", params: { groupId: g.id } });
     },
-    onError: (e: Error) => toast.error("Couldn't create that squad", { description: e.message }),
+    onError: (e: Error) => {
+      haptic("warn");
+      toast.error("Couldn't create that squad", { description: e.message });
+    },
   });
 
   const onPick = async (file: File) => {

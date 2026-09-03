@@ -8,6 +8,7 @@ import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { CreateGroupModal } from "@/components/quorum/CreateGroupModal";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
+import { PullToRefresh } from "@/components/quorum/interactions";
 import { coverTheme } from "@/lib/quorum/covers";
 import { listGroups } from "@/lib/quorum/plan.functions";
 import { cn } from "@/lib/utils";
@@ -116,23 +117,25 @@ function GroupsPage() {
         </div>
       ) : null}
 
-      {!groups.isLoading && shown.length === 0 ? (
-        <Empty
-          title={squads.length ? "Nothing in this filter" : "No squads yet"}
-          body={
-            squads.length
-              ? "Try another tab, or launch a plan to light one up."
-              : "Create a squad or join one with a six-character code."
-          }
-          action={<Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>}
-        />
-      ) : null}
+      <PullToRefresh onRefresh={() => groups.refetch()}>
+        {!groups.isLoading && shown.length === 0 ? (
+          <Empty
+            title={squads.length ? "Nothing in this filter" : "No squads yet"}
+            body={
+              squads.length
+                ? "Try another tab, or launch a plan to light one up."
+                : "Create a squad or join one with a six-character code."
+            }
+            action={<Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>}
+          />
+        ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {shown.map((g) => (
-          <SquadCard key={g.id} squad={g} />
-        ))}
-      </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {shown.map((g) => (
+            <SquadCard key={g.id} squad={g} />
+          ))}
+        </div>
+      </PullToRefresh>
 
       <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} />
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />

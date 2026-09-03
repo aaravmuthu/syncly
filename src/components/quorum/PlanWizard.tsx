@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
@@ -216,7 +217,11 @@ export function PlanWizard({
     });
   };
 
-  return (
+  // Portaled straight to <body>: this overlay must stay pinned to the real
+  // viewport even though route content (its natural DOM ancestor) sits
+  // inside RouteTransition's animated wrapper, whose transform would
+  // otherwise make it the containing block for our `fixed` positioning.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-xl">
       {/* header */}
       <div className="flex items-center justify-between gap-3 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-3">
@@ -398,7 +403,8 @@ export function PlanWizard({
           ) : null}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

@@ -1,8 +1,12 @@
 {
+  "id": "/",
   "name": "Syncly — Squad Planning & Live Radar",
   "short_name": "Syncly",
-  "start_url": "/",
+  "description": "Group plans that work for everyone, privately. Weekly timelines, live radar, and squad chat in one app.",
+  "start_url": "/home",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
   "icons": [

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { SquadChat } from "@/components/quorum/SquadChat";
@@ -16,7 +17,11 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
   const [open, setOpen] = useState(false);
   const ride = useServerFn(postRideUpdate);
 
-  return (
+  // Portaled to <body>: must stay pinned to the real viewport even though
+  // route content (its natural DOM ancestor) sits inside RouteTransition's
+  // animated wrapper, whose transform would otherwise become the
+  // containing block for our `fixed` positioning.
+  return createPortal(
     <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] right-4 z-[60] flex flex-col items-end gap-2 md:bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
       {open ? (
         <div className="w-[min(92vw,380px)] overflow-hidden rounded-3xl">
@@ -55,6 +60,7 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
       >
         {open ? "Close chat ✕" : "Squad Chat 💬"}
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }

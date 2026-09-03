@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BRAND } from "@/lib/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "@/lib/theme";
+import { registerServiceWorker } from "@/lib/quorum/pwa";
 
 function NotFoundComponent() {
   return (
@@ -141,11 +142,20 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Outlet />
-        <Toaster position="top-center" richColors closeButton />
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          offset={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+        />
       </ThemeProvider>
     </QueryClientProvider>
   );

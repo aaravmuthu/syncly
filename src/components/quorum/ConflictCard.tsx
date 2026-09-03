@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "./ui";
 import { QuickResponse } from "./QuickResponse";
 import { castResolutionVote } from "@/lib/quorum/conflict.functions";
+import { haptic } from "@/lib/quorum/haptics";
 
 export type ConflictAlt = {
   id: string;
@@ -43,6 +44,7 @@ export function ConflictCard({
     mutationFn: useServerFn(castResolutionVote),
     onSuccess: (raw) => {
       const r = raw as { locked: boolean; votes: number; needed: number };
+      haptic(r.locked ? "success" : "select");
       void qc.invalidateQueries({ queryKey: ["dashboard"] });
       void qc.invalidateQueries({ queryKey: ["plan", planId] });
       toast.success(r.locked ? "Locked in for everyone" : "Vote counted", {
@@ -51,10 +53,12 @@ export function ConflictCard({
           : `${r.votes}/${r.needed} needed for the group to agree.`,
       });
     },
-    onError: (e: unknown) =>
+    onError: (e: unknown) => {
+      haptic("warn");
       toast.error("Could not record that vote", {
         description: e instanceof Error ? e.message : "Try again.",
-      }),
+      });
+    },
   });
 
   return (

@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { Modal } from "./Modal";
 import { CONFLICT_REASONS, confirmAttendance, flagConflict } from "@/lib/quorum/conflict.functions";
+import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 
 const REASON_ICONS: Record<string, LucideIcon> = {
@@ -88,10 +89,12 @@ export function QuickResponse({
     mutationFn: useServerFn(confirmAttendance),
     onMutate: () => optimistic(true),
     onSuccess: () => {
+      haptic("success");
       refresh();
       toast.success("You're in", { description: "The group can see you're confirmed." });
     },
     onError: (e: unknown) => {
+      haptic("warn");
       setLocal(null);
       toast.error("Couldn't confirm", {
         description: e instanceof Error ? e.message : "Try again.",
@@ -107,6 +110,7 @@ export function QuickResponse({
     },
     onSuccess: (raw) => {
       const r = raw as { alternatives: number; kind: string };
+      haptic("select");
       refresh();
       toast.success("Got it — the host knows", {
         description:
@@ -120,6 +124,7 @@ export function QuickResponse({
       });
     },
     onError: (e: unknown) => {
+      haptic("warn");
       setLocal(null);
       toast.error("Couldn't send that", {
         description: e instanceof Error ? e.message : "Try again.",

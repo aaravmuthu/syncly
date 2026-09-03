@@ -35,6 +35,8 @@ import { directionsUrl } from "@/lib/quorum/vibes";
 import { toast } from "sonner";
 import { VenueDetailModal, type VenueDetail } from "@/components/quorum/VenueDetailModal";
 import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
+import { haptic } from "@/lib/quorum/haptics";
+import { SwipeBack } from "@/components/quorum/interactions";
 
 export const Route = createFileRoute("/_authenticated/plans/$planId")({
   head: () => ({
@@ -142,11 +144,19 @@ function PlanPage() {
 
   const vote = useMutation({
     mutationFn: useServerFn(castVote),
-    onSuccess: () => void invalidate(),
+    onSuccess: () => {
+      haptic("select");
+      void invalidate();
+    },
+    onError: () => haptic("warn"),
   });
   const finalize = useMutation({
     mutationFn: useServerFn(finalizePlan),
-    onSuccess: () => void invalidate(),
+    onSuccess: () => {
+      haptic("success");
+      void invalidate();
+    },
+    onError: () => haptic("warn"),
   });
   const askParent = useMutation({
     mutationFn: useServerFn(requestParentApproval),
@@ -216,6 +226,7 @@ function PlanPage() {
       title={data.plan.title}
       subtitle={`${meta.emoji} ${meta.label} · ${responded} of ${total} have answered privately`}
     >
+      <SwipeBack>
       {selectedRec ? (
         <FinalizedPlanHub
           planTitle={data.plan.title}
@@ -757,6 +768,7 @@ function PlanPage() {
 
       <VenueDetailModal venue={venueDetail} onClose={() => setVenueDetail(null)} />
       <ChatDrawer groupId={data.plan.group_id} planId={planId} />
+      </SwipeBack>
     </AppShell>
   );
 }

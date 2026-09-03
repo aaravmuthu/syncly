@@ -18,6 +18,8 @@ import {
   removeSafeZone,
 } from "@/lib/quorum/guardian.functions";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
+import { PullToRefresh } from "@/components/quorum/interactions";
+import { haptic } from "@/lib/quorum/haptics";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { cn } from "@/lib/utils";
 
@@ -74,6 +76,7 @@ function GuardianHub() {
   const link = useMutation({
     mutationFn: useServerFn(linkTeen),
     onSuccess: (r: { teenName: string }) => {
+      haptic("success");
       setCode("");
       void navigate({ search: {}, replace: true });
       void qc.invalidateQueries({ queryKey: ["guardian-hub"] });
@@ -81,10 +84,12 @@ function GuardianHub() {
         description: "Their live radar is now on your family hub.",
       });
     },
-    onError: (e: unknown) =>
+    onError: (e: unknown) => {
+      haptic("warn");
       toast.error("Couldn't link that code", {
         description: e instanceof Error ? e.message : "Try again.",
-      }),
+      });
+    },
   });
   const readAlerts = useMutation({ mutationFn: useServerFn(markAlertsRead) });
 
@@ -168,6 +173,7 @@ function GuardianHub() {
           <GuardianInvite />
         </div>
       ) : (
+        <PullToRefresh onRefresh={() => hub.refetch()}>
         <div className="space-y-4">
           <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
             {teens.map((t) => (
@@ -243,6 +249,7 @@ function GuardianHub() {
             </Card>
           ) : null}
         </div>
+        </PullToRefresh>
       )}
     </GuardianShell>
   );
@@ -452,36 +459,39 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   loading={decide.isPending}
-                  onClick={() =>
+                  onClick={() => {
+                    haptic("success");
                     decide.mutate({
                       data: { approvalId: p.approval!.id, decision: "approved" },
-                    })
-                  }
+                    });
+                  }}
                 >
                   Approve
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() =>
+                  onClick={() => {
+                    haptic("success");
                     decide.mutate({
                       data: {
                         approvalId: p.approval!.id,
                         decision: "approved_with_condition",
                         condition: "Home by curfew, text me when you leave",
                       },
-                    })
-                  }
+                    });
+                  }}
                 >
                   Approve with condition
                 </Button>
                 <Button
                   variant="ghost"
                   className="text-destructive"
-                  onClick={() =>
+                  onClick={() => {
+                    haptic("warn");
                     decide.mutate({
                       data: { approvalId: p.approval!.id, decision: "declined" },
-                    })
-                  }
+                    });
+                  }}
                 >
                   Not this time
                 </Button>
