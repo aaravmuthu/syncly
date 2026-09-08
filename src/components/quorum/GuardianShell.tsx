@@ -44,7 +44,10 @@ export function GuardianShell({
         data-vaul-drawer-wrapper
         className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+        {/* No backdrop-blur: this header stays on screen through every page
+            transition, and blurring animating content behind it forces a
+            recomposite every frame regardless of network conditions. */}
+        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 pt-[env(safe-area-inset-top)]">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
             <Link to="/guardian" className="flex items-center gap-2">
               <Wordmark className="h-6" />
@@ -101,7 +104,8 @@ export function GuardianShell({
           <PageTransition>{children}</PageTransition>
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+        {/* Same reasoning as the header above. */}
+        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] md:hidden">
           <div className="mx-auto flex max-w-xs items-stretch justify-between px-2 py-1.5">
             {NAV.map((n) => {
               const active = pathname.startsWith(n.to);
