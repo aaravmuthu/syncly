@@ -66,6 +66,33 @@ export type Database = {
           },
         ]
       }
+      ai_quota_events: {
+        Row: {
+          created_at: string
+          error_type: string
+          feature: string
+          id: string
+          message: string | null
+          model: string
+        }
+        Insert: {
+          created_at?: string
+          error_type: string
+          feature: string
+          id?: string
+          message?: string | null
+          model: string
+        }
+        Update: {
+          created_at?: string
+          error_type?: string
+          feature?: string
+          id?: string
+          message?: string | null
+          model?: string
+        }
+        Relationships: []
+      }
       checkin_requests: {
         Row: {
           created_at: string

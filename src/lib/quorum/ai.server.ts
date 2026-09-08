@@ -3,7 +3,7 @@
 // deterministic, non-AI result instead of an error.
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
-import { lovableAiModel } from "@/lib/ai-gateway.server";
+import { lovableAiModel, recordAiFailure } from "@/lib/ai-gateway.server";
 import { CATEGORIES, type PlanCategory, type ScoreBreakdown } from "./types";
 import type { Forecast } from "./weather";
 
@@ -149,7 +149,8 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
     try {
       const { text } = await generateText({ model: lovableAiModel(), prompt: instructions });
       return coerceDraft(extractJson(text), prompt);
-    } catch {
+    } catch (retryError) {
+      void recordAiFailure("magic_plan_draft", retryError);
       return heuristicDraft(prompt);
     }
   }
@@ -244,6 +245,7 @@ export async function summarizeCompromises(facts: CompromiseFacts[]): Promise<Re
       const items = Array.isArray(raw) ? raw : (raw?.items ?? null);
       if (Array.isArray(items)) return mergeSummaries(fallback, items);
     }
+    void recordAiFailure("compromise_summaries", error);
     return fallback;
   }
 }
@@ -305,7 +307,8 @@ export async function writePlanBPitch(input: {
       ].join("\n"),
     });
     return output.pitch.trim() || fallback;
-  } catch {
+  } catch (error) {
+    void recordAiFailure("plan_b_pitch", error);
     return fallback;
   }
 }
@@ -444,7 +447,8 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
       detail: output.detail.trim() || fallback.detail,
       suggestedStart: /^\d{2}:\d{2}$/.test(start ?? "") ? start : fallback.suggestedStart,
     };
-  } catch {
+  } catch (error) {
+    void recordAiFailure("ai_compromise", error);
     return fallback;
   }
 }

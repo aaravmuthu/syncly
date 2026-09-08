@@ -1,6 +1,7 @@
 // Server-only. Lovable AI Gateway provider for the AI SDK.
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { APICallError, RetryError } from "ai";
 
 const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
 
@@ -94,4 +95,41 @@ export function lovableAiModel() {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured");
   return createLovableAiGatewayProvider(key)(SYNCLY_AI_MODEL);
+}
+
+/** True when a generateText/generateObject failure was specifically a rate/quota limit (HTTP 429), not some other failure. */
+function isQuotaError(error: unknown): boolean {
+  const candidates: unknown[] = [error];
+  if (RetryError.isInstance(error)) candidates.push(...error.errors);
+  return candidates.some(
+    (e) =>
+      APICallError.isInstance(e) &&
+      (e.statusCode === 429 || /quota|resource_exhausted/i.test(e.message)),
+  );
+}
+
+/**
+ * Every AI feature already has a deterministic fallback for when the model
+ * is unavailable, which is exactly why quota exhaustion was previously
+ * invisible -- the app just quietly degraded. This makes that visible: logs
+ * to the server console immediately, and persists a row to
+ * `ai_quota_events` so real-world frequency can be queried later instead of
+ * guessed at. Never throws -- a logging failure must never break the
+ * caller's own fallback path.
+ */
+export async function recordAiFailure(feature: string, error: unknown): Promise<void> {
+  const quota = isQuotaError(error);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`[ai:${feature}] ${quota ? "quota exceeded" : "call failed"}: ${message.slice(0, 300)}`);
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("ai_quota_events").insert({
+      feature,
+      model: GEMINI_MODEL,
+      error_type: quota ? "quota" : "other",
+      message: message.slice(0, 500),
+    });
+  } catch {
+    /* logging is best-effort only */
+  }
 }

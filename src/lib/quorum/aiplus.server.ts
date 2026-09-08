@@ -3,7 +3,7 @@
 // Every helper degrades to a deterministic result when the model is unavailable.
 import { generateText, NoObjectGeneratedError, Output, tool } from "ai";
 import { z } from "zod";
-import { lovableAiModel } from "@/lib/ai-gateway.server";
+import { lovableAiModel, recordAiFailure } from "@/lib/ai-gateway.server";
 
 /** One chat turn exchanged with the concierge. */
 export type ConciergeTurn = { role: "user" | "assistant"; content: string };
@@ -162,7 +162,8 @@ export async function conciergeReply(
     const answer = result.text?.trim() || (action ? actionIntro(action) : "");
     if (!answer) return { answer: CONCIERGE_FALLBACK };
     return action ? { answer, action } : { answer };
-  } catch {
+  } catch (error) {
+    void recordAiFailure("plan_concierge", error);
     return { answer: CONCIERGE_FALLBACK };
   }
 }
@@ -244,6 +245,7 @@ export async function writeSquadDigest(facts: {
         };
       }
     }
+    void recordAiFailure("squad_digest", error);
     /* fall through */
   }
 
@@ -326,6 +328,7 @@ export async function rankByVibe(
         .slice(0, 5);
       if (ranks.length) return { ranks, aiGenerated: true };
     }
+    void recordAiFailure("vibe_search", error);
     /* fall through */
   }
   return {
@@ -418,6 +421,7 @@ export async function writeGuardianSummary(facts: {
         };
       }
     }
+    void recordAiFailure("guardian_summary", error);
     /* fall through */
   }
   return fallback;
@@ -488,6 +492,7 @@ export async function synclyReply(
           : { answer: parsed.answer.trim() };
       }
     }
+    void recordAiFailure("ask_syncly", error);
     return { answer: SYNCLY_FALLBACK };
   }
 }
