@@ -35,6 +35,9 @@ import { estCostLabel } from "@/lib/quorum/estcost";
 
 
 export const Route = createFileRoute("/_authenticated/_app/plans/")({
+  loader: ({ context }) => {
+    void context.queryClient.ensureQueryData({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
+  },
   head: () => ({
     meta: [
       { title: "All plans — Syncly" },

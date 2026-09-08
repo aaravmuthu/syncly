@@ -23,6 +23,13 @@ export const Route = createFileRoute("/_authenticated/_app/messages")({
     ...(typeof s.thread === "string" ? { thread: s.thread } : {}),
     ...(typeof s.group === "string" ? { group: s.group } : {}),
   }),
+  loader: ({ context }) => {
+    void context.queryClient.ensureQueryData({ queryKey: ["dm-inbox"], queryFn: () => listInbox() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["dm-contacts"],
+      queryFn: () => listContacts(),
+    });
+  },
   head: () => ({
     meta: [
       { title: "Messages — Syncly" },

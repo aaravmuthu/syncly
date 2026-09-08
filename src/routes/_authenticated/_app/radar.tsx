@@ -38,6 +38,17 @@ import { cn } from "@/lib/utils";
 
 
 export const Route = createFileRoute("/_authenticated/_app/radar")({
+  loader: ({ context }) => {
+    void context.queryClient.ensureQueryData({
+      queryKey: ["guardian-hub"],
+      queryFn: () => getGuardianHub(),
+    });
+    void context.queryClient.ensureQueryData({ queryKey: ["my-radar"], queryFn: () => getMyRadar() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["friend-pins"],
+      queryFn: () => getFriendPins(),
+    });
+  },
   head: () => ({
     meta: [
       { title: "Live radar — Syncly" },

@@ -40,6 +40,12 @@ import { haptic } from "@/lib/quorum/haptics";
 import { SwipeBack } from "@/components/quorum/interactions";
 
 export const Route = createFileRoute("/_authenticated/_app/plans/$planId")({
+  loader: ({ context, params }) => {
+    void context.queryClient.ensureQueryData({
+      queryKey: ["plan", params.planId],
+      queryFn: () => getPlan({ data: { planId: params.planId } }),
+    });
+  },
   head: () => ({
     meta: [
       { title: "Plan — Syncly" },

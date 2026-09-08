@@ -16,6 +16,12 @@ import { categoryMeta } from "@/lib/quorum/types";
 import { estCostLabel } from "@/lib/quorum/estcost";
 
 export const Route = createFileRoute("/_authenticated/_app/groups/$groupId")({
+  loader: ({ context, params }) => {
+    void context.queryClient.ensureQueryData({
+      queryKey: ["group", params.groupId],
+      queryFn: () => getGroup({ data: { groupId: params.groupId } }),
+    });
+  },
   head: () => ({
     meta: [
       { title: "Group — Syncly" },

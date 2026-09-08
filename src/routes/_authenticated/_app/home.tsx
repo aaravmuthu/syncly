@@ -35,6 +35,16 @@ import { takePendingInvite } from "@/lib/quorum/invite";
 import { getMe, getDashboard, listGroups } from "@/lib/quorum/plan.functions";
 
 export const Route = createFileRoute("/_authenticated/_app/home")({
+  // Fire-and-forget: with defaultPreload "intent" on the router, this starts
+  // warming the same query cache HomePage reads from as soon as a Link to
+  // here is touched/hovered, not after the route has already switched and
+  // the component mounted. Not awaited, so it never blocks navigation --
+  // useQuery below just picks up whatever's already in flight or cached.
+  loader: ({ context }) => {
+    void context.queryClient.ensureQueryData({ queryKey: ["me"], queryFn: () => getMe() });
+    void context.queryClient.ensureQueryData({ queryKey: ["groups"], queryFn: () => listGroups() });
+    void context.queryClient.ensureQueryData({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
+  },
   head: () => ({
     meta: [
       { title: "Your week — Syncly" },

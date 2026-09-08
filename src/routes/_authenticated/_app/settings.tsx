@@ -35,6 +35,9 @@ import { AddressPicker } from "@/components/quorum/AddressPicker";
 import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard";
 
 export const Route = createFileRoute("/_authenticated/_app/settings")({
+  loader: ({ context }) => {
+    void context.queryClient.ensureQueryData({ queryKey: ["me"], queryFn: () => getMe() });
+  },
   head: () => ({
     meta: [
       { title: "Your profile — Syncly" },

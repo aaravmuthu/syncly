@@ -16,6 +16,9 @@ import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_app/groups/")({
+  loader: ({ context }) => {
+    void context.queryClient.ensureQueryData({ queryKey: ["groups"], queryFn: () => listGroups() });
+  },
   head: () => ({
     meta: [
       { title: "Squad hub — Syncly" },
