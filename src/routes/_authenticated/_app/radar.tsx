@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
   BatteryFull,
@@ -148,107 +148,118 @@ function RadarPage() {
   const teens = (hub.data?.teens ?? []) as TeenCard[];
   const loading = hub.isLoading || mine.isLoading || friendPins.isLoading;
 
-  const people: MapPerson[] = [];
-  const zones: MapZone[] = [];
-  const places: MapPlace[] = [];
+  // Memoized on the underlying query data (not on `teens`, which is a fresh
+  // array every render): these three arrays are passed straight into the
+  // Mapbox map, whose marker effect keys off their identity. Rebuilding them
+  // on every render -- which happens every 45-60s from this page's polling
+  // queries alone -- was tearing down and recreating every marker and
+  // re-running fitBounds() (an animated camera recenter) each time, whether
+  // or not anything actually changed. That's what made Radar feel laggy.
+  const { people, zones, places, hasPins } = useMemo(() => {
+    const teensList = (hub.data?.teens ?? []) as TeenCard[];
+    const people: MapPerson[] = [];
+    const zones: MapZone[] = [];
+    const places: MapPlace[] = [];
 
-  // Guardian links imply a location share too, so a linked teen can show up
-  // in both feeds — the teen card below already covers them.
-  const teenIds = new Set(teens.map((t) => t.id));
-  for (const p of friendPins.data ?? []) {
-    if (teenIds.has(p.profileId)) continue;
-    people.push({
-      id: p.profileId,
-      name: alias(p.profileId, p.name),
-      initials: initials(alias(p.profileId, p.name)),
-      avatarUrl: p.avatarUrl,
-      lat: p.lat,
-      lon: p.lon,
-      motion: p.motion,
-      batteryPct: p.batteryPct,
-      address: p.address,
-      etaMinutes: p.driveMinutes,
-      lastSeen: p.lastSeen,
-      state: p.atHome ? "arrived" : /driv|walk/i.test(p.motion ?? "") ? "enroute" : "idle",
-    });
-  }
-
-  for (const t of teens) {
-    if (t.location) {
+    // Guardian links imply a location share too, so a linked teen can show up
+    // in both feeds — the teen card below already covers them.
+    const teenIds = new Set(teensList.map((t) => t.id));
+    for (const p of friendPins.data ?? []) {
+      if (teenIds.has(p.profileId)) continue;
       people.push({
-        id: t.id,
-        name: t.name,
-        initials: initials(t.name),
-        avatarUrl: t.avatar_url,
-        lat: t.location.lat,
-        lon: t.location.lon,
-        batteryPct: t.location.battery_pct,
-        motion: t.status.label,
-        state: /arriv|home|at /i.test(t.status.label)
-          ? "arrived"
-          : /driv|walk|way|mov/i.test(t.status.label)
-            ? "enroute"
-            : "idle",
-        lastSeen: t.location.at,
+        id: p.profileId,
+        name: alias(p.profileId, p.name),
+        initials: initials(alias(p.profileId, p.name)),
+        avatarUrl: p.avatarUrl,
+        lat: p.lat,
+        lon: p.lon,
+        motion: p.motion,
+        batteryPct: p.batteryPct,
+        address: p.address,
+        etaMinutes: p.driveMinutes,
+        lastSeen: p.lastSeen,
+        state: p.atHome ? "arrived" : /driv|walk/i.test(p.motion ?? "") ? "enroute" : "idle",
       });
     }
-    for (const z of t.zones) {
-      zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: z.radius_m });
+
+    for (const t of teensList) {
+      if (t.location) {
+        people.push({
+          id: t.id,
+          name: t.name,
+          initials: initials(t.name),
+          avatarUrl: t.avatar_url,
+          lat: t.location.lat,
+          lon: t.location.lon,
+          batteryPct: t.location.battery_pct,
+          motion: t.status.label,
+          state: /arriv|home|at /i.test(t.status.label)
+            ? "arrived"
+            : /driv|walk|way|mov/i.test(t.status.label)
+              ? "enroute"
+              : "idle",
+          lastSeen: t.location.at,
+        });
+      }
+      for (const z of t.zones) {
+        zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: z.radius_m });
+      }
+      const plan = t.plans.find((p) => p.lat != null && p.lon != null);
+      if (plan?.lat != null && plan.lon != null) {
+        places.push({
+          id: plan.id,
+          title: plan.venue ?? plan.title,
+          subtitle: plan.group_name,
+          lat: plan.lat,
+          lon: plan.lon,
+          active: true,
+        });
+      }
     }
-    const plan = t.plans.find((p) => p.lat != null && p.lon != null);
-    if (plan?.lat != null && plan.lon != null) {
-      places.push({
-        id: plan.id,
-        title: plan.venue ?? plan.title,
-        subtitle: plan.group_name,
-        lat: plan.lat,
-        lon: plan.lon,
+
+    const me = mine.data;
+    if (me?.lastPing) {
+      people.push({
+        id: "me",
+        name: me.me.name,
+        initials: initials(me.me.name),
+        avatarUrl: me.me.avatar_url,
+        lat: me.lastPing.lat,
+        lon: me.lastPing.lon,
+        batteryPct: me.lastPing.battery_pct,
+        motion: me.lastPing.status_label ?? "Sharing",
+        state: /driv|walk/i.test(me.lastPing.status_label ?? "") ? "enroute" : "idle",
+        lastSeen: me.lastPing.created_at,
+      });
+    }
+    for (const z of me?.zones ?? []) {
+      zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: 200 });
+    }
+
+    // A chat card can hand us a pin to fly to (?lat&lon&label).
+    if (focus.lat != null && focus.lon != null) {
+      places.unshift({
+        id: "chat-focus",
+        title: focus.label ?? "Shared pin",
+        subtitle: "Shared in chat",
+        lat: focus.lat,
+        lon: focus.lon,
         active: true,
       });
+      people.unshift({
+        id: "chat-focus-pin",
+        name: focus.label ?? "Shared pin",
+        initials: "📍",
+        lat: focus.lat,
+        lon: focus.lon,
+        motion: "Shared in chat",
+        state: "arrived",
+      });
     }
-  }
 
-  const me = mine.data;
-  if (me?.lastPing) {
-    people.push({
-      id: "me",
-      name: me.me.name,
-      initials: initials(me.me.name),
-      avatarUrl: me.me.avatar_url,
-      lat: me.lastPing.lat,
-      lon: me.lastPing.lon,
-      batteryPct: me.lastPing.battery_pct,
-      motion: me.lastPing.status_label ?? "Sharing",
-      state: /driv|walk/i.test(me.lastPing.status_label ?? "") ? "enroute" : "idle",
-      lastSeen: me.lastPing.created_at,
-    });
-  }
-  for (const z of me?.zones ?? []) {
-    zones.push({ id: z.id, label: z.label, lat: z.lat, lon: z.lon, radiusM: 200 });
-  }
-
-  // A chat card can hand us a pin to fly to (?lat&lon&label).
-  if (focus.lat != null && focus.lon != null) {
-    places.unshift({
-      id: "chat-focus",
-      title: focus.label ?? "Shared pin",
-      subtitle: "Shared in chat",
-      lat: focus.lat,
-      lon: focus.lon,
-      active: true,
-    });
-    people.unshift({
-      id: "chat-focus-pin",
-      name: focus.label ?? "Shared pin",
-      initials: "📍",
-      lat: focus.lat,
-      lon: focus.lon,
-      motion: "Shared in chat",
-      state: "arrived",
-    });
-  }
-
-  const hasPins = people.length > 0 || zones.length > 0;
+    return { people, zones, places, hasPins: people.length > 0 || zones.length > 0 };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hub.data, mine.data, friendPins.data, alias, focus.lat, focus.lon, focus.label]);
 
 
   return (

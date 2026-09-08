@@ -197,6 +197,33 @@ function PlanPage() {
   // Must stay above the loading guard — hooks cannot run conditionally.
   const summaries = useCompromiseSummaries(planId, (data?.recommendations.length ?? 0) > 0);
 
+  // Memoized for the same reason as Radar's pin arrays: VenueMap's marker
+  // effect keys off this array's identity and tears down/rebuilds every
+  // marker when it changes, so an inline .filter().map() here would rebuild
+  // the whole venue map on every unrelated re-render of this page (there are
+  // several pieces of local state above that do just that).
+  const venueMapVenues = useMemo(() => {
+    const recs = data?.recommendations ?? [];
+    const selectedId = data?.plan.selected_recommendation_id;
+    const category = data?.plan.category;
+    return recs
+      .filter(
+        (r): r is typeof r & { lat: number; lon: number } =>
+          typeof r.lat === "number" && typeof r.lon === "number",
+      )
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        lat: r.lat,
+        lon: r.lon,
+        rank: r.rank,
+        selected: selectedId === r.id,
+        kind:
+          ((r.breakdown ?? {}) as unknown as ScoreBreakdown).venue?.kind ??
+          (category === "dinner" ? "food" : "activity"),
+      }));
+  }, [data?.recommendations, data?.plan.selected_recommendation_id, data?.plan.category]);
+
   if (q.isLoading || !data || !meta) {
     return (
       <>
@@ -383,24 +410,7 @@ function PlanPage() {
             isHost={data.plan.created_by === data.meProfileId}
             enabled={data.recommendations.length > 0}
           />
-          <VenueMap
-            venues={data.recommendations
-              .filter(
-                (r): r is typeof r & { lat: number; lon: number } =>
-                  typeof r.lat === "number" && typeof r.lon === "number",
-              )
-              .map((r) => ({
-                id: r.id,
-                title: r.title,
-                lat: r.lat,
-                lon: r.lon,
-                rank: r.rank,
-                selected: selected === r.id,
-                kind:
-                  ((r.breakdown ?? {}) as unknown as ScoreBreakdown).venue?.kind ??
-                  (data.plan.category === "dinner" ? "food" : "activity"),
-              }))}
-          />
+          <VenueMap venues={venueMapVenues} />
           {data.recommendations.map((r) => {
             const b = (r.breakdown ?? {}) as unknown as ScoreBreakdown;
             const myVote = votes.find((v) => v.profile_id === data.meProfileId)?.recommendation_id;
