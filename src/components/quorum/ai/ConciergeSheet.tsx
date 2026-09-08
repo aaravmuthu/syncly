@@ -26,6 +26,9 @@ export function ConciergeSheet({ planId, planTitle }: { planId: string; planTitl
   const [turns, setTurns] = useState<ConciergeTurn[]>([]);
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
 
   const askFn = useServerFn(askPlanConcierge);
   const ask = useMutation({
