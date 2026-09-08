@@ -69,12 +69,18 @@ export const SYNCLY_AI_MODEL = "google/gemini-3.6-flash";
  * tier daily request quota separately per model, and flash-lite's bucket is
  * meaningfully larger than flash's (confirmed directly against this API key
  * -- the full flash model hit its 20-requests/day cap during testing).
- * Every AI feature in this app already has a deterministic fallback for when
- * the model is unavailable for any reason, quota included, so this is a
- * capacity choice, not a correctness one -- confirmed tool-calling and
- * schema-validated structured output both still work correctly on this tier.
+ *
+ * Pinned to an explicit version (3.5) rather than the "flash-lite-latest"
+ * rolling alias, so behavior/quota-bucket identity doesn't silently shift
+ * whenever Google repoints "latest". gemini-2.5-flash-lite was tried first
+ * (a lower/older tier was the original ask) but this API key's project
+ * postdates its cutoff -- Google's own API rejects it outright with
+ * "no longer available to new users... use models/gemini-3.5-flash-lite" --
+ * so 3.5 is the actual lowest available lite tier here, not a choice made
+ * for capability. Confirmed tool-calling and schema-validated structured
+ * output both work correctly on it.
  */
-export const GEMINI_MODEL = "gemini-flash-lite-latest";
+export const GEMINI_MODEL = "gemini-3.5-flash-lite";
 
 /**
  * Primary AI model. Reads GEMINI_API_KEY at call time (never module scope) and
@@ -93,7 +99,14 @@ export function lovableAiModel() {
     return google(GEMINI_MODEL);
   }
   const key = process.env["LOVABLE_API_KEY"];
-  if (!key) throw new Error("AI is not configured");
+  if (!key) {
+    throw new Error(
+      "AI is not configured: neither GEMINI_API_KEY nor LOVABLE_API_KEY is set in this environment. " +
+        "A .env.local file with GEMINI_API_KEY only reaches local dev -- it's gitignored, so it never " +
+        "reaches a deployed build. Add the key as a secret in the deployment platform's own project " +
+        "settings (not just the local file) for it to work once published.",
+    );
+  }
   return createLovableAiGatewayProvider(key)(SYNCLY_AI_MODEL);
 }
 
