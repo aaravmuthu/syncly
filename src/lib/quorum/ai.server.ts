@@ -325,7 +325,9 @@ export type ConflictFacts = {
   tightestBudget: number | null;
   topCostMin: number | null;
   topCostMax: number | null;
-  voteSplit: { title: string; votes: number; id: string }[];
+  voteSplit: { title: string; votes: number; id: string; costMin: number | null; costMax: number | null }[];
+  /** Forecast for the top option's location/date, when available. */
+  weather: { summary: string; precipProbability: number | null; alert: boolean } | null;
   dietaryNeeds: string[];
   longestDriveMinutes: number | null;
   travelLimitMinutes: number | null;
@@ -407,9 +409,11 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
         "You resolve scheduling conflicts for a privacy-first group planning app.",
         "PRIVACY RULE: never name a person; talk about the group ('the earliest curfew in the group').",
         "Propose ONE concrete compromise that satisfies budget, curfew and travel limits together.",
+        "You're also given each option's cost range and votes together — weigh cost against how many",
+        "people already voted for it, not just vote count alone, and weigh the forecast (when given)",
+        "as a real reason to favor a different time or option, same as budget or curfew.",
         "headline: under 90 characters, action-first. detail: one sentence explaining the trade-off.",
         "suggested_start: 24h HH:MM start time, or null when the timing is already fine.",
-        'Reply with ONLY JSON: {"headline":string,"detail":string,"suggested_start":string|null}',
         "",
         JSON.stringify({
           plan: f.planTitle,
@@ -421,7 +425,12 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
           members_breaching_curfew: f.curfewBreachCount,
           tightest_budget_cap: f.tightestBudget,
           top_option_cost: [f.topCostMin, f.topCostMax],
-          vote_split: f.voteSplit.map((v) => ({ option: v.title, votes: v.votes })),
+          vote_split: f.voteSplit.map((v) => ({
+            option: v.title,
+            votes: v.votes,
+            cost: [v.costMin, v.costMax],
+          })),
+          forecast: f.weather,
           dietary_needs_in_group: f.dietaryNeeds,
           longest_drive_minutes: f.longestDriveMinutes,
           travel_limit_minutes: f.travelLimitMinutes,

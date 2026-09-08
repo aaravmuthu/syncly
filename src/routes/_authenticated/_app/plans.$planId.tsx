@@ -786,7 +786,12 @@ function PlanPage() {
       </section>
 
       <VenueDetailModal venue={venueDetail} onClose={() => setVenueDetail(null)} />
-      <ConciergeSheet planId={planId} planTitle={data.plan.title} />
+      <ConciergeSheet
+        planId={planId}
+        planTitle={data.plan.title}
+        groupId={data.plan.group_id}
+        isHost={data.plan.created_by === data.meProfileId}
+      />
       <ChatDrawer groupId={data.plan.group_id} planId={planId} />
       </SwipeBack>
     </>

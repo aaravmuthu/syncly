@@ -135,6 +135,20 @@ export async function buildConflictFacts(planId: string) {
   const ctx = await loadPlanContext(planId);
   if (!ctx.plan) return null;
 
+  const top0 = ctx.recs[0] as { lat?: number | null; lon?: number | null } | undefined;
+  let weather: { summary: string; precipProbability: number | null; alert: boolean } | null = null;
+  if (typeof top0?.lat === "number" && typeof top0?.lon === "number") {
+    const { fetchForecast } = await import("./weather.server");
+    const forecast = await fetchForecast(top0.lat, top0.lon, ctx.plan.window_start);
+    if (forecast) {
+      weather = {
+        summary: `${forecast.label}, ${forecast.tempMaxF}°/${forecast.tempMinF}°F`,
+        precipProbability: forecast.precipProbability,
+        alert: forecast.alert,
+      };
+    }
+  }
+
   const { data: votes } = await supabaseAdmin
     .from("votes")
     .select("recommendation_id")
@@ -178,7 +192,10 @@ export async function buildConflictFacts(planId: string) {
       id: r.id,
       title: r.title,
       votes: (votes ?? []).filter((v) => v.recommendation_id === r.id).length,
+      costMin: (r as { cost_min?: number | null }).cost_min ?? null,
+      costMax: (r as { cost_max?: number | null }).cost_max ?? null,
     })),
+    weather,
     dietaryNeeds: ctx.dietaryNeeds,
     longestDriveMinutes: longestDrive,
     travelLimitMinutes: ctx.tightestTravelMinutes,

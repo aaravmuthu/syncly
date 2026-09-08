@@ -1,40 +1,58 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AnimatePresence, motion } from "motion/react";
-import { Send, Sparkles } from "lucide-react";
+import { motion } from "motion/react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { Modal } from "@/components/quorum/Modal";
-import { Button, Spinner } from "@/components/quorum/ui";
-import { askPlanConcierge, type ConciergeTurn } from "@/lib/quorum/aiplus.functions";
+import { Button, Card, Pill } from "@/components/quorum/ui";
+import {
+  askPlanConcierge,
+  type ConciergeAction,
+  type ConciergeTurn,
+} from "@/lib/quorum/aiplus.functions";
+import { castVote } from "@/lib/quorum/plan.functions";
+import { applyAiCompromise } from "@/lib/quorum/ai.functions";
+import { sendMessage } from "@/lib/quorum/chat.functions";
+import { ChatSheetShell } from "./ChatSheetShell";
 
 const STARTERS = [
   "Which option works best for everyone?",
   "What will this cost each of us?",
   "What time should we actually meet?",
-  "Any backup if the weather turns?",
+  "Vote for the top option for me",
 ];
+
+type Turn = ConciergeTurn & { action?: ConciergeAction; taken?: boolean };
 
 /**
  * Plan concierge: a conversational assistant that answers questions about one
- * plan using group-safe facts only (no member's private answers).
+ * plan using group-safe facts only (no member's private answers), and can
+ * propose one action per reply (vote, retime, lock in an option, nudge the
+ * group chat). The model only ever proposes -- an explicit tap here is what
+ * actually calls the same authorized mutation a manual button press would.
  */
-export function ConciergeSheet({ planId, planTitle }: { planId: string; planTitle: string }) {
+export function ConciergeSheet({
+  planId,
+  planTitle,
+  groupId,
+  isHost,
+}: {
+  planId: string;
+  planTitle: string;
+  groupId: string;
+  isHost: boolean;
+}) {
   const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [turns, setTurns] = useState<ConciergeTurn[]>([]);
-  const scroller = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [turns, setTurns] = useState<Turn[]>([]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-
+  const qc = useQueryClient();
   const askFn = useServerFn(askPlanConcierge);
   const ask = useMutation({
     mutationFn: (question: string) => askFn({ data: { planId, question, history: turns } }),
-    onSuccess: (r: { answer: string }) =>
-      setTurns((prev) => [...prev, { role: "assistant", content: r.answer }]),
+    onSuccess: (r) => setTurns((prev) => [...prev, { role: "assistant", content: r.answer, action: r.action }]),
     onError: (e: unknown) => {
       setTurns((prev) => prev.slice(0, -1));
       toast.error("The concierge couldn't answer", {
@@ -43,20 +61,50 @@ export function ConciergeSheet({ planId, planTitle }: { planId: string; planTitl
     },
   });
 
-  useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
-  }, [open]);
-  useEffect(() => {
-    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [turns, ask.isPending]);
+  const runVote = useServerFn(castVote);
+  const runCompromise = useServerFn(applyAiCompromise);
+  const runNudge = useServerFn(sendMessage);
+  const [actingOn, setActingOn] = useState<number | null>(null);
+
+  const confirmAction = async (index: number, action: ConciergeAction) => {
+    setActingOn(index);
+    try {
+      switch (action.type) {
+        case "cast_vote":
+          await runVote({ data: { planId, recommendationId: action.recommendationId } });
+          toast.success(`Voted for ${action.recommendationTitle}`);
+          void qc.invalidateQueries({ queryKey: ["plan", planId] });
+          break;
+        case "change_time":
+          await runCompromise({ data: { planId, startTime: action.newStartTime } });
+          toast.success(`Start time changed to ${action.newStartTime}`);
+          void qc.invalidateQueries({ queryKey: ["plan", planId] });
+          break;
+        case "select_option":
+          await runCompromise({ data: { planId, recommendationId: action.recommendationId } });
+          toast.success(`${action.recommendationTitle} locked in`, {
+            description: "Everyone has been notified.",
+          });
+          void qc.invalidateQueries({ queryKey: ["plan", planId] });
+          break;
+        case "send_nudge":
+          await runNudge({ data: { groupId, planId, content: action.message } });
+          toast.success("Sent to the group chat");
+          break;
+      }
+      setTurns((prev) => prev.map((t, i) => (i === index ? { ...t, taken: true } : t)));
+    } catch (e) {
+      toast.error("Couldn't do that", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      });
+    } finally {
+      setActingOn(null);
+    }
+  };
 
   const send = (text: string) => {
-    const q = text.trim();
-    if (!q || ask.isPending) return;
-    setTurns((prev) => [...prev, { role: "user", content: q }]);
-    setInput("");
-    ask.mutate(q);
-    requestAnimationFrame(() => inputRef.current?.focus());
+    setTurns((prev) => [...prev, { role: "user", content: text }]);
+    ask.mutate(text);
   };
 
   const trigger = (
@@ -75,107 +123,85 @@ export function ConciergeSheet({ planId, planTitle }: { planId: string; planTitl
 
   return (
     <>
-      {/* Portaled to <body>: route content sits inside PageTransition's animated
-          wrapper, whose transform/will-change makes it the containing block for
-          position:fixed descendants. */}
+      {/* Portaled to <body>: route content sits inside an animated wrapper
+          elsewhere in the app whose transform/will-change would make it the
+          containing block for position:fixed descendants. */}
       {mounted ? createPortal(trigger, document.body) : null}
 
-
-      <Modal
+      <ChatSheetShell
         open={open}
         onClose={() => setOpen(false)}
         title="Plan concierge"
         description={planTitle}
-      >
-        <div ref={scroller} className="max-h-[46dvh] space-y-3 overflow-y-auto pr-1">
-          {turns.length === 0 ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Ask anything about this plan — options, cost, timing or backups.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {STARTERS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => send(s)}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <AnimatePresence initial={false}>
-            {turns.map((t, i) => (
-              <motion.div
-                key={`${i}-${t.role}`}
-                initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 360, damping: 28 }}
-                className={
-                  t.role === "user"
-                    ? "ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-primary-foreground"
-                    : "mr-auto max-w-[90%] rounded-2xl rounded-bl-md border border-border bg-secondary/60 px-3.5 py-2.5 text-sm"
-                }
-              >
-                <MessageBody text={t.content} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {ask.isPending ? (
-            <div className="mr-auto inline-flex items-center gap-2 rounded-2xl border border-border px-3.5 py-2.5 text-sm text-muted-foreground">
-              <Spinner className="h-3.5 w-3.5" /> Thinking…
-            </div>
-          ) : null}
-        </div>
-
-        <form
-          className="mt-4 flex items-center gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-        >
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask the concierge…"
-            aria-label="Ask the plan concierge"
-            className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 text-sm outline-none focus:border-primary/60"
-          />
-          <Button type="submit" disabled={!input.trim() || ask.isPending} className="h-11 px-4">
-            <Send className="h-4 w-4" aria-hidden />
-          </Button>
-        </form>
-      </Modal>
+        emptyHint="Ask anything about this plan — options, cost, timing or backups."
+        starters={STARTERS}
+        turns={turns}
+        pending={ask.isPending}
+        onSend={send}
+        renderTurnExtra={(t, i) =>
+          t.action ? (
+            <ActionCard
+              action={t.action}
+              isHost={isHost}
+              taken={Boolean(t.taken)}
+              pending={actingOn === i}
+              onConfirm={() => confirmAction(i, t.action!)}
+            />
+          ) : null
+        }
+      />
     </>
   );
 }
 
-/** Renders the model's light markdown (bullets + bold) without a dependency. */
-function MessageBody({ text }: { text: string }) {
-  const lines = text.split("\n").filter((l) => l.trim().length);
+const HOST_ONLY = new Set<ConciergeAction["type"]>(["change_time", "select_option"]);
+
+function ActionCard({
+  action,
+  isHost,
+  taken,
+  pending,
+  onConfirm,
+}: {
+  action: ConciergeAction;
+  isHost: boolean;
+  taken: boolean;
+  pending: boolean;
+  onConfirm: () => void;
+}) {
+  const needsHost = HOST_ONLY.has(action.type);
+  const blocked = needsHost && !isHost;
+
+  const label =
+    action.type === "cast_vote"
+      ? `Vote for ${action.recommendationTitle}`
+      : action.type === "change_time"
+        ? `Change start time to ${action.newStartTime}`
+        : action.type === "select_option"
+          ? `Lock in ${action.recommendationTitle}`
+          : "Send this to the group chat";
+
   return (
-    <div className="space-y-1.5 leading-relaxed">
-      {lines.map((line, i) => {
-        const bullet = /^\s*([-*•]|\d+\.)\s+/.test(line);
-        const clean = line.replace(/^\s*([-*•]|\d+\.)\s+/, "").replace(/\*\*/g, "");
-        return bullet ? (
-          <p key={i} className="flex gap-2">
-            <span aria-hidden className="text-primary">
-              •
-            </span>
-            <span>{clean}</span>
-          </p>
-        ) : (
-          <p key={i}>{clean}</p>
-        );
-      })}
-    </div>
+    <Card className="mr-auto mt-2 max-w-[90%] border-primary/40 bg-primary/5 p-3">
+      <div className="flex items-center gap-2">
+        <Pill tone="accent">💡 Suggested action</Pill>
+        {blocked ? <Pill tone="neutral">Host only</Pill> : null}
+      </div>
+      {action.type === "send_nudge" ? (
+        <p className="mt-2 text-sm italic text-muted-foreground">&ldquo;{action.message}&rdquo;</p>
+      ) : null}
+      {action.type === "change_time" && action.reason ? (
+        <p className="mt-1 text-xs text-muted-foreground">{action.reason}</p>
+      ) : null}
+      {taken ? (
+        <p className="mt-2 text-xs font-medium text-success">Done ✓</p>
+      ) : blocked ? (
+        <p className="mt-2 text-xs text-muted-foreground">Ask your host to do this.</p>
+      ) : (
+        <Button className="mt-2 h-9 px-3 text-xs" loading={pending} onClick={onConfirm}>
+          {label}
+        </Button>
+      )}
+    </Card>
   );
 }

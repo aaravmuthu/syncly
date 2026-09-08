@@ -1,14 +1,47 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { ConciergeTurn, GuardianAiSummary, SquadDigest, VibeRank } from "./aiplus.server";
+import type {
+  ConciergeAction,
+  ConciergeTurn,
+  GuardianAiSummary,
+  SquadDigest,
+  SynclyPlanRef,
+  VibeRank,
+} from "./aiplus.server";
 
-export type { ConciergeTurn, GuardianAiSummary, SquadDigest, VibeRank };
+export type { ConciergeAction, ConciergeTurn, GuardianAiSummary, SquadDigest, SynclyPlanRef, VibeRank };
+
+/**
+ * Human relative-day label ("today", "this weekend", "in 3 days", "Sep 12")
+ * computed server-side so the model reuses it verbatim instead of doing its
+ * own (often wrong) date arithmetic from a raw ISO timestamp.
+ */
+function relativeDay(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const days = Math.round((startOfDay(d).getTime() - startOfDay(new Date()).getTime()) / 86_400_000);
+  if (days < 0) return null;
+  if (days === 0) return "today";
+  if (days === 1) return "tomorrow";
+  if (days <= 6) {
+    const isWeekendDay = d.getDay() === 0 || d.getDay() === 6;
+    return isWeekendDay && days >= 2 ? "this weekend" : `in ${days} days`;
+  }
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 /* ------------------------------------------------------------------ */
 /* 1. Plan concierge chat                                              */
 /* ------------------------------------------------------------------ */
 
-export type ConciergeAnswer = { answer: string };
+export type ConciergeAnswer = {
+  answer: string;
+  action?: ConciergeAction;
+  isHost: boolean;
+  groupId: string;
+};
 
 /**
  * Answers a free-text question about one plan. Only group-safe aggregates are
@@ -25,25 +58,27 @@ export const askPlanConcierge = createServerFn({ method: "POST" })
     const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
 
-    const [{ data: plan }, { data: recs }, { data: parts }, { data: votes }] = await Promise.all([
-      supabase
-        .from("plans")
-        .select(
-          "id, title, category, status, window_start, window_end, est_cost_min, est_cost_max, notes, groups(name)",
-        )
-        .eq("id", data.planId)
-        .maybeSingle(),
-      supabase
-        .from("recommendations")
-        .select("id, title, subtitle, cost_min, cost_max, travel_minutes, address, tags, score, rank")
-        .eq("plan_id", data.planId)
-        .order("rank"),
-      supabase
-        .from("plan_participants")
-        .select("profile_id, responded, attending")
-        .eq("plan_id", data.planId),
-      supabase.from("votes").select("recommendation_id").eq("plan_id", data.planId),
-    ]);
+    const [{ data: plan }, { data: recs }, { data: parts }, { data: votes }, { data: isOwner }] =
+      await Promise.all([
+        supabase
+          .from("plans")
+          .select(
+            "id, title, category, status, window_start, window_end, est_cost_min, est_cost_max, notes, group_id, groups(name)",
+          )
+          .eq("id", data.planId)
+          .maybeSingle(),
+        supabase
+          .from("recommendations")
+          .select("id, title, subtitle, cost_min, cost_max, travel_minutes, address, tags, score, rank")
+          .eq("plan_id", data.planId)
+          .order("rank"),
+        supabase
+          .from("plan_participants")
+          .select("profile_id, responded, attending")
+          .eq("plan_id", data.planId),
+        supabase.from("votes").select("recommendation_id").eq("plan_id", data.planId),
+        supabase.rpc("is_plan_owner", { _plan_id: data.planId }),
+      ]);
     if (!plan) throw new Error("Plan not found");
 
     const voteCounts: Record<string, number> = {};
@@ -67,6 +102,7 @@ export const askPlanConcierge = createServerFn({ method: "POST" })
         going: (parts ?? []).filter((p) => p.attending === true).length,
       },
       options: (recs ?? []).map((r) => ({
+        id: r.id,
         title: r.title,
         subtitle: r.subtitle,
         cost: [r.cost_min, r.cost_max],
@@ -79,8 +115,13 @@ export const askPlanConcierge = createServerFn({ method: "POST" })
     };
 
     const { conciergeReply } = await import("./aiplus.server");
-    const answer = await conciergeReply(facts, data.history ?? [], question);
-    return { answer };
+    const { answer, action } = await conciergeReply(facts, data.history ?? [], question);
+    return {
+      answer,
+      ...(action ? { action } : {}),
+      isHost: Boolean(isOwner),
+      groupId: plan.group_id as string,
+    };
   });
 
 /* ------------------------------------------------------------------ */
@@ -142,7 +183,7 @@ export const getSquadDigest = createServerFn({ method: "GET" })
         .map((p) => ({
           title: p.title as string,
           group: groupOf(p),
-          when: (p.window_start as string | null) ?? null,
+          when: relativeDay((p.window_start as string | null) ?? null),
         })),
       recentlyDone: list
         .filter(
@@ -252,6 +293,7 @@ export const vibeSearchSpots = createServerFn({ method: "POST" })
         title: s.title,
         subtitle: s.subtitle,
         address: s.address ?? null,
+        openHours: s.openHours ?? null,
         cuisine: s.cuisine ?? null,
         priceLevel: s.priceLevel ?? "$$",
         kind: (s.kind ?? (data.kind === "activity" ? "activity" : "food")) as "food" | "activity",
@@ -271,6 +313,8 @@ export const vibeSearchSpots = createServerFn({ method: "POST" })
         key: p.key,
         title: p.title,
         subtitle: p.subtitle,
+        address: p.address,
+        openHours: p.openHours,
         cuisine: p.cuisine,
         priceLevel: p.priceLevel,
         costMin: p.costMin,
@@ -310,6 +354,23 @@ export const getGuardianAiSummary = createServerFn({ method: "POST" })
       return { summary: "No linked teens yet — share a sync code to get started.", watchouts: [], aiGenerated: false };
     }
 
+    // Delays/checkins have no plan_id — correlate by time proximity instead
+    // of leaving the model to guess which plan (if any) a given event
+    // belongs to. A generous 3h pad around the plan window covers early
+    // arrivals and running-late check-ins without matching an unrelated plan.
+    const PAD_MS = 3 * 60 * 60 * 1000;
+    const relatedPlanTitle = (atIso: string): string | null => {
+      const at = new Date(atIso).getTime();
+      if (Number.isNaN(at)) return null;
+      for (const p of teen.plans) {
+        if (!p.window_start) continue;
+        const start = new Date(p.window_start).getTime() - PAD_MS;
+        const end = (p.window_end ? new Date(p.window_end).getTime() : start) + PAD_MS;
+        if (at >= start && at <= end) return p.title;
+      }
+      return null;
+    };
+
     const facts = {
       teen: teen.name,
       status: teen.status.label,
@@ -327,12 +388,114 @@ export const getGuardianAiSummary = createServerFn({ method: "POST" })
           departed: Boolean(r.departed_at),
         })),
       })),
-      delays: teen.delays.slice(0, 3).map((d) => ({ reason: d.reason, minutes: d.minutes })),
-      checkins: teen.checkins
-        .slice(0, 3)
-        .map((c) => ({ status: c.status, place: c.place_label })),
+      delays: teen.delays.slice(0, 3).map((d) => ({
+        reason: d.reason,
+        minutes: d.minutes,
+        relatedPlan: relatedPlanTitle(d.created_at),
+      })),
+      checkins: teen.checkins.slice(0, 3).map((c) => ({
+        status: c.status,
+        place: c.place_label,
+        relatedPlan: relatedPlanTitle(c.created_at),
+      })),
     };
 
     const { writeGuardianSummary } = await import("./aiplus.server");
     return writeGuardianSummary(facts);
+  });
+
+/* ------------------------------------------------------------------ */
+/* 5. Ask Syncly — site-wide assistant                                 */
+/* ------------------------------------------------------------------ */
+
+export type SynclyAnswer = { answer: string; planRef?: SynclyPlanRef };
+
+const LIVE_STATUSES = new Set(["collecting", "recommending", "voting"]);
+
+/**
+ * Free-text question answered with a bird's-eye view across every group the
+ * member is in — not scoped to one plan like the Plan Concierge. Same
+ * group-safe-aggregates rule: never a member's private constraint answers.
+ */
+export const askSyncly = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { question: string; history?: ConciergeTurn[] }) => d)
+  .handler(async ({ data, context }): Promise<SynclyAnswer> => {
+    const question = data.question.trim();
+    if (!question) throw new Error("Ask a question first");
+
+    const { supabase } = context;
+    const { data: myId } = await supabase.rpc("my_profile_id");
+    const [{ data: plans }, { data: activity }] = await Promise.all([
+      supabase
+        .from("plans")
+        .select("id, title, status, window_start, groups(name)")
+        .order("created_at", { ascending: false })
+        .limit(25),
+      supabase
+        .from("activity_events")
+        .select("message, created_at")
+        .not("group_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(8),
+    ]);
+    const list = plans ?? [];
+    const ids = list.map((p) => p.id as string);
+
+    const [{ data: parts }, { data: votes }] = await Promise.all([
+      ids.length
+        ? supabase.from("plan_participants").select("plan_id, profile_id, responded").in("plan_id", ids)
+        : Promise.resolve({ data: [] as { plan_id: string; profile_id: string; responded: boolean }[] }),
+      ids.length
+        ? supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids)
+        : Promise.resolve({ data: [] as { plan_id: string; profile_id: string }[] }),
+    ]);
+
+    const groupOf = (p: (typeof list)[number]) =>
+      (p.groups as unknown as { name?: string } | null)?.name ?? "your squad";
+    const now = Date.now();
+
+    const activeByGroup = new Map<string, number>();
+    for (const p of list) {
+      if (LIVE_STATUSES.has(p.status as string)) {
+        const g = groupOf(p);
+        activeByGroup.set(g, (activeByGroup.get(g) ?? 0) + 1);
+      }
+    }
+
+    const facts = {
+      needsYou: list
+        .filter((p) => {
+          const mine = (parts ?? []).find((r) => r.plan_id === p.id && r.profile_id === (myId as string));
+          const voted = (votes ?? []).some((v) => v.plan_id === p.id && v.profile_id === (myId as string));
+          return (p.status === "collecting" && !mine?.responded) || (p.status === "voting" && !voted);
+        })
+        .slice(0, 5)
+        .map((p) => ({
+          plan_id: p.id,
+          title: p.title,
+          group: groupOf(p),
+          status: p.status,
+        })),
+      upcoming: list
+        .filter(
+          (p) => p.status === "finalized" && p.window_start && new Date(p.window_start as string).getTime() > now,
+        )
+        .slice(0, 5)
+        .map((p) => ({
+          plan_id: p.id,
+          title: p.title,
+          group: groupOf(p),
+          when: relativeDay((p.window_start as string | null) ?? null),
+        })),
+      groups: [...activeByGroup.entries()].map(([name, activePlans]) => ({ name, activePlans })),
+      recentActivity: (activity ?? []).map((a) => ({
+        message: a.message,
+        when: relativeDay(a.created_at as string),
+      })),
+    };
+
+    const { synclyReply } = await import("./aiplus.server");
+    const { answer, planRef } = await synclyReply(facts, data.history ?? [], question);
+    return planRef ? { answer, planRef } : { answer };
   });

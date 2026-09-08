@@ -17,6 +17,7 @@ import { getMe } from "@/lib/quorum/plan.functions";
 import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
 import { PageTransition } from "./interactions/PageTransition";
+import { AskSynclySheet } from "./ai/AskSynclySheet";
 
 // Settings/profile lives at the header gear + avatar tap, and Activity lives
 // at the header bell (below) — keeping the tab bar at 5 items per Apple's HIG
@@ -130,6 +131,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </nav>
               <ContextSwitcher />
               <ThemeToggle />
+              <AskSynclySheet />
               <Link
                 to="/activity"
                 aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
