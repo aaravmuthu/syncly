@@ -116,8 +116,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link
                     key={n.to}
                     to={n.to}
+                    preload="intent"
                     className={cn(
-                      "rounded-xl px-3 py-1.5 text-sm font-medium transition",
+                      "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors duration-100",
                       pathname.startsWith(n.to)
                         ? "bg-secondary text-foreground"
                         : "text-muted-foreground hover:text-foreground",
@@ -177,22 +178,23 @@ export function AppShell({ children }: { children: ReactNode }) {
             {NAV.map((n) => {
               const active = pathname.startsWith(n.to);
               return (
-                <Link key={n.to} to={n.to} onClick={() => haptic("select")} className="flex flex-1">
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  preload="intent"
+                  onClick={() => haptic("select")}
+                  className="flex flex-1"
+                >
                   <motion.span
-                    whileTap={{ scale: 0.9 }}
-                    animate={{ scale: active ? 1.06 : 1, y: active ? -1 : 0 }}
-                    transition={{ type: "spring", stiffness: 460, damping: 24 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ duration: 0.08 }}
                     className={cn(
-                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium",
+                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium transition-colors duration-100",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
                     {active ? (
-                      <motion.span
-                        layoutId="tab-indicator"
-                        transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                        className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500"
-                      />
+                      <span className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500" />
                     ) : null}
                     <span className="relative leading-none">
                       <n.icon className="h-5 w-5" aria-hidden />
