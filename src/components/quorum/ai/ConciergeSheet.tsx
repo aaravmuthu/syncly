@@ -55,19 +55,27 @@ export function ConciergeSheet({ planId, planTitle }: { planId: string; planTitl
     requestAnimationFrame(() => inputRef.current?.focus());
   };
 
+  const trigger = (
+    <motion.button
+      type="button"
+      onClick={() => setOpen(true)}
+      whileHover={{ scale: 1.04, y: -2 }}
+      whileTap={{ scale: 0.94 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      className="fixed bottom-24 left-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg"
+    >
+      <Sparkles className="h-4 w-4" aria-hidden />
+      Ask AI
+    </motion.button>
+  );
+
   return (
     <>
-      <motion.button
-        type="button"
-        onClick={() => setOpen(true)}
-        whileHover={{ scale: 1.04, y: -2 }}
-        whileTap={{ scale: 0.94 }}
-        transition={{ type: "spring", stiffness: 420, damping: 26 }}
-        className="fixed bottom-24 left-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg"
-      >
-        <Sparkles className="h-4 w-4" aria-hidden />
-        Ask AI
-      </motion.button>
+      {/* Portaled to <body>: route content sits inside PageTransition's animated
+          wrapper, whose transform/will-change makes it the containing block for
+          position:fixed descendants. */}
+      {mounted ? createPortal(trigger, document.body) : null}
+
 
       <Modal
         open={open}
