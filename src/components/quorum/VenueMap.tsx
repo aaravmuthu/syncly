@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -32,6 +32,12 @@ export function VenueMap({
     staleTime: 1000 * 60 * 60,
     retry: false,
   });
+
+  // Same chunk as SquadMap's Mapbox engine -- start it in parallel with the
+  // token round-trip below instead of waiting on that first.
+  useEffect(() => {
+    void import("./VenueMapInner");
+  }, []);
 
   if (venues.length === 0) return null;
   if (token.isLoading) return <Skeleton className="h-64 rounded-3xl" />;

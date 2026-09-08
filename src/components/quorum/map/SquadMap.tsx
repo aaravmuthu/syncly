@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -32,6 +32,13 @@ export function SquadMap({
     staleTime: 1000 * 60 * 60,
     retry: false,
   });
+
+  // Mapbox-gl is a heavy chunk -- start downloading it as soon as this
+  // component mounts instead of waiting on the token round-trip below, so
+  // the two loads happen in parallel rather than as a waterfall.
+  useEffect(() => {
+    void import("./SquadMapInner");
+  }, []);
 
   const hasPins =
     data.people.length > 0 || (data.places?.length ?? 0) > 0 || (data.zones?.length ?? 0) > 0;

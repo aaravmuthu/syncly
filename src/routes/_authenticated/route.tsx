@@ -14,8 +14,13 @@ let appliedInitialRoute = false;
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
+    // getSession() reads the persisted/auto-refreshed session locally --
+    // getUser() instead hits Supabase's auth server over the network, and
+    // since this beforeLoad reruns on every navigation in the authenticated
+    // tree, that was adding a network round-trip to every single tab switch.
+    const { data, error } = await supabase.auth.getSession();
+    const user = data.session?.user ?? null;
+    if (error || !user) {
       throw redirect({ to: "/auth", search: { next: "/home", mode: "signin" as const } });
     }
 
@@ -40,7 +45,7 @@ export const Route = createFileRoute("/_authenticated")({
       }
     }
 
-    return { user: data.user };
+    return { user };
   },
   component: () => <Outlet />,
 });
