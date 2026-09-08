@@ -62,13 +62,23 @@ export function createLovableAiGatewayProvider(lovableApiKey: string, initialRun
 /** The one chat model Syncly uses. */
 export const SYNCLY_AI_MODEL = "google/gemini-3.6-flash";
 
-/** Direct Google Gemini model id used for every AI feature. */
-export const GEMINI_MODEL = "gemini-flash-latest";
+/**
+ * Direct Google Gemini model id used for every AI feature.
+ * Deliberately the "flash-lite" tier, not plain "flash": Google tracks free-
+ * tier daily request quota separately per model, and flash-lite's bucket is
+ * meaningfully larger than flash's (confirmed directly against this API key
+ * -- the full flash model hit its 20-requests/day cap during testing).
+ * Every AI feature in this app already has a deterministic fallback for when
+ * the model is unavailable for any reason, quota included, so this is a
+ * capacity choice, not a correctness one -- confirmed tool-calling and
+ * schema-validated structured output both still work correctly on this tier.
+ */
+export const GEMINI_MODEL = "gemini-flash-lite-latest";
 
 /**
  * Primary AI model. Reads GEMINI_API_KEY at call time (never module scope) and
  * talks straight to Google's REST endpoint:
- * https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=...
+ * https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key=...
  * Falls back to the Lovable AI Gateway when no Gemini key is configured.
  * Throws a friendly error when neither is available so callers can degrade.
  */
