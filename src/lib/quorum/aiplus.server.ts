@@ -434,30 +434,70 @@ export async function writeGuardianSummary(facts: {
 /** A plan the answer referenced, so the UI can offer a direct "View plan" link. */
 export type SynclyPlanRef = { planId: string; title: string };
 
+/**
+ * An action Ask Syncly proposes alongside its text answer -- same
+ * propose-only contract as the plan concierge's actions: the model never
+ * creates anything itself, it only names a group (by the exact name given in
+ * the facts) and restates the request. The server resolves that name to a
+ * real groupId the member actually belongs to before the client ever sees
+ * it, and nothing happens until an explicit confirm tap calls the real,
+ * already-authorized launchAiPlan the same way a manual "Launch Plan" button
+ * would.
+ */
+export type SynclyAction = { type: "create_plan"; groupName: string; prompt: string };
+
+const synclyTools = {
+  create_plan: tool({
+    description:
+      "Draft and launch a brand-new plan inside one of the member's existing groups, from a" +
+      " free-text description of what to plan. Only call this when the member is clearly asking" +
+      " to create/start/plan/organize something new -- never for a question about an existing plan.",
+    inputSchema: z.object({
+      groupName: z.string().describe("Must match one of the group names given in the facts, as exactly as possible"),
+      prompt: z
+        .string()
+        .describe("A clean restatement of what to plan, keeping any date/time/budget/vibe the member mentioned"),
+    }),
+  }),
+};
+
 const SYNCLY_SYSTEM = [
   "You are Ask Syncly: a warm, concise assistant with a bird's-eye view of one member's",
   "groups and plans across the whole app — not just a single plan.",
   "Only use the facts you are given. Never invent a group, plan, date, cost or person.",
   "Never name what an individual member privately answered; talk in group terms only.",
-  "You can summarize the week, point out what needs the member's attention, or suggest",
-  "what their squad should do next. Answer in at most 130 words, no emoji.",
-  "If you reference one specific plan by name, also return its exact id from the facts",
-  "in `plan_ref` so the app can link to it; use `plan_ref: null` otherwise.",
+  "You can summarize the week, point out what needs the member's attention, suggest",
+  "what their squad should do next, or draft a brand-new plan with the create_plan tool",
+  "when clearly asked to. Answer in at most 130 words, no emoji, and always write a short",
+  "plain-text answer even when you call a tool.",
 ].join(" ");
-
-const SynclyReplySchema = z.object({
-  answer: z.string(),
-  plan_ref: z.object({ plan_id: z.string(), title: z.string() }).nullable(),
-});
 
 const SYNCLY_FALLBACK =
   "I can't reach the AI service right now — your groups and plans are all still on the Home and Groups tabs.";
+
+/** Best-effort "which plan is this about" from the facts already given, since there's no structured plan_ref field now that this uses tool-calling. */
+function findMentionedPlan(
+  answer: string,
+  facts: unknown,
+): SynclyPlanRef | undefined {
+  const lists = [
+    (facts as { needsYou?: { plan_id?: string; title?: string }[] })?.needsYou,
+    (facts as { upcoming?: { plan_id?: string; title?: string }[] })?.upcoming,
+  ].flat();
+  const lower = answer.toLowerCase();
+  for (const p of lists) {
+    if (p?.plan_id && p.title && lower.includes(p.title.toLowerCase())) {
+      return { planId: p.plan_id, title: p.title };
+    }
+  }
+  return undefined;
+}
 
 export async function synclyReply(
   facts: unknown,
   history: ConciergeTurn[],
   question: string,
-): Promise<{ answer: string; planRef?: SynclyPlanRef }> {
+): Promise<{ answer: string; planRef?: SynclyPlanRef; action?: SynclyAction }> {
   const transcript = history
     .slice(-8)
     .map((t) => `${t.role === "user" ? "Member" : "Syncly"}: ${t.content}`)
@@ -470,28 +510,28 @@ export async function synclyReply(
   ].join("\n");
 
   try {
-    const { output } = await generateText({
+    const result = await generateText({
       model: lovableAiModel(),
-      output: Output.object({ schema: SynclyReplySchema }),
       system: SYNCLY_SYSTEM,
       prompt,
+      tools: synclyTools,
     });
-    const answer = output.answer.trim();
+    const call = result.toolCalls?.[0];
+    const action: SynclyAction | undefined =
+      call?.toolName === "create_plan"
+        ? {
+            type: "create_plan",
+            groupName: String((call.input as Record<string, unknown>)["groupName"] ?? ""),
+            prompt: String((call.input as Record<string, unknown>)["prompt"] ?? question),
+          }
+        : undefined;
+    const answer =
+      result.text?.trim() ||
+      (action ? `Want me to draft a plan in ${action.groupName}?` : "");
     if (!answer) return { answer: SYNCLY_FALLBACK };
-    const ref = output.plan_ref;
-    return ref?.plan_id ? { answer, planRef: { planId: ref.plan_id, title: ref.title } } : { answer };
+    const planRef = action ? undefined : findMentionedPlan(answer, facts);
+    return { answer, ...(planRef ? { planRef } : {}), ...(action ? { action } : {}) };
   } catch (error) {
-    if (NoObjectGeneratedError.isInstance(error)) {
-      const parsed = extractJson(error.text) as
-        | { answer?: string; plan_ref?: { plan_id?: string; title?: string } | null }
-        | null;
-      if (parsed?.answer?.trim()) {
-        const ref = parsed.plan_ref;
-        return ref?.plan_id
-          ? { answer: parsed.answer.trim(), planRef: { planId: ref.plan_id, title: ref.title ?? "" } }
-          : { answer: parsed.answer.trim() };
-      }
-    }
     void recordAiFailure("ask_syncly", error);
     return { answer: SYNCLY_FALLBACK };
   }

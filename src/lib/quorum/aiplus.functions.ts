@@ -408,7 +408,10 @@ export const getGuardianAiSummary = createServerFn({ method: "POST" })
 /* 5. Ask Syncly — site-wide assistant                                 */
 /* ------------------------------------------------------------------ */
 
-export type SynclyAnswer = { answer: string; planRef?: SynclyPlanRef };
+/** Resolved, client-facing action -- groupId is filled in server-side from an authoritative membership query, never taken from the model. */
+export type SynclyAction = { type: "create_plan"; groupId: string; groupName: string; prompt: string };
+
+export type SynclyAnswer = { answer: string; planRef?: SynclyPlanRef; action?: SynclyAction };
 
 const LIVE_STATUSES = new Set(["collecting", "recommending", "voting"]);
 
@@ -426,7 +429,7 @@ export const askSyncly = createServerFn({ method: "POST" })
 
     const { supabase } = context;
     const { data: myId } = await supabase.rpc("my_profile_id");
-    const [{ data: plans }, { data: activity }] = await Promise.all([
+    const [{ data: plans }, { data: activity }, { data: myGroups }] = await Promise.all([
       supabase
         .from("plans")
         .select("id, title, status, window_start, groups(name)")
@@ -438,9 +441,21 @@ export const askSyncly = createServerFn({ method: "POST" })
         .not("group_id", "is", null)
         .order("created_at", { ascending: false })
         .limit(8),
+      // Authoritative group list (with real ids) the caller actually belongs
+      // to -- used both as the facts the model can name and, after a reply,
+      // to resolve a proposed create_plan action's group name back to a real
+      // id server-side. The model is never trusted with an id directly.
+      // Filtered to the caller's own membership rows -- group_members' RLS
+      // policy grants roster visibility (every member of a group you're in),
+      // so an unfiltered select here would return one row per fellow member,
+      // duplicating each group once per person in it.
+      supabase.from("group_members").select("groups(id, name)").eq("profile_id", myId as string),
     ]);
     const list = plans ?? [];
     const ids = list.map((p) => p.id as string);
+    const groupRoster = (myGroups ?? [])
+      .map((g) => g.groups as unknown as { id?: string; name?: string } | null)
+      .filter((g): g is { id: string; name: string } => Boolean(g?.id && g.name));
 
     const [{ data: parts }, { data: votes }] = await Promise.all([
       ids.length
@@ -488,7 +503,9 @@ export const askSyncly = createServerFn({ method: "POST" })
           group: groupOf(p),
           when: relativeDay((p.window_start as string | null) ?? null),
         })),
-      groups: [...activeByGroup.entries()].map(([name, activePlans]) => ({ name, activePlans })),
+      // Every group the member is actually in, not just ones with an active
+      // plan right now -- so "plan something with X" works for a quiet group too.
+      groups: groupRoster.map((g) => ({ name: g.name, activePlans: activeByGroup.get(g.name) ?? 0 })),
       recentActivity: (activity ?? []).map((a) => ({
         message: a.message,
         when: relativeDay(a.created_at as string),
@@ -496,6 +513,32 @@ export const askSyncly = createServerFn({ method: "POST" })
     };
 
     const { synclyReply } = await import("./aiplus.server");
-    const { answer, planRef } = await synclyReply(facts, data.history ?? [], question);
-    return planRef ? { answer, planRef } : { answer };
+    const reply = await synclyReply(facts, data.history ?? [], question);
+
+    let action: SynclyAction | undefined;
+    if (reply.action?.type === "create_plan") {
+      const wanted = reply.action.groupName.trim().toLowerCase();
+      const match =
+        groupRoster.find((g) => g.name.toLowerCase() === wanted) ??
+        groupRoster.find(
+          (g) => g.name.toLowerCase().includes(wanted) || wanted.includes(g.name.toLowerCase()),
+        );
+      // Drop the action entirely rather than propose one against a group the
+      // model misnamed or that the caller isn't actually in -- the confirm
+      // card would have nothing valid to act on otherwise.
+      if (match) {
+        action = {
+          type: "create_plan",
+          groupId: match.id,
+          groupName: match.name,
+          prompt: reply.action.prompt,
+        };
+      }
+    }
+
+    return {
+      answer: reply.answer,
+      ...(reply.planRef ? { planRef: reply.planRef } : {}),
+      ...(action ? { action } : {}),
+    };
   });
