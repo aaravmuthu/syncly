@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, House, MessageCircle, Radar, Settings, Users, Zap, type LucideIcon } from "lucide-react";
@@ -76,6 +76,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   // its own shell (GuardianShell) and is reached via the ContextSwitcher, not
   // a swapped nav tab here.
   const NAV: NavItem[] = [...BASE_NAV];
+
+  // Radar's map pulls in mapbox-gl -- ~500KB gzipped on its own, by far the
+  // single heaviest thing this app ships -- which otherwise only starts
+  // downloading the moment someone taps the Radar tab. Radar is one of five
+  // fixed bottom-nav destinations, so warm that chunk in the background
+  // during idle time as soon as the shell mounts, instead of making it part
+  // of the critical path the first time someone actually navigates there.
+  useEffect(() => {
+    const prefetch = () => void import("./map/SquadMapInner");
+    if (typeof window === "undefined") return;
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(prefetch, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(prefetch, 2000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   return (
     <FriendProvider>
