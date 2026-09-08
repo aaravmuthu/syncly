@@ -18,7 +18,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { Modal } from "@/components/quorum/Modal";
@@ -34,7 +34,7 @@ import { TimePicker } from "@/components/quorum/TimePicker";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
 import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard";
 
-export const Route = createFileRoute("/_authenticated/settings")({
+export const Route = createFileRoute("/_authenticated/_app/settings")({
   head: () => ({
     meta: [
       { title: "Your profile — Syncly" },
@@ -239,9 +239,10 @@ function SettingsPage() {
 
   if (me.isLoading) {
     return (
-      <AppShell title="You">
+      <>
+        <PageHeader title="You" />
         <Skeleton className="h-40 rounded-3xl" />
-      </AppShell>
+      </>
     );
   }
 
@@ -267,7 +268,8 @@ function SettingsPage() {
   const isGuardian = (form["account_type"] ?? "teen") === "guardian";
 
   return (
-    <AppShell title="You" subtitle="Your defaults travel with you into every questionnaire.">
+    <>
+      <PageHeader title="You" subtitle="Your defaults travel with you into every questionnaire." />
       {/* Profile */}
       <Card className="space-y-4">
         <SectionHeader icon={UserRound} title="Profile" />
@@ -705,6 +707,6 @@ function SettingsPage() {
           </Button>
         </div>
       </Modal>
-    </AppShell>
+    </>
   );
 }

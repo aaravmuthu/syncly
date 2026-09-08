@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle, Search } from "lucide-react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
 import { Empty, Skeleton } from "@/components/quorum/ui";
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 type Search = { peer?: string; thread?: string; group?: string };
 
-export const Route = createFileRoute("/_authenticated/messages")({
+export const Route = createFileRoute("/_authenticated/_app/messages")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     ...(typeof s.peer === "string" ? { peer: s.peer } : {}),
     ...(typeof s.thread === "string" ? { thread: s.thread } : {}),
@@ -119,7 +119,8 @@ function MessagesPage() {
   }
 
   return (
-    <AppShell title="Messages" subtitle="DMs and squad chats, all in one place">
+    <>
+      <PageHeader title="Messages" subtitle="DMs and squad chats, all in one place" />
       <PullToRefresh onRefresh={async () => void (await inbox.refetch())}>
         <div className="space-y-5">
           <label className="flex items-center gap-2 rounded-2xl border border-border/70 bg-secondary/40 px-3.5 py-2.5">
@@ -250,7 +251,7 @@ function MessagesPage() {
           </div>
         ) : null}
       </ChatSheet>
-    </AppShell>
+    </>
   );
 }
 

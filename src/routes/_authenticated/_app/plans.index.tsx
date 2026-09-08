@@ -19,7 +19,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Empty, Pill, Skeleton, Button } from "@/components/quorum/ui";
 import {
@@ -34,7 +34,7 @@ import { categoryIcon } from "@/lib/quorum/icons";
 import { estCostLabel } from "@/lib/quorum/estcost";
 
 
-export const Route = createFileRoute("/_authenticated/plans/")({
+export const Route = createFileRoute("/_authenticated/_app/plans/")({
   head: () => ({
     meta: [
       { title: "All plans — Syncly" },
@@ -110,7 +110,8 @@ function PlansPage() {
   });
 
   return (
-    <AppShell title="Plans" subtitle="Everything your groups are working out right now.">
+    <>
+      <PageHeader title="Plans" subtitle="Everything your groups are working out right now." />
       {dash.isLoading ? <Skeleton className="h-40 rounded-3xl" /> : null}
 
       {!dash.isLoading && plans.length === 0 ? (
@@ -157,7 +158,7 @@ function PlansPage() {
       <p className="mt-4 text-center text-xs text-muted-foreground md:hidden">
         Swipe a plan right to join · left to mute
       </p>
-    </AppShell>
+    </>
   );
 }
 

@@ -20,22 +20,23 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/_app/route'
 import { Route as AuthenticatedGuardianRouteImport } from './routes/_authenticated/guardian'
-import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
-import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
-import { Route as AuthenticatedRlsCheckRouteImport } from './routes/_authenticated/rls-check'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
-import { Route as AuthenticatedGroupsIndexRouteImport } from './routes/_authenticated/groups.index'
-import { Route as AuthenticatedGroupsGroupIdRouteImport } from './routes/_authenticated/groups.$groupId'
-import { Route as AuthenticatedPlansIndexRouteImport } from './routes/_authenticated/plans.index'
-import { Route as AuthenticatedPlansPlanIdRouteImport } from './routes/_authenticated/plans.$planId'
+import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated/_app/activity'
+import { Route as AuthenticatedAppHomeRouteImport } from './routes/_authenticated/_app/home'
+import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
+import { Route as AuthenticatedAppRadarRouteImport } from './routes/_authenticated/_app/radar'
+import { Route as AuthenticatedAppRlsCheckRouteImport } from './routes/_authenticated/_app/rls-check'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/_app/settings'
+import { Route as AuthenticatedAppGroupsIndexRouteImport } from './routes/_authenticated/_app/groups.index'
+import { Route as AuthenticatedAppGroupsGroupIdRouteImport } from './routes/_authenticated/_app/groups.$groupId'
+import { Route as AuthenticatedAppPlansIndexRouteImport } from './routes/_authenticated/_app/plans.index'
+import { Route as AuthenticatedAppPlansPlanIdRouteImport } from './routes/_authenticated/_app/plans.$planId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -93,9 +94,8 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
+const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
+  id: '/_app',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGuardianRoute = AuthenticatedGuardianRouteImport.update({
@@ -103,34 +103,9 @@ const AuthenticatedGuardianRoute = AuthenticatedGuardianRouteImport.update({
   path: '/guardian',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMessagesRoute = AuthenticatedMessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRadarRoute = AuthenticatedRadarRouteImport.update({
-  id: '/radar',
-  path: '/radar',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRlsCheckRoute = AuthenticatedRlsCheckRouteImport.update({
-  id: '/rls-check',
-  path: '/rls-check',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApproveTokenRoute = ApproveTokenRouteImport.update({
@@ -154,28 +129,63 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedGroupsIndexRoute =
-  AuthenticatedGroupsIndexRouteImport.update({
+const AuthenticatedAppActivityRoute =
+  AuthenticatedAppActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppHomeRoute = AuthenticatedAppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppMessagesRoute =
+  AuthenticatedAppMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppRadarRoute = AuthenticatedAppRadarRouteImport.update({
+  id: '/radar',
+  path: '/radar',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppRlsCheckRoute =
+  AuthenticatedAppRlsCheckRouteImport.update({
+    id: '/rls-check',
+    path: '/rls-check',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppGroupsIndexRoute =
+  AuthenticatedAppGroupsIndexRouteImport.update({
     id: '/groups/',
     path: '/groups/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
-const AuthenticatedGroupsGroupIdRoute =
-  AuthenticatedGroupsGroupIdRouteImport.update({
+const AuthenticatedAppGroupsGroupIdRoute =
+  AuthenticatedAppGroupsGroupIdRouteImport.update({
     id: '/groups/$groupId',
     path: '/groups/$groupId',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
-const AuthenticatedPlansIndexRoute = AuthenticatedPlansIndexRouteImport.update({
-  id: '/plans/',
-  path: '/plans/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPlansPlanIdRoute =
-  AuthenticatedPlansPlanIdRouteImport.update({
+const AuthenticatedAppPlansIndexRoute =
+  AuthenticatedAppPlansIndexRouteImport.update({
+    id: '/plans/',
+    path: '/plans/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppPlansPlanIdRoute =
+  AuthenticatedAppPlansPlanIdRouteImport.update({
     id: '/plans/$planId',
     path: '/plans/$planId',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -189,22 +199,22 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/activity': typeof AuthenticatedActivityRoute
   '/guardian': typeof AuthenticatedGuardianRoute
-  '/home': typeof AuthenticatedHomeRoute
-  '/messages': typeof AuthenticatedMessagesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/radar': typeof AuthenticatedRadarRoute
-  '/rls-check': typeof AuthenticatedRlsCheckRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
-  '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
-  '/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
-  '/groups/': typeof AuthenticatedGroupsIndexRoute
-  '/plans/': typeof AuthenticatedPlansIndexRoute
+  '/activity': typeof AuthenticatedAppActivityRoute
+  '/home': typeof AuthenticatedAppHomeRoute
+  '/messages': typeof AuthenticatedAppMessagesRoute
+  '/radar': typeof AuthenticatedAppRadarRoute
+  '/rls-check': typeof AuthenticatedAppRlsCheckRoute
+  '/settings': typeof AuthenticatedAppSettingsRoute
+  '/groups/$groupId': typeof AuthenticatedAppGroupsGroupIdRoute
+  '/plans/$planId': typeof AuthenticatedAppPlansPlanIdRoute
+  '/groups/': typeof AuthenticatedAppGroupsIndexRoute
+  '/plans/': typeof AuthenticatedAppPlansIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -217,22 +227,22 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/activity': typeof AuthenticatedActivityRoute
   '/guardian': typeof AuthenticatedGuardianRoute
-  '/home': typeof AuthenticatedHomeRoute
-  '/messages': typeof AuthenticatedMessagesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
-  '/radar': typeof AuthenticatedRadarRoute
-  '/rls-check': typeof AuthenticatedRlsCheckRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
-  '/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
-  '/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
-  '/groups': typeof AuthenticatedGroupsIndexRoute
-  '/plans': typeof AuthenticatedPlansIndexRoute
+  '/activity': typeof AuthenticatedAppActivityRoute
+  '/home': typeof AuthenticatedAppHomeRoute
+  '/messages': typeof AuthenticatedAppMessagesRoute
+  '/radar': typeof AuthenticatedAppRadarRoute
+  '/rls-check': typeof AuthenticatedAppRlsCheckRoute
+  '/settings': typeof AuthenticatedAppSettingsRoute
+  '/groups/$groupId': typeof AuthenticatedAppGroupsGroupIdRoute
+  '/plans/$planId': typeof AuthenticatedAppPlansPlanIdRoute
+  '/groups': typeof AuthenticatedAppGroupsIndexRoute
+  '/plans': typeof AuthenticatedAppPlansIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -245,24 +255,25 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/_app': typeof AuthenticatedAppRouteRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/guardian': typeof AuthenticatedGuardianRoute
-  '/_authenticated/home': typeof AuthenticatedHomeRoute
-  '/_authenticated/messages': typeof AuthenticatedMessagesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
-  '/_authenticated/radar': typeof AuthenticatedRadarRoute
-  '/_authenticated/rls-check': typeof AuthenticatedRlsCheckRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
-  '/_authenticated/groups/$groupId': typeof AuthenticatedGroupsGroupIdRoute
-  '/_authenticated/plans/$planId': typeof AuthenticatedPlansPlanIdRoute
-  '/_authenticated/groups/': typeof AuthenticatedGroupsIndexRoute
-  '/_authenticated/plans/': typeof AuthenticatedPlansIndexRoute
+  '/_authenticated/_app/activity': typeof AuthenticatedAppActivityRoute
+  '/_authenticated/_app/home': typeof AuthenticatedAppHomeRoute
+  '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRoute
+  '/_authenticated/_app/radar': typeof AuthenticatedAppRadarRoute
+  '/_authenticated/_app/rls-check': typeof AuthenticatedAppRlsCheckRoute
+  '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/_app/groups/$groupId': typeof AuthenticatedAppGroupsGroupIdRoute
+  '/_authenticated/_app/plans/$planId': typeof AuthenticatedAppPlansPlanIdRoute
+  '/_authenticated/_app/groups/': typeof AuthenticatedAppGroupsIndexRoute
+  '/_authenticated/_app/plans/': typeof AuthenticatedAppPlansIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -277,18 +288,18 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/activity'
     | '/guardian'
-    | '/home'
-    | '/messages'
     | '/onboarding'
-    | '/radar'
-    | '/rls-check'
-    | '/settings'
     | '/approve/$token'
     | '/join/$code'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/activity'
+    | '/home'
+    | '/messages'
+    | '/radar'
+    | '/rls-check'
+    | '/settings'
     | '/groups/$groupId'
     | '/plans/$planId'
     | '/groups/'
@@ -305,18 +316,18 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/activity'
     | '/guardian'
-    | '/home'
-    | '/messages'
     | '/onboarding'
-    | '/radar'
-    | '/rls-check'
-    | '/settings'
     | '/approve/$token'
     | '/join/$code'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/activity'
+    | '/home'
+    | '/messages'
+    | '/radar'
+    | '/rls-check'
+    | '/settings'
     | '/groups/$groupId'
     | '/plans/$planId'
     | '/groups'
@@ -332,24 +343,25 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
+    | '/_authenticated/_app'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
-    | '/_authenticated/activity'
     | '/_authenticated/guardian'
-    | '/_authenticated/home'
-    | '/_authenticated/messages'
     | '/_authenticated/onboarding'
-    | '/_authenticated/radar'
-    | '/_authenticated/rls-check'
-    | '/_authenticated/settings'
     | '/approve/$token'
     | '/join/$code'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
-    | '/_authenticated/groups/$groupId'
-    | '/_authenticated/plans/$planId'
-    | '/_authenticated/groups/'
-    | '/_authenticated/plans/'
+    | '/_authenticated/_app/activity'
+    | '/_authenticated/_app/home'
+    | '/_authenticated/_app/messages'
+    | '/_authenticated/_app/radar'
+    | '/_authenticated/_app/rls-check'
+    | '/_authenticated/_app/settings'
+    | '/_authenticated/_app/groups/$groupId'
+    | '/_authenticated/_app/plans/$planId'
+    | '/_authenticated/_app/groups/'
+    | '/_authenticated/_app/plans/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -449,11 +461,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/activity': {
-      id: '/_authenticated/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof AuthenticatedActivityRouteImport
+    '/_authenticated/_app': {
+      id: '/_authenticated/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAppRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/guardian': {
@@ -463,46 +475,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGuardianRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/home': {
-      id: '/_authenticated/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AuthenticatedHomeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/messages': {
-      id: '/_authenticated/messages'
-      path: '/messages'
-      fullPath: '/messages'
-      preLoaderRoute: typeof AuthenticatedMessagesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/radar': {
-      id: '/_authenticated/radar'
-      path: '/radar'
-      fullPath: '/radar'
-      preLoaderRoute: typeof AuthenticatedRadarRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/rls-check': {
-      id: '/_authenticated/rls-check'
-      path: '/rls-check'
-      fullPath: '/rls-check'
-      preLoaderRoute: typeof AuthenticatedRlsCheckRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/approve/$token': {
@@ -533,65 +510,120 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/groups/': {
-      id: '/_authenticated/groups/'
+    '/_authenticated/_app/activity': {
+      id: '/_authenticated/_app/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedAppActivityRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/home': {
+      id: '/_authenticated/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedAppHomeRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/messages': {
+      id: '/_authenticated/_app/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedAppMessagesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/radar': {
+      id: '/_authenticated/_app/radar'
+      path: '/radar'
+      fullPath: '/radar'
+      preLoaderRoute: typeof AuthenticatedAppRadarRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/rls-check': {
+      id: '/_authenticated/_app/rls-check'
+      path: '/rls-check'
+      fullPath: '/rls-check'
+      preLoaderRoute: typeof AuthenticatedAppRlsCheckRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/settings': {
+      id: '/_authenticated/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/groups/': {
+      id: '/_authenticated/_app/groups/'
       path: '/groups'
       fullPath: '/groups/'
-      preLoaderRoute: typeof AuthenticatedGroupsIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof AuthenticatedAppGroupsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
-    '/_authenticated/groups/$groupId': {
-      id: '/_authenticated/groups/$groupId'
+    '/_authenticated/_app/groups/$groupId': {
+      id: '/_authenticated/_app/groups/$groupId'
       path: '/groups/$groupId'
       fullPath: '/groups/$groupId'
-      preLoaderRoute: typeof AuthenticatedGroupsGroupIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof AuthenticatedAppGroupsGroupIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
-    '/_authenticated/plans/': {
-      id: '/_authenticated/plans/'
+    '/_authenticated/_app/plans/': {
+      id: '/_authenticated/_app/plans/'
       path: '/plans'
       fullPath: '/plans/'
-      preLoaderRoute: typeof AuthenticatedPlansIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof AuthenticatedAppPlansIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
-    '/_authenticated/plans/$planId': {
-      id: '/_authenticated/plans/$planId'
+    '/_authenticated/_app/plans/$planId': {
+      id: '/_authenticated/_app/plans/$planId'
       path: '/plans/$planId'
       fullPath: '/plans/$planId'
-      preLoaderRoute: typeof AuthenticatedPlansPlanIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof AuthenticatedAppPlansPlanIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
   }
 }
 
+interface AuthenticatedAppRouteRouteChildren {
+  AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
+  AuthenticatedAppHomeRoute: typeof AuthenticatedAppHomeRoute
+  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
+  AuthenticatedAppRadarRoute: typeof AuthenticatedAppRadarRoute
+  AuthenticatedAppRlsCheckRoute: typeof AuthenticatedAppRlsCheckRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppGroupsGroupIdRoute: typeof AuthenticatedAppGroupsGroupIdRoute
+  AuthenticatedAppPlansPlanIdRoute: typeof AuthenticatedAppPlansPlanIdRoute
+  AuthenticatedAppGroupsIndexRoute: typeof AuthenticatedAppGroupsIndexRoute
+  AuthenticatedAppPlansIndexRoute: typeof AuthenticatedAppPlansIndexRoute
+}
+
+const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
+  AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
+  AuthenticatedAppHomeRoute: AuthenticatedAppHomeRoute,
+  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
+  AuthenticatedAppRadarRoute: AuthenticatedAppRadarRoute,
+  AuthenticatedAppRlsCheckRoute: AuthenticatedAppRlsCheckRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppGroupsGroupIdRoute: AuthenticatedAppGroupsGroupIdRoute,
+  AuthenticatedAppPlansPlanIdRoute: AuthenticatedAppPlansPlanIdRoute,
+  AuthenticatedAppGroupsIndexRoute: AuthenticatedAppGroupsIndexRoute,
+  AuthenticatedAppPlansIndexRoute: AuthenticatedAppPlansIndexRoute,
+}
+
+const AuthenticatedAppRouteRouteWithChildren =
+  AuthenticatedAppRouteRoute._addFileChildren(
+    AuthenticatedAppRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAppRouteRoute: typeof AuthenticatedAppRouteRouteWithChildren
   AuthenticatedGuardianRoute: typeof AuthenticatedGuardianRoute
-  AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
-  AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
-  AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
-  AuthenticatedRlsCheckRoute: typeof AuthenticatedRlsCheckRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedGroupsGroupIdRoute: typeof AuthenticatedGroupsGroupIdRoute
-  AuthenticatedPlansPlanIdRoute: typeof AuthenticatedPlansPlanIdRoute
-  AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
-  AuthenticatedPlansIndexRoute: typeof AuthenticatedPlansIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAppRouteRoute: AuthenticatedAppRouteRouteWithChildren,
   AuthenticatedGuardianRoute: AuthenticatedGuardianRoute,
-  AuthenticatedHomeRoute: AuthenticatedHomeRoute,
-  AuthenticatedMessagesRoute: AuthenticatedMessagesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
-  AuthenticatedRadarRoute: AuthenticatedRadarRoute,
-  AuthenticatedRlsCheckRoute: AuthenticatedRlsCheckRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedGroupsGroupIdRoute: AuthenticatedGroupsGroupIdRoute,
-  AuthenticatedPlansPlanIdRoute: AuthenticatedPlansPlanIdRoute,
-  AuthenticatedGroupsIndexRoute: AuthenticatedGroupsIndexRoute,
-  AuthenticatedPlansIndexRoute: AuthenticatedPlansIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

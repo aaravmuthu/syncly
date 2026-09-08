@@ -31,17 +31,44 @@ const BASE_NAV = [
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
 
-export function AppShell({
-  children,
+/**
+ * Animated title block a page renders at the top of its own content. Split
+ * out of AppShell so the header/nav chrome below can live in a persistent
+ * layout route instead of remounting on every navigation.
+ */
+export function PageHeader({
   title,
   subtitle,
   action,
 }: {
-  children: ReactNode;
   title?: string;
   subtitle?: string;
   action?: ReactNode;
 }) {
+  if (!title) return null;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 320, damping: 28 }}
+      className="mb-6 flex items-start justify-between gap-4"
+    >
+      <div>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+        {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
+      </div>
+      {action}
+    </motion.div>
+  );
+}
+
+/**
+ * Header, bottom nav and their supporting providers — mounted once by the
+ * `_app` pathless layout route so they persist across page navigation
+ * instead of tearing down (and re-subscribing realtime notifications) on
+ * every tab switch.
+ */
+export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
@@ -118,25 +145,7 @@ export function AppShell({
 
         <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
           <InstallPrompt />
-          <PageTransition>
-            {title ? (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                className="mb-6 flex items-start justify-between gap-4"
-              >
-                <div>
-                  <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
-                  {subtitle ? (
-                    <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-                  ) : null}
-                </div>
-                {action}
-              </motion.div>
-            ) : null}
-            {children}
-          </PageTransition>
+          <PageTransition>{children}</PageTransition>
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">

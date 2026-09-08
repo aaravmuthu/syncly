@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { GroupSettings } from "@/components/quorum/GroupSettings";
 import { GroupAppearance } from "@/components/quorum/GroupAppearance";
@@ -15,7 +15,7 @@ import { PullToRefresh, SwipeBack } from "@/components/quorum/interactions";
 import { categoryMeta } from "@/lib/quorum/types";
 import { estCostLabel } from "@/lib/quorum/estcost";
 
-export const Route = createFileRoute("/_authenticated/groups/$groupId")({
+export const Route = createFileRoute("/_authenticated/_app/groups/$groupId")({
   head: () => ({
     meta: [
       { title: "Group — Syncly" },
@@ -48,12 +48,13 @@ function GroupPage() {
 
   if (q.isLoading) {
     return (
-      <AppShell title="Group">
+      <>
+        <PageHeader title="Group" />
         <Skeleton className="h-32 rounded-3xl" />
-      </AppShell>
+      </>
     );
   }
-  if (!q.data) return <AppShell title="Group not found">{null}</AppShell>;
+  if (!q.data) return <PageHeader title="Group not found" />;
 
   const { group, members, plans, myProfileId } = q.data;
   const memberIds = members.map((m) => m.profile_id);
@@ -67,10 +68,11 @@ function GroupPage() {
   const activeIndex = TABS.findIndex((t) => t.id === tab);
 
   return (
-    <AppShell
-      title={`${group.emoji} ${group.name}`}
-      subtitle={`${members.length} members · invite code ${group.invite_code}`}
-    >
+    <>
+      <PageHeader
+        title={`${group.emoji} ${group.name}`}
+        subtitle={`${members.length} members · invite code ${group.invite_code}`}
+      />
       <SwipeBack>
       {/* Sub-tab bar */}
       <div className="relative mt-1 grid grid-cols-3 gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
@@ -213,7 +215,7 @@ function GroupPage() {
         <PlanWizard groupId={groupId} memberIds={memberIds} onClose={() => setWizard(false)} />
       ) : null}
       </SwipeBack>
-    </AppShell>
+    </>
   );
 }
 

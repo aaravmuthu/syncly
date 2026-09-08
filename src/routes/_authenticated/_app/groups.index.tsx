@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { CreateGroupModal } from "@/components/quorum/CreateGroupModal";
@@ -15,7 +15,7 @@ import { motion } from "motion/react";
 import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/groups/")({
+export const Route = createFileRoute("/_authenticated/_app/groups/")({
   head: () => ({
     meta: [
       { title: "Squad hub — Syncly" },
@@ -82,18 +82,19 @@ function GroupsPage() {
   );
 
   return (
-    <AppShell
-      title="Squad hub"
-      subtitle="Your circles, live votes, and one-tap plan launches."
-      action={
-        <div className="flex gap-2">
-          <Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>
-          <Button variant="outline" onClick={() => setJoinOpen(true)}>
-            🔗 Join with Code
-          </Button>
-        </div>
-      }
-    >
+    <>
+      <PageHeader
+        title="Squad hub"
+        subtitle="Your circles, live votes, and one-tap plan launches."
+        action={
+          <div className="flex gap-2">
+            <Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>
+            <Button variant="outline" onClick={() => setJoinOpen(true)}>
+              🔗 Join with Code
+            </Button>
+          </div>
+        }
+      />
       <PullToRefresh onRefresh={async () => void (await groups.refetch())}>
       <div className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1">
         {FILTERS.map((f) => (
@@ -152,7 +153,7 @@ function GroupsPage() {
 
       <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} />
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
-    </AppShell>
+    </>
   );
 }
 

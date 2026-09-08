@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { Button, Card, Pill } from "@/components/quorum/ui";
 import { runRlsSelfCheck } from "@/lib/quorum/rlscheck.functions";
 
-export const Route = createFileRoute("/_authenticated/rls-check")({
+export const Route = createFileRoute("/_authenticated/_app/rls-check")({
   component: RlsCheckPage,
   head: () => ({
     meta: [
@@ -31,7 +31,8 @@ function RlsCheckPage() {
   const result = run.data;
 
   return (
-    <AppShell title="Security self-check" subtitle="Confirm nobody else can edit or delete your data">
+    <>
+      <PageHeader title="Security self-check" subtitle="Confirm nobody else can edit or delete your data" />
       <Card className="space-y-4">
         <p className="text-sm text-muted-foreground">
           This runs a live probe against the database: temporary rows are created for a fake other
@@ -78,6 +79,6 @@ function RlsCheckPage() {
           </div>
         ) : null}
       </Card>
-    </AppShell>
+    </>
   );
 }

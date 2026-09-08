@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { CarpoolShield } from "@/components/quorum/guardian/CarpoolShield";
 import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsights";
 import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
@@ -39,7 +39,7 @@ import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { haptic } from "@/lib/quorum/haptics";
 import { SwipeBack } from "@/components/quorum/interactions";
 
-export const Route = createFileRoute("/_authenticated/plans/$planId")({
+export const Route = createFileRoute("/_authenticated/_app/plans/$planId")({
   head: () => ({
     meta: [
       { title: "Plan — Syncly" },
@@ -193,9 +193,10 @@ function PlanPage() {
 
   if (q.isLoading || !data || !meta) {
     return (
-      <AppShell title="Plan">
+      <>
+        <PageHeader title="Plan" />
         <Skeleton className="h-40 rounded-3xl" />
-      </AppShell>
+      </>
     );
   }
 
@@ -223,10 +224,11 @@ function PlanPage() {
   const latestApproval = data.approvals[0]?.status ?? null;
 
   return (
-    <AppShell
-      title={data.plan.title}
-      subtitle={`${meta.emoji} ${meta.label} · ${responded} of ${total} have answered privately`}
-    >
+    <>
+      <PageHeader
+        title={data.plan.title}
+        subtitle={`${meta.emoji} ${meta.label} · ${responded} of ${total} have answered privately`}
+      />
       <SwipeBack>
       {selectedRec ? (
         <FinalizedPlanHub
@@ -771,6 +773,6 @@ function PlanPage() {
       <ConciergeSheet planId={planId} planTitle={data.plan.title} />
       <ChatDrawer groupId={data.plan.group_id} planId={planId} />
       </SwipeBack>
-    </AppShell>
+    </>
   );
 }

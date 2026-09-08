@@ -14,7 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
@@ -37,7 +37,7 @@ import { getFriendPins } from "@/lib/quorum/sharing.functions";
 import { cn } from "@/lib/utils";
 
 
-export const Route = createFileRoute("/_authenticated/radar")({
+export const Route = createFileRoute("/_authenticated/_app/radar")({
   head: () => ({
     meta: [
       { title: "Live radar — Syncly" },
@@ -241,7 +241,8 @@ function RadarPage() {
 
 
   return (
-    <AppShell title="Radar">
+    <>
+      <PageHeader title="Radar" />
       <PullToRefresh
         onRefresh={async () => {
           await Promise.all([hub.refetch(), mine.refetch(), friendPins.refetch()]);
@@ -292,7 +293,7 @@ function RadarPage() {
         )}
       </div>
       </PullToRefresh>
-    </AppShell>
+    </>
   );
 }
 

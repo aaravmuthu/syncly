@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Sparkles, KeyRound } from "lucide-react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
@@ -34,7 +34,7 @@ import {
 import { takePendingInvite } from "@/lib/quorum/invite";
 import { getMe, getDashboard, listGroups } from "@/lib/quorum/plan.functions";
 
-export const Route = createFileRoute("/_authenticated/home")({
+export const Route = createFileRoute("/_authenticated/_app/home")({
   head: () => ({
     meta: [
       { title: "Your week — Syncly" },
@@ -171,10 +171,11 @@ function HomePage() {
   const empty = !dash.isLoading && plans.length === 0;
 
   return (
-    <AppShell
-      title={me.data ? `Hey, ${String(me.data.display_name).split(" ")[0]}` : "Home"}
-      subtitle="Everyone answers privately. Syncly only shows what works for the whole group."
-    >
+    <>
+      <PageHeader
+        title={me.data ? `Hey, ${String(me.data.display_name).split(" ")[0]}` : "Home"}
+        subtitle="Everyone answers privately. Syncly only shows what works for the whole group."
+      />
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
 
       <PullToRefresh
@@ -341,8 +342,7 @@ function HomePage() {
         ) : null}
       </div>
       </PullToRefresh>
-    </AppShell>
-
+    </>
   );
 }
 

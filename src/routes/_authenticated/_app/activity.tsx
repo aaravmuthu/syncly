@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AppShell } from "@/components/quorum/AppShell";
+import { PageHeader } from "@/components/quorum/AppShell";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
@@ -18,7 +18,7 @@ import {
 } from "@/components/quorum/interactions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/activity")({
+export const Route = createFileRoute("/_authenticated/_app/activity")({
   head: () => ({
     meta: [
       { title: "Activity — Syncly" },
@@ -238,17 +238,18 @@ function ActivityPage() {
   );
 
   return (
-    <AppShell
-      title="Activity"
-      subtitle="Everything that moved across your groups and plans."
-      action={
-        unread > 0 ? (
-          <Button variant="outline" onClick={() => void markRead()}>
-            Mark all read
-          </Button>
-        ) : null
-      }
-    >
+    <>
+      <PageHeader
+        title="Activity"
+        subtitle="Everything that moved across your groups and plans."
+        action={
+          unread > 0 ? (
+            <Button variant="outline" onClick={() => void markRead()}>
+              Mark all read
+            </Button>
+          ) : null
+        }
+      />
       {perm === "default" && !dismissed ? (
         <div className="surface mb-4 flex items-center gap-3 px-4 py-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-base">
@@ -349,6 +350,6 @@ function ActivityPage() {
           ))}
         </div>
       </PullToRefresh>
-    </AppShell>
+    </>
   );
 }
