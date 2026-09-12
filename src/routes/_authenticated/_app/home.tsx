@@ -195,23 +195,6 @@ function HomePage() {
       >
       <div className="space-y-6">
 
-        {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
-            <p className="text-sm">
-              <span className="mr-1">📍</span>
-              Add your home address to get exact drive distances to every spot.
-            </p>
-            <Link to="/settings">
-              <Button variant="outline">Set address</Button>
-            </Link>
-          </div>
-        ) : null}
-        {me.data && me.data.account_type !== "guardian" ? (
-          <TeenSafetyBar sharing={Boolean(me.data.location_sharing_enabled)} />
-        ) : null}
-
-        <SquadDigestCard />
-
         <WeekStrip
           weekStart={weekStart}
           selected={selectedDay}
@@ -271,7 +254,7 @@ function HomePage() {
         ) : null}
 
         {conflicted.length > 0 ? (
-          <Section title="Conflicts" accent="text-amber-400">
+          <Section title="Conflicts" accent="text-foreground">
             <div className="grid gap-3">
               {conflicted.map((p) => (
                 <ConflictCard
@@ -314,6 +297,23 @@ function HomePage() {
             </section>
           ) : null}
         </LayoutGroup>
+
+        {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
+            <p className="text-sm">
+              <span className="mr-1">📍</span>
+              Add your home address to get exact drive distances to every spot.
+            </p>
+            <Link to="/settings">
+              <Button variant="outline">Set address</Button>
+            </Link>
+          </div>
+        ) : null}
+        {me.data && me.data.account_type !== "guardian" ? (
+          <TeenSafetyBar sharing={Boolean(me.data.location_sharing_enabled)} />
+        ) : null}
+
+        <SquadDigestCard />
 
         <FindMySquad />
 

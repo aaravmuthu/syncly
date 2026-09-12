@@ -144,7 +144,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
           />
           <span
             className={cn(
-              "absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full text-[10px] shadow-md ring-2 ring-card",
+              "absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full text-[11px] shadow-md ring-2 ring-card",
               k.badgeClass,
             )}
             aria-label={k.label}

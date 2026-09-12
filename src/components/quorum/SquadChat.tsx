@@ -405,7 +405,7 @@ function Bubble({
           <p className="px-1 text-[11px] text-white/45">
             {msg.profiles?.display_name ?? "Member"}
             {isHost ? (
-              <span className="ml-1.5 rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+              <span className="ml-1.5 rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-300">
                 Host
               </span>
             ) : null}
@@ -461,7 +461,7 @@ function Bubble({
             ) : null}
           </button>
         </div>
-        <p className="px-1 text-[10px] text-white/35">
+        <p className="px-1 text-[11px] text-white/35">
           {time(msg.created_at)}
           {mine ? <span className="ml-1">{readers.length > 0 ? "✓✓" : "✓"}</span> : null}
         </p>
@@ -479,7 +479,7 @@ function Bubble({
                 />
               ))}
             </div>
-            <span className="text-[10px] text-white/35">
+            <span className="text-[11px] text-white/35">
               Seen by {readers[0]?.profiles?.display_name ?? "someone"}
               {readers.length > 1 ? ` +${readers.length - 1}` : ""}
             </span>
@@ -502,7 +502,7 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
   const title = meta.title ?? msg.content;
   return (
     <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 text-center shadow-xl backdrop-blur">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">
         {tag}
       </p>
       <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-emerald-50">
@@ -519,7 +519,7 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
           Vote Now ⚡
         </Button>
       ) : null}
-      <p className="mt-2 text-[10px] text-white/35">{time(msg.created_at)}</p>
+      <p className="mt-2 text-[11px] text-white/35">{time(msg.created_at)}</p>
     </div>
   );
 }

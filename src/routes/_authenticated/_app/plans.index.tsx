@@ -289,7 +289,7 @@ function PlanCard({
             </span>
           ))}
           {plan.participants.length > 5 ? (
-            <span className="grid size-[30px] place-items-center rounded-full bg-secondary text-[10px] font-semibold ring-2 ring-background">
+            <span className="grid size-[30px] place-items-center rounded-full bg-secondary text-[11px] font-semibold ring-2 ring-background">
               +{plan.participants.length - 5}
             </span>
           ) : null}

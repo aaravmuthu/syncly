@@ -139,7 +139,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <Bell className="size-5" aria-hidden />
                 {unread > 0 ? (
-                  <span className="absolute right-0.5 top-0.5 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground">
+                  <span className="absolute right-0.5 top-0.5 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-4 text-primary-foreground">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 ) : null}

@@ -292,7 +292,7 @@ function Row({
         <span className="mt-0.5 flex items-center justify-between gap-2">
           <span className="truncate text-xs text-muted-foreground">{preview}</span>
           {unread > 0 ? (
-            <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+            <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
               {unread > 9 ? "9+" : unread}
             </span>
           ) : null}

@@ -73,7 +73,7 @@ export function AvailabilityHeatmap({ planId }: { planId: string }) {
                 style={{ backgroundColor: `color-mix(in oklab, var(--color-primary) ${Math.round(tone * 100)}%, transparent)` }}
                 title={`${c.free} of ${c.total} free at ${prettySlot(c.slot)}`}
               />
-              <span className="mt-1 block text-[10px] text-muted-foreground">{prettySlot(c.slot)}</span>
+              <span className="mt-1 block text-[11px] text-muted-foreground">{prettySlot(c.slot)}</span>
             </div>
           );
         })}

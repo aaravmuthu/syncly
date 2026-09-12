@@ -153,7 +153,7 @@ export function AvatarStack({ people, max = 4 }: { people: DashParticipant[]; ma
         />
       ))}
       {rest > 0 ? (
-        <span className="-ml-2 grid h-7 w-7 place-items-center rounded-full bg-secondary text-[10px] font-semibold ring-2 ring-background">
+        <span className="-ml-2 grid h-7 w-7 place-items-center rounded-full bg-secondary text-[11px] font-semibold ring-2 ring-background">
           +{rest}
         </span>
       ) : null}
@@ -264,7 +264,7 @@ export function WeekStrip({
                     : "text-muted-foreground hover:bg-foreground/5",
               )}
             >
-              <span className="text-[10px] font-semibold uppercase tracking-wide opacity-80">
+              <span className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
                 {d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3)}
               </span>
               <span className="text-sm font-semibold tabular-nums">{d.getDate()}</span>

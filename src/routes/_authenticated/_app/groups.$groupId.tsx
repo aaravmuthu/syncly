@@ -345,7 +345,7 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
                 : `👍 ${names[0]}${going.length > 1 ? ` + ${going.length - 1} other${going.length > 2 ? "s" : ""}` : ""}`}
             </span>
             {conflicts > 0 ? (
-              <span className="shrink-0 rounded-full bg-amber-400/12 px-2 py-0.5 text-[11px] font-medium text-amber-500">
+              <span className="shrink-0 rounded-full bg-amber-400/12 px-2 py-0.5 text-[11px] font-medium text-foreground">
                 ✋ {conflicts} Conflict{conflicts === 1 ? "" : "s"}
               </span>
             ) : null}

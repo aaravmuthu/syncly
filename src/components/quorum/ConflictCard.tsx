@@ -64,9 +64,9 @@ export function ConflictCard({
   return (
     <div className="glass-card space-y-3 border-amber-400/35 p-4">
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden />
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-500">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground">
             Conflict detected
           </p>
           <p className="text-sm font-semibold">{title}</p>

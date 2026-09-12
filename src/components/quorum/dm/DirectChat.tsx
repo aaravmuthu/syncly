@@ -332,7 +332,7 @@ export function DirectChat({
         ) : null}
 
         {peerReadAt && messages.some((m) => m.sender_id === me) ? (
-          <p className="pr-1 text-right text-[10px] text-white/35">Read {time(peerReadAt)}</p>
+          <p className="pr-1 text-right text-[11px] text-white/35">Read {time(peerReadAt)}</p>
         ) : null}
       </div>
 
@@ -537,7 +537,7 @@ function DmBubble({
               {emoji} {count}
             </button>
           ))}
-          <span className="text-[10px] text-white/30">{time(msg.created_at)}</span>
+          <span className="text-[11px] text-white/30">{time(msg.created_at)}</span>
         </div>
       </div>
     </div>
