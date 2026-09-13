@@ -115,6 +115,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [optimisticTab, setOptimisticTab] = useState<TabPath | null>(null);
   const selectedTab = optimisticTab ?? routedTab;
   const visibleTab = optimisticTab ?? exactTab(pathname);
+  // Radar is map-native: its map is a fixed, full-viewport layer, so the
+  // header and bottom nav can't reserve their own flow space above/below it
+  // the way every other (normally scrolling) tab needs them to. On Radar
+  // they become floating glass overlays instead -- same content, just
+  // repositioned out of flow and given a frosted background instead of an
+  // opaque one, so the map reads through them at the very top/bottom edges.
+  const isRadar = visibleTab === "/radar";
   const navigationLock = useRef({ to: "" as TabPath | "", until: 0 });
   const blockNextClick = useRef(false);
   const clickCommitted = useRef(false);
@@ -153,16 +160,45 @@ export function AppShell({ children }: { children: ReactNode }) {
     setOptimisticTab(to);
     if (window.matchMedia("(pointer: coarse)").matches) haptic("select");
 
+    const target = event.currentTarget;
+
     // A touch that ends without a click (finger slid off the tab, scroll took
     // over, browser cancelled the gesture) must not leave the optimistic tab
     // selected — otherwise the shell shows a tab the router never navigated
-    // to and later snaps back.
+    // to and later snaps back. That's the ONLY case this should revert for.
+    //
+    // This used to revert on a flat 120ms timeout after pointerup instead,
+    // racing it against the browser's own (already-guaranteed, since
+    // touch-action: manipulation removes any tap/pan ambiguity) click
+    // dispatch. Under Radar's heavier main-thread load -- Mapbox render +
+    // marker layout work -- that dispatch could occasionally land after
+    // 120ms had already elapsed, so settle() reverted a tab switch that was
+    // genuinely still in flight, which is what actually caused switches
+    // away from Radar to snap back. A fixed timeout can't self-adjust to
+    // main-thread congestion; double requestAnimationFrame can, since it
+    // won't run until the browser is idle enough to paint a frame -- the
+    // same condition the pending click needs to actually dispatch. So this
+    // now only ever reverts on a real abandoned-gesture signal (pointerup
+    // landing outside the tapped element, or pointercancel), never on
+    // elapsed time alone.
     const settle = () => {
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
-      if (!clickCommitted.current) setOptimisticTab((current) => (current === to ? null : current));
+      if (!clickCommitted.current) {
+        console.warn(`[tab-switch] "${to}" primed but no click landed -- reverting`);
+        setOptimisticTab((current) => (current === to ? null : current));
+      }
     };
-    const onUp = () => window.setTimeout(settle, 120);
+    const onUp = (upEvent: PointerEvent) => {
+      const landedOnTarget =
+        target instanceof Node &&
+        (upEvent.target === target || target.contains(upEvent.target as Node));
+      if (landedOnTarget) {
+        requestAnimationFrame(() => requestAnimationFrame(settle));
+      } else {
+        settle();
+      }
+    };
     const onCancel = () => settle();
     window.addEventListener("pointerup", onUp, { once: true });
     window.addEventListener("pointercancel", onCancel, { once: true });
@@ -212,12 +248,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         data-vaul-drawer-wrapper
         className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
-        {/* No backdrop-blur here: this header sits on screen through every
-            page transition, and blurring the animating content behind it
-            forces the browser to recomposite on every frame -- a real,
-            network-independent cost. A near-opaque background reads almost
-            identically without it. */}
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 pt-[env(safe-area-inset-top)]">
+        {/* No backdrop-blur outside Radar: this header sits on screen through
+            every page transition, and blurring the animating content behind
+            it forces the browser to recomposite on every frame -- a real,
+            network-independent cost that a near-opaque background avoids.
+            On Radar the map behind it needs to actually read through, so it
+            switches to `fixed` (out of document flow entirely -- nothing
+            below it needs to know it exists) with the glass treatment; the
+            main-thread cost of blurring a mostly-static map is worth it
+            there specifically. */}
+        <header
+          className={cn(
+            "inset-x-0 top-0 z-30 border-b border-border/70 pt-[env(safe-area-inset-top)]",
+            isRadar ? "fixed map-glass-bar" : "sticky bg-background/95",
+          )}
+        >
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
             <Link to="/home" className="flex items-center gap-2">
               <Wordmark className="h-6" />
@@ -268,15 +313,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
+        {/* Radar's own map container is `fixed inset-0` -- already viewport-
+            relative and independent of this padding either way -- but every
+            OTHER tab sharing this same persistent host still needs it to
+            clear the now-`fixed` header/nav, so it's stripped only while
+            Radar is actually the visible tab, not removed outright. */}
+        <main className={cn("mx-auto w-full max-w-3xl", !isRadar && "px-4 pb-32 pt-6")}>
           <InstallPrompt />
           <PersistentTabHost activeTab={visibleTab} />
           {visibleTab ? null : <PageTransition>{children}</PageTransition>}
         </main>
 
-        {/* Same reasoning as the header above: no backdrop-blur on an
-            element that's on screen for every page transition. */}
-        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] md:hidden">
+        {/* Same reasoning as the header above: opaque everywhere except
+            Radar, where it floats over the full-bleed map as glass. */}
+        <nav
+          className={cn(
+            "fixed inset-x-0 bottom-0 z-50 border-t border-border/70 pb-[env(safe-area-inset-bottom)] md:hidden",
+            isRadar ? "map-glass-bar" : "bg-background/95",
+          )}
+        >
           <div className="relative mx-auto flex max-w-md items-stretch justify-between px-2 py-1.5">
             <div className="pointer-events-none absolute inset-x-2 top-1.5 h-0.5" aria-hidden>
               <span

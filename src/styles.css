@@ -491,19 +491,43 @@
 /* Floating controls over the Radar map. Permanently dark (the Mapbox style
    is always dark-v11 regardless of app theme, so a light-adaptive control
    would wash out) -- a real glassmorphism treatment, not a flat fill:
-   frost + edge-of-glass highlight + layered shadow for depth. */
+   frost + edge-of-glass highlight + layered shadow for depth.
+   Opacity is deliberately low (0.32) with a brightness lift on the blur --
+   Mapbox's dark-v11 basemap is itself mostly near-black, so a darker/more
+   opaque frost (the previous 0.45, no brightness boost) read as just
+   another solid dark rectangle instead of glass. Lifting what's blurred
+   behind it is what actually reads as "frosted" against a dark backdrop. */
 @utility map-glass {
-  background: rgba(20, 20, 24, 0.45);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(32, 34, 40, 0.32);
+  backdrop-filter: blur(24px) saturate(180%) brightness(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.25);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    0 8px 28px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
 }
 @media (prefers-reduced-transparency: reduce) {
   .map-glass {
+    background: oklch(0.16 0.006 270);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Same frost recipe, tuned for edge-to-edge app chrome (top nav, bottom tab
+   bar) floating over the full-bleed Radar map instead of a discrete pill --
+   no border-radius/full border (those elements own their own hairline
+   edge via border-b/border-t), slightly higher opacity since this chrome
+   has to stay legible against ANY part of the map scrolling underneath it,
+   not just the generally darker regions a pill happens to sit over. */
+@utility map-glass-bar {
+  background: rgba(32, 34, 40, 0.45);
+  backdrop-filter: blur(24px) saturate(180%) brightness(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.25);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .map-glass-bar {
     background: oklch(0.16 0.006 270);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
