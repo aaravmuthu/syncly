@@ -177,6 +177,7 @@ export async function generateAlternatives(planId: string) {
     dietaryFit: 85,
     transportFit: 85,
     fairness: 90,
+    overallFit: 82,
     reasons: [reason],
     cautions: [],
   });

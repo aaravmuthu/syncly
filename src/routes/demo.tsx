@@ -341,7 +341,7 @@ function DemoPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-semibold tabular-nums">{r.score}</div>
-                    <div className="text-[11px] text-muted-foreground">compatibility</div>
+                    <div className="text-[11px] text-muted-foreground">Overall Match</div>
                   </div>
                 </div>
 
@@ -363,12 +363,17 @@ function DemoPage() {
                 </div>
 
                 {i === 0 && (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <Meter label="Budget fit" value={r.breakdown.budgetFit} />
-                    <Meter label="Schedule fit" value={r.breakdown.scheduleFit} />
-                    <Meter label="Travel fit" value={r.breakdown.travelFit} />
-                    <Meter label="Fairness" value={r.breakdown.fairness} />
-                  </div>
+                  <>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <Meter label="Preference fit" value={r.breakdown.overallFit} />
+                      <Meter label="Fairness" value={r.breakdown.fairness} />
+                    </div>
+                    <p className="mt-2.5 text-xs text-muted-foreground">
+                      Overall Match is 62% preference fit, 28% fairness, 10% ride coverage.
+                      Budget, schedule, and travel are pass/fail requirements — already reflected
+                      in "Works for all {members.length}" above, not a percentage.
+                    </p>
+                  </>
                 )}
 
                 {i === 0 && (

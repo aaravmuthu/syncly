@@ -99,6 +99,9 @@ function Landing() {
               <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
                 {DESCRIPTION}
               </p>
+              <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground/80">
+                Location sharing is optional and only turned on per plan.
+              </p>
             </RevealItem>
             <RevealItem lift={false} className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <GlowButton

@@ -159,6 +159,14 @@ export type ScoreBreakdown = {
   dietaryFit: number;
   transportFit: number;
   fairness: number;
+  /**
+   * The actual number behind the headline score's largest input (62% weight):
+   * a blend of the group's average preference satisfaction and its worst-off
+   * member's, 0-100. Distinct from `preferenceFit` (average only) — this is
+   * what "Overall Match" is mostly made of, and the UI should show this
+   * number rather than implying budget/schedule/travel drive the headline.
+   */
+  overallFit: number;
   reasons: string[];
   cautions: string[];
   /** Assigned when the option makes the strict top-3 shortlist. */

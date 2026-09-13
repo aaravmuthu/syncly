@@ -241,6 +241,7 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
     preferenceFit: Math.round(avgSoft * 100),
     transportFit: Math.round(transport.ratio * 100),
     fairness: Math.round(fairness * 100),
+    overallFit: Math.round(groupFit * 100),
     reasons,
     cautions,
     ...(option.address || option.distanceMiles != null

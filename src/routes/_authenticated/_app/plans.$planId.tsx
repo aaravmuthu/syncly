@@ -647,7 +647,7 @@ function PlanPage() {
                     <div className="font-display text-2xl font-semibold tabular-nums">
                       {r.score}%
                     </div>
-                    <div className="text-caption text-muted-foreground">match</div>
+                    <div className="text-caption text-muted-foreground">Overall Match</div>
                     {b.venue?.distanceMiles != null ? (
                       <div className="mt-0.5 text-caption text-muted-foreground tabular-nums">
                         {b.venue.distanceMiles} mi
@@ -657,12 +657,14 @@ function PlanPage() {
                 </div>
 
                 <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                  <Meter label="Schedule fit" value={b.scheduleFit ?? 0} />
-                  <Meter label="Travel" value={b.travelFit ?? 0} />
-                  <Meter label="Food needs" value={b.dietaryFit ?? 0} />
-                  <Meter label="Preferences" value={b.preferenceFit ?? 0} />
+                  <Meter label="Preference fit" value={b.overallFit ?? 0} />
                   <Meter label="Fairness" value={b.fairness ?? 0} />
                 </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Overall Match is 62% preference fit, 28% fairness, 10% ride coverage. Budget,
+                  schedule, dietary and travel needs are pass/fail requirements, already reflected
+                  in "{r.feasible ? "Works for everyone" : "Doesn't work for everyone"}" above.
+                </p>
 
                 {(() => {
                   const cost = estimateCost({

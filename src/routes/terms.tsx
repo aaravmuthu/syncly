@@ -162,13 +162,10 @@ function TermsPage() {
 
         <SubSection title="Ending a link">
           <p>
-            Either party can unlink the accounts from Settings. Unlinking stops new data from being
-            shared going forward.{" "}
-            <Ph>
-              [Confirm and state here whether either party can unlink unilaterally, or whether
-              disputes over unlinking (e.g. a teen unlinking without a guardian's knowledge) are
-              handled some other way.]
-            </Ph>
+            Either party can unlink the accounts from Settings at any time, unilaterally, without
+            the other party's confirmation. Unlinking stops new data from being shared going
+            forward, but does not retroactively delete data already shared with the other party
+            while the link was active.
           </p>
         </SubSection>
 

@@ -335,6 +335,7 @@ export const launchAiPlan = createServerFn({ method: "POST" })
                 dietaryFit: 90,
                 transportFit: 80,
                 fairness: 85,
+                overallFit: 82,
                 reasons: [`Clustered around the group's fair point (${origin.label})`],
                 cautions: warns.map(
                   (w) => `Wraps at ${w.wrapsAt}, past ${w.name}'s ${w.curfew} curfew`,
