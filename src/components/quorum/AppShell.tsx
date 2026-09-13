@@ -140,6 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // opaque one, so the map reads through them at the very top/bottom edges.
   const isRadar = visibleTab === "/radar";
   const navigationLock = useRef({ to: "" as TabPath | "", until: 0 });
+  const suppressClickUntil = useRef(0);
 
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
@@ -154,9 +155,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     const now = performance.now();
     if (to === exactTab(pathname) || now < navigationLock.current.until) return;
     navigationLock.current = { to, until: now + 180 };
+    suppressClickUntil.current = now + 500;
     haptic("select");
     void navigate({ to });
   }, [navigate, pathname]);
+
+  const suppressTouchClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (performance.now() >= suppressClickUntil.current) return;
+    event.preventDefault();
+    suppressClickUntil.current = 0;
+  }, []);
 
 
   // Radar's map pulls in mapbox-gl -- ~500KB gzipped on its own, by far the
@@ -229,8 +237,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </span>
                 ) : null}
               </Link>
-              </div>
-              {isRadar ? <RadarMobileMenu unread={unread} /> : null}
               <Link
                 to="/settings"
                 aria-label="Settings"
@@ -251,6 +257,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className="ring-1 ring-border"
                 />
               </Link>
+              </div>
+              {isRadar ? <RadarMobileMenu unread={unread} /> : null}
             </div>
           </div>
         </header>
@@ -298,6 +306,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={n.to}
                   preload="intent"
                   onPointerDown={(event) => navigateOnTouch(event, n.to as TabPath)}
+                  onClick={suppressTouchClick}
                   className="flex flex-1"
                 >
                   <span

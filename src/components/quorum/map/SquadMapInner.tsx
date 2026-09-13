@@ -21,10 +21,12 @@ import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./
 import { cn } from "@/lib/utils";
 
 const MAP_SEARCH_POSITION =
-  "bottom-[calc(env(safe-area-inset-bottom)+8.5rem)] md:bottom-auto md:top-[calc(env(safe-area-inset-top)+4.5rem)]";
+  "bottom-[calc(env(safe-area-inset-bottom)+13.25rem)] md:bottom-auto md:top-[calc(env(safe-area-inset-top)+4.5rem)]";
 const MAP_CONTROLS_POSITION =
-  "bottom-[calc(env(safe-area-inset-bottom)+12rem)] md:bottom-auto md:top-[calc(env(safe-area-inset-top)+8rem)]";
-const MAP_BOTTOM_CLEAR_SHEET = "bottom-[calc(env(safe-area-inset-bottom)+8rem)]";
+  "bottom-[calc(env(safe-area-inset-bottom)+9.75rem)] md:bottom-auto md:top-[calc(env(safe-area-inset-top)+8rem)]";
+const MAP_LIST_POSITION =
+  "top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-[calc(env(safe-area-inset-bottom)+9.75rem)] md:bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:top-[calc(env(safe-area-inset-top)+8rem)]";
+const MAP_BOTTOM_CLEAR_SHEET = "bottom-[calc(env(safe-area-inset-bottom)+9.75rem)]";
 
 type Props = SquadMapData & {
   token: string;
@@ -460,8 +462,7 @@ export default function SquadMapInner({
         <div
           className={cn(
             "map-glass absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl",
-            MAP_CONTROLS_POSITION,
-            MAP_BOTTOM_CLEAR_SHEET,
+            MAP_LIST_POSITION,
           )}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
