@@ -3,14 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
-import { DollarSign, Info, MapPin } from "lucide-react";
+import { DollarSign, Info, MapPin, Scale } from "lucide-react";
 import { Avatar } from "./Avatar";
-import { Button, statusTone, statusToneClasses } from "./ui";
+import { Button, Pill, statusTone, statusToneClasses } from "./ui";
 import { cn } from "@/lib/utils";
 import { getMapToken } from "@/lib/quorum/location.functions";
 import { getPlanWeather } from "@/lib/quorum/insight.functions";
 import { describeWeather } from "@/lib/quorum/weather";
-import { estCostLabel } from "@/lib/quorum/estcost";
+import { budgetFitLabel, budgetFitTone, estCostLabel } from "@/lib/quorum/estcost";
 
 export type DashParticipant = {
   profile_id: string;
@@ -110,6 +110,29 @@ export function CostBadge({
       <DollarSign className="size-3" aria-hidden />
       {label}
     </span>
+  );
+}
+
+/**
+ * Privacy-safe read of the group's private budgets vs. this plan's leading
+ * option — never a number, never a name, just "fits" or "a stretch." Pulls
+ * from the engine's already-computed ScoreBreakdown.budgetFit.
+ */
+export function BudgetFitPill({
+  budgetFit,
+  className,
+}: {
+  budgetFit: number | null | undefined;
+  className?: string;
+}) {
+  const tone = budgetFitTone(budgetFit);
+  const label = budgetFitLabel(budgetFit);
+  if (!tone || !label) return null;
+  return (
+    <Pill tone={tone} className={className}>
+      <Scale className="size-3" aria-hidden />
+      {label}
+    </Pill>
   );
 }
 

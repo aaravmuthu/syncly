@@ -7,7 +7,11 @@ import { Card, Pill } from "@/components/quorum/ui";
 import { OPTION_CATALOG } from "@/lib/quorum/catalog";
 import { rankOptions, buildTransportPlan, type MemberInput } from "@/lib/quorum/engine";
 import { estimateCost } from "@/lib/quorum/cost";
-import { CATEGORIES, type ConstraintPayload, type PlanCategory } from "@/lib/quorum/types";
+import {
+  TOP_LEVEL_CATEGORIES,
+  type ConstraintPayload,
+  type PlanCategory,
+} from "@/lib/quorum/types";
 
 const TITLE = `Try ${BRAND.name} — interactive demo, no account needed`;
 const DESCRIPTION =
@@ -183,7 +187,7 @@ function DemoPage() {
 
         {/* Category */}
         <div className="mt-6 flex flex-wrap gap-2">
-          {CATEGORIES.filter((c) => c.id !== "custom").map((c) => (
+          {TOP_LEVEL_CATEGORIES.filter((c) => c.id !== "custom").map((c) => (
             <button
               key={c.id}
               type="button"

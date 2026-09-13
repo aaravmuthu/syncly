@@ -17,20 +17,26 @@ export const CATEGORIES: {
   emoji: string;
   blurb: string;
   questionnaire: "dinner" | "event" | "trip" | "general";
+  /** Shown as its own choice in category pickers. Non-top-level ids are
+   *  legacy/tag-level values — still valid data, but folded into a broader
+   *  category's picker instead of standing alone (see PlanWizard's vibe row). */
+  topLevel?: boolean;
 }[] = [
   {
     id: "dinner",
-    label: "Dinner / Food",
+    label: "Food & Drinks",
     emoji: "🍜",
-    blurb: "Restaurants, late bites, dessert runs",
+    blurb: "Restaurants, boba, late bites, dessert runs",
     questionnaire: "dinner",
+    topLevel: true,
   },
   {
     id: "hangout",
-    label: "Casual Hangout",
+    label: "Hangout",
     emoji: "🛋️",
-    blurb: "Low-key, low-cost, easy to say yes to",
+    blurb: "Movies, bowling, arcades — low-key and easy to say yes to",
     questionnaire: "general",
+    topLevel: true,
   },
   {
     id: "concert",
@@ -38,28 +44,37 @@ export const CATEGORIES: {
     emoji: "🎟️",
     blurb: "Tickets, venues, late returns",
     questionnaire: "event",
+    topLevel: true,
   },
   {
     id: "trip",
-    label: "Vacation / Trip",
+    label: "Trip / Getaway",
     emoji: "🏝️",
-    blurb: "Multi-day, budgets, travel time",
+    blurb: "Day trips, road trips, multi-day travel",
     questionnaire: "trip",
+    topLevel: true,
   },
-  { id: "party", label: "Party", emoji: "🎉", blurb: "Hosting and headcounts", questionnaire: "general" },
+  { id: "party", label: "Party", emoji: "🎉", blurb: "Hosting and headcounts", questionnaire: "general", topLevel: true },
   { id: "movie", label: "Movie", emoji: "🎬", blurb: "Showtimes and seats", questionnaire: "general" },
   { id: "shopping", label: "Shopping", emoji: "🛍️", blurb: "Malls, thrifting, outlets", questionnaire: "general" },
   {
     id: "sports",
-    label: "Sports / Recreation",
+    label: "Sports & Rec",
     emoji: "🏓",
     blurb: "Courts, ranges, climbing, bowling",
     questionnaire: "general",
+    topLevel: true,
   },
   { id: "daytrip", label: "Day Trip", emoji: "🚗", blurb: "Out and back in a day", questionnaire: "trip" },
   { id: "roadtrip", label: "Road Trip", emoji: "🛣️", blurb: "Longer drives, split costs", questionnaire: "trip" },
-  { id: "custom", label: "Custom", emoji: "✨", blurb: "Anything else", questionnaire: "general" },
+  { id: "custom", label: "Custom", emoji: "✨", blurb: "Anything else", questionnaire: "general", topLevel: true },
 ];
+
+/** The general, non-overlapping choices offered in category pickers. Movie,
+ *  Shopping, Day Trip and Road Trip stay valid stored values (existing plans
+ *  still render correctly via categoryMeta) but no longer compete as peers
+ *  of the broader buckets they're actually part of. */
+export const TOP_LEVEL_CATEGORIES = CATEGORIES.filter((c) => c.topLevel);
 
 export function categoryMeta(id: string) {
   return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1]!;

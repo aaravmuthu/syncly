@@ -32,6 +32,7 @@ import { getDashboard } from "@/lib/quorum/plan.functions";
 import { confirmAttendance } from "@/lib/quorum/conflict.functions";
 import { categoryIcon } from "@/lib/quorum/icons";
 import { estCostLabel } from "@/lib/quorum/estcost";
+import { BudgetFitPill } from "@/components/quorum/DashboardParts";
 
 
 export const Route = createFileRoute("/_authenticated/_app/plans/")({
@@ -239,15 +240,18 @@ function PlanCard({
             </span>
           ) : null}
         </div>
-        {finalized ? (
-          <Pill tone="good">
-            <Lock className="size-3.5" /> Locked in
-          </Pill>
-        ) : (
-          <Pill tone="accent" className="animate-pulse">
-            <Zap className="size-3.5" /> Voting active
-          </Pill>
-        )}
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+          {finalized ? (
+            <Pill tone="good">
+              <Lock className="size-3.5" /> Locked in
+            </Pill>
+          ) : (
+            <Pill tone="accent" className="animate-pulse">
+              <Zap className="size-3.5" /> Voting active
+            </Pill>
+          )}
+          <BudgetFitPill budgetFit={plan.budget_fit} />
+        </div>
       </div>
 
       {/* Hero */}

@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { linkTeen } from "@/lib/quorum/guardian.functions";
-import { CATEGORIES } from "@/lib/quorum/types";
+import { TOP_LEVEL_CATEGORIES } from "@/lib/quorum/types";
 import { categoryIcon } from "@/lib/quorum/icons";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
@@ -139,7 +139,7 @@ function Onboarding() {
       caption: "This only decides which questionnaires appear first.",
       body: (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {CATEGORIES.slice(0, 9).map((c) => {
+          {TOP_LEVEL_CATEGORIES.filter((c) => c.id !== "custom").map((c) => {
             const on = cats.includes(c.id);
             const Icon = categoryIcon(c.id);
             return (

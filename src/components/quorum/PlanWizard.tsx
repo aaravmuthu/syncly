@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Clapperboard, Coffee, Trophy, Utensils, Radar } from "lucide-react";
+import { ArrowLeft, Clapperboard, Trophy, Utensils, Radar } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Skeleton } from "./ui";
 import { FairVenueCard } from "./FairPointVenues";
@@ -11,6 +11,7 @@ import { VenueMap, type MapVenue } from "./VenueMap";
 import { createPlan } from "@/lib/quorum/plan.functions";
 import { getPlanDefaults, previewFairPointVenues } from "@/lib/quorum/planner.functions";
 import type { PlanCategory } from "@/lib/quorum/types";
+import { VIBES, vibeById } from "@/lib/quorum/vibes";
 
 /* ---------------------------------------------------------------- */
 /* Step 1 vibes                                                      */
@@ -23,12 +24,36 @@ type WizardVibe = {
   emoji: string;
   Icon: typeof Trophy;
   category: PlanCategory;
-  /** matching vibe id from lib/quorum/vibes */
+  /** default vibe id from lib/quorum/vibes */
   vibe: string;
+  /** other vibe ids offered as one-tap sub-picks under this category, e.g. Boba under Food. */
+  subVibes?: string[];
   glow: string;
 };
 
 const WIZARD_VIBES: WizardVibe[] = [
+  {
+    id: "food",
+    title: "Food & Drinks",
+    blurb: "Pizza · Burgers · Boba · Tacos",
+    emoji: "🍔",
+    Icon: Utensils,
+    category: "dinner",
+    vibe: "burgers-wings",
+    subVibes: ["burgers-wings", "pizza", "casual-dining", "boba-cafes", "late-night"],
+    glow: "from-amber-400/25",
+  },
+  {
+    id: "fun",
+    title: "Hangout",
+    blurb: "Movies · Bowling · Arcades · Golf",
+    emoji: "🎬",
+    Icon: Clapperboard,
+    category: "hangout",
+    vibe: "activities",
+    subVibes: ["activities", "outdoors"],
+    glow: "from-sky-400/25",
+  },
   {
     id: "sports",
     title: "Sports & Activity",
@@ -38,36 +63,6 @@ const WIZARD_VIBES: WizardVibe[] = [
     category: "sports",
     vibe: "activities",
     glow: "from-emerald-400/25",
-  },
-  {
-    id: "food",
-    title: "Food & Bites",
-    blurb: "Wings · Pizza · Burgers · Tacos",
-    emoji: "🍔",
-    Icon: Utensils,
-    category: "dinner",
-    vibe: "burgers-wings",
-    glow: "from-amber-400/25",
-  },
-  {
-    id: "boba",
-    title: "Boba & Chill",
-    blurb: "Coffee · Desserts · Tea",
-    emoji: "🧋",
-    Icon: Coffee,
-    category: "hangout",
-    vibe: "boba-cafes",
-    glow: "from-fuchsia-400/25",
-  },
-  {
-    id: "fun",
-    title: "Hangouts & Fun",
-    blurb: "Movies · Bowling · Arcades · Golf",
-    emoji: "🎬",
-    Icon: Clapperboard,
-    category: "movie",
-    vibe: "activities",
-    glow: "from-sky-400/25",
   },
 ];
 
@@ -105,6 +100,7 @@ export function PlanWizard({
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
   const [vibe, setVibe] = useState<WizardVibe | null>(null);
+  const [subVibeId, setSubVibeId] = useState<string | null>(null);
   const [budget, setBudget] = useState<(typeof BUDGETS)[number]>(BUDGETS[1]);
   const [respectCurfew, setRespectCurfew] = useState(true);
   const [picked, setPicked] = useState<string | null>(null);
@@ -133,15 +129,17 @@ export function PlanWizard({
   }, [respectCurfew, earliestCurfew]);
   const endTime = useMemo(() => clock(mins(startTime) + 150), [startTime]);
 
+  const activeVibeId = subVibeId ?? vibe?.vibe ?? null;
+
   const fetchVenues = useServerFn(previewFairPointVenues);
   const venues = useQuery({
-    queryKey: ["wizard-venues", groupId, vibe?.id, budget.id, endTime],
+    queryKey: ["wizard-venues", groupId, vibe?.id, activeVibeId, budget.id, endTime],
     queryFn: () =>
       fetchVenues({
         data: {
           groupId,
           category: vibe?.category ?? "dinner",
-          vibe: vibe?.vibe ?? null,
+          vibe: activeVibeId,
           radiusMiles: 15,
           maxSpend: budget.max || null,
           endTime,
@@ -208,7 +206,7 @@ export function PlanWizard({
         windowStart: `${date}T${startTime}:00`,
         windowEnd: `${date}T${endTime}:00`,
         zipCode: defaults.data?.fairPoint?.zip ?? null,
-        foodVibe: vibe.vibe,
+        foodVibe: activeVibeId ?? vibe.vibe,
         radiusMiles: 15,
         estCostMin: budget.min,
         estCostMax: budget.max,
@@ -254,7 +252,7 @@ export function PlanWizard({
               <p className="mt-1 text-sm text-muted-foreground">
                 Pick a vibe — we'll find spots that are fair for everyone.
               </p>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {WIZARD_VIBES.map((v) => {
                   const active = vibe?.id === v.id;
                   return (
@@ -263,6 +261,7 @@ export function PlanWizard({
                       type="button"
                       onClick={() => {
                         setVibe(v);
+                        setSubVibeId(null);
                         setPicked(null);
                         setTimeout(() => setStep(1), 180);
                       }}
@@ -296,6 +295,31 @@ export function PlanWizard({
               <p className="mt-1 text-sm text-muted-foreground">
                 {vibe ? `${vibe.emoji} ${vibe.title}` : ""} — set the money and the clock.
               </p>
+
+              {vibe?.subVibes && vibe.subVibes.length > 1 ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {vibe.subVibes.map((id) => {
+                    const v = vibeById(id) ?? VIBES.find((x) => x.id === id);
+                    if (!v) return null;
+                    const active = activeVibeId === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setSubVibeId(id)}
+                        className={`pressable rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          active
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <span className="mr-1">{v.emoji}</span>
+                        {v.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
 
               <div className="mt-5 grid grid-cols-3 gap-2">
                 {BUDGETS.map((b) => {

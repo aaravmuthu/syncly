@@ -2,8 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
-import { Copy, Link2, Moon, Rocket, Zap } from "lucide-react";
+import { Link2, Moon, Rocket, Zap } from "lucide-react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Empty, Skeleton, statusToneClasses } from "@/components/quorum/ui";
@@ -256,25 +255,13 @@ function SquadCard({ squad }: { squad: Squad }) {
         </div>
       </Link>
 
-      <div className="flex items-center gap-2 px-5 pb-5 pt-4">
+      <div className="px-5 pb-5 pt-4">
         <Button
-          className="flex-1"
+          className="w-full"
           onClick={() => void navigate({ to: "/groups/$groupId", params: { groupId: squad.id } })}
         >
           <Rocket className="size-4" aria-hidden /> Launch Plan
         </Button>
-        <button
-          type="button"
-          onClick={() => {
-            void navigator.clipboard
-              ?.writeText(squad.invite_code)
-              .then(() => toast.success("Invite code copied"))
-              .catch(() => toast.error("Couldn't copy that code"));
-          }}
-          className="tap-target pressable inline-flex items-center gap-1.5 justify-center rounded-2xl bg-secondary px-3 text-xs font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-secondary/70"
-        >
-          <Copy className="size-3.5" aria-hidden /> Copy Code {squad.invite_code}
-        </button>
       </div>
     </article>
   );

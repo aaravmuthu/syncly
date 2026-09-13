@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-ro
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageCircle, Search } from "lucide-react";
+import { Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -13,7 +13,6 @@ import { ChatSheet } from "@/components/quorum/dm/ChatSheet";
 import { DirectChat } from "@/components/quorum/dm/DirectChat";
 import { SquadChat } from "@/components/quorum/SquadChat";
 import { listContacts, listInbox, openThread } from "@/lib/quorum/dm.functions";
-import { cn } from "@/lib/utils";
 
 type Search = { peer?: string; thread?: string; group?: string };
 
@@ -75,6 +74,7 @@ export function MessagesPage() {
   const contacts = useQuery({ queryKey: ["dm-contacts"], queryFn: () => fetchContacts() });
 
   const [query, setQuery] = useState("");
+  const [browseNew, setBrowseNew] = useState(false);
   const [thread, setThread] = useState<string | null>(search.thread ?? null);
   const [group, setGroup] = useState<string | null>(search.group ?? null);
 
@@ -217,24 +217,34 @@ export function MessagesPage() {
               ) : null}
 
               {newContacts.length > 0 ? (
-                <section className="space-y-2">
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    Start a new chat
-                  </h2>
-                  {newContacts.slice(0, 12).map((c) => (
-                    <Row
-                      key={c.id}
-                      onClick={() => void startWith(c.id)}
-                      avatar={
-                        <Avatar url={c.avatar_url} emoji={c.avatar_emoji} name={c.name} size={44} />
-                      }
-                      title={c.name}
-                      preview={c.circles.join(" · ") || "In your circles"}
-                      at=""
-                      unread={0}
-                    />
-                  ))}
-                </section>
+                q || browseNew || (threads.length === 0 && squads.length === 0) ? (
+                  <section className="space-y-2">
+                    <h2 className="text-sm font-semibold text-muted-foreground">
+                      Start a new chat
+                    </h2>
+                    {newContacts.slice(0, 12).map((c) => (
+                      <Row
+                        key={c.id}
+                        onClick={() => void startWith(c.id)}
+                        avatar={
+                          <Avatar url={c.avatar_url} emoji={c.avatar_emoji} name={c.name} size={44} />
+                        }
+                        title={c.name}
+                        preview={c.circles.join(" · ") || "In your circles"}
+                        at=""
+                        unread={0}
+                      />
+                    ))}
+                  </section>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setBrowseNew(true)}
+                    className="tap-target pressable flex w-full items-center gap-2 rounded-2xl border border-dashed border-border px-3.5 py-3 text-sm font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+                  >
+                    <UserPlus className="h-4 w-4" aria-hidden /> Start a new chat
+                  </button>
+                )
               ) : null}
 
               {threads.length === 0 && squads.length === 0 && newContacts.length === 0 ? (
@@ -316,7 +326,6 @@ function Row({
           ) : null}
         </span>
       </span>
-      <MessageCircle className={cn("h-4 w-4 shrink-0 text-muted-foreground", unread > 0 && "text-primary")} aria-hidden />
     </button>
   );
 }

@@ -27,7 +27,7 @@ import {
 } from "@/components/quorum/PlanAiInsights";
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { QuickResponse } from "@/components/quorum/QuickResponse";
-import { CostBadge } from "@/components/quorum/DashboardParts";
+import { BudgetFitPill, CostBadge } from "@/components/quorum/DashboardParts";
 import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
 import { VenueMap } from "@/components/quorum/VenueMap";
@@ -237,6 +237,21 @@ function PlanPage() {
       }));
   }, [data?.recommendations, data?.plan.selected_recommendation_id, data?.plan.category]);
 
+  // "Best match" (server rank) vs "Best for budget" — a first-class, one-tap
+  // reorder rather than a hidden menu. Client-side only: same recommendation
+  // set, just resorted by the engine's already-computed budgetFit.
+  const [recSort, setRecSort] = useState<"match" | "budget">("match");
+  const sortedRecs = useMemo(() => {
+    const list = [...(data?.recommendations ?? [])];
+    if (recSort === "budget") {
+      list.sort((a, b) => {
+        const bf = (r: typeof a) => ((r.breakdown ?? {}) as unknown as ScoreBreakdown).budgetFit ?? 0;
+        return bf(b) - bf(a);
+      });
+    }
+    return list;
+  }, [data?.recommendations, recSort]);
+
   if (q.isLoading || !data || !meta) {
     return (
       <>
@@ -262,6 +277,10 @@ function PlanPage() {
     driver: t.driver_label ?? "A driver",
   }));
   const selectedRec = data.recommendations.find((r) => r.id === selected) ?? null;
+  const topRec = selectedRec ?? data.recommendations[0] ?? null;
+  const topBudgetFit = topRec
+    ? (((topRec.breakdown ?? {}) as unknown as ScoreBreakdown).budgetFit ?? null)
+    : null;
 
   const backupRec =
     data.recommendations.find((r) => r.id !== selected && r.feasible) ??
@@ -302,8 +321,9 @@ function PlanPage() {
                   : "Everyone has responded — you're good to lock it in."}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
+              <BudgetFitPill budgetFit={topBudgetFit} />
               <Button variant="outline" onClick={() => setEditing((v) => !v)}>
                 <Pencil className="size-4" aria-hidden /> {editing ? "Close" : "Edit Plan"}
               </Button>
@@ -325,7 +345,10 @@ function PlanPage() {
                 Two taps, no survey. Your reason stays private to you.
               </p>
             </div>
-            <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
+            <div className="flex flex-wrap items-center gap-2">
+              <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
+              <BudgetFitPill budgetFit={topBudgetFit} />
+            </div>
           </div>
           <QuickResponse planId={planId} className="mt-3" />
           <button
@@ -417,16 +440,39 @@ function PlanPage() {
 
       {data.recommendations.length > 0 ? (
         <section className="mt-8 space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">
-            Top 3 options that work for everyone
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              Top 3 options that work for everyone
+            </h2>
+            <div className="inline-flex rounded-full bg-secondary p-0.5 text-xs font-medium">
+              {(
+                [
+                  { id: "match", label: "Best match" },
+                  { id: "budget", label: "Best for budget" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setRecSort(opt.id)}
+                  className={`rounded-full px-3 py-1.5 transition ${
+                    recSort === opt.id
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <AiCompromiseBanner
             planId={planId}
             isHost={data.plan.created_by === data.meProfileId}
             enabled={data.recommendations.length > 0}
           />
           <VenueMap venues={venueMapVenues} />
-          {data.recommendations.map((r) => {
+          {sortedRecs.map((r) => {
             const b = (r.breakdown ?? {}) as unknown as ScoreBreakdown;
             const myVote = votes.find((v) => v.profile_id === data.meProfileId)?.recommendation_id;
             const count = votes.filter((v) => v.recommendation_id === r.id).length;
@@ -450,6 +496,7 @@ function PlanPage() {
                       ) : (
                         <Pill tone="bad">Doesn't work for everyone</Pill>
                       )}
+                      <BudgetFitPill budgetFit={b.budgetFit} />
                       {isSelected ? <Pill tone="accent">Chosen</Pill> : null}
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">{r.subtitle}</p>
@@ -610,7 +657,6 @@ function PlanPage() {
                 </div>
 
                 <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                  <Meter label="Budget fit" value={b.budgetFit ?? 0} />
                   <Meter label="Schedule fit" value={b.scheduleFit ?? 0} />
                   <Meter label="Travel" value={b.travelFit ?? 0} />
                   <Meter label="Food needs" value={b.dietaryFit ?? 0} />

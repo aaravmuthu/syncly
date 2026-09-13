@@ -429,7 +429,7 @@ export const getDashboard = createServerFn({ method: "GET" })
         supabase
           .from("recommendations")
           .select(
-            "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank",
+            "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank, breakdown",
           )
           .in("plan_id", ids)
           .order("rank"),
@@ -461,6 +461,12 @@ export const getDashboard = createServerFn({ method: "GET" })
         const original = planRecs.find(
           (r) => !((r.tags as string[] | null) ?? []).includes("alternative"),
         );
+        // Budget fit of the plan's current leading option (or the finalized
+        // pick once locked in) — the % of the group this option's cost works
+        // for, never which member it doesn't. See ScoreBreakdown.budgetFit.
+        const budgetFitSource = selected ?? planRecs[0] ?? null;
+        const budget_fit =
+          (budgetFitSource?.breakdown as { budgetFit?: number } | null)?.budgetFit ?? null;
         return {
           ...p,
           participants: mine.map((r) => {
@@ -479,6 +485,7 @@ export const getDashboard = createServerFn({ method: "GET" })
           i_responded: Boolean(meRow?.responded),
           i_attending: meRow?.attending == null ? null : Boolean(meRow.attending),
           i_voted: planVotes.some((v) => v.profile_id === myId),
+          budget_fit,
           selected_recommendation: selected,
           conflicts: planConflicts.map((c) => ({
             id: c.id as string,

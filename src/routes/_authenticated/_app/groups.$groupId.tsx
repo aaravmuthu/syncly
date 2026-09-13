@@ -5,8 +5,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
   CheckCircle2,
+  ChevronRight,
   Clock,
-  DollarSign,
   Lock,
   MessageCircle,
   Pencil,
@@ -92,7 +92,7 @@ function GroupPage() {
     <>
       <PageHeader
         title={`${group.emoji} ${group.name}`}
-        subtitle={`${members.length} members · invite code ${group.invite_code}`}
+        subtitle={`${members.length} member${members.length === 1 ? "" : "s"}`}
       />
       <SwipeBack>
       {/* Sub-tab bar */}
@@ -344,18 +344,12 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
           </Pill>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/70 px-2.5 py-1">
-            <DollarSign className="size-3.5" aria-hidden /> {cost ?? "Cost TBD"}
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="size-3.5 shrink-0" aria-hidden />
+          <span className="truncate">
+            {whenLabel(plan.window_start)}
+            {cost ? ` · ${cost}` : ""}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/70 px-2.5 py-1">
-            <Clock className="size-3.5" aria-hidden /> {whenLabel(plan.window_start)}
-          </span>
-          {conflicts === 0 && plan.window_start ? (
-            <span className="rounded-full bg-success/12 px-2.5 py-1 text-success">
-              Compliant with all curfews
-            </span>
-          ) : null}
         </div>
 
         <div className="mt-4 flex items-center justify-between gap-3">
@@ -385,9 +379,7 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
               </span>
             ) : null}
           </div>
-          <span className="shrink-0 rounded-xl bg-primary/15 px-3 py-2 text-xs font-semibold text-primary ring-1 ring-primary/30">
-            View Plan & Carpools →
-          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         </div>
       </div>
     </Link>

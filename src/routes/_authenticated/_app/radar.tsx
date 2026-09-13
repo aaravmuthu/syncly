@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
-  BatteryFull,
   BatteryLow,
   Car,
   Clock,
@@ -34,7 +33,6 @@ import {
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { FindMyFriends } from "@/components/quorum/sharing/FindMyFriends";
 import { getFriendPins } from "@/lib/quorum/sharing.functions";
-import { cn } from "@/lib/utils";
 
 
 export const Route = createFileRoute("/_authenticated/_app/radar")({
@@ -440,7 +438,6 @@ function FamilyRadar({ teens }: { teens: TeenCard[] }) {
 function TeenWidget({ teen }: { teen: TeenCard }) {
   const Icon = motionIcon(teen.status.label);
   const battery = teen.location?.battery_pct ?? null;
-  const Batt = battery != null && battery <= 20 ? BatteryLow : BatteryFull;
 
   return (
     <motion.div
@@ -462,14 +459,9 @@ function TeenWidget({ teen }: { teen: TeenCard }) {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        {battery != null ? (
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1",
-              battery <= 20 && "text-destructive",
-            )}
-          >
-            <Batt className="h-3.5 w-3.5" aria-hidden /> {battery}%
+        {battery != null && battery <= 20 ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-destructive">
+            <BatteryLow className="h-3.5 w-3.5" aria-hidden /> {battery}%
           </span>
         ) : null}
         <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-1">

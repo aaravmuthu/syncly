@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "@/components/quorum/ui";
-import { CheckCircle2, MapPin, Share2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, MapPin, Share2 } from "lucide-react";
 import {
   arrivedSafely,
   getMyCheckins,
@@ -50,6 +50,7 @@ async function batteryPct(): Promise<number | null> {
 export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
   const qc = useQueryClient();
   const [delayOpen, setDelayOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [sosArmed, setSosArmed] = useState(false);
   const [arrival, setArrival] = useState<{ place: string; at: string } | null>(null);
 
@@ -157,7 +158,21 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
             {sharing ? "Location shared with linked parents" : "Location sharing is off"}
           </div>
         </div>
-        <Pill tone={sharing ? "good" : "neutral"}>{sharing ? "Live" : "Private"}</Pill>
+        <div className="flex items-center gap-2">
+          <Pill tone={sharing ? "good" : "neutral"}>{sharing ? "Live" : "Private"}</Pill>
+          <button
+            type="button"
+            onClick={() => setToolsOpen((v) => !v)}
+            aria-expanded={toolsOpen}
+            className="tap-target inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          >
+            Safety tools
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${toolsOpen ? "rotate-180" : ""}`}
+              aria-hidden
+            />
+          </button>
+        </div>
       </div>
 
       {arrival ? (
@@ -167,64 +182,68 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <Button
-          loading={arrive.isPending}
-          onClick={async () => {
-            const pos = await currentPosition();
-            arrive.mutate({
-              data: {
-                lat: pos?.coords.latitude ?? null,
-                lon: pos?.coords.longitude ?? null,
-                batteryPct: await batteryPct(),
-                placeLabel: "my destination",
-              },
-            });
-          }}
-        >
-          <MapPin className="h-4 w-4" aria-hidden /> I arrived safely
-        </Button>
-        <Button variant="outline" onClick={shareLiveSession}>
-          <Share2 className="h-4 w-4" aria-hidden /> Share live session
-        </Button>
-        <Button variant="outline" onClick={() => setDelayOpen((v) => !v)}>
-          Running late
-        </Button>
-        <Button
-          variant={sosArmed ? "danger" : "outline"}
-          loading={sos.isPending}
-          onClick={async () => {
-            if (!sosArmed) {
-              setSosArmed(true);
-              setTimeout(() => setSosArmed(false), 5000);
-              return;
-            }
-            const pos = await currentPosition();
-            sos.mutate({
-              data: {
-                lat: pos?.coords.latitude ?? null,
-                lon: pos?.coords.longitude ?? null,
-              },
-            });
-          }}
-        >
-          {sosArmed ? "Tap again to send SOS" : "SOS"}
-        </Button>
-      </div>
-
-      {delayOpen ? (
-        <div className="flex flex-wrap gap-2">
-          {DELAY_REASONS.map((r) => (
-            <button
-              key={r.label}
-              type="button"
-              className="tap-target rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary"
-              onClick={() => delay.mutate({ data: { reason: r.label, minutes: r.minutes } })}
+      {toolsOpen ? (
+        <>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              loading={arrive.isPending}
+              onClick={async () => {
+                const pos = await currentPosition();
+                arrive.mutate({
+                  data: {
+                    lat: pos?.coords.latitude ?? null,
+                    lon: pos?.coords.longitude ?? null,
+                    batteryPct: await batteryPct(),
+                    placeLabel: "my destination",
+                  },
+                });
+              }}
             >
-              {r.label} · +{r.minutes}m
-            </button>
-          ))}
-        </div>
+              <MapPin className="h-4 w-4" aria-hidden /> I arrived safely
+            </Button>
+            <Button variant="outline" onClick={shareLiveSession}>
+              <Share2 className="h-4 w-4" aria-hidden /> Share live session
+            </Button>
+            <Button variant="outline" onClick={() => setDelayOpen((v) => !v)}>
+              Running late
+            </Button>
+            <Button
+              variant={sosArmed ? "danger" : "outline"}
+              loading={sos.isPending}
+              onClick={async () => {
+                if (!sosArmed) {
+                  setSosArmed(true);
+                  setTimeout(() => setSosArmed(false), 5000);
+                  return;
+                }
+                const pos = await currentPosition();
+                sos.mutate({
+                  data: {
+                    lat: pos?.coords.latitude ?? null,
+                    lon: pos?.coords.longitude ?? null,
+                  },
+                });
+              }}
+            >
+              {sosArmed ? "Tap again to send SOS" : "SOS"}
+            </Button>
+          </div>
+
+          {delayOpen ? (
+            <div className="flex flex-wrap gap-2">
+              {DELAY_REASONS.map((r) => (
+                <button
+                  key={r.label}
+                  type="button"
+                  className="tap-target rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+                  onClick={() => delay.mutate({ data: { reason: r.label, minutes: r.minutes } })}
+                >
+                  {r.label} · +{r.minutes}m
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </>
       ) : null}
     </Card>
   );

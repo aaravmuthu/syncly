@@ -28,3 +28,18 @@ export function presetIdFor(min: number | null, max: number | null) {
     EST_COST_PRESETS.find((p) => p.min === (min ?? -1) && p.max === (max ?? -1))?.id ?? null
   );
 }
+
+/**
+ * Plain-language read of `ScoreBreakdown.budgetFit` — the % of the group an
+ * option's cost works for, computed privately by the engine from everyone's
+ * hard budget cap. Never a number, never a name: just "fits" or "a stretch."
+ */
+export function budgetFitTone(budgetFit: number | null | undefined): "good" | "warn" | null {
+  if (budgetFit == null) return null;
+  return budgetFit >= 100 ? "good" : "warn";
+}
+
+export function budgetFitLabel(budgetFit: number | null | undefined): string | null {
+  if (budgetFit == null) return null;
+  return budgetFit >= 100 ? "Fits everyone's budget" : "A stretch for someone's budget";
+}
