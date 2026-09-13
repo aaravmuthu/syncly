@@ -150,7 +150,7 @@ function MessagesPage() {
             <>
               {threads.length > 0 ? (
                 <section className="space-y-2">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h2 className="text-sm font-semibold text-muted-foreground">
                     Direct messages
                   </h2>
                   {threads.map((t) => (
@@ -178,7 +178,7 @@ function MessagesPage() {
 
               {squads.length > 0 ? (
                 <section className="space-y-2">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h2 className="text-sm font-semibold text-muted-foreground">
                     Squad chats
                   </h2>
                   {squads.map((s) => (
@@ -209,7 +209,7 @@ function MessagesPage() {
 
               {newContacts.length > 0 ? (
                 <section className="space-y-2">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h2 className="text-sm font-semibold text-muted-foreground">
                     Start a new chat
                   </h2>
                   {newContacts.slice(0, 12).map((c) => (
@@ -287,12 +287,12 @@ function Row({
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2">
           <span className="truncate text-sm font-semibold">{title}</span>
-          <span className="shrink-0 text-[11px] text-muted-foreground">{at}</span>
+          <span className="shrink-0 text-caption text-muted-foreground">{at}</span>
         </span>
         <span className="mt-0.5 flex items-center justify-between gap-2">
           <span className="truncate text-xs text-muted-foreground">{preview}</span>
           {unread > 0 ? (
-            <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-foreground">
+            <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-caption font-bold text-primary-foreground">
               {unread > 9 ? "9+" : unread}
             </span>
           ) : null}

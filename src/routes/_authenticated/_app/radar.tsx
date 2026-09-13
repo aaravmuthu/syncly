@@ -272,7 +272,7 @@ function RadarPage() {
       >
       <div className="space-y-5">
         <header className="glass-card p-5">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
+          <div className="flex items-center gap-2 text-sm font-semibold text-primary">
             <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
           </div>
           <h1 className="font-display mt-1 text-xl font-semibold">Everyone, on one map</h1>
@@ -322,9 +322,7 @@ function RadarPage() {
 function FamilyRadar({ teens }: { teens: TeenCard[] }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Family radar
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground">Family radar</h2>
       <div className="grid gap-3 sm:grid-cols-2">
         {teens.map((t) => (
           <TeenWidget key={t.id} teen={t} />
@@ -454,9 +452,7 @@ function MyRadar({ data }: { data: MyRadarData }) {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Your live status
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground">Your live status</h2>
 
       <Card className="flex items-center gap-3">
         <Avatar

@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     to={n.to}
                     preload="intent"
                     className={cn(
-                      "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors duration-100",
+                      "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-colors duration-100",
                       pathname.startsWith(n.to)
                         ? "bg-secondary text-foreground"
                         : "text-muted-foreground hover:text-foreground",
@@ -135,11 +135,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 to="/activity"
                 aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
-                className="pressable active:pressable-active relative rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="tap-target pressable active:pressable-active relative inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Bell className="size-5" aria-hidden />
                 {unread > 0 ? (
-                  <span className="absolute right-0.5 top-0.5 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[11px] font-semibold leading-4 text-primary-foreground">
+                  <span className="absolute right-1 top-1 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-caption font-semibold leading-4 text-primary-foreground">
                     {unread > 9 ? "9+" : unread}
                   </span>
                 ) : null}
@@ -147,14 +147,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 to="/settings"
                 aria-label="Settings"
-                className="pressable active:pressable-active rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Settings className="size-5" aria-hidden />
               </Link>
               <Link
                 to="/settings"
                 aria-label="Your profile"
-                className="pressable active:pressable-active"
+                className="tap-target pressable active:pressable-active inline-flex items-center justify-center"
               >
                 <Avatar
                   url={me.data?.avatar_url}
@@ -191,12 +191,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                     whileTap={{ scale: 0.96 }}
                     transition={{ duration: 0.08 }}
                     className={cn(
-                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium transition-colors duration-100",
+                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium transition-colors duration-100",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
                     {active ? (
-                      <span className="absolute -top-px h-0.5 w-8 rounded-full bg-emerald-500" />
+                      <span className="absolute -top-px h-0.5 w-8 rounded-full bg-primary" />
                     ) : null}
                     <span className="relative leading-none">
                       <n.icon className="h-5 w-5" aria-hidden />

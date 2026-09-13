@@ -90,7 +90,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={toggle}
       aria-label={resolved === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       className={
-        "pressable active:pressable-active inline-flex h-9 w-9 items-center justify-center rounded-full border border-border text-base text-muted-foreground hover:bg-secondary hover:text-foreground " +
+        "tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full border border-border text-base text-muted-foreground hover:bg-secondary hover:text-foreground " +
         (className ?? "")
       }
     >

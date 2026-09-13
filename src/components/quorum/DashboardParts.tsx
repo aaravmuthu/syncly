@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Avatar } from "./Avatar";
-import { Button } from "./ui";
+import { Button, statusTone, statusToneClasses } from "./ui";
 import { cn } from "@/lib/utils";
 import { getMapToken } from "@/lib/quorum/location.functions";
 import { getPlanWeather } from "@/lib/quorum/insight.functions";
@@ -85,14 +85,7 @@ export function Glass({
   );
 }
 
-const TONES: Record<string, string> = {
-  voting: "bg-emerald-400/12 text-emerald-500 ring-emerald-400/25",
-  collecting: "bg-amber-400/12 text-amber-500 ring-amber-400/25",
-  finalized: "bg-indigo-400/14 text-indigo-400 ring-indigo-400/25",
-  draft: "bg-foreground/8 text-muted-foreground ring-foreground/12",
-};
-
-/** Creator's up-front "bring this much money" badge. */
+/** Creator's up-front "bring this much money" badge — informational, not a status, so it stays neutral rather than competing with the status tag's accent color. */
 export function CostBadge({
   min,
   max,
@@ -107,7 +100,7 @@ export function CostBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-lg bg-emerald-400/12 px-2 py-0.5 text-[11px] font-semibold text-emerald-500 ring-1 ring-emerald-400/25",
+        "inline-flex items-center rounded-lg bg-secondary px-2 py-0.5 text-caption font-semibold text-secondary-foreground",
         className,
       )}
     >
@@ -120,8 +113,8 @@ export function StatusTag({ status, label }: { status: string; label?: string })
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ring-1",
-        TONES[status] ?? TONES["draft"],
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold ring-1",
+        statusToneClasses(status),
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -153,7 +146,7 @@ export function AvatarStack({ people, max = 4 }: { people: DashParticipant[]; ma
         />
       ))}
       {rest > 0 ? (
-        <span className="-ml-2 grid h-7 w-7 place-items-center rounded-full bg-secondary text-[11px] font-semibold ring-2 ring-background">
+        <span className="-ml-2 grid h-7 w-7 place-items-center rounded-full bg-secondary text-caption font-semibold ring-2 ring-background">
           +{rest}
         </span>
       ) : null}
@@ -165,7 +158,7 @@ export function Progress({ done, total }: { done: number; total: number }) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+      <div className="flex items-center justify-between text-caption font-medium text-muted-foreground">
         <span>Group readiness</span>
         <span>
           {done}/{total} ready
@@ -256,7 +249,11 @@ export function WeekStrip({
               type="button"
               onClick={() => onSelect(isActive ? null : key)}
               className={cn(
-                "pressable flex flex-col items-center gap-1 rounded-2xl px-1 py-2 text-center transition",
+                // min-h-11 (not the shared tap-target utility) enforces the
+                // 44px height that matters most for a horizontal row of
+                // adjacent targets, without forcing min-width:44px, which
+                // would overflow this 7-column grid below ~375px wide.
+                "pressable flex min-h-11 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center transition",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-[0_10px_30px_-14px_var(--primary)]"
                   : isToday
@@ -264,7 +261,7 @@ export function WeekStrip({
                     : "text-muted-foreground hover:bg-foreground/5",
               )}
             >
-              <span className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
+              <span className="text-caption font-semibold uppercase tracking-wide opacity-80">
                 {d.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3)}
               </span>
               <span className="text-sm font-semibold tabular-nums">{d.getDate()}</span>
@@ -276,11 +273,9 @@ export function WeekStrip({
                       "h-1.5 w-1.5 rounded-full",
                       isActive
                         ? "bg-primary-foreground/80"
-                        : status === "finalized"
-                          ? "bg-indigo-400"
-                          : status === "voting"
-                            ? "bg-emerald-400"
-                            : "bg-amber-400",
+                        : statusTone(status) === "good"
+                          ? "bg-success"
+                          : "bg-primary",
                     )}
                   />
                 ))}
@@ -339,7 +334,7 @@ export function MapThumb({
         </div>
       )}
       {label ? (
-        <span className="absolute inset-x-1 bottom-1 truncate rounded-xl bg-background/80 px-2 py-1 text-[11px] font-medium backdrop-blur">
+        <span className="absolute inset-x-1 bottom-1 truncate rounded-xl bg-background/80 px-2 py-1 text-caption font-medium backdrop-blur">
           {label}
         </span>
       ) : null}
@@ -362,7 +357,7 @@ export function WeatherChip({ planId }: { planId: string }) {
   if (!q.data) return null;
   const w = describeWeather(q.data.code);
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-foreground/6 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+    <span className="inline-flex items-center gap-1 rounded-full bg-foreground/6 px-2 py-1 text-caption font-medium text-muted-foreground">
       <span aria-hidden>{w.emoji}</span>
       {Math.round(q.data.tempMaxF)}°F · {w.label}
     </span>
@@ -391,7 +386,7 @@ export function ActionCard({ plan }: { plan: DashPlan }) {
       <Glass interactive className="flex h-full flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="truncate text-[11px] text-muted-foreground">
+            <p className="truncate text-caption text-muted-foreground">
               {plan.groups?.emoji ?? "✨"} {plan.groups?.name ?? "Group"}
             </p>
             <h3 className="mt-0.5 truncate font-display text-base font-semibold">{plan.title}</h3>
@@ -431,7 +426,7 @@ export function ConfirmedCard({ plan }: { plan: DashPlan }) {
         <MapThumb lat={rec?.lat} lon={rec?.lon} className="h-24 w-24 shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-indigo-400/12 px-2 py-0.5 text-[11px] font-semibold text-indigo-400">
+            <span className={cn("rounded-lg px-2 py-0.5 text-caption font-semibold ring-1", statusToneClasses("finalized"))}>
               {formatWhen(plan.window_start)}
             </span>
             <WeatherChip planId={plan.id} />
@@ -443,7 +438,7 @@ export function ConfirmedCard({ plan }: { plan: DashPlan }) {
           </p>
           <div className="mt-auto flex items-center justify-between">
             <AvatarStack people={plan.participants} max={3} />
-            <span className="text-[11px] font-medium text-muted-foreground">
+            <span className="text-caption font-medium text-muted-foreground">
               {plan.compatibility_score ?? 0}% match
             </span>
           </div>
@@ -468,7 +463,7 @@ export function GroupsRail({
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{g.name}</p>
-              <p className="text-[11px] text-muted-foreground">{g.members} members</p>
+              <p className="text-caption text-muted-foreground">{g.members} members</p>
             </div>
           </div>
           <Link to="/groups/$groupId" params={{ groupId: g.id }} className="block">

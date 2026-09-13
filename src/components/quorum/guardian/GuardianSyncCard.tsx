@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
+import { Switch } from "@/components/ui/switch";
 import {
   getMyGuardians,
   getMySyncCode,
@@ -57,9 +58,7 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
           <Skeleton className="h-14 rounded-2xl" />
         ) : (
           <div className="rounded-2xl border border-border bg-secondary/50 px-4 py-3 text-center">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              Your sync code
-            </div>
+            <div className="text-caption text-muted-foreground">Your sync code</div>
             <div className="font-display text-3xl font-semibold tracking-[0.35em] tabular-nums">
               {code.data?.code}
             </div>
@@ -71,20 +70,22 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
         </Button>
       )}
 
-      <label className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
-        <span>
-          <span className="text-sm font-medium">Share live location</span>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
+        <button
+          type="button"
+          className="flex-1 text-left"
+          onClick={() => share.mutate({ data: { enabled: !sharing } })}
+        >
+          <span className="block text-sm font-medium">Share live location</span>
           <span className="mt-0.5 block text-xs text-muted-foreground">
             Only linked parents see it. Turn it off any time.
           </span>
-        </span>
-        <input
-          type="checkbox"
-          className="size-5 accent-emerald-500"
+        </button>
+        <Switch
           checked={sharing}
-          onChange={(e) => share.mutate({ data: { enabled: e.target.checked } })}
+          onCheckedChange={(checked) => share.mutate({ data: { enabled: checked } })}
         />
-      </label>
+      </div>
 
       <div className="space-y-2">
         <div className="text-sm font-medium">Linked parents</div>

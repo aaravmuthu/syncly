@@ -160,10 +160,10 @@ export function QuickResponse({
               transition={spring}
               onClick={() => confirm.mutate({ data: { planId, attending: true } })}
               className={cn(
-                "inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
+                "tap-target inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
                 variant === "stacked"
-                  ? "w-full bg-emerald-500 py-3.5 text-base text-black hover:bg-emerald-400"
-                  : "bg-emerald-500/15 text-emerald-500 ring-1 ring-emerald-400/30 backdrop-blur-xl hover:bg-emerald-500/25",
+                  ? "w-full bg-primary py-3.5 text-base text-primary-foreground hover:opacity-92"
+                  : "bg-primary/15 text-primary ring-1 ring-primary/30 backdrop-blur-xl hover:bg-primary/25",
                 variant === "pair" && (compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base"),
               )}
             >
@@ -177,10 +177,10 @@ export function QuickResponse({
               transition={spring}
               onClick={() => setPicking(true)}
               className={cn(
-                "inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
+                "tap-target inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
                 variant === "stacked"
-                  ? "w-full py-2 text-sm text-muted-foreground hover:text-foreground"
-                  : "bg-amber-400/12 text-foreground ring-1 ring-amber-400/30 backdrop-blur-xl hover:bg-amber-400/20",
+                  ? "w-full text-sm text-muted-foreground hover:text-foreground"
+                  : "bg-warning/18 text-warning-foreground ring-1 ring-warning/30 backdrop-blur-xl hover:bg-warning/25",
                 variant === "pair" && (compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base"),
               )}
             >
@@ -207,8 +207,8 @@ export function QuickResponse({
               className={cn(
                 "inline-flex items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-semibold ring-1 backdrop-blur-xl",
                 state
-                  ? "bg-emerald-500/15 text-emerald-400 ring-emerald-400/40 shadow-[0_0_24px_-6px_var(--color-emerald-500)]"
-                  : "bg-amber-400/12 text-foreground ring-amber-400/40 shadow-[0_0_24px_-8px_var(--color-amber-400)]",
+                  ? "bg-primary/15 text-primary ring-primary/40 shadow-[0_0_24px_-6px_var(--primary)]"
+                  : "bg-warning/18 text-warning-foreground ring-warning/40 shadow-[0_0_24px_-8px_var(--warning)]",
               )}
             >
               {state ? (
@@ -248,7 +248,7 @@ export function QuickResponse({
                 whileTap={{ scale: 0.95 }}
                 transition={spring}
                 onClick={() => flag.mutate({ data: { planId, kind: r.id } })}
-                className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-foreground/[0.04] px-4 py-3 text-left text-sm font-medium backdrop-blur-xl transition hover:border-primary/50 hover:bg-primary/8 disabled:opacity-60"
+                className="tap-target flex items-center gap-2.5 rounded-2xl border border-border bg-foreground/[0.04] px-4 py-3 text-left text-sm font-medium backdrop-blur-xl transition hover:border-primary/50 hover:bg-primary/8 disabled:opacity-60"
               >
                 <Icon className="h-4 w-4 text-muted-foreground" aria-hidden />
                 {r.label}

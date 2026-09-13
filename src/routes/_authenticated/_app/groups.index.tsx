@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
-import { Button, Empty, Skeleton } from "@/components/quorum/ui";
+import { Button, Empty, Skeleton, statusToneClasses } from "@/components/quorum/ui";
 import { CreateGroupModal } from "@/components/quorum/CreateGroupModal";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import { coverTheme } from "@/lib/quorum/covers";
@@ -112,7 +112,7 @@ function GroupsPage() {
               setFilter(f.id);
             }}
             className={cn(
-              "shrink-0 rounded-full px-4 py-2 text-sm font-semibold backdrop-blur-md transition",
+              "tap-target inline-flex shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold backdrop-blur-md transition",
               filter === f.id
                 ? "bg-primary text-primary-foreground shadow-lg"
                 : "bg-secondary/70 text-muted-foreground ring-1 ring-border hover:text-foreground",
@@ -145,7 +145,7 @@ function GroupsPage() {
       <RevealGroup className="grid gap-4 sm:grid-cols-2" stagger={0.07}>
         {shown.map((g) => (
           <RevealItem key={g.id}>
-            <SpotlightCard tilt className="rounded-2xl">
+            <SpotlightCard tilt className="rounded-surface">
               <SquadCard squad={g} />
             </SpotlightCard>
           </RevealItem>
@@ -170,7 +170,7 @@ function SquadCard({ squad }: { squad: Squad }) {
       <Link to="/groups/$groupId" params={{ groupId: squad.id }} className="block">
         <div className={cn("relative h-24", theme.banner)}>
           <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />
-          <span className="absolute right-3 top-3 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/20 backdrop-blur">
+          <span className="absolute right-3 top-3 rounded-full bg-black/35 px-2.5 py-1 text-caption font-semibold text-white ring-1 ring-white/20 backdrop-blur">
             {squad.kind === "temporary" ? "One-Off" : "Ongoing"}
           </span>
           <div className="absolute -bottom-6 left-4 flex items-end gap-3">
@@ -215,9 +215,7 @@ function SquadCard({ squad }: { squad: Squad }) {
           <div
             className={cn(
               "mt-3 inline-flex max-w-full items-center gap-1.5 truncate rounded-full px-3 py-1.5 text-xs font-semibold ring-1",
-              squad.active_plan
-                ? "bg-emerald-500/12 text-emerald-300 ring-emerald-400/30"
-                : "bg-secondary text-muted-foreground ring-border",
+              squad.active_plan ? statusToneClasses("voting") : "bg-secondary text-muted-foreground ring-border",
             )}
           >
             {squad.active_plan
@@ -225,7 +223,7 @@ function SquadCard({ squad }: { squad: Squad }) {
               : "💤 No active plans"}
           </div>
 
-          <p className="mt-3 text-[11px] text-muted-foreground">
+          <p className="mt-3 text-caption text-muted-foreground">
             {squad.hangouts_completed} hangout{squad.hangouts_completed === 1 ? "" : "s"} completed
             {squad.top_spot ? ` • Most frequent spot: ${squad.top_spot}` : ""}
           </p>
@@ -247,7 +245,7 @@ function SquadCard({ squad }: { squad: Squad }) {
               .then(() => toast.success("Invite code copied"))
               .catch(() => toast.error("Couldn't copy that code"));
           }}
-          className="pressable rounded-2xl bg-secondary px-3 py-2.5 text-xs font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-secondary/70"
+          className="tap-target pressable inline-flex items-center justify-center rounded-2xl bg-secondary px-3 text-xs font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-secondary/70"
         >
           Copy Code {squad.invite_code} 📋
         </button>

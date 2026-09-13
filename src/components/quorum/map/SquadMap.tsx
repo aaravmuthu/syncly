@@ -43,10 +43,10 @@ export function SquadMap({
   const hasPins =
     data.people.length > 0 || (data.places?.length ?? 0) > 0 || (data.zones?.length ?? 0) > 0;
   if (!hasPins) return null;
-  if (token.isLoading) return <Skeleton className={className ?? "h-80 rounded-[28px]"} />;
+  if (token.isLoading) return <Skeleton className={className ?? "h-80 rounded-surface"} />;
   if (token.isError || !token.data) return null;
 
-  const fallback = <Skeleton className={className ?? "h-80 rounded-[28px]"} />;
+  const fallback = <Skeleton className={className ?? "h-80 rounded-surface"} />;
 
   return (
     <ErrorBoundary label="squad-map" fallback={null}>

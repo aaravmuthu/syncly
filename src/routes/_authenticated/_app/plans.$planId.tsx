@@ -402,7 +402,7 @@ function PlanPage() {
 
       {data.recommendations.length > 0 ? (
         <section className="mt-8 space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="text-sm font-semibold text-muted-foreground">
             Top 3 options that work for everyone
           </h2>
           <AiCompromiseBanner
@@ -424,7 +424,7 @@ function PlanPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     {b.optionLabel ? (
-                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                      <p className="mb-1 text-caption font-semibold text-primary">
                         {b.optionLabel.emoji} {b.optionLabel.title}
                       </p>
                     ) : null}
@@ -485,17 +485,17 @@ function PlanPage() {
                     <CompromiseNote text={summaries.data?.[r.id]} />
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       {b.venue?.cuisine ? (
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium">
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-caption font-medium">
                           {b.venue.kind === "activity" ? "🎳" : "🍽️"} {b.venue.cuisine}
                         </span>
                       ) : null}
                       {b.venue?.priceLevel ? (
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold tabular-nums">
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-caption font-semibold tabular-nums">
                           {b.venue.priceLevel}
                         </span>
                       ) : null}
                       {b.venue?.rating != null ? (
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] tabular-nums">
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-caption tabular-nums">
                           ★ {b.venue.rating}
                         </span>
                       ) : null}
@@ -573,11 +573,9 @@ function PlanPage() {
                     <div className="font-display text-2xl font-semibold tabular-nums">
                       {r.score}%
                     </div>
-                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      match
-                    </div>
+                    <div className="text-caption text-muted-foreground">match</div>
                     {b.venue?.distanceMiles != null ? (
-                      <div className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                      <div className="mt-0.5 text-caption text-muted-foreground tabular-nums">
                         {b.venue.distanceMiles} mi
                       </div>
                     ) : null}
@@ -711,7 +709,7 @@ function PlanPage() {
 
       {data.transport.length > 0 ? (
         <section className="mt-8">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
             Getting there
           </h2>
           <Card className="space-y-2">
@@ -726,7 +724,7 @@ function PlanPage() {
       ) : null}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
           Parent permission
         </h2>
         <Card>

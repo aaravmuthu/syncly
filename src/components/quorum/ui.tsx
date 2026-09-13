@@ -14,7 +14,7 @@ export function Card({
   className?: string;
   as?: "div" | "section" | "article";
 }) {
-  return <As className={cn("surface rounded-3xl p-5", className)}>{children}</As>;
+  return <As className={cn("surface p-5", className)}>{children}</As>;
 }
 
 export function Pill({
@@ -46,6 +46,42 @@ export function Pill({
   );
 }
 
+export type PillTone = "neutral" | "good" | "warn" | "bad" | "accent";
+
+/**
+ * Canonical plan/vote status -> semantic tone. Single source of truth so
+ * Home, Groups, and Plans don't each invent their own emerald/amber/indigo
+ * mapping for the same underlying states.
+ */
+export function statusTone(status: string): PillTone {
+  switch (status) {
+    case "voting":
+    case "collecting":
+    case "recommending":
+      return "accent";
+    case "finalized":
+    case "completed":
+      return "good";
+    case "cancelled":
+      return "bad";
+    default:
+      return "neutral";
+  }
+}
+
+const STATUS_TONE_CLASSES: Record<PillTone, string> = {
+  accent: "bg-primary/12 text-primary ring-primary/25",
+  good: "bg-success/14 text-success ring-success/25",
+  warn: "bg-warning/16 text-warning-foreground ring-warning/25",
+  bad: "bg-destructive/12 text-destructive ring-destructive/25",
+  neutral: "bg-foreground/8 text-muted-foreground ring-foreground/12",
+};
+
+/** Ring/bg/text classes for statusTone(), for callers using the ring-pill look directly instead of the `Pill` component. */
+export function statusToneClasses(status: string): string {
+  return STATUS_TONE_CLASSES[statusTone(status)];
+}
+
 export function Button({
   children,
   variant = "primary",
@@ -74,7 +110,7 @@ export function Button({
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
       disabled={rest.disabled || loading}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-out disabled:opacity-55",
+        "tap-target inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-out disabled:opacity-55",
         variants[variant],
         className,
       )}
@@ -116,8 +152,11 @@ export function Field({
   );
 }
 
+// No text-sm here: Tailwind's utility layer beats the global 16px base rule
+// for inputs (src/styles.css), and anything under 16px triggers iOS Safari's
+// zoom-on-focus. Let the base rule's 16px win.
 export const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-primary/60";
+  "w-full rounded-2xl border border-border bg-background px-3.5 py-2.5 outline-none focus:border-primary/60";
 
 export function Meter({ value, label }: { value: number; label: string }) {
   const tone = value >= 75 ? "bg-success" : value >= 45 ? "bg-warning" : "bg-destructive";

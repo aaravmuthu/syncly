@@ -21,6 +21,7 @@ import {
 import { PageHeader } from "@/components/quorum/AppShell";
 import { pushPermission, requestPush } from "@/lib/quorum/push";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
+import { Switch } from "@/components/ui/switch";
 import { Modal } from "@/components/quorum/Modal";
 import { getMe, saveProfile, uploadAvatar, deleteAccount } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -80,7 +81,9 @@ function SectionHeader({
 }
 
 /** One preference toggle rendered as its own glass card instead of a flat
- * list row, matching the rest of the app's surface styling. */
+ * list row, matching the rest of the app's surface styling. The label area
+ * and the Switch are independent sibling controls (not nested) so both are
+ * clickable without double-firing onToggle. */
 function ToggleCard({
   label,
   hint,
@@ -96,38 +99,21 @@ function ToggleCard({
 }) {
   const Wrapper = onToggle ? "button" : "div";
   return (
-    <Card
-      as="article"
-      className={cn(
-        "flex w-full items-center justify-between gap-4 p-4",
-        onToggle && "text-left transition active:scale-[0.99]",
-      )}
-    >
+    <Card as="article" className="flex w-full items-center justify-between gap-4 p-4">
       <Wrapper
         type={onToggle ? "button" : undefined}
         onClick={onToggle}
-        className="flex flex-1 items-center justify-between gap-4"
+        className={cn(
+          "flex flex-1 items-center gap-4",
+          onToggle && "text-left transition active:scale-[0.99]",
+        )}
       >
         <span>
           <span className="block text-sm font-medium">{label}</span>
           <span className="block text-xs text-muted-foreground">{hint}</span>
         </span>
-        {onToggle ? (
-          <span
-            className={cn(
-              "h-6 w-10 shrink-0 rounded-full p-0.5 transition",
-              on ? "bg-primary" : "bg-secondary-foreground/20",
-            )}
-          >
-            <span
-              className={cn(
-                "block h-5 w-5 rounded-full bg-background transition",
-                on ? "translate-x-4" : "translate-x-0",
-              )}
-            />
-          </span>
-        ) : null}
       </Wrapper>
+      {onToggle ? <Switch checked={on} onCheckedChange={onToggle} /> : null}
       {action}
     </Card>
   );
@@ -284,7 +270,7 @@ function SettingsPage() {
             size={64}
           />
           <div className="space-y-1">
-            <label className="pressable active:pressable-active inline-flex cursor-pointer items-center rounded-full border border-input px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary">
+            <label className="tap-target pressable active:pressable-active inline-flex cursor-pointer items-center rounded-full border border-input px-4 text-sm font-medium transition-colors hover:bg-secondary">
               {uploading ? "Uploading…" : "Upload photo"}
               <input
                 type="file"
@@ -317,7 +303,7 @@ function SettingsPage() {
                 type="button"
                 onClick={() => set("avatar_emoji", a)}
                 className={cn(
-                  "h-10 w-10 rounded-2xl text-lg transition",
+                  "tap-target h-11 w-11 rounded-2xl text-lg transition",
                   form["avatar_emoji"] === a ? "bg-primary/15 ring-1 ring-primary/40" : "bg-secondary",
                 )}
               >
@@ -368,7 +354,7 @@ function SettingsPage() {
                 save.mutate({ data: { account_type: opt.id } });
               }}
               className={cn(
-                "rounded-2xl border px-3 py-2.5 text-sm font-medium transition",
+                "tap-target inline-flex items-center justify-center rounded-2xl border px-3 text-sm font-medium transition",
                 (form["account_type"] ?? "teen") === opt.id
                   ? "border-primary/50 bg-primary/10"
                   : "border-border hover:bg-secondary",
@@ -475,6 +461,9 @@ function SettingsPage() {
         )}
         <Field label="Phone" hint="Only shared with linked parents if you allow it below.">
           <input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             className={inputClass}
             value={String(form["phone"] ?? "")}
             placeholder="(555) 555-5555"
@@ -482,18 +471,26 @@ function SettingsPage() {
             onBlur={() => save.mutate({ data: { phone: form["phone"] } })}
           />
         </Field>
-        <label className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
-          <span className="text-sm font-medium">Share my number with parents on the plan</span>
-          <input
-            type="checkbox"
-            className="size-5 accent-emerald-500"
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
+          <button
+            type="button"
+            className="flex-1 text-left text-sm font-medium"
+            onClick={() => {
+              const next = !form["share_contact_with_parents"];
+              set("share_contact_with_parents", next);
+              save.mutate({ data: { share_contact_with_parents: next } });
+            }}
+          >
+            Share my number with parents on the plan
+          </button>
+          <Switch
             checked={Boolean(form["share_contact_with_parents"])}
-            onChange={(e) => {
-              set("share_contact_with_parents", e.target.checked);
-              save.mutate({ data: { share_contact_with_parents: e.target.checked } });
+            onCheckedChange={(checked) => {
+              set("share_contact_with_parents", checked);
+              save.mutate({ data: { share_contact_with_parents: checked } });
             }}
           />
-        </label>
+        </div>
       </Card>
 
       {/* Appearance */}
@@ -516,7 +513,7 @@ function SettingsPage() {
               type="button"
               onClick={() => chooseTheme(opt.id)}
               className={cn(
-                "rounded-2xl border px-3 py-2.5 text-sm font-medium transition",
+                "tap-target inline-flex items-center justify-center rounded-2xl border px-3 text-sm font-medium transition",
                 theme === opt.id ? "border-primary/50 bg-primary/10" : "border-border hover:bg-secondary",
               )}
             >
@@ -587,7 +584,7 @@ function SettingsPage() {
               <input
                 type={showPw.next ? "text" : "password"}
                 autoComplete="new-password"
-                className={cn(inputClass, "pr-10")}
+                className={cn(inputClass, "pr-11")}
                 value={passwordForm.next}
                 onChange={(e) => setPasswordForm((f) => ({ ...f, next: e.target.value }))}
               />
@@ -595,7 +592,7 @@ function SettingsPage() {
                 type="button"
                 aria-label={showPw.next ? "Hide password" : "Show password"}
                 onClick={() => setShowPw((s) => ({ ...s, next: !s.next }))}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="tap-target absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPw.next ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
               </button>
@@ -606,7 +603,7 @@ function SettingsPage() {
               <input
                 type={showPw.confirm ? "text" : "password"}
                 autoComplete="new-password"
-                className={cn(inputClass, "pr-10")}
+                className={cn(inputClass, "pr-11")}
                 value={passwordForm.confirm}
                 onChange={(e) => setPasswordForm((f) => ({ ...f, confirm: e.target.value }))}
               />
@@ -614,7 +611,7 @@ function SettingsPage() {
                 type="button"
                 aria-label={showPw.confirm ? "Hide password" : "Show password"}
                 onClick={() => setShowPw((s) => ({ ...s, confirm: !s.confirm }))}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="tap-target absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 {showPw.confirm ? (
                   <EyeOff className="size-4" aria-hidden />

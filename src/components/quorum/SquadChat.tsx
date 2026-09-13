@@ -238,13 +238,13 @@ export function SquadChat({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-neutral-950/85 shadow-2xl backdrop-blur-xl",
+        "relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card/85 shadow-2xl backdrop-blur-xl",
         className,
       )}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,rgba(16,185,129,0.16),transparent_65%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent_65%)]"
       />
       <div
         ref={scrollRef}
@@ -256,7 +256,7 @@ export function SquadChat({
               <Spinner />
             </div>
           ) : messages.length === 0 ? (
-            <p className="py-10 text-center text-sm text-white/45">
+            <p className="py-10 text-center text-sm text-muted-foreground">
               No messages yet — say something to the squad 💬
             </p>
           ) : null}
@@ -282,7 +282,7 @@ export function SquadChat({
           )}
 
           {typingNames.length > 0 ? (
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70 backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground backdrop-blur">
               <Dots />
               {typingNames.length === 1
                 ? `${typingNames[0]} is typing...`
@@ -293,25 +293,25 @@ export function SquadChat({
       </div>
 
       {replyTo ? (
-        <div className="mx-4 mb-2 flex items-start gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur">
-          <span className="mt-0.5 h-full w-0.5 rounded bg-emerald-400/70" />
+        <div className="mx-4 mb-2 flex items-start gap-2 rounded-2xl border border-border bg-secondary/50 px-3 py-2 backdrop-blur">
+          <span className="mt-0.5 h-full w-0.5 rounded bg-primary/70" />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-emerald-300">
+            <p className="text-caption font-semibold text-primary">
               {replyTo.profiles?.display_name ?? "Member"}
             </p>
-            <p className="truncate text-xs text-white/60">{replyTo.content || "Photo"}</p>
+            <p className="truncate text-xs text-muted-foreground">{replyTo.content || "Photo"}</p>
           </div>
           <button
             type="button"
             onClick={() => setReplyTo(null)}
-            className="rounded-lg px-1.5 text-xs text-white/50 hover:bg-white/10"
+            className="tap-target rounded-lg px-1.5 text-xs text-muted-foreground hover:bg-secondary"
           >
             ✕
           </button>
         </div>
       ) : null}
 
-      <div className="relative border-t border-white/10 bg-white/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+      <div className="relative border-t border-border bg-foreground/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
         <form
           className="flex items-end gap-2"
           onSubmit={(e) => {
@@ -334,7 +334,7 @@ export function SquadChat({
             type="button"
             onClick={() => fileRef.current?.click()}
             aria-label="Add photo"
-            className="tap-target grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-base hover:bg-white/10"
+            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 text-base hover:bg-secondary"
           >
             📷
           </button>
@@ -350,9 +350,11 @@ export function SquadChat({
                 void submit(text);
               }
             }}
-            className="max-h-32 min-h-10 flex-1 resize-none rounded-2xl border border-white/10 bg-neutral-900/70 px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-emerald-400/50"
+            // No text-sm: same iOS zoom-on-focus issue as inputClass -- the
+            // global 16px base rule needs to win here too.
+            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-border bg-background px-3.5 py-2.5 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
           />
-          <Button type="submit" loading={busy} className="h-10 shrink-0 px-4">
+          <Button type="submit" loading={busy} className="h-11 shrink-0 px-4">
             Send
           </Button>
         </form>
@@ -367,7 +369,7 @@ function Dots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-300"
+          className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary"
           style={{ animationDelay: `${i * 120}ms` }}
         />
       ))}
@@ -402,10 +404,10 @@ function Bubble({
       ) : null}
       <div className={cn("max-w-[78%] space-y-1", mine && "items-end text-right")}>
         {!mine ? (
-          <p className="px-1 text-[11px] text-white/45">
+          <p className="px-1 text-caption text-muted-foreground">
             {msg.profiles?.display_name ?? "Member"}
             {isHost ? (
-              <span className="ml-1.5 rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-300">
+              <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-caption font-semibold text-primary">
                 Host
               </span>
             ) : null}
@@ -414,7 +416,7 @@ function Bubble({
         <div className="relative">
           <div
             className={cn(
-              "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-white/10 bg-neutral-900/95 p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
+              "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-border bg-popover p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
               mine ? "right-0" : "left-0",
             )}
           >
@@ -423,7 +425,7 @@ function Bubble({
                 key={e}
                 type="button"
                 onClick={() => onReact(e)}
-                className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-emerald-400/10"
+                className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-primary/10"
               >
                 {e}
               </button>
@@ -436,12 +438,15 @@ function Bubble({
             className={cn(
               "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
               mine
-                ? "rounded-tr-none bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
-                : "rounded-tl-none border border-white/10 bg-neutral-800/80 text-neutral-100 hover:bg-neutral-800",
+                ? "rounded-tr-none bg-primary text-primary-foreground"
+                : "rounded-tl-none border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80",
             )}
           >
+            {/* Fixed dark scrim regardless of theme: this sits on the bubble's
+                own solid color (primary or secondary), not the page surface,
+                same reasoning as the venue-photo badges elsewhere. */}
             {msg.reply_to ? (
-              <span className="mb-1.5 block rounded-xl border border-white/10 bg-black/25 px-2 py-1 text-[11px] text-white/55">
+              <span className="mb-1.5 block rounded-xl border border-white/10 bg-black/25 px-2 py-1 text-caption text-white/55">
                 <span className="font-semibold text-white/75">
                   {msg.reply_to.profiles?.display_name ?? "Member"}
                 </span>
@@ -461,7 +466,7 @@ function Bubble({
             ) : null}
           </button>
         </div>
-        <p className="px-1 text-[11px] text-white/35">
+        <p className="px-1 text-caption text-muted-foreground">
           {time(msg.created_at)}
           {mine ? <span className="ml-1">{readers.length > 0 ? "✓✓" : "✓"}</span> : null}
         </p>
@@ -475,11 +480,11 @@ function Bubble({
                   emoji={r.profiles?.avatar_emoji}
                   name={r.profiles?.display_name}
                   size={16}
-                  className="ring-1 ring-neutral-950"
+                  className="ring-1 ring-card"
                 />
               ))}
             </div>
-            <span className="text-[11px] text-white/35">
+            <span className="text-caption text-muted-foreground">
               Seen by {readers[0]?.profiles?.display_name ?? "someone"}
               {readers.length > 1 ? ` +${readers.length - 1}` : ""}
             </span>
@@ -501,25 +506,23 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
       : "🔒 Plan locked in";
   const title = meta.title ?? msg.content;
   return (
-    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] to-teal-500/[0.06] p-4 text-center shadow-xl backdrop-blur">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-300/80">
-        {tag}
-      </p>
-      <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-emerald-50">
+    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-xl backdrop-blur">
+      <p className="text-caption font-semibold text-primary">{tag}</p>
+      <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-foreground">
         <span>{icon}</span>
         <span className="truncate">{title}</span>
       </p>
       {meta.cost ? (
-        <span className="mt-2 inline-block rounded-full bg-black/25 px-2.5 py-0.5 text-[11px] text-emerald-100/80">
+        <span className="mt-2 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-caption text-secondary-foreground">
           {meta.cost}
         </span>
       ) : null}
       {isPlan && msg.plan_id ? (
-        <Button className="mt-3 w-full py-2 text-xs" onClick={() => onVote(msg.plan_id!)}>
+        <Button className="mt-3 w-full text-xs" onClick={() => onVote(msg.plan_id!)}>
           Vote Now ⚡
         </Button>
       ) : null}
-      <p className="mt-2 text-[11px] text-white/35">{time(msg.created_at)}</p>
+      <p className="mt-2 text-caption text-muted-foreground">{time(msg.created_at)}</p>
     </div>
   );
 }

@@ -96,7 +96,7 @@ export function AskSynclySheet() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Ask Syncly"
-        className="pressable active:pressable-active rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
       >
         <Sparkles className="size-5" aria-hidden />
       </button>

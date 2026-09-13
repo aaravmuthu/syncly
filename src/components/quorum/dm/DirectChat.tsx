@@ -226,9 +226,9 @@ export function DirectChat({
     navigate({ to: "/radar", search: { lat, lon, label: label ?? "Shared pin" } });
 
   return (
-    <div className={cn("flex min-h-0 flex-col bg-zinc-950/90 backdrop-blur-2xl", className)}>
+    <div className={cn("flex min-h-0 flex-col bg-card/90 backdrop-blur-2xl", className)}>
       {/* context banner ------------------------------------------------ */}
-      <header className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+      <header className="flex items-center gap-3 border-b border-border px-4 py-3">
         <button
           type="button"
           className="relative"
@@ -238,8 +238,8 @@ export function DirectChat({
           <Avatar url={peer?.avatar_url} emoji={peer?.avatar_emoji} name={peerName} size={40} />
           <span
             className={cn(
-              "absolute -bottom-0.5 -right-0.5 size-3 rounded-full ring-2 ring-zinc-950",
-              peerOnline ? "bg-emerald-400" : "bg-zinc-500",
+              "absolute -bottom-0.5 -right-0.5 size-3 rounded-full ring-2 ring-card",
+              peerOnline ? "bg-success" : "bg-muted-foreground",
             )}
           />
         </button>
@@ -247,18 +247,18 @@ export function DirectChat({
           <button
             type="button"
             onClick={() => peer?.id && openFriend(peer.id)}
-            className="block max-w-full truncate text-left text-sm font-semibold text-white"
+            className="block max-w-full truncate text-left text-sm font-semibold text-foreground"
           >
             {peer ? peerName : "Direct message"}
           </button>
-          <p className="flex items-center gap-1.5 truncate text-[11px] text-white/55">
+          <p className="flex items-center gap-1.5 truncate text-caption text-muted-foreground">
             {telemetry ? (
               <>
                 <span>{telemetry.status ?? "Sharing location"}</span>
                 {telemetry.battery != null ? (
                   <span className="inline-flex items-center gap-0.5">
                     {telemetry.battery <= 20 ? (
-                      <BatteryLow className="h-3 w-3 text-amber-400" aria-hidden />
+                      <BatteryLow className="h-3 w-3 text-warning" aria-hidden />
                     ) : (
                       <BatteryFull className="h-3 w-3" aria-hidden />
                     )}
@@ -276,7 +276,7 @@ export function DirectChat({
           <button
             type="button"
             onClick={() => flyTo(telemetry.lat, telemetry.lon, peerName)}
-            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 transition active:scale-95"
+            className="tap-target inline-flex items-center gap-1 rounded-full border border-border bg-secondary/50 px-3 text-caption font-semibold text-secondary-foreground transition active:scale-95"
           >
             <Navigation className="h-3.5 w-3.5" aria-hidden /> View on Map
           </button>
@@ -286,7 +286,7 @@ export function DirectChat({
             type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="rounded-full px-2 py-1 text-white/50 hover:bg-white/10"
+            className="tap-target rounded-full px-2 text-muted-foreground hover:bg-secondary"
           >
             ✕
           </button>
@@ -300,7 +300,7 @@ export function DirectChat({
             <Spinner />
           </div>
         ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-white/45">
+          <p className="py-10 text-center text-sm text-muted-foreground">
             Say hi — this chat is just between you two.
           </p>
         ) : null}
@@ -326,18 +326,18 @@ export function DirectChat({
         )}
 
         {peerTyping ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
             <Dots /> {peer ? peerName : "They"} is typing…
           </div>
         ) : null}
 
         {peerReadAt && messages.some((m) => m.sender_id === me) ? (
-          <p className="pr-1 text-right text-[11px] text-white/35">Read {time(peerReadAt)}</p>
+          <p className="pr-1 text-right text-caption text-muted-foreground">Read {time(peerReadAt)}</p>
         ) : null}
       </div>
 
       {/* quick pills + composer ---------------------------------------- */}
-      <div className="border-t border-white/10 bg-white/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+      <div className="border-t border-border bg-foreground/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
         <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
           {CONTEXT_PILLS.map((p) => (
             <button
@@ -348,7 +348,7 @@ export function DirectChat({
                 if (p.includes("live location")) void shareMyLocation();
                 else void submit({ threadId, content: p });
               }}
-              className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-medium text-white/75 transition active:scale-95 hover:border-emerald-400/40 hover:bg-emerald-400/10"
+              className="tap-target shrink-0 rounded-full border border-border bg-secondary/50 px-3 text-caption font-medium text-secondary-foreground transition active:scale-95 hover:border-primary/40 hover:bg-primary/10"
             >
               {p}
             </button>
@@ -365,7 +365,7 @@ export function DirectChat({
             type="button"
             onClick={() => void shareMyLocation()}
             aria-label="Send my location"
-            className="tap-target grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/70 transition active:scale-95 hover:bg-white/10"
+            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 text-muted-foreground transition active:scale-95 hover:bg-secondary"
           >
             <MapPin className="h-4 w-4" aria-hidden />
           </button>
@@ -374,10 +374,10 @@ export function DirectChat({
             onClick={() => void toggleRecording()}
             aria-label={recording ? "Stop recording" : "Record a voice note"}
             className={cn(
-              "tap-target grid h-10 w-10 shrink-0 place-items-center rounded-2xl border text-white/70 transition active:scale-95",
+              "tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition active:scale-95",
               recording
-                ? "animate-pulse border-rose-400/50 bg-rose-500/20 text-rose-200"
-                : "border-white/10 bg-white/5 hover:bg-white/10",
+                ? "animate-pulse border-destructive/50 bg-destructive/20 text-destructive"
+                : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary",
             )}
           >
             {recording ? (
@@ -398,9 +398,10 @@ export function DirectChat({
                 if (text.trim()) void submit({ threadId, content: text });
               }
             }}
-            className="max-h-32 min-h-10 flex-1 resize-none rounded-2xl border border-white/10 bg-zinc-900/70 px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-white/35 focus:border-emerald-400/50"
+            // No text-sm: same iOS zoom-on-focus issue as inputClass.
+            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-border bg-background px-3.5 py-2.5 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
           />
-          <Button type="submit" loading={busy} className="h-10 shrink-0 px-4">
+          <Button type="submit" loading={busy} className="h-11 shrink-0 px-4">
             Send
           </Button>
         </form>
@@ -415,7 +416,7 @@ function Dots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-300"
+          className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary"
           style={{ animationDelay: `${i * 120}ms` }}
         />
       ))}
@@ -457,7 +458,7 @@ function DmBubble({
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: "spring", stiffness: 480, damping: 26 }}
               className={cn(
-                "absolute -top-11 z-20 flex gap-0.5 rounded-full border border-white/10 bg-zinc-900/95 p-1 shadow-2xl backdrop-blur-2xl",
+                "absolute -top-11 z-20 flex gap-0.5 rounded-full border border-border bg-popover p-1 shadow-2xl backdrop-blur-2xl",
                 mine ? "right-0" : "left-0",
               )}
             >
@@ -469,7 +470,7 @@ function DmBubble({
                     void onReact(e);
                     setOpen(false);
                   }}
-                  className="rounded-full px-2 py-0.5 text-base transition hover:scale-125 hover:bg-emerald-400/10"
+                  className="rounded-full px-2 py-0.5 text-base transition hover:scale-125 hover:bg-primary/10"
                 >
                   {e}
                 </button>
@@ -502,8 +503,8 @@ function DmBubble({
           className={cn(
             "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
             mine
-              ? "rounded-br-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
-              : "rounded-bl-md border border-white/10 bg-zinc-800/80 text-zinc-100",
+              ? "rounded-br-md bg-primary text-primary-foreground"
+              : "rounded-bl-md border border-border bg-secondary text-secondary-foreground",
           )}
         >
           {msg.kind === "location" ? (
@@ -511,7 +512,7 @@ function DmBubble({
               <MapPin className="h-4 w-4 shrink-0" aria-hidden />
               <span>
                 {meta.label ?? "Live location"}
-                <span className="block text-[11px] opacity-70">Tap to open on the map</span>
+                <span className="block text-caption opacity-70">Tap to open on the map</span>
               </span>
             </span>
           ) : msg.kind === "voice" && msg.media_url ? (
@@ -528,16 +529,16 @@ function DmBubble({
               type="button"
               onClick={() => void onReact(emoji)}
               className={cn(
-                "rounded-full border px-1.5 py-0.5 text-[11px] transition active:scale-90",
+                "rounded-full border px-1.5 py-0.5 text-caption transition active:scale-90",
                 reactions.some((r) => r.emoji === emoji && r.profile_id === myId)
-                  ? "border-emerald-400/50 bg-emerald-400/15 text-emerald-200"
-                  : "border-white/10 bg-white/5 text-white/60",
+                  ? "border-primary/50 bg-primary/15 text-primary"
+                  : "border-border bg-secondary/50 text-muted-foreground",
               )}
             >
               {emoji} {count}
             </button>
           ))}
-          <span className="text-[11px] text-white/30">{time(msg.created_at)}</span>
+          <span className="text-caption text-muted-foreground">{time(msg.created_at)}</span>
         </div>
       </div>
     </div>
@@ -560,8 +561,8 @@ function SystemChip({
         disabled={!tappable}
         onClick={() => tappable && onFly(meta.lat!, meta.lon!, meta.label)}
         className={cn(
-          "rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-[11px] text-white/70 backdrop-blur",
-          tappable && "transition active:scale-95 hover:border-emerald-400/40 hover:text-white",
+          "tap-target rounded-full border border-border bg-secondary/40 px-3.5 text-caption text-muted-foreground backdrop-blur",
+          tappable && "transition active:scale-95 hover:border-primary/40 hover:text-foreground",
         )}
       >
         {msg.content} · {time(msg.created_at)}

@@ -62,13 +62,11 @@ export function ConflictCard({
   });
 
   return (
-    <div className="glass-card space-y-3 border-amber-400/35 p-4">
+    <div className="glass-card space-y-3 border-warning/35 p-4">
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-foreground" aria-hidden />
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground">
-            Conflict detected
-          </p>
+          <p className="text-sm font-semibold text-foreground">Conflict detected</p>
           <p className="text-sm font-semibold">{title}</p>
           <p className="text-xs text-muted-foreground">
             Plan conflict detected for {conflicts.length} member{conflicts.length === 1 ? "" : "s"}.
@@ -84,7 +82,7 @@ export function ConflictCard({
             type="button"
             disabled={vote.isPending}
             onClick={() => vote.mutate({ data: { planId, recommendationId: a.id } })}
-            className="w-full rounded-2xl border border-border px-3 py-2.5 text-left text-sm transition hover:bg-secondary disabled:opacity-60"
+            className="tap-target w-full rounded-2xl border border-border px-3 py-2.5 text-left text-sm transition hover:bg-secondary disabled:opacity-60"
           >
             <span className="font-medium">
               Vote Option {String.fromCharCode(65 + i)} · {altLabel(a.tags)}

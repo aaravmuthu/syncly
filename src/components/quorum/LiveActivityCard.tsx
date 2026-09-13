@@ -41,11 +41,11 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
         layout
         transition={spring}
         className={cn(
-          "flex items-center gap-3 rounded-[28px] border border-white/5 bg-card/40 px-4 py-3 backdrop-blur-3xl",
+          "flex items-center gap-3 rounded-surface border border-border bg-card/40 px-4 py-3 backdrop-blur-3xl",
           className,
         )}
       >
-        <TriangleAlert className="h-4 w-4 shrink-0 text-amber-400" aria-hidden />
+        <TriangleAlert className="h-4 w-4 shrink-0 text-warning" aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{plan.title}</p>
           <p className="truncate text-xs font-medium text-muted-foreground">
@@ -70,17 +70,15 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
       layout
       transition={spring}
       className={cn(
-        "relative overflow-hidden rounded-[28px] border bg-card/40 p-5 backdrop-blur-3xl",
-        confirmed
-          ? "border-emerald-400/25 shadow-[0_0_60px_-24px_var(--color-emerald-400)]"
-          : "border-white/5",
+        "relative overflow-hidden rounded-surface border bg-card/40 p-5 backdrop-blur-3xl",
+        confirmed ? "border-primary/25 shadow-[0_0_60px_-24px_var(--primary)]" : "border-border",
         className,
       )}
     >
       {confirmed ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-emerald-500/20 blur-3xl"
+          className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-primary/20 blur-3xl"
         />
       ) : null}
 
@@ -105,7 +103,7 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={spring}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400 ring-1 ring-emerald-400/40"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-semibold text-primary ring-1 ring-primary/40"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> You&apos;re in
               </motion.span>

@@ -322,7 +322,7 @@ export default function SquadMapInner({
   const focus = people.find((p) => p.id === selected) ?? null;
 
   return (
-    <div className={cn("relative overflow-hidden rounded-[28px]", className)}>
+    <div className={cn("relative overflow-hidden rounded-surface", className)}>
       <div ref={container} className="h-full w-full" />
 
       {/* Top floating search pill */}
@@ -369,7 +369,7 @@ export default function SquadMapInner({
 
       {/* Tap-to-focus mini card */}
       {focus ? (
-        <div className="absolute inset-x-3 bottom-3 mx-auto max-w-sm rounded-[24px] border border-white/10 bg-zinc-900/70 p-4 shadow-2xl backdrop-blur-2xl">
+        <div className="absolute inset-x-3 bottom-3 mx-auto max-w-sm rounded-3xl border border-white/10 bg-zinc-900/70 p-4 shadow-2xl backdrop-blur-2xl">
           <div className="flex items-start gap-3">
             <span
               className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
@@ -387,7 +387,7 @@ export default function SquadMapInner({
               <p className="truncate text-xs font-medium text-muted-foreground">
                 {focus.address ?? focus.motion ?? "Location shared"}
               </p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-caption font-semibold text-muted-foreground">
                 <Chip icon={focus.speedMph && focus.speedMph >= 12 ? Car : PersonStanding}>
                   {focus.speedMph && focus.speedMph >= 2
                     ? `${Math.round(focus.speedMph)} mph`
@@ -444,7 +444,10 @@ function HudButton({
       aria-label={label}
       aria-pressed={active ?? undefined}
       className={cn(
-        "tap-target grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-zinc-900/60 backdrop-blur-2xl transition-transform active:scale-95",
+        // h-11/w-11 match what tap-target's min-height/min-width already
+        // enforce -- named explicitly instead of the old h-10/w-10 (40px)
+        // so the class list isn't lying about the actual rendered size.
+        "tap-target grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-zinc-900/60 backdrop-blur-2xl transition-transform active:scale-95",
         active ? "text-primary" : "text-foreground/80",
       )}
     >
@@ -475,7 +478,7 @@ function MiniAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 py-2 text-xs font-semibold transition-transform active:scale-95"
+      className="tap-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold transition-transform active:scale-95"
     >
       <Icon className="h-3.5 w-3.5" aria-hidden />
       {children}

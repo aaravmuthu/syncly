@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { GroupSettings } from "@/components/quorum/GroupSettings";
 import { GroupAppearance } from "@/components/quorum/GroupAppearance";
-import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
+import { Button, Card, Pill, Skeleton, statusTone } from "@/components/quorum/ui";
 import { getGroup } from "@/lib/quorum/plan.functions";
 import { PlanWizard } from "@/components/quorum/PlanWizard";
 import { SquadChat } from "@/components/quorum/SquadChat";
@@ -264,14 +264,16 @@ type GroupPlan = {
   plan_conflicts?: { id: string; resolved: boolean }[];
 };
 
-const STATUS_PILL: Record<string, { label: string; tone: "good" | "accent" | "warn" }> = {
-  finalized: { label: "🔒 Locked In", tone: "good" },
-  completed: { label: "✨ Completed", tone: "good" },
-  voting: { label: "⚡ Voting Active", tone: "accent" },
-  recommending: { label: "⚡ Voting Active", tone: "accent" },
-  collecting: { label: "⚡ Voting Active", tone: "accent" },
-  draft: { label: "📝 Draft", tone: "warn" },
-  cancelled: { label: "✕ Cancelled", tone: "warn" },
+// Tone comes from the canonical statusTone() (ui.tsx) — only the label text
+// is specific to this screen.
+const STATUS_LABEL: Record<string, string> = {
+  finalized: "🔒 Locked In",
+  completed: "✨ Completed",
+  voting: "⚡ Voting Active",
+  recommending: "⚡ Voting Active",
+  collecting: "⚡ Voting Active",
+  draft: "📝 Draft",
+  cancelled: "✕ Cancelled",
 };
 
 function whenLabel(iso: string | null) {
@@ -288,7 +290,7 @@ function whenLabel(iso: string | null) {
 /** Rich, tappable plan card for the group Plans tab. */
 function PlanCard({ plan }: { plan: GroupPlan }) {
   const meta = categoryMeta(plan.category);
-  const status = STATUS_PILL[plan.status] ?? { label: plan.status, tone: "accent" as const };
+  const status = { label: STATUS_LABEL[plan.status] ?? plan.status, tone: statusTone(plan.status) };
   const going = (plan.plan_participants ?? []).filter((p) => p.responded && p.attending);
   const conflicts = (plan.plan_conflicts ?? []).filter((c) => !c.resolved).length;
   const cost = estCostLabel(plan.est_cost_min, plan.est_cost_max);
@@ -335,7 +337,7 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
                   emoji={g.profiles?.avatar_emoji}
                   name={g.profiles?.display_name}
                   size={24}
-                  className="ring-2 ring-neutral-900"
+                  className="ring-2 ring-card"
                 />
               ))}
             </div>
@@ -345,7 +347,7 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
                 : `👍 ${names[0]}${going.length > 1 ? ` + ${going.length - 1} other${going.length > 2 ? "s" : ""}` : ""}`}
             </span>
             {conflicts > 0 ? (
-              <span className="shrink-0 rounded-full bg-amber-400/12 px-2 py-0.5 text-[11px] font-medium text-foreground">
+              <span className="shrink-0 rounded-full bg-warning/16 px-2 py-0.5 text-caption font-medium text-warning-foreground">
                 ✋ {conflicts} Conflict{conflicts === 1 ? "" : "s"}
               </span>
             ) : null}

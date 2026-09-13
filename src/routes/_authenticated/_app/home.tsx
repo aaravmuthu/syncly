@@ -273,7 +273,7 @@ function HomePage() {
         <LayoutGroup>
           {activeNow.length > 0 ? (
             <section className="space-y-3">
-              <h2 className="text-xl font-bold tracking-tight">Active right now</h2>
+              <h2 className="text-title font-semibold tracking-tight">Active right now</h2>
               <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <AnimatePresence initial={false} mode="popLayout">
                   {activeNow.map((p) => (
@@ -286,7 +286,7 @@ function HomePage() {
                       transition={cardSpring}
                       className="w-[88%] shrink-0 snap-start sm:w-[420px]"
                     >
-                      <SpotlightCard tilt className="rounded-[28px]">
+                      <SpotlightCard tilt className="rounded-surface">
                         <LiveActivityCard plan={p} />
                       </SpotlightCard>
                     </motion.div>
@@ -319,7 +319,7 @@ function HomePage() {
 
         {upcoming.length > 0 || memories.length > 0 ? (
           <section className="space-y-3">
-            <h2 className="text-xl font-bold tracking-tight">Upcoming &amp; memories</h2>
+            <h2 className="text-title font-semibold tracking-tight">Upcoming &amp; memories</h2>
             <div className="grid gap-3">
               {upcoming.map((p) => (
                 <ConfirmedCard key={p.id} plan={p} />
@@ -329,7 +329,7 @@ function HomePage() {
                   key={p.id}
                   to="/plans/$planId"
                   params={{ planId: p.id }}
-                  className="flex items-center gap-3 rounded-[28px] border border-white/5 bg-card/30 px-4 py-3 backdrop-blur-3xl"
+                  className="flex items-center gap-3 rounded-surface border border-border bg-card/30 px-4 py-3 backdrop-blur-3xl"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-muted-foreground">
@@ -376,11 +376,7 @@ function MotionSection({
       transition={cardSpring}
       className="space-y-3"
     >
-      <h2
-        className={`text-xs font-semibold uppercase tracking-wide ${accent ?? "text-muted-foreground"}`}
-      >
-        {title}
-      </h2>
+      <h2 className={`text-sm font-semibold ${accent ?? "text-muted-foreground"}`}>{title}</h2>
       {children}
     </motion.section>
   );
@@ -412,11 +408,7 @@ function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h2
-        className={`text-xs font-semibold uppercase tracking-wide ${accent ?? "text-muted-foreground"}`}
-      >
-        {title}
-      </h2>
+      <h2 className={`text-sm font-semibold ${accent ?? "text-muted-foreground"}`}>{title}</h2>
       {children}
     </section>
   );

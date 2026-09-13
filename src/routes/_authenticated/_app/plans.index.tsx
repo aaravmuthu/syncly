@@ -194,7 +194,10 @@ function PlanCard({
     <SpotlightCard
       as="article"
       tilt
-      className={`surface rounded-3xl border border-border/70 p-5 shadow-xl backdrop-blur-xl transition-colors hover:border-primary/40 ${
+      // .surface already supplies background/border/radius/blur -- the old
+      // rounded-3xl + border-border/70 + backdrop-blur-xl here were
+      // redundant, cascade-order-dependent overrides of the same properties.
+      className={`surface p-5 shadow-xl transition-colors hover:border-primary/40 ${
         muted ? "opacity-60" : ""
       }`}
     >
@@ -289,7 +292,7 @@ function PlanCard({
             </span>
           ))}
           {plan.participants.length > 5 ? (
-            <span className="grid size-[30px] place-items-center rounded-full bg-secondary text-[11px] font-semibold ring-2 ring-background">
+            <span className="grid size-[30px] place-items-center rounded-full bg-secondary text-caption font-semibold ring-2 ring-background">
               +{plan.participants.length - 5}
             </span>
           ) : null}
