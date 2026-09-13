@@ -142,14 +142,12 @@ export function RadarPage() {
   // navigation elsewhere -- the root cause of tab switches away from Radar
   // occasionally snapping back (a delayed click landed after AppShell's
   // optimistic-tab-switch window had already given up and reverted).
-  const [isActive, setIsActive] = useState(() => location.pathname === "/radar");
-  useEffect(() => {
-    const onTabVisible = (event: Event) => {
-      setIsActive((event as CustomEvent<string>).detail === "/radar");
-    };
-    window.addEventListener("syncly:tab-visible", onTabVisible);
-    return () => window.removeEventListener("syncly:tab-visible", onTabVisible);
-  }, []);
+  // Derived straight from the URL rather than from a tab-visibility event:
+  // the event only fires when another *tab* becomes active, so leaving Radar
+  // for a non-tab route (/activity, /settings, a group or plan detail) left
+  // this stuck true and kept the body scroll lock below applied.
+  const isActive = location.pathname === "/radar";
+
 
   // The map IS the page here, so page scroll is locked while Radar is the
   // visible tab -- released the instant the user switches away (before they
