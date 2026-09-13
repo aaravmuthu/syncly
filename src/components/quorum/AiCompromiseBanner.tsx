@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "./ui";
 import { prettyTime } from "./TimePicker";
@@ -46,7 +47,9 @@ export function AiCompromiseBanner({
   return (
     <Card className="border-primary/40 bg-primary/5">
       <div className="flex flex-wrap items-center gap-2">
-        <Pill tone="accent">💡 AI compromise</Pill>
+        <Pill tone="accent">
+          <Lightbulb className="size-3.5" aria-hidden /> AI compromise
+        </Pill>
         {c.suggestedStart ? <Pill tone="neutral">Start {prettyTime(c.suggestedStart)}</Pill> : null}
         {c.suggestedRecommendationTitle ? (
           <Pill tone="neutral">{c.suggestedRecommendationTitle}</Pill>

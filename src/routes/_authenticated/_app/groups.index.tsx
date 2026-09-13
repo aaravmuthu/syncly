@@ -102,11 +102,17 @@ export function GroupsPage() {
         }
       />
       <PullToRefresh onRefresh={async () => void (await groups.refetch())}>
-      <div className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1">
+      <div
+        role="tablist"
+        aria-label="Filter squads"
+        className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1"
+      >
         {FILTERS.map((f) => (
           <motion.button
             key={f.id}
             type="button"
+            role="tab"
+            aria-selected={filter === f.id}
             whileTap={{ scale: 0.94 }}
             animate={{ scale: filter === f.id ? 1.03 : 1 }}
             transition={{ type: "spring", stiffness: 420, damping: 26 }}

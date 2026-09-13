@@ -98,7 +98,7 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
         aria-label="Ask Syncly"
         className={
           trigger === "menu"
-            ? "relative flex w-full cursor-default select-none items-center gap-2 rounded-xl px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+            ? "relative flex min-h-11 w-full cursor-default select-none items-center gap-2 rounded-xl px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
             : "tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         }
       >

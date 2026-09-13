@@ -478,6 +478,14 @@ function PersistentTabHost({ activeTab }: { activeTab: TabPath | null }) {
   const [visited, setVisited] = useState<Set<TabPath>>(() => new Set(activeTab ? [activeTab] : []));
   const previousTab = useRef<TabPath | null>(activeTab);
   const scrollPositions = useRef(new Map<TabPath, number>());
+  // Purely cosmetic fade-in state -- which tab (if any) is mid-transition
+  // right now. This is intentionally its OWN state, separate from
+  // everything above: it never decides which tab is active or when a
+  // switch happens (that's entirely activeTab, owned by AppShell's
+  // navigateOnTouch/suppressTouchClick), it only reacts after the fact to
+  // dress up an already-decided switch. Safe to delete this whole
+  // mechanism without touching navigation behavior at all.
+  const [enteringTab, setEnteringTab] = useState<TabPath | null>(null);
 
   useEffect(() => {
     if (!activeTab) return;
@@ -501,6 +509,20 @@ function PersistentTabHost({ activeTab }: { activeTab: TabPath | null }) {
     return () => window.cancelAnimationFrame(frame);
   }, [activeTab]);
 
+  // Sets the entering tab's opacity to 0 BEFORE the browser paints the
+  // switch (useLayoutEffect, same reasoning as the scroll-restore effect
+  // above) so there's an actual "from" state to transition out of; the
+  // separate effect below then flips it back to opaque on the next frame,
+  // which is what the browser actually animates.
+  useLayoutEffect(() => {
+    if (activeTab) setEnteringTab(activeTab);
+  }, [activeTab]);
+  useEffect(() => {
+    if (!enteringTab) return;
+    const frame = window.requestAnimationFrame(() => setEnteringTab(null));
+    return () => window.cancelAnimationFrame(frame);
+  }, [enteringTab]);
+
   return (
     <Suspense fallback={null}>
       {BASE_NAV.map((item) => {
@@ -508,7 +530,16 @@ function PersistentTabHost({ activeTab }: { activeTab: TabPath | null }) {
         const Component = TAB_COMPONENTS[item.to];
         const active = activeTab === item.to;
         return (
-          <div key={item.to} hidden={!active} aria-hidden={!active || undefined} inert={!active || undefined}>
+          <div
+            key={item.to}
+            hidden={!active}
+            aria-hidden={!active || undefined}
+            inert={!active || undefined}
+            className={cn(
+              "transition-opacity duration-150 ease-out motion-reduce:transition-none",
+              active && enteringTab === item.to ? "opacity-0" : "opacity-100",
+            )}
+          >
             <Component />
           </div>
         );

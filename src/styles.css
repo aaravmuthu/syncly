@@ -524,7 +524,13 @@
 }
 .dark {
   --glass-tint: 32 34 40;
-  --glass-bg-alpha: 0.32;
+  /* 0.32 read as genuinely glassy but left text contrast at the mercy of
+     whatever's directly behind a given pill -- fine over this app's own
+     near-black background, riskier on Radar where a bright road/water
+     line from the live map can sit right behind light glass-pill text.
+     0.4 keeps the frost effect clearly visible while raising the worst-
+     case contrast floor against unpredictable map content underneath. */
+  --glass-bg-alpha: 0.4;
   --glass-border: rgba(255, 255, 255, 0.16);
   --glass-shadow:
     0 8px 28px rgba(0, 0, 0, 0.32),

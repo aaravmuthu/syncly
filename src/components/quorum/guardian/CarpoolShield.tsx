@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { Car } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Field, Pill, inputClass } from "@/components/quorum/ui";
 import { markRideLeaving, saveVehicleDetails } from "@/lib/quorum/guardian.functions";
@@ -68,8 +69,9 @@ export function CarpoolShield({
         return (
           <div key={r.id} className="rounded-2xl border border-border px-3 py-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-medium">
-                🚗 {r.car_label} · {r.driver_label ?? "Driver TBD"}
+              <div className="flex items-center gap-1.5 text-sm font-medium">
+                <Car className="size-3.5 shrink-0" aria-hidden />
+                {r.car_label} · {r.driver_label ?? "Driver TBD"}
                 <span className="text-xs font-normal text-muted-foreground"> · {r.leg}</span>
               </div>
               {r.departed_at ? (

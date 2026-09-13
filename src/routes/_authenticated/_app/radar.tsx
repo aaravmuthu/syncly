@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { haptic } from "@/lib/quorum/haptics";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
@@ -353,7 +354,10 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
   return (
     <motion.div
       layout
-      transition={{ type: "spring", stiffness: 380, damping: 34 }}
+      // stiffness 500 / damping 40 -> damping ratio ~0.89, settles in ~200ms
+      // (the prior 380/34 pair settled closer to 235ms) -- snappy without
+      // enough overshoot to feel bouncy for a safety-relevant status sheet.
+      transition={{ type: "spring", stiffness: 500, damping: 40 }}
       className="glass-pill pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
       style={{
         // Anchored at var(--chrome-bottom) (styles.css) whether collapsed or
@@ -372,15 +376,20 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
             <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
               <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
             </div>
-            <button
+            <motion.button
               type="button"
-              onClick={() => setOpen(false)}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              onClick={() => {
+                haptic("select");
+                setOpen(false);
+              }}
               aria-label="Collapse live radar"
               aria-expanded="true"
               className="tap-target -m-2 grid place-items-center text-muted-foreground"
             >
               <X className="h-4 w-4" aria-hidden />
-            </button>
+            </motion.button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
             <div className="space-y-5">
@@ -397,15 +406,20 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
           </div>
         </div>
       ) : (
-        <button
+        <motion.button
           type="button"
-          onClick={() => setOpen(true)}
+          whileTap={{ scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          onClick={() => {
+            haptic("select");
+            setOpen(true);
+          }}
           aria-label="Show live radar details"
           aria-expanded="false"
           className="tap-target flex w-full items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-primary"
         >
           <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
-        </button>
+        </motion.button>
       )}
     </motion.div>
   );

@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
-import { DollarSign, Info } from "lucide-react";
+import { DollarSign, Info, MapPin } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { Button, statusTone, statusToneClasses } from "./ui";
 import { cn } from "@/lib/utils";
@@ -382,8 +382,11 @@ export function MapThumb({
           loading="lazy"
         />
       ) : (
-        <div className="grid h-full w-full place-items-center bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_60%)] text-2xl">
-          📍
+        <div
+          className="grid h-full w-full place-items-center bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_60%)] text-muted-foreground"
+          aria-hidden
+        >
+          <MapPin className="size-6" />
         </div>
       )}
       {label ? (

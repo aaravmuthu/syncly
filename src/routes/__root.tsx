@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { MotionConfig } from "motion/react";
 import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
@@ -148,13 +149,21 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <Outlet />
-        <Toaster
-          position="top-center"
-          richColors
-          closeButton
-          offset={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
-        />
+        {/* App-wide, not new: every framer-motion animation already in this
+            app (whileTap/whileHover on every Button, TeenWidget, HUD
+            controls, and everything just added in this pass) had no
+            prefers-reduced-motion handling at all until this one wrapper --
+            "user" respects the OS setting for spring/tween animations while
+            still allowing layout animations that convey real information. */}
+        <MotionConfig reducedMotion="user">
+          <Outlet />
+          <Toaster
+            position="top-center"
+            richColors
+            closeButton
+            offset={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
+          />
+        </MotionConfig>
       </ThemeProvider>
     </QueryClientProvider>
   );
