@@ -248,7 +248,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
           <InstallPrompt />
           <PersistentTabHost activeTab={visibleTab} />
-          {exactTab(pathname) ? null : <PageTransition>{children}</PageTransition>}
+          {visibleTab ? null : <PageTransition>{children}</PageTransition>}
         </main>
 
         {/* Same reasoning as the header above: no backdrop-blur on an
