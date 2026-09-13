@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   lazy,
   Suspense,
@@ -7,12 +7,22 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, House, MessageCircle, Radar, Settings, Users, Zap, type LucideIcon } from "lucide-react";
+import {
+  Bell,
+  House,
+  MessageCircle,
+  MoreHorizontal,
+  Radar,
+  Settings,
+  SunMoon,
+  Users,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { haptic } from "@/lib/quorum/haptics";
 import { Wordmark } from "./Wordmark";
@@ -21,13 +31,20 @@ import { ContextSwitcher } from "./ContextSwitcher";
 import { Avatar } from "./Avatar";
 import { InstallPrompt } from "./InstallPrompt";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/lib/theme";
+import { ThemeToggle, useTheme } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
 import { getMe } from "@/lib/quorum/plan.functions";
 import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
 import { PageTransition } from "./interactions/PageTransition";
 import { AskSynclySheet } from "./ai/AskSynclySheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Settings/profile lives at the header gear + avatar tap, and Activity lives
 // at the header bell (below) — keeping the tab bar at 5 items per Apple's HIG
@@ -111,10 +128,10 @@ export function PageHeader({
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const routedTab = navTab(pathname);
-  const [optimisticTab, setOptimisticTab] = useState<TabPath | null>(null);
-  const selectedTab = optimisticTab ?? routedTab;
-  const visibleTab = optimisticTab ?? exactTab(pathname);
+  const selectedTab = routedTab;
+  const visibleTab = exactTab(pathname);
   // Radar is map-native: its map is a fixed, full-viewport layer, so the
   // header and bottom nav can't reserve their own flow space above/below it
   // the way every other (normally scrolling) tab needs them to. On Radar
@@ -123,8 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // opaque one, so the map reads through them at the very top/bottom edges.
   const isRadar = visibleTab === "/radar";
   const navigationLock = useRef({ to: "" as TabPath | "", until: 0 });
-  const blockNextClick = useRef(false);
-  const clickCommitted = useRef(false);
+  const suppressClickUntil = useRef(0);
 
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
@@ -133,95 +149,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   // a swapped nav tab here.
   const NAV: NavItem[] = [...BASE_NAV];
 
-  useEffect(() => {
-    if (optimisticTab && routedTab === optimisticTab) setOptimisticTab(null);
-  }, [optimisticTab, routedTab]);
-
-  // Safety net only: if a navigation somehow never lands, don't stay stuck on
-  // an optimistic tab forever. Deliberately long, so a slow-loading tab is
-  // never yanked back to the previous screen mid-navigation.
-  useEffect(() => {
-    if (!optimisticTab) return;
-    const timeout = window.setTimeout(() => setOptimisticTab(null), 6000);
-    return () => window.clearTimeout(timeout);
-  }, [optimisticTab]);
-
-  const primeTab = useCallback((event: ReactPointerEvent, to: TabPath) => {
+  const navigateOnTouch = useCallback((event: React.PointerEvent<HTMLAnchorElement>, to: TabPath) => {
+    if (event.pointerType === "mouse" || event.button !== 0) return;
+    event.preventDefault();
     const now = performance.now();
-    if (now < navigationLock.current.until) {
-      blockNextClick.current = true;
-      event.preventDefault();
-      return;
-    }
-
-    blockNextClick.current = false;
-    clickCommitted.current = false;
+    suppressClickUntil.current = now + 500;
+    if (to === exactTab(pathname) || now < navigationLock.current.until) return;
     navigationLock.current = { to, until: now + 180 };
-    setOptimisticTab(to);
-    if (window.matchMedia("(pointer: coarse)").matches) haptic("select");
+    haptic("select");
+    void navigate({ to });
+  }, [navigate, pathname]);
 
-    const target = event.currentTarget;
-
-    // A touch that ends without a click (finger slid off the tab, scroll took
-    // over, browser cancelled the gesture) must not leave the optimistic tab
-    // selected — otherwise the shell shows a tab the router never navigated
-    // to and later snaps back. That's the ONLY case this should revert for.
-    //
-    // This used to revert on a flat 120ms timeout after pointerup instead,
-    // racing it against the browser's own (already-guaranteed, since
-    // touch-action: manipulation removes any tap/pan ambiguity) click
-    // dispatch. Under Radar's heavier main-thread load -- Mapbox render +
-    // marker layout work -- that dispatch could occasionally land after
-    // 120ms had already elapsed, so settle() reverted a tab switch that was
-    // genuinely still in flight, which is what actually caused switches
-    // away from Radar to snap back. A fixed timeout can't self-adjust to
-    // main-thread congestion; double requestAnimationFrame can, since it
-    // won't run until the browser is idle enough to paint a frame -- the
-    // same condition the pending click needs to actually dispatch. So this
-    // now only ever reverts on a real abandoned-gesture signal (pointerup
-    // landing outside the tapped element, or pointercancel), never on
-    // elapsed time alone.
-    const settle = () => {
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-      if (!clickCommitted.current) {
-        console.warn(`[tab-switch] "${to}" primed but no click landed -- reverting`);
-        setOptimisticTab((current) => (current === to ? null : current));
-      }
-    };
-    const onUp = (upEvent: PointerEvent) => {
-      const landedOnTarget =
-        target instanceof Node &&
-        (upEvent.target === target || target.contains(upEvent.target as Node));
-      if (landedOnTarget) {
-        requestAnimationFrame(() => requestAnimationFrame(settle));
-      } else {
-        settle();
-      }
-    };
-    const onCancel = () => settle();
-    window.addEventListener("pointerup", onUp, { once: true });
-    window.addEventListener("pointercancel", onCancel, { once: true });
-  }, []);
-
-  const commitTab = useCallback((event: React.MouseEvent, to: TabPath) => {
-    if (blockNextClick.current) {
-      blockNextClick.current = false;
-      event.preventDefault();
-      return;
-    }
-
-    clickCommitted.current = true;
-
-    if (event.detail === 0) {
-      const now = performance.now();
-      if (now < navigationLock.current.until && navigationLock.current.to !== to) {
-        event.preventDefault();
-        return;
-      }
-      navigationLock.current = { to, until: now + 180 };
-    }
-    setOptimisticTab(to);
+  const suppressTouchClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (performance.now() >= suppressClickUntil.current) return;
+    event.preventDefault();
+    suppressClickUntil.current = 0;
   }, []);
 
 
@@ -259,11 +201,18 @@ export function AppShell({ children }: { children: ReactNode }) {
             there specifically. */}
         <header
           className={cn(
-            "inset-x-0 top-0 z-30 border-b border-border/70 pt-[env(safe-area-inset-top)]",
-            isRadar ? "fixed map-glass-bar" : "sticky bg-background/95",
+            "inset-x-0 top-0 z-30 pt-[env(safe-area-inset-top)]",
+            isRadar
+              ? "fixed border-0 bg-transparent px-3 md:border-b md:border-border/70 md:px-0"
+              : "sticky border-b border-border/70 bg-background/95",
           )}
         >
-          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+          <div
+            className={cn(
+              "mx-auto flex max-w-3xl items-center justify-between px-4 py-3",
+              isRadar && "map-glass mt-2 rounded-full py-2 md:mt-0 md:rounded-none md:border-x-0 md:border-t-0 md:py-3",
+            )}
+          >
             <Link to="/home" className="flex items-center gap-2">
               <Wordmark className="h-6" />
             </Link>
@@ -271,12 +220,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <DesktopTabs
                 nav={NAV}
                 selectedTab={selectedTab}
-                onPointerDown={primeTab}
-                onClick={commitTab}
               />
-              <ContextSwitcher />
-              <ThemeToggle />
-              <AskSynclySheet />
+              <div className={cn("contents", isRadar && "max-md:hidden")}>
+                <ContextSwitcher />
+                <ThemeToggle />
+                <AskSynclySheet />
               <Link
                 to="/activity"
                 aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
@@ -309,6 +257,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   className="ring-1 ring-border"
                 />
               </Link>
+              </div>
+              {isRadar ? <RadarMobileMenu unread={unread} /> : null}
             </div>
           </div>
         </header>
@@ -328,11 +278,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             Radar, where it floats over the full-bleed map as glass. */}
         <nav
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 border-t border-border/70 pb-[env(safe-area-inset-bottom)] md:hidden",
-            isRadar ? "map-glass-bar" : "bg-background/95",
+            "fixed z-50 pb-[env(safe-area-inset-bottom)] md:hidden",
+            isRadar
+              ? "inset-x-3 bottom-2 rounded-3xl border-0 bg-transparent"
+              : "inset-x-0 bottom-0 border-t border-border/70 bg-background/95",
           )}
         >
-          <div className="relative mx-auto flex max-w-md items-stretch justify-between px-2 py-1.5">
+          <div className={cn("relative mx-auto flex max-w-md items-stretch justify-between px-2 py-1.5", isRadar && "map-glass rounded-3xl")}>
             <div className="pointer-events-none absolute inset-x-2 top-1.5 h-0.5" aria-hidden>
               <span
                 className={cn(
@@ -353,8 +305,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={n.to}
                   to={n.to}
                   preload="intent"
-                  onPointerDown={(event) => primeTab(event, n.to as TabPath)}
-                  onClick={(event) => commitTab(event, n.to as TabPath)}
+                  onPointerDown={(event) => navigateOnTouch(event, n.to as TabPath)}
+                  onClick={suppressTouchClick}
                   className="flex flex-1"
                 >
                   <span
@@ -389,13 +341,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 function DesktopTabs({
   nav,
   selectedTab,
-  onPointerDown,
-  onClick,
 }: {
   nav: NavItem[];
   selectedTab: TabPath | null;
-  onPointerDown: (event: ReactPointerEvent, to: TabPath) => void;
-  onClick: (event: React.MouseEvent, to: TabPath) => void;
 }) {
   const root = useRef<HTMLElement>(null);
   const items = useRef(new Map<TabPath, HTMLAnchorElement>());
@@ -436,8 +384,6 @@ function DesktopTabs({
             }}
             to={item.to}
             preload="intent"
-            onPointerDown={(event) => onPointerDown(event, item.to as TabPath)}
-            onClick={(event) => onClick(event, item.to as TabPath)}
             className={cn(
               "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
               active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
@@ -448,6 +394,45 @@ function DesktopTabs({
         );
       })}
     </nav>
+  );
+}
+
+function RadarMobileMenu({ unread }: { unread: number }) {
+  const { resolved, toggle } = useTheme();
+  return (
+    <div className="md:hidden">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label="Open menu"
+            className="tap-target grid place-items-center rounded-full text-foreground"
+          >
+            <MoreHorizontal className="size-5" aria-hidden />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" sideOffset={10} className="map-glass min-w-52 rounded-2xl p-1.5">
+          <DropdownMenuItem onSelect={toggle} className="rounded-xl py-2.5">
+            <SunMoon aria-hidden />
+            {resolved === "dark" ? "Light appearance" : "Dark appearance"}
+          </DropdownMenuItem>
+          <AskSynclySheet trigger="menu" />
+          <DropdownMenuItem asChild className="rounded-xl py-2.5">
+            <Link to="/activity">
+              <Bell aria-hidden />
+              Activity{unread > 0 ? ` (${Math.min(unread, 9)}${unread > 9 ? "+" : ""})` : ""}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="rounded-xl py-2.5">
+            <Link to="/settings">
+              <Settings aria-hidden /> Settings and profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <div className="px-1 py-1"><ContextSwitcher className="w-full justify-center" /></div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
