@@ -18,8 +18,19 @@ import {
   X,
 } from "lucide-react";
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
-import { RadarInfoPill } from "./RadarInfoPill";
 import { cn } from "@/lib/utils";
+
+// The map now renders full-viewport, behind AppShell's sticky header
+// (~3.5rem content + safe-area-inset-top) and, on mobile, its fixed bottom
+// nav (~3.5rem + safe-area-inset-bottom, absent on desktop where
+// DesktopTabs live in the header instead) -- every floating control here
+// has to clear that chrome explicitly instead of relying on the old
+// document-flow layout where the map already started below the header.
+const MAP_TOP_CLEAR = "top-[calc(env(safe-area-inset-top)+3.75rem)]";
+const MAP_CONTROLS_TOP = "top-[calc(env(safe-area-inset-top)+7.25rem)]";
+// Clears the collapsed RadarSheet pill (radar.tsx), which floats above the
+// bottom nav on both mobile and desktop.
+const MAP_BOTTOM_CLEAR_SHEET = "bottom-[calc(env(safe-area-inset-bottom)+7.5rem)]";
 
 type Props = SquadMapData & {
   token: string;
@@ -402,7 +413,7 @@ export default function SquadMapInner({
       <div ref={container} className="h-full w-full" />
 
       {/* Top floating search pill */}
-      <div className="pointer-events-none absolute inset-x-3 top-3 flex justify-center">
+      <div className={cn("pointer-events-none absolute inset-x-3 flex justify-center", MAP_TOP_CLEAR)}>
         <label className="map-glass pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
@@ -425,10 +436,8 @@ export default function SquadMapInner({
         </label>
       </div>
 
-      <RadarInfoPill />
-
       {/* Right-side quick actions */}
-      <div className="absolute right-3 top-16 flex flex-col gap-2">
+      <div className={cn("absolute right-3 flex flex-col gap-2", MAP_CONTROLS_TOP)}>
         <HudButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
         <HudButton label="3D view tilt" onClick={toggleTilt} icon={Building2} active={tilted} />
         <HudButton
@@ -454,7 +463,13 @@ export default function SquadMapInner({
 
       {/* List-view fallback: always-legible regardless of zoom or clustering. */}
       {showList ? (
-        <div className="map-glass absolute inset-x-3 bottom-3 top-16 z-10 flex flex-col overflow-hidden rounded-3xl">
+        <div
+          className={cn(
+            "map-glass absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl",
+            MAP_CONTROLS_TOP,
+            MAP_BOTTOM_CLEAR_SHEET,
+          )}
+        >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <span className="text-sm font-semibold text-foreground">Everyone on the map</span>
             <button
@@ -508,9 +523,16 @@ export default function SquadMapInner({
         </div>
       ) : null}
 
-      {/* Tap-to-focus mini card */}
+      {/* Tap-to-focus mini card -- sits above the collapsed RadarSheet pill
+          (radar.tsx) rather than the raw bottom-nav clearance, since both
+          can be visible over the map at once. */}
       {focus ? (
-        <div className="map-glass absolute inset-x-3 bottom-3 mx-auto max-w-sm rounded-3xl p-4">
+        <div
+          className={cn(
+            "map-glass absolute inset-x-3 mx-auto max-w-sm rounded-3xl p-4",
+            MAP_BOTTOM_CLEAR_SHEET,
+          )}
+        >
           <div className="flex items-start gap-3">
             <span
               className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"

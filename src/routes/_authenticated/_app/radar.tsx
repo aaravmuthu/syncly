@@ -12,9 +12,9 @@ import {
   Navigation,
   PersonStanding,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PullToRefresh } from "@/components/quorum/interactions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
@@ -133,20 +133,49 @@ export function RadarPage() {
     focusRef.current = location.search as { lat?: number; lon?: number; label?: string };
   }
   const focus = focusRef.current;
+
+  // Radar stays mounted (not unmounted) once visited -- the persistent tab
+  // host just hides it behind whichever tab is active. Without this, its
+  // 45-60s polling and Mapbox rendering kept running at full rate in the
+  // background indefinitely, competing for main-thread time with actual
+  // navigation elsewhere -- the root cause of tab switches away from Radar
+  // occasionally snapping back (a delayed click landed after AppShell's
+  // optimistic-tab-switch window had already given up and reverted).
+  const [isActive, setIsActive] = useState(() => location.pathname === "/radar");
+  useEffect(() => {
+    const onTabVisible = (event: Event) => {
+      setIsActive((event as CustomEvent<string>).detail === "/radar");
+    };
+    window.addEventListener("syncly:tab-visible", onTabVisible);
+    return () => window.removeEventListener("syncly:tab-visible", onTabVisible);
+  }, []);
+
+  // The map IS the page here, so page scroll is locked while Radar is the
+  // visible tab -- released the instant the user switches away (before they
+  // even see the next tab), never touching any other screen's scroll.
+  useEffect(() => {
+    if (!isActive) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isActive]);
+
   const hub = useQuery({
     queryKey: ["guardian-hub"],
     queryFn: useServerFn(getGuardianHub),
-    refetchInterval: 45_000,
+    refetchInterval: isActive ? 45_000 : false,
   });
   const mine = useQuery({
     queryKey: ["my-radar"],
     queryFn: useServerFn(getMyRadar),
-    refetchInterval: 60_000,
+    refetchInterval: isActive ? 60_000 : false,
   });
   const friendPins = useQuery({
     queryKey: ["friend-pins"],
     queryFn: useServerFn(getFriendPins),
-    refetchInterval: 45_000,
+    refetchInterval: isActive ? 45_000 : false,
   });
 
   const teens = (hub.data?.teens ?? []) as TeenCard[];
@@ -267,55 +296,107 @@ export function RadarPage() {
 
 
   return (
-    <>
-      <PullToRefresh
-        onRefresh={async () => {
-          await Promise.all([hub.refetch(), mine.refetch(), friendPins.refetch()]);
-        }}
-      >
-      {/* -mx-4 -mt-6 cancels <main>'s own padding (AppShell.tsx) so the map
-          runs edge-to-edge instead of sitting in a boxed card -- no shared
-          layout change needed, this is the only place that opts out.
-          "Live radar" now lives in the floating RadarInfoPill on the map
-          itself instead of a separate PageHeader + boxed banner above it. */}
-      <div className="-mx-4 -mt-6">
-        {loading ? (
-          <Skeleton className="h-[75dvh] min-h-[520px] rounded-none" />
-        ) : hasPins ? (
-          <SquadMap
-            people={people}
-            zones={zones}
-            places={places}
-            className="h-[75dvh] min-h-[520px] w-full rounded-none"
-            onProfile={(p) => (p.id === "me" || p.id === "chat-focus-pin" ? null : openFriend(p.id))}
-            onPing={(p) => toast(`Nudge sent to ${p.name}`)}
-            onMessage={(p) =>
-              p.id === "me"
-                ? toast("That's you 🙂")
-                : navigate({ to: "/messages", search: { peer: p.id } })
-            }
+    // The map IS the page: fixed, full-viewport, no page-level scroll at
+    // all. It renders behind the sticky header (z-30) and bottom nav
+    // (z-50, both opaque) at the very top/bottom edges -- that's fine, it's
+    // meant to run edge-to-edge under them, not just up to them. Everything
+    // that used to be separate scrollable sections below the map (search,
+    // controls, live-status cards) is now a floating overlay on top of it.
+    <div className="fixed inset-0 overflow-hidden bg-background">
+      {loading ? (
+        <Skeleton className="h-full w-full rounded-none" />
+      ) : hasPins ? (
+        <SquadMap
+          people={people}
+          zones={zones}
+          places={places}
+          className="h-full w-full rounded-none"
+          onProfile={(p) => (p.id === "me" || p.id === "chat-focus-pin" ? null : openFriend(p.id))}
+          onPing={(p) => toast(`Nudge sent to ${p.name}`)}
+          onMessage={(p) =>
+            p.id === "me"
+              ? toast("That's you 🙂")
+              : navigate({ to: "/messages", search: { peer: p.id } })
+          }
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center p-6">
+          <Empty
+            title="No live pins yet"
+            body="Turn on location sharing in Settings, or link a family account to see live pins here."
           />
-        ) : null}
-      </div>
+        </div>
+      )}
 
-      <div className="mt-5 space-y-5">
-        {!loading ? (
-          <>
-            <FindMyFriends />
-            {teens.length > 0 ? <FamilyRadar teens={teens} /> : null}
-            {mine.data ? <MyRadar data={mine.data} /> : null}
+      {!loading ? <RadarSheet teens={teens} mine={mine.data ?? null} /> : null}
+    </div>
+  );
+}
 
-            {teens.length === 0 && !mine.data?.lastPing ? (
-              <Empty
-                title="No live pins yet"
-                body="Turn on location sharing in Settings, or link a family account to see live pins here."
-              />
-            ) : null}
-          </>
-        ) : null}
-      </div>
-      </PullToRefresh>
-    </>
+/**
+ * Bottom sheet overlay: collapsed to a small "Live radar" pill that clears
+ * the bottom nav's safe area, expands upward (map stays partly visible and
+ * interactive above it, matching Uber/Find My) to hold everything that used
+ * to be separate scrollable sections -- FindMyFriends, family widgets, and
+ * the "I arrived safely" status card.
+ */
+function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | null }) {
+  const [open, setOpen] = useState(false);
+  const empty = teens.length === 0 && !mine?.lastPing;
+
+  return (
+    <motion.div
+      layout
+      transition={{ type: "spring", stiffness: 380, damping: 34 }}
+      className="map-glass pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
+      style={{
+        bottom: open
+          ? "calc(env(safe-area-inset-bottom) + 0.75rem)"
+          : "calc(env(safe-area-inset-bottom) + 4.25rem)",
+      }}
+    >
+      {open ? (
+        <div className="flex max-h-[min(70dvh,calc(100dvh-13rem))] flex-col">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+              <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Collapse live radar"
+              aria-expanded="true"
+              className="tap-target -m-2 grid place-items-center text-muted-foreground"
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            <div className="space-y-5">
+              <FindMyFriends />
+              {teens.length > 0 ? <FamilyRadar teens={teens} /> : null}
+              {mine ? <MyRadar data={mine} /> : null}
+              {empty ? (
+                <Empty
+                  title="No live pins yet"
+                  body="Turn on location sharing in Settings, or link a family account to see live pins here."
+                />
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Show live radar details"
+          aria-expanded="false"
+          className="tap-target flex w-full items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-primary"
+        >
+          <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
+        </button>
+      )}
+    </motion.div>
   );
 }
 

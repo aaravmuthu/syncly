@@ -537,6 +537,13 @@
 @utility tap-target {
   min-height: 44px;
   min-width: 44px;
+  /* Without this, mobile browsers can delay the synthetic click event up to
+     ~300ms after touchend (legacy double-tap-to-zoom detection) -- which is
+     longer than AppShell's 120ms optimistic-tab-commit window and was the
+     root cause of tab switches snapping back to whatever route was active
+     before the tap. This removes that delay at the source for every tap
+     target in the app, not just the nav. */
+  touch-action: manipulation;
 }
 
 /* Desktop: render the app inside a centered mobile frame */
