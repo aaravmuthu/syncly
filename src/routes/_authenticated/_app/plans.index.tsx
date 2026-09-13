@@ -117,7 +117,15 @@ function PlansPage() {
       <PageHeader title="Plans" subtitle="Everything your groups are working out right now." />
       {dash.isLoading ? <Skeleton className="h-40 rounded-3xl" /> : null}
 
-      {!dash.isLoading && plans.length === 0 ? (
+      {dash.isError ? (
+        <Empty
+          title="Couldn't load your plans"
+          body="Check your connection and try again."
+          action={<Button onClick={() => dash.refetch()}>Try again</Button>}
+        />
+      ) : null}
+
+      {!dash.isLoading && !dash.isError && plans.length === 0 ? (
         <Empty
           title="Nothing planned"
           body="Plans start inside a group so the right people get asked."
@@ -153,7 +161,13 @@ function PlansPage() {
                 },
               }}
             >
-              <PlanCard plan={p} now={now} index={i} muted={muted.includes(p.id)} />
+              <PlanCard
+                plan={p}
+                now={now}
+                index={i}
+                muted={muted.includes(p.id)}
+                myProfileId={dash.data?.myProfileId ?? null}
+              />
             </SwipeRow>
           ))}
         </div>
@@ -170,11 +184,13 @@ function PlanCard({
   now,
   index,
   muted = false,
+  myProfileId,
 }: {
   plan: DashPlan;
   now: number;
   index: number;
   muted?: boolean;
+  myProfileId: string | null;
 }) {
   const Icon = categoryIcon(plan.category);
   const group = plan.groups as { name?: string; emoji?: string } | null;
@@ -185,10 +201,11 @@ function PlanCard({
 
   const total = Math.max(plan.participant_count, 1);
   const votedPct = Math.round((plan.responded_count / total) * 100);
-  const cost = estCostLabel(plan.est_cost_min, plan.est_cost_max)?.replace("💵 ", "") ?? null;
+  const cost = estCostLabel(plan.est_cost_min, plan.est_cost_max);
   const left = finalized ? null : countdown(plan.window_start, now);
   const when = whenLabel(plan.window_start);
   const curfew = curfewState(plan.window_end);
+  const isOrganizer = Boolean(myProfileId) && plan.created_by === myProfileId;
 
   return (
     <SpotlightCard
@@ -216,7 +233,11 @@ function PlanCard({
           <span className="truncate text-xs font-medium text-muted-foreground">
             {group?.name ?? "Your squad"}
           </span>
-          <Crown className="size-3.5 shrink-0 text-warning" />
+          {isOrganizer ? (
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-warning">
+              <Crown className="size-3.5" aria-hidden /> You're the organizer
+            </span>
+          ) : null}
         </div>
         {finalized ? (
           <Pill tone="good">
@@ -275,7 +296,7 @@ function PlanCard({
       </div>
 
       {/* Members + badges */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <div className="flex -space-x-2">
           {plan.participants.slice(0, 5).map((m) => (
             <span key={m.profile_id} className="relative">

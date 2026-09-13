@@ -3,6 +3,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import {
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  Lock,
+  MessageCircle,
+  Pencil,
+  Settings as SettingsIcon,
+  ThumbsUp,
+  X,
+  XCircle,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { GroupSettings } from "@/components/quorum/GroupSettings";
@@ -13,6 +27,7 @@ import { PlanWizard } from "@/components/quorum/PlanWizard";
 import { SquadChat } from "@/components/quorum/SquadChat";
 import { PullToRefresh, SwipeBack } from "@/components/quorum/interactions";
 import { categoryMeta } from "@/lib/quorum/types";
+import { categoryIcon } from "@/lib/quorum/icons";
 import { estCostLabel } from "@/lib/quorum/estcost";
 
 export const Route = createFileRoute("/_authenticated/_app/groups/$groupId")({
@@ -35,10 +50,10 @@ export const Route = createFileRoute("/_authenticated/_app/groups/$groupId")({
 
 type Tab = "plans" | "chat" | "settings";
 
-const TABS: { id: Tab; label: string; emoji: string }[] = [
-  { id: "plans", label: "Plans", emoji: "⚡" },
-  { id: "chat", label: "Chat", emoji: "💬" },
-  { id: "settings", label: "Settings", emoji: "⚙️" },
+const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
+  { id: "plans", label: "Plans", icon: Zap },
+  { id: "chat", label: "Chat", icon: MessageCircle },
+  { id: "settings", label: "Settings", icon: SettingsIcon },
 ];
 
 function GroupPage() {
@@ -95,11 +110,11 @@ function GroupPage() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`tap-target relative z-10 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 ${
+            className={`tap-target relative z-10 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 ${
               tab === t.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <span className="mr-1">{t.emoji}</span>
+            <t.icon className="size-3.5" aria-hidden />
             {t.label}
           </button>
         ))}
@@ -264,32 +279,44 @@ type GroupPlan = {
   plan_conflicts?: { id: string; resolved: boolean }[];
 };
 
-// Tone comes from the canonical statusTone() (ui.tsx) — only the label text
-// is specific to this screen.
+// Tone/icon come from the canonical statusTone() (ui.tsx) and its lucide
+// equivalent -- only the label text is specific to this screen.
 const STATUS_LABEL: Record<string, string> = {
-  finalized: "🔒 Locked In",
-  completed: "✨ Completed",
-  voting: "⚡ Voting Active",
-  recommending: "⚡ Voting Active",
-  collecting: "⚡ Voting Active",
-  draft: "📝 Draft",
-  cancelled: "✕ Cancelled",
+  finalized: "Locked In",
+  completed: "Completed",
+  voting: "Voting Active",
+  recommending: "Voting Active",
+  collecting: "Voting Active",
+  draft: "Draft",
+  cancelled: "Cancelled",
+};
+
+const STATUS_ICON: Record<string, LucideIcon> = {
+  finalized: Lock,
+  completed: CheckCircle2,
+  voting: Zap,
+  recommending: Zap,
+  collecting: Zap,
+  draft: Pencil,
+  cancelled: X,
 };
 
 function whenLabel(iso: string | null) {
-  if (!iso) return "⏰ Time TBD";
+  if (!iso) return "Time TBD";
   const d = new Date(iso);
   const today = new Date();
   const sameDay = d.toDateString() === today.toDateString();
   const day = sameDay
     ? "Today"
     : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
-  return `⏰ ${day} @ ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  return `${day} @ ${d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
 }
 
 /** Rich, tappable plan card for the group Plans tab. */
 function PlanCard({ plan }: { plan: GroupPlan }) {
   const meta = categoryMeta(plan.category);
+  const CategoryIcon = categoryIcon(plan.category);
+  const StatusIcon = STATUS_ICON[plan.status] ?? Zap;
   const status = { label: STATUS_LABEL[plan.status] ?? plan.status, tone: statusTone(plan.status) };
   const going = (plan.plan_participants ?? []).filter((p) => p.responded && p.attending);
   const conflicts = (plan.plan_conflicts ?? []).filter((c) => !c.resolved).length;
@@ -301,8 +328,8 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
       <div className="surface p-4 transition-all hover:border-primary/30 active:scale-[0.99]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-lg ring-1 ring-primary/25">
-              {meta.emoji}
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/25">
+              <CategoryIcon className="size-4" aria-hidden />
             </span>
             <div className="min-w-0">
               <p className="truncate font-display font-semibold">{plan.title}</p>
@@ -312,13 +339,17 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
               </p>
             </div>
           </div>
-          <Pill tone={status.tone}>{status.label}</Pill>
+          <Pill tone={status.tone}>
+            <StatusIcon className="size-3.5" aria-hidden /> {status.label}
+          </Pill>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="rounded-full bg-secondary/70 px-2.5 py-1">{cost ?? "💵 Cost TBD"}</span>
-          <span className="rounded-full bg-secondary/70 px-2.5 py-1">
-            {whenLabel(plan.window_start)}
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/70 px-2.5 py-1">
+            <DollarSign className="size-3.5" aria-hidden /> {cost ?? "Cost TBD"}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary/70 px-2.5 py-1">
+            <Clock className="size-3.5" aria-hidden /> {whenLabel(plan.window_start)}
           </span>
           {conflicts === 0 && plan.window_start ? (
             <span className="rounded-full bg-success/12 px-2.5 py-1 text-success">
@@ -341,14 +372,16 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
                 />
               ))}
             </div>
-            <span className="truncate text-xs text-muted-foreground">
+            <span className="inline-flex min-w-0 items-center gap-1 truncate text-xs text-muted-foreground">
+              {going.length > 0 ? <ThumbsUp className="size-3 shrink-0" aria-hidden /> : null}
               {going.length === 0
                 ? "No responses yet"
-                : `👍 ${names[0]}${going.length > 1 ? ` + ${going.length - 1} other${going.length > 2 ? "s" : ""}` : ""}`}
+                : `${names[0]}${going.length > 1 ? ` + ${going.length - 1} other${going.length > 2 ? "s" : ""}` : ""}`}
             </span>
             {conflicts > 0 ? (
-              <span className="shrink-0 rounded-full bg-warning/16 px-2 py-0.5 text-caption font-medium text-warning-foreground">
-                ✋ {conflicts} Conflict{conflicts === 1 ? "" : "s"}
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-warning/16 px-2 py-0.5 text-caption font-medium text-warning">
+                <XCircle className="size-3" aria-hidden /> {conflicts} Conflict
+                {conflicts === 1 ? "" : "s"}
               </span>
             ) : null}
           </div>

@@ -14,7 +14,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/quorum/AppShell";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
@@ -264,43 +263,39 @@ function RadarPage() {
 
   return (
     <>
-      <PageHeader title="Radar" />
       <PullToRefresh
         onRefresh={async () => {
           await Promise.all([hub.refetch(), mine.refetch(), friendPins.refetch()]);
         }}
       >
-      <div className="space-y-5">
-        <header className="glass-card p-5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-            <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
-          </div>
-          <h1 className="font-display mt-1 text-xl font-semibold">Everyone, on one map</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Live pins update while a hangout is running. Safe-zone arrivals ping linked parents
-            automatically.
-          </p>
-        </header>
-
+      {/* -mx-4 -mt-6 cancels <main>'s own padding (AppShell.tsx) so the map
+          runs edge-to-edge instead of sitting in a boxed card -- no shared
+          layout change needed, this is the only place that opts out.
+          "Live radar" now lives in the floating RadarInfoPill on the map
+          itself instead of a separate PageHeader + boxed banner above it. */}
+      <div className="-mx-4 -mt-6">
         {loading ? (
-          <Skeleton className="h-72 rounded-3xl" />
-        ) : (
+          <Skeleton className="h-[75dvh] min-h-[520px] rounded-none" />
+        ) : hasPins ? (
+          <SquadMap
+            people={people}
+            zones={zones}
+            places={places}
+            className="h-[75dvh] min-h-[520px] w-full rounded-none"
+            onProfile={(p) => (p.id === "me" || p.id === "chat-focus-pin" ? null : openFriend(p.id))}
+            onPing={(p) => toast(`Nudge sent to ${p.name}`)}
+            onMessage={(p) =>
+              p.id === "me"
+                ? toast("That's you 🙂")
+                : navigate({ to: "/messages", search: { peer: p.id } })
+            }
+          />
+        ) : null}
+      </div>
+
+      <div className="mt-5 space-y-5">
+        {!loading ? (
           <>
-            {hasPins ? (
-              <SquadMap
-                people={people}
-                zones={zones}
-                places={places}
-                className="h-[58vh] min-h-80 w-full"
-                onProfile={(p) => (p.id === "me" || p.id === "chat-focus-pin" ? null : openFriend(p.id))}
-                onPing={(p) => toast(`Nudge sent to ${p.name}`)}
-                onMessage={(p) =>
-                  p.id === "me"
-                    ? toast("That's you 🙂")
-                    : navigate({ to: "/messages", search: { peer: p.id } })
-                }
-              />
-            ) : null}
             <FindMyFriends />
             {teens.length > 0 ? <FamilyRadar teens={teens} /> : null}
             {mine.data ? <MyRadar data={mine.data} /> : null}
@@ -312,7 +307,7 @@ function RadarPage() {
               />
             ) : null}
           </>
-        )}
+        ) : null}
       </div>
       </PullToRefresh>
     </>

@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Check, Copy, Link2, MessageSquare } from "lucide-react";
 import { Avatar } from "@/components/quorum/Avatar";
+import { QrCode } from "@/components/quorum/QrCode";
 import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -13,12 +15,18 @@ import {
 } from "@/lib/quorum/guardian.functions";
 
 /**
- * Teen-side pairing card: shows the permanent 6-digit sync code, who is
- * currently linked, and the single switch that controls location sharing.
+ * Teen-side pairing card: reveal-on-tap 6-digit sync code with a real
+ * scannable QR code plus share-sheet/copy/SMS actions, who is currently
+ * linked, and the single switch that controls location sharing. This is the
+ * one pairing UI in the app -- it used to be split between this bare
+ * text-code reveal and a separate, richer GuardianInvite card that (by a
+ * placement bug) was also showing up on the *guardian's* own hub screen with
+ * teen-facing copy ("Invite a parent"). Both are merged here.
  */
 export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
   const qc = useQueryClient();
   const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const codeFn = useServerFn(getMySyncCode);
   const code = useQuery({
     queryKey: ["sync-code"],
@@ -43,6 +51,34 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
     },
   });
 
+  const origin = typeof window === "undefined" ? "https://syncly.website" : window.location.origin;
+  const inviteUrl = code.data?.code ? `${origin}/guardian?invite=${code.data.code}` : "";
+  const smsBody = `Link to my Syncly radar so you can see I got there safe: ${inviteUrl}`;
+
+  const copyValue = async (value: string, which: "code" | "link") => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(which);
+      setTimeout(() => setCopied(null), 1800);
+      toast.success(which === "code" ? "Code copied" : "Invite link copied");
+    } catch {
+      toast.error("Copy failed — select and copy manually");
+    }
+  };
+
+  const shareInvite = async () => {
+    if (!inviteUrl) return;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: "Syncly parent invite", text: smsBody, url: inviteUrl });
+        return;
+      } catch {
+        /* user dismissed — fall through to copy */
+      }
+    }
+    void copyValue(inviteUrl, "link");
+  };
+
   return (
     <Card className="space-y-4">
       <div>
@@ -57,10 +93,44 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
         code.isLoading ? (
           <Skeleton className="h-14 rounded-2xl" />
         ) : (
-          <div className="rounded-2xl border border-border bg-secondary/50 px-4 py-3 text-center">
-            <div className="text-caption text-muted-foreground">Your sync code</div>
-            <div className="font-display text-3xl font-semibold tracking-[0.35em] tabular-nums">
-              {code.data?.code}
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-border bg-secondary/50 px-4 py-3 text-center">
+              <div className="text-caption text-muted-foreground">Your sync code</div>
+              <div className="font-display text-3xl font-semibold tracking-[0.35em] tabular-nums">
+                {code.data?.code}
+              </div>
+            </div>
+            {inviteUrl ? (
+              <div className="flex justify-center">
+                <QrCode value={inviteUrl} size={160} />
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={shareInvite} disabled={!code.data?.code} className="flex-1">
+                <Link2 className="mr-1.5 size-4" aria-hidden />
+                Share invite link
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!code.data?.code}
+                onClick={() => code.data?.code && copyValue(code.data.code, "code")}
+                aria-label="Copy pairing code"
+              >
+                {copied === "code" ? (
+                  <Check className="size-4" aria-hidden />
+                ) : (
+                  <Copy className="size-4" aria-hidden />
+                )}
+              </Button>
+              {code.data?.code ? (
+                <a
+                  href={`sms:&body=${encodeURIComponent(smsBody)}`}
+                  className="tap-target inline-flex items-center justify-center rounded-2xl border border-border px-3 text-sm font-medium transition hover:bg-secondary"
+                >
+                  <MessageSquare className="mr-1.5 size-4" aria-hidden />
+                  Text it
+                </a>
+              ) : null}
             </div>
           </div>
         )
@@ -78,12 +148,13 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
         >
           <span className="block text-sm font-medium">Share live location</span>
           <span className="mt-0.5 block text-xs text-muted-foreground">
-            Only linked parents see it. Turn it off any time.
+            Only linked parents see it — never your squad or friends. Turn it off any time.
           </span>
         </button>
         <Switch
           checked={sharing}
           onCheckedChange={(checked) => share.mutate({ data: { enabled: checked } })}
+          aria-label="Share live location"
         />
       </div>
 

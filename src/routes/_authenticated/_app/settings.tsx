@@ -113,7 +113,7 @@ function ToggleCard({
           <span className="block text-xs text-muted-foreground">{hint}</span>
         </span>
       </Wrapper>
-      {onToggle ? <Switch checked={on} onCheckedChange={onToggle} /> : null}
+      {onToggle ? <Switch checked={on} onCheckedChange={onToggle} aria-label={label} /> : null}
       {action}
     </Card>
   );
@@ -474,14 +474,18 @@ function SettingsPage() {
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3">
           <button
             type="button"
-            className="flex-1 text-left text-sm font-medium"
+            className="flex-1 text-left"
             onClick={() => {
               const next = !form["share_contact_with_parents"];
               set("share_contact_with_parents", next);
               save.mutate({ data: { share_contact_with_parents: next } });
             }}
           >
-            Share my number with parents on the plan
+            <span className="block text-sm font-medium">Share my number with parents on the plan</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Off by default. Never visible to your squad — only linked parents, only if you turn
+              this on.
+            </span>
           </button>
           <Switch
             checked={Boolean(form["share_contact_with_parents"])}
@@ -489,6 +493,7 @@ function SettingsPage() {
               set("share_contact_with_parents", checked);
               save.mutate({ data: { share_contact_with_parents: checked } });
             }}
+            aria-label="Share my number with parents on the plan"
           />
         </div>
       </Card>

@@ -92,7 +92,7 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
               {plan.groups?.name ?? "Group"}
             </p>
             <Link to="/plans/$planId" params={{ planId: plan.id }}>
-              <h3 className="truncate text-xl font-bold tracking-tight">{plan.title}</h3>
+              <h3 className="line-clamp-2 text-xl font-bold tracking-tight">{plan.title}</h3>
             </Link>
           </div>
           <AnimatePresence initial={false}>

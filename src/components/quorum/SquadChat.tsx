@@ -3,9 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { Camera, Car, Check, CheckCheck, Lock, Sparkles, X, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/quorum/Avatar";
-import { Button, Spinner } from "@/components/quorum/ui";
+import { Button, Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 import { listMessages, markRead, sendMessage, uploadChatImage } from "@/lib/quorum/chat.functions";
 
@@ -252,8 +253,10 @@ export function SquadChat({
       >
         <div className="mt-auto space-y-3">
           {q.isLoading ? (
-            <div className="flex justify-center py-8">
-              <Spinner />
+            <div className="space-y-3">
+              <Skeleton className="ml-auto h-9 w-2/3 rounded-2xl" />
+              <Skeleton className="h-9 w-1/2 rounded-2xl" />
+              <Skeleton className="ml-auto h-9 w-3/5 rounded-2xl" />
             </div>
           ) : messages.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
@@ -304,9 +307,10 @@ export function SquadChat({
           <button
             type="button"
             onClick={() => setReplyTo(null)}
-            className="tap-target rounded-lg px-1.5 text-xs text-muted-foreground hover:bg-secondary"
+            aria-label="Cancel reply"
+            className="tap-target grid place-items-center rounded-lg text-muted-foreground hover:bg-secondary"
           >
-            ✕
+            <X className="size-3.5" aria-hidden />
           </button>
         </div>
       ) : null}
@@ -334,9 +338,9 @@ export function SquadChat({
             type="button"
             onClick={() => fileRef.current?.click()}
             aria-label="Add photo"
-            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 text-base hover:bg-secondary"
+            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 hover:bg-secondary"
           >
-            📷
+            <Camera className="size-4" aria-hidden />
           </button>
           <textarea
             value={text}
@@ -468,7 +472,15 @@ function Bubble({
         </div>
         <p className="px-1 text-caption text-muted-foreground">
           {time(msg.created_at)}
-          {mine ? <span className="ml-1">{readers.length > 0 ? "✓✓" : "✓"}</span> : null}
+          {mine ? (
+            <span className="ml-1 inline-flex align-middle">
+              {readers.length > 0 ? (
+                <CheckCheck className="size-3" aria-hidden />
+              ) : (
+                <Check className="size-3" aria-hidden />
+              )}
+            </span>
+          ) : null}
         </p>
         {mine && readers.length > 0 ? (
           <div className="flex items-center justify-end gap-1 px-1">
@@ -498,18 +510,28 @@ function Bubble({
 function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => void }) {
   const meta = (msg.meta ?? {}) as { emoji?: string; title?: string; cost?: string };
   const isPlan = msg.system_type === "plan_created";
-  const icon = meta.emoji ?? (isPlan ? "⚽" : msg.system_type === "ride_update" ? "🚗" : "🔒");
-  const tag = isPlan
-    ? "⚡ New plan proposal"
-    : msg.system_type === "ride_update"
-      ? "🚗 Ride update"
-      : "🔒 Plan locked in";
+  const isRide = msg.system_type === "ride_update";
+  const TagIcon = isPlan ? Zap : isRide ? Car : Lock;
+  const FallbackIcon = isPlan ? Sparkles : isRide ? Car : Lock;
+  const tagText = isPlan ? "New plan proposal" : isRide ? "Ride update" : "Plan locked in";
   const title = meta.title ?? msg.content;
   return (
-    <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-xl backdrop-blur">
-      <p className="text-caption font-semibold text-primary">{tag}</p>
+    // Narrower than a message bubble and always centered (never left/right
+    // aligned like a person's message) so a system event reads unmistakably
+    // as chrome, not a message from someone in the chat.
+    <div className="mx-auto w-full max-w-[75%] overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-xl backdrop-blur">
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-caption font-semibold text-primary">
+        <TagIcon className="size-3" aria-hidden /> {tagText}
+      </span>
       <p className="mt-2 flex items-center justify-center gap-2 text-base font-semibold text-foreground">
-        <span>{icon}</span>
+        {/* meta.emoji is a host-chosen plan-category snapshot saved with the
+            message -- content, not a status glyph, so it stays as emoji when
+            present; only the generic fallback becomes a lucide icon. */}
+        {meta.emoji ? (
+          <span>{meta.emoji}</span>
+        ) : (
+          <FallbackIcon className="size-4 text-primary" aria-hidden />
+        )}
         <span className="truncate">{title}</span>
       </p>
       {meta.cost ? (
@@ -519,7 +541,7 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
       ) : null}
       {isPlan && msg.plan_id ? (
         <Button className="mt-3 w-full text-xs" onClick={() => onVote(msg.plan_id!)}>
-          Vote Now ⚡
+          <Zap className="size-3.5" aria-hidden /> Vote Now
         </Button>
       ) : null}
       <p className="mt-2 text-caption text-muted-foreground">{time(msg.created_at)}</p>

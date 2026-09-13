@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Copy, Link2, Moon, Rocket, Zap } from "lucide-react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Empty, Skeleton, statusToneClasses } from "@/components/quorum/ui";
@@ -61,7 +62,7 @@ type Squad = {
 
 const FILTERS = [
   { id: "all", label: "All Squads" },
-  { id: "active", label: "Active Plans ⚡" },
+  { id: "active", label: "Active Plans" },
   { id: "oneoff", label: "One-Off Events" },
 ] as const;
 
@@ -93,7 +94,7 @@ function GroupsPage() {
           <div className="flex gap-2">
             <Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>
             <Button variant="outline" onClick={() => setJoinOpen(true)}>
-              🔗 Join with Code
+              <Link2 className="size-4" aria-hidden /> Join with Code
             </Button>
           </div>
         }
@@ -130,7 +131,15 @@ function GroupsPage() {
         </div>
       ) : null}
 
-        {!groups.isLoading && shown.length === 0 ? (
+      {groups.isError ? (
+        <Empty
+          title="Couldn't load your squads"
+          body="Check your connection and try again."
+          action={<Button onClick={() => groups.refetch()}>Try again</Button>}
+        />
+      ) : null}
+
+        {!groups.isLoading && !groups.isError && shown.length === 0 ? (
           <Empty
             title={squads.length ? "Nothing in this filter" : "No squads yet"}
             body={
@@ -218,9 +227,16 @@ function SquadCard({ squad }: { squad: Squad }) {
               squad.active_plan ? statusToneClasses("voting") : "bg-secondary text-muted-foreground ring-border",
             )}
           >
-            {squad.active_plan
-              ? `⚡ Active vote: ${squad.active_plan.title}`
-              : "💤 No active plans"}
+            {squad.active_plan ? (
+              <>
+                <Zap className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">Active vote: {squad.active_plan.title}</span>
+              </>
+            ) : (
+              <>
+                <Moon className="size-3.5 shrink-0" aria-hidden /> No active plans
+              </>
+            )}
           </div>
 
           <p className="mt-3 text-caption text-muted-foreground">
@@ -235,7 +251,7 @@ function SquadCard({ squad }: { squad: Squad }) {
           className="flex-1"
           onClick={() => void navigate({ to: "/groups/$groupId", params: { groupId: squad.id } })}
         >
-          Launch Plan 🚀
+          <Rocket className="size-4" aria-hidden /> Launch Plan
         </Button>
         <button
           type="button"
@@ -245,9 +261,9 @@ function SquadCard({ squad }: { squad: Squad }) {
               .then(() => toast.success("Invite code copied"))
               .catch(() => toast.error("Couldn't copy that code"));
           }}
-          className="tap-target pressable inline-flex items-center justify-center rounded-2xl bg-secondary px-3 text-xs font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-secondary/70"
+          className="tap-target pressable inline-flex items-center gap-1.5 justify-center rounded-2xl bg-secondary px-3 text-xs font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-secondary/70"
         >
-          Copy Code {squad.invite_code} 📋
+          <Copy className="size-3.5" aria-hidden /> Copy Code {squad.invite_code}
         </button>
       </div>
     </article>

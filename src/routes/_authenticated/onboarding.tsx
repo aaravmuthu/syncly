@@ -3,10 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Button, Card, Field, inputClass } from "@/components/quorum/ui";
+import { Switch } from "@/components/ui/switch";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { linkTeen } from "@/lib/quorum/guardian.functions";
 import { CATEGORIES } from "@/lib/quorum/types";
+import { categoryIcon } from "@/lib/quorum/icons";
 import { toast } from "sonner";
 import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
@@ -139,6 +141,7 @@ function Onboarding() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {CATEGORIES.slice(0, 9).map((c) => {
             const on = cats.includes(c.id);
+            const Icon = categoryIcon(c.id);
             return (
               <button
                 key={c.id}
@@ -147,11 +150,11 @@ function Onboarding() {
                   set("preferred_categories", on ? cats.filter((x) => x !== c.id) : [...cats, c.id])
                 }
                 className={cn(
-                  "rounded-2xl border px-3 py-2.5 text-left text-sm transition",
+                  "flex items-center rounded-2xl border px-3 py-2.5 text-left text-sm transition",
                   on ? "border-primary/50 bg-primary/8" : "border-border hover:bg-secondary",
                 )}
               >
-                <span className="mr-1.5">{c.emoji}</span>
+                <Icon className="mr-1.5 size-4 shrink-0" aria-hidden />
                 <span className="font-medium">{c.label}</span>
               </button>
             );
@@ -208,25 +211,26 @@ function Onboarding() {
           ].map((t) => {
             const on = Boolean(form[t.key]);
             return (
-              <button
+              <div
                 key={t.key}
-                type="button"
-                onClick={() => set(t.key, !on)}
                 className={cn(
-                  "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition",
+                  "flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm transition",
                   on ? "border-primary/50 bg-primary/8" : "border-border",
                 )}
               >
-                {t.label}
-                <span className={cn("h-6 w-10 rounded-full p-0.5", on ? "bg-primary" : "bg-secondary-foreground/20")}>
-                  <span
-                    className={cn(
-                      "block h-5 w-5 rounded-full bg-background transition",
-                      on ? "translate-x-4" : "translate-x-0",
-                    )}
-                  />
-                </span>
-              </button>
+                <button
+                  type="button"
+                  className="flex-1 text-left"
+                  onClick={() => set(t.key, !on)}
+                >
+                  {t.label}
+                </button>
+                <Switch
+                  checked={on}
+                  onCheckedChange={(checked) => set(t.key, checked)}
+                  aria-label={t.label}
+                />
+              </div>
             );
           })}
         </div>
@@ -286,7 +290,7 @@ function Onboarding() {
               setStep(step - 1);
             }}
           >
-            {step === 0 ? "Skip" : isGuardian && last ? "Skip — link later" : "Back"}
+            {step === 0 ? "Skip setup" : isGuardian && last ? "Skip — link later" : "Back"}
           </button>
           <Button
             loading={save.isPending || link.isPending}

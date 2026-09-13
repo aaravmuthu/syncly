@@ -67,7 +67,7 @@ export function FairVenueCard({
       {driveLine ? <p className="mt-2 text-xs text-muted-foreground">{driveLine}</p> : null}
 
       {venue.curfewWarnings.length ? (
-        <p className="mt-2 rounded-2xl bg-warning/15 px-3 py-2 text-xs text-warning-foreground">
+        <p className="mt-2 rounded-2xl bg-warning/15 px-3 py-2 text-xs text-warning">
           ⚠️ Heads up: wraps up at {venue.curfewWarnings[0]!.wrapsAt}, which is past{" "}
           {venue.curfewWarnings[0]!.name}'s {venue.curfewWarnings[0]!.curfew} curfew
           {venue.curfewWarnings.length > 1 ? ` (+${venue.curfewWarnings.length - 1} more)` : ""}.

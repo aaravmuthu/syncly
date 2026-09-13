@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { AnimatePresence, motion } from "motion/react";
+import { DollarSign, Info } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { Button, statusTone, statusToneClasses } from "./ui";
 import { cn } from "@/lib/utils";
@@ -100,10 +103,11 @@ export function CostBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-lg bg-secondary px-2 py-0.5 text-caption font-semibold text-secondary-foreground",
+        "inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-0.5 text-caption font-semibold text-secondary-foreground",
         className,
       )}
     >
+      <DollarSign className="size-3" aria-hidden />
       {label}
     </span>
   );
@@ -213,10 +217,11 @@ export function WeekStrip({
     return d;
   });
   const label = `${days[0]!.toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${days[6]!.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  const [legendOpen, setLegendOpen] = useState(false);
 
   return (
     <Glass className="p-3">
-      <div className="mb-2 flex items-center justify-between px-1">
+      <div className="relative mb-2 flex items-center justify-between px-1">
         <button
           type="button"
           onClick={() => onShift(-1)}
@@ -225,9 +230,20 @@ export function WeekStrip({
         >
           ‹
         </button>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+        <span className="flex items-center gap-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
+          <button
+            type="button"
+            onClick={() => setLegendOpen((v) => !v)}
+            aria-label="What do the dots under each date mean?"
+            aria-expanded={legendOpen}
+            className="tap-target -m-2.5 grid shrink-0 place-items-center rounded-full text-muted-foreground/70 hover:text-foreground"
+          >
+            <Info className="h-3.5 w-3.5" aria-hidden />
+          </button>
+        </span>
         <button
           type="button"
           onClick={() => onShift(1)}
@@ -236,6 +252,27 @@ export function WeekStrip({
         >
           ›
         </button>
+        <AnimatePresence>
+          {legendOpen ? (
+            <motion.div
+              role="tooltip"
+              initial={{ opacity: 0, scale: 0.92, y: -4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ type: "spring", stiffness: 420, damping: 28 }}
+              className="absolute left-1/2 top-full z-20 mt-2 w-56 -translate-x-1/2 space-y-1.5 rounded-2xl border border-border bg-popover p-3 text-xs text-popover-foreground shadow-xl"
+            >
+              <p className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" aria-hidden />
+                Confirmed and locked in
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" aria-hidden />
+                Voting or needs your answer
+              </p>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
       <div className="grid grid-cols-7 gap-1">
         {days.map((d) => {
@@ -243,11 +280,22 @@ export function WeekStrip({
           const isToday = key === today;
           const isActive = selected === key;
           const dots = marks[key] ?? [];
+          const confirmedCount = dots.filter((s) => statusTone(s) === "good").length;
+          const needsCount = dots.length - confirmedCount;
+          const dotSummary = dots.length
+            ? `. ${[
+                confirmedCount ? `${confirmedCount} confirmed` : null,
+                needsCount ? `${needsCount} need${needsCount === 1 ? "s" : ""} your input` : null,
+              ]
+                .filter(Boolean)
+                .join(", ")}`
+            : "";
           return (
             <button
               key={key}
               type="button"
               onClick={() => onSelect(isActive ? null : key)}
+              aria-label={`${d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}${dotSummary}`}
               className={cn(
                 // min-h-11 (not the shared tap-target utility) enforces the
                 // 44px height that matters most for a horizontal row of
@@ -389,7 +437,7 @@ export function ActionCard({ plan }: { plan: DashPlan }) {
             <p className="truncate text-caption text-muted-foreground">
               {plan.groups?.emoji ?? "✨"} {plan.groups?.name ?? "Group"}
             </p>
-            <h3 className="mt-0.5 truncate font-display text-base font-semibold">{plan.title}</h3>
+            <h3 className="mt-0.5 line-clamp-2 font-display text-base font-semibold">{plan.title}</h3>
             <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} className="mt-1" />
           </div>
           <StatusTag status={plan.status} />
@@ -432,7 +480,7 @@ export function ConfirmedCard({ plan }: { plan: DashPlan }) {
             <WeatherChip planId={plan.id} />
             <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} />
           </div>
-          <h3 className="truncate font-display text-base font-semibold">{plan.title}</h3>
+          <h3 className="line-clamp-2 font-display text-base font-semibold">{plan.title}</h3>
           <p className="truncate text-xs text-muted-foreground">
             {rec?.location_name ?? rec?.title ?? plan.location_area ?? "Location TBD"}
           </p>

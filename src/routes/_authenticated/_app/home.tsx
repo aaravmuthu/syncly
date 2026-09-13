@@ -178,7 +178,7 @@ function HomePage() {
     [groups.data],
   );
 
-  const empty = !dash.isLoading && plans.length === 0;
+  const empty = !dash.isLoading && !dash.isError && plans.length === 0;
 
   return (
     <>
@@ -203,14 +203,15 @@ function HomePage() {
           onShift={(d) => setWeekOffset((v) => v + d)}
         />
 
-        {/* Quick actions */}
-        <div className="flex gap-2">
+        {/* Quick actions -- Magic AI plan is the hero action here, Join
+            code stays a smaller secondary affordance beside it. */}
+        <div className="flex items-stretch gap-2">
           <Link to="/groups" className="flex-1">
-            <Button className="w-full">
-              <Sparkles className="h-4 w-4" /> Magic AI plan
+            <Button className="h-14 w-full text-base">
+              <Sparkles className="h-5 w-5" /> Magic AI plan
             </Button>
           </Link>
-          <Button variant="outline" onClick={() => setJoinOpen(true)}>
+          <Button variant="outline" className="h-14" onClick={() => setJoinOpen(true)}>
             <KeyRound className="h-4 w-4" /> Join code
           </Button>
         </div>
@@ -220,6 +221,17 @@ function HomePage() {
             <Skeleton className="h-44 rounded-3xl" />
             <Skeleton className="h-28 rounded-3xl" />
           </div>
+        ) : null}
+
+        {/* A failed fetch previously fell through to the same "No plans
+            yet" empty state as genuinely having zero plans -- indistinguishable
+            to the user. */}
+        {dash.isError ? (
+          <Empty
+            title="Couldn't load your week"
+            body="Check your connection and try again."
+            action={<Button onClick={() => dash.refetch()}>Try again</Button>}
+          />
         ) : null}
 
         {empty ? (
@@ -348,6 +360,18 @@ function HomePage() {
         {groupList.length > 0 ? (
           <Section title="Active circles">
             <GroupsRail groups={groupList} />
+          </Section>
+        ) : !groups.isLoading ? (
+          <Section title="Active circles">
+            <Empty
+              title="No groups yet"
+              body="Create a squad or join one with a six-character code to start planning together."
+              action={
+                <Link to="/groups">
+                  <Button>Set up a group</Button>
+                </Link>
+              }
+            />
           </Section>
         ) : null}
       </div>

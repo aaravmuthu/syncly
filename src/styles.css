@@ -18,6 +18,7 @@
   --radius-2xl: calc(var(--radius) + 10px);
   --radius-3xl: calc(var(--radius) + 18px);
   --radius-surface: 1.75rem;
+  --color-elevated: var(--elevated);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -62,6 +63,7 @@
   --radius: 1rem;
   --background: oklch(0.985 0.006 95);
   --surface: oklch(0.965 0.008 95);
+  --elevated: oklch(0.965 0.008 95);
   --foreground: oklch(0.22 0.012 70);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.22 0.012 70);
@@ -90,13 +92,17 @@
 }
 
 .dark {
-  /* Apple-style pitch-dark canvas with layered vibrant surfaces. */
+  /* Apple-style pitch-dark canvas with layered vibrant surfaces. Three real
+     lightness steps -- background -> card -> elevated -- not a hairline
+     border alone, so depth reads even before backdrop-filter dilutes it
+     (.surface/.glass-card mix these at partial opacity over the canvas). */
   --background: oklch(0.06 0.002 270);
   --surface: oklch(0.145 0.004 270);
+  --elevated: oklch(0.27 0.006 270);
   --foreground: oklch(0.985 0.002 270);
-  --card: oklch(0.155 0.004 270);
+  --card: oklch(0.2 0.005 270);
   --card-foreground: oklch(0.985 0.002 270);
-  --popover: oklch(0.17 0.004 270);
+  --popover: oklch(0.3 0.006 270);
   --popover-foreground: oklch(0.96 0.006 95);
   --primary: oklch(0.72 0.11 168);
   --primary-foreground: oklch(0.18 0.02 168);
@@ -167,9 +173,11 @@
   }
 }
 
-/* Primary iOS material used by Card and sheets. */
+/* Primary iOS material used by Card and sheets. 74% (not 60%) so the
+   --card lightness step actually reads against the canvas instead of being
+   diluted back toward --background by the transparent remainder. */
 @utility surface {
-  background: color-mix(in oklab, var(--card) 60%, transparent);
+  background: color-mix(in oklab, var(--card) 74%, transparent);
   border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
   border-radius: var(--radius-surface);
   backdrop-filter: blur(40px) saturate(180%);
@@ -462,7 +470,9 @@
 
 /* iOS-style liquid frosted glass. */
 @utility glass-card {
-  background: color-mix(in oklab, var(--card) 55%, transparent);
+  /* --elevated, not --card: Glass is the floating/live tier, one step above
+     Card's flat/structural tier -- see ui.tsx's Card vs DashboardParts' Glass. */
+  background: color-mix(in oklab, var(--elevated) 72%, transparent);
   border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
   border-radius: var(--radius-surface);
   backdrop-filter: blur(40px) saturate(180%);
@@ -476,6 +486,28 @@
 }
 .glass-card:hover {
   border-color: color-mix(in oklab, var(--primary) 32%, transparent);
+}
+
+/* Floating controls over the Radar map. Permanently dark (the Mapbox style
+   is always dark-v11 regardless of app theme, so a light-adaptive control
+   would wash out) -- a real glassmorphism treatment, not a flat fill:
+   frost + edge-of-glass highlight + layered shadow for depth. */
+@utility map-glass {
+  background: rgba(20, 20, 24, 0.45);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .map-glass {
+    background: oklch(0.16 0.006 270);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 @utility scrollbar-none {
@@ -511,6 +543,23 @@
 @utility app-frame {
   margin-inline: auto;
   width: 100%;
+}
+
+/* Screen-space proximity cluster: 2+ people who'd otherwise overlap at the
+   current zoom collapse into one numbered badge instead of stacking. */
+.q-cluster-pin {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  width: 44px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 15px;
+  font-weight: 700;
+  border: 3px solid oklch(0.06 0.002 270 / 0.6);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.55);
+  cursor: pointer;
 }
 
 /* ---------- Apple-style squad map pins ---------- */
@@ -563,6 +612,24 @@
   border-right: 5px solid transparent;
   border-bottom: 9px solid var(--halo);
   transform-origin: 50% 32px;
+}
+/* Only rendered when battery is actually low -- matches the low-battery
+   convention used in DirectChat/TeenWidget, not a persistent readout. */
+.q-avatar-battery-low {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  display: grid;
+  place-items: center;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  background: var(--warning);
+  color: oklch(0.2 0.02 75);
+  font-size: 9px;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px oklch(0.06 0.002 270);
 }
 .q-avatar-meta {
   position: absolute;

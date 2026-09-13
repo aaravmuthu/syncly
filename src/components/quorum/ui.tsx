@@ -29,7 +29,7 @@ export function Pill({
   const tones: Record<string, string> = {
     neutral: "bg-secondary text-secondary-foreground",
     good: "bg-success/15 text-success",
-    warn: "bg-warning/18 text-warning-foreground",
+    warn: "bg-warning/18 text-warning",
     bad: "bg-destructive/12 text-destructive",
     accent: "bg-primary/12 text-primary",
   };
@@ -72,7 +72,7 @@ export function statusTone(status: string): PillTone {
 const STATUS_TONE_CLASSES: Record<PillTone, string> = {
   accent: "bg-primary/12 text-primary ring-primary/25",
   good: "bg-success/14 text-success ring-success/25",
-  warn: "bg-warning/16 text-warning-foreground ring-warning/25",
+  warn: "bg-warning/16 text-warning ring-warning/25",
   bad: "bg-destructive/12 text-destructive ring-destructive/25",
   neutral: "bg-foreground/8 text-muted-foreground ring-foreground/12",
 };

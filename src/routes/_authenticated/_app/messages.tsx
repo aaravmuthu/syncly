@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
-import { Empty, Skeleton } from "@/components/quorum/ui";
+import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { ChatSheet } from "@/components/quorum/dm/ChatSheet";
 import { DirectChat } from "@/components/quorum/dm/DirectChat";
@@ -146,6 +146,12 @@ function MessagesPage() {
                 <Skeleton key={i} className="h-16 rounded-2xl" />
               ))}
             </div>
+          ) : inbox.isError ? (
+            <Empty
+              title="Couldn't load your chats"
+              body="Check your connection and try again."
+              action={<Button onClick={() => inbox.refetch()}>Try again</Button>}
+            />
           ) : (
             <>
               {threads.length > 0 ? (
@@ -286,7 +292,16 @@ function Row({
       {avatar}
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-semibold">{title}</span>
+          {/* "New member" is the literal default display_name for anyone who
+              hasn't set a real name yet -- not a unique identifier, so two
+              different unnamed people would otherwise render as identical,
+              indistinguishable rows. Style it as a visible placeholder
+              instead of a real name. */}
+          {title === "New member" ? (
+            <span className="truncate text-sm italic text-muted-foreground">No name set</span>
+          ) : (
+            <span className="truncate text-sm font-semibold">{title}</span>
+          )}
           <span className="shrink-0 text-caption text-muted-foreground">{at}</span>
         </span>
         <span className="mt-0.5 flex items-center justify-between gap-2">

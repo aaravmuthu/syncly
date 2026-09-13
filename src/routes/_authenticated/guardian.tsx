@@ -7,7 +7,6 @@ import { GuardianShell } from "@/components/quorum/GuardianShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { TeenRadarMap } from "@/components/quorum/guardian/TeenRadarMap";
-import { GuardianInvite } from "@/components/quorum/guardian/GuardianInvite";
 import { GuardianAiSummaryCard } from "@/components/quorum/ai/GuardianAiSummary";
 import {
   addSafeZone,
@@ -171,7 +170,6 @@ function GuardianHub() {
               </Button>
             </div>
           </Card>
-          <GuardianInvite />
         </div>
       ) : (
         <PullToRefresh onRefresh={() => hub.refetch()}>
@@ -221,7 +219,6 @@ function GuardianHub() {
                   </Button>
                 </div>
               </Card>
-              <GuardianInvite />
             </div>
           ) : teen ? (
             <TeenPanel teen={teen} />

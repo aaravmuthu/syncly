@@ -180,7 +180,7 @@ export function QuickResponse({
                 "tap-target inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
                 variant === "stacked"
                   ? "w-full text-sm text-muted-foreground hover:text-foreground"
-                  : "bg-warning/18 text-warning-foreground ring-1 ring-warning/30 backdrop-blur-xl hover:bg-warning/25",
+                  : "bg-warning/18 text-warning ring-1 ring-warning/30 backdrop-blur-xl hover:bg-warning/25",
                 variant === "pair" && (compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base"),
               )}
             >
@@ -208,7 +208,7 @@ export function QuickResponse({
                 "inline-flex items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-semibold ring-1 backdrop-blur-xl",
                 state
                   ? "bg-primary/15 text-primary ring-primary/40 shadow-[0_0_24px_-6px_var(--primary)]"
-                  : "bg-warning/18 text-warning-foreground ring-warning/40 shadow-[0_0_24px_-8px_var(--warning)]",
+                  : "bg-warning/18 text-warning ring-warning/40 shadow-[0_0_24px_-8px_var(--warning)]",
               )}
             >
               {state ? (

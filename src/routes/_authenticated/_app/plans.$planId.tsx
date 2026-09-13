@@ -1,4 +1,17 @@
 import { Avatar } from "@/components/quorum/Avatar";
+import {
+  Activity,
+  AlertTriangle,
+  Check,
+  CheckCircle2,
+  Compass,
+  Crown,
+  MapPin,
+  Pencil,
+  Shuffle,
+  Star,
+  Utensils,
+} from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -260,7 +273,7 @@ function PlanPage() {
     <>
       <PageHeader
         title={data.plan.title}
-        subtitle={`${meta.emoji} ${meta.label} · ${responded} of ${total} have answered privately`}
+        subtitle={`${meta.label} · ${responded} of ${total} have answered privately`}
       />
       <SwipeBack>
       {selectedRec ? (
@@ -280,7 +293,9 @@ function PlanPage() {
         <Card className="border-primary/25 bg-primary/[0.06]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="font-semibold">👑 You organized this plan</p>
+              <p className="flex items-center gap-1.5 font-semibold">
+                <Crown className="size-4 text-warning" aria-hidden /> You organized this plan
+              </p>
               <p className="text-sm text-muted-foreground">
                 {total - responded > 0
                   ? `Waiting for ${total - responded} squad response${total - responded === 1 ? "" : "s"}`
@@ -290,7 +305,7 @@ function PlanPage() {
             <div className="flex items-center gap-2">
               <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
               <Button variant="outline" onClick={() => setEditing((v) => !v)}>
-                {editing ? "Close ✏️" : "Edit Plan ✏️"}
+                <Pencil className="size-4" aria-hidden /> {editing ? "Close" : "Edit Plan"}
               </Button>
             </div>
           </div>
@@ -471,10 +486,14 @@ function PlanPage() {
                           className="h-32 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                         />
                         <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
-                          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
-                            {b.venue?.rating != null
-                              ? `★ ${b.venue.rating}`
-                              : venueStats(r.id).ratingLabel}
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                            {b.venue?.rating != null ? (
+                              <>
+                                <Star className="size-3 fill-current" aria-hidden /> {b.venue.rating}
+                              </>
+                            ) : (
+                              venueStats(r.id).ratingLabel
+                            )}
                           </span>
                           <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
                             {b.venue?.priceLevel ?? "$$"}
@@ -485,8 +504,13 @@ function PlanPage() {
                     <CompromiseNote text={summaries.data?.[r.id]} />
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       {b.venue?.cuisine ? (
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-caption font-medium">
-                          {b.venue.kind === "activity" ? "🎳" : "🍽️"} {b.venue.cuisine}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-caption font-medium">
+                          {b.venue.kind === "activity" ? (
+                            <Activity className="size-3" aria-hidden />
+                          ) : (
+                            <Utensils className="size-3" aria-hidden />
+                          )}
+                          {b.venue.cuisine}
                         </span>
                       ) : null}
                       {b.venue?.priceLevel ? (
@@ -495,8 +519,8 @@ function PlanPage() {
                         </span>
                       ) : null}
                       {b.venue?.rating != null ? (
-                        <span className="rounded-full bg-secondary px-2 py-0.5 text-caption tabular-nums">
-                          ★ {b.venue.rating}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-caption tabular-nums">
+                          <Star className="size-3 fill-current" aria-hidden /> {b.venue.rating}
                         </span>
                       ) : null}
                     </div>
@@ -520,7 +544,7 @@ function PlanPage() {
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       {b.fair && b.fair.drives.length ? (
                         <Pill tone="accent">
-                          📍{" "}
+                          <MapPin className="size-3.5" aria-hidden />{" "}
                           {b.fair.spreadMinutes <= 6
                             ? `Equal ~${b.fair.avgMinutes} min drive for everyone`
                             : `~${b.fair.avgMinutes} min average drive`}
@@ -528,7 +552,10 @@ function PlanPage() {
                       ) : null}
                       {b.fair ? (
                         b.fair.curfewOk ? (
-                          <Pill tone="good">✓ Works with everyone's curfew</Pill>
+                          <Pill tone="good">
+                            <CheckCircle2 className="size-3.5" aria-hidden /> Works with everyone's
+                            curfew
+                          </Pill>
                         ) : (
                           <Pill tone="warn">{b.fair.curfewNote}</Pill>
                         )
@@ -546,7 +573,7 @@ function PlanPage() {
                       rel="noopener noreferrer"
                       className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
                     >
-                      <span aria-hidden>🧭</span> Directions in Maps
+                      <Compass className="size-3.5" aria-hidden /> Directions in Maps
                     </a>
                     <button
                       type="button"
@@ -623,14 +650,14 @@ function PlanPage() {
                 {(b.reasons ?? []).length ? (
                   <ul className="mt-4 space-y-1 text-sm">
                     {b.reasons.map((x) => (
-                      <li key={x} className="text-muted-foreground">
-                        <span className="mr-1.5 text-success">✓</span>
+                      <li key={x} className="flex items-start gap-1.5 text-muted-foreground">
+                        <Check className="mt-0.5 size-3.5 shrink-0 text-success" aria-hidden />
                         {x}
                       </li>
                     ))}
                     {(b.cautions ?? []).map((x) => (
-                      <li key={x} className="text-muted-foreground">
-                        <span className="mr-1.5 text-warning">!</span>
+                      <li key={x} className="flex items-start gap-1.5 text-muted-foreground">
+                        <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden />
                         {x}
                       </li>
                     ))}
@@ -696,7 +723,7 @@ function PlanPage() {
                 generate.mutate({ data: { planId, shuffle: next } });
               }}
             >
-              🔀 Shuffle · load 3 different options
+              <Shuffle className="size-4" aria-hidden /> Shuffle · load 3 different options
             </Button>
           </div>
 

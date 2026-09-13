@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { AlertTriangle, Bell, Lock, MessageCircle, X, Zap, type LucideIcon } from "lucide-react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -54,39 +55,41 @@ function kindOf(type: string): Kind {
   return "action";
 }
 
+// Colors route through the app's semantic tokens, not raw Tailwind hues --
+// cyan/purple in particular weren't part of the design-token palette at all.
 const KIND: Record<
   Kind,
-  { badge: string; badgeClass: string; glow: string; hover: string; label: string; cta: string }
+  { badge: LucideIcon; badgeClass: string; glow: string; hover: string; label: string; cta: string }
 > = {
   action: {
-    badge: "⚡",
-    badgeClass: "bg-emerald-500 text-black animate-pulse",
-    glow: "from-emerald-500/18",
-    hover: "hover:border-emerald-400/30",
+    badge: Zap,
+    badgeClass: "bg-primary text-primary-foreground animate-pulse",
+    glow: "from-primary/18",
+    hover: "hover:border-primary/30",
     label: "Action needed",
     cta: "Vote now →",
   },
   locked: {
-    badge: "🔒",
-    badgeClass: "bg-cyan-400 text-black",
-    glow: "from-cyan-400/16",
-    hover: "hover:border-cyan-300/30",
+    badge: Lock,
+    badgeClass: "bg-success text-background",
+    glow: "from-success/16",
+    hover: "hover:border-success/30",
     label: "Locked in",
     cta: "View plan",
   },
   groups: {
-    badge: "💬",
-    badgeClass: "bg-purple-500 text-white",
-    glow: "from-purple-500/14",
-    hover: "hover:border-purple-400/30",
+    badge: MessageCircle,
+    badgeClass: "bg-secondary-foreground/80 text-secondary",
+    glow: "from-foreground/10",
+    hover: "hover:border-foreground/20",
     label: "Group",
     cta: "View plan",
   },
   conflict: {
-    badge: "⚠️",
-    badgeClass: "bg-amber-400 text-black",
-    glow: "from-amber-400/18",
-    hover: "hover:border-amber-300/35",
+    badge: AlertTriangle,
+    badgeClass: "bg-warning text-background",
+    glow: "from-warning/18",
+    hover: "hover:border-warning/35",
     label: "Conflict",
     cta: "Quick re-vote",
   },
@@ -144,12 +147,12 @@ function ActivityCard({ item }: { item: FeedItem }) {
           />
           <span
             className={cn(
-              "absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full text-[11px] shadow-md ring-2 ring-card",
+              "absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full shadow-md ring-2 ring-card",
               k.badgeClass,
             )}
             aria-label={k.label}
           >
-            {k.badge}
+            <k.badge className="size-3" aria-hidden />
           </span>
         </span>
         <div className="min-w-0 flex-1">
@@ -168,9 +171,9 @@ function ActivityCard({ item }: { item: FeedItem }) {
             className={cn(
               "shrink-0 self-center rounded-full px-3.5 py-2 text-xs font-semibold transition-all",
               item.kind === "action"
-                ? "bg-emerald-500 text-black hover:bg-emerald-400"
+                ? "bg-primary text-primary-foreground hover:opacity-90"
                 : item.kind === "conflict"
-                  ? "bg-amber-400 text-black hover:bg-amber-300"
+                  ? "bg-warning text-background hover:opacity-90"
                   : "border border-border bg-secondary/70 text-foreground hover:bg-secondary",
             )}
           >
@@ -184,9 +187,9 @@ function ActivityCard({ item }: { item: FeedItem }) {
 
 const FILTERS: { id: "all" | Kind; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "action", label: "Action Needed ⚡" },
-  { id: "locked", label: "Locked In 🔒" },
-  { id: "groups", label: "Groups 👥" },
+  { id: "action", label: "Action Needed" },
+  { id: "locked", label: "Locked In" },
+  { id: "groups", label: "Groups" },
 ];
 
 function ActivityPage() {
@@ -255,8 +258,8 @@ function ActivityPage() {
       />
       {perm === "default" && !dismissed ? (
         <div className="surface mb-4 flex items-center gap-3 px-4 py-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-emerald-500/15 text-base">
-            🔔
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+            <Bell className="size-4" aria-hidden />
           </span>
           <p className="min-w-0 flex-1 text-xs text-muted-foreground">
             <span className="block text-sm font-medium text-foreground">Stay in the loop</span>
@@ -264,7 +267,7 @@ function ActivityPage() {
           </p>
           <button
             onClick={async () => setPerm(await requestPush())}
-            className="shrink-0 rounded-full bg-emerald-500 px-3.5 py-2 text-xs font-semibold text-black transition-colors hover:bg-emerald-400"
+            className="tap-target shrink-0 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground transition-colors hover:opacity-90"
           >
             Enable
           </button>
@@ -273,7 +276,7 @@ function ActivityPage() {
             onClick={() => setDismissed(true)}
             className="tap-target grid shrink-0 place-items-center rounded-full p-1.5 text-muted-foreground hover:bg-secondary"
           >
-            ✕
+            <X className="size-3.5" aria-hidden />
           </button>
         </div>
       ) : null}
@@ -286,7 +289,7 @@ function ActivityPage() {
             className={cn(
               "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all",
               filter === f.id
-                ? "border-emerald-400/40 bg-emerald-500/15 text-foreground"
+                ? "border-primary/40 bg-primary/15 text-foreground"
                 : "border-border bg-secondary/70 text-muted-foreground hover:border-foreground/20",
             )}
           >
