@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle, Search } from "lucide-react";
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/_app/messages")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: MessagesPage,
+  component: () => null,
 });
 
 const stamp = (iso?: string | null) => {
@@ -60,8 +60,11 @@ const stamp = (iso?: string | null) => {
   return d.toLocaleDateString([], { month: "short", day: "numeric" });
 };
 
-function MessagesPage() {
-  const search = Route.useSearch();
+export function MessagesPage() {
+  const location = useRouterState({ select: (state) => state.location });
+  const searchRef = useRef<Search>({});
+  if (location.pathname === "/messages") searchRef.current = location.search as Search;
+  const search = searchRef.current;
   const { alias } = useFriends();
   const navigate = useNavigate();
   const fetchInbox = useServerFn(listInbox);

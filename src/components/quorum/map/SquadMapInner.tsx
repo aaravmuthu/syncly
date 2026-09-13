@@ -224,6 +224,16 @@ export default function SquadMapInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  useEffect(() => {
+    const resizeWhenVisible = (event: Event) => {
+      const tab = (event as CustomEvent<string>).detail;
+      if (tab !== "/radar") return;
+      window.requestAnimationFrame(() => map.current?.resize());
+    };
+    window.addEventListener("syncly:tab-visible", resizeWhenVisible);
+    return () => window.removeEventListener("syncly:tab-visible", resizeWhenVisible);
+  }, []);
+
   // ---- geometry layers -----------------------------------------------------
   useEffect(() => {
     const m = map.current;

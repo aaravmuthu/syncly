@@ -62,10 +62,10 @@ export const Route = createFileRoute("/_authenticated/_app/home")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: HomePage,
+  component: () => null,
 });
 
-function HomePage() {
+export function HomePage() {
   const navigate = useNavigate();
   const [joinOpen, setJoinOpen] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
