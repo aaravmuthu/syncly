@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_authenticated/_app/groups/")({
       },
     ],
   }),
-  component: GroupsPage,
+  component: () => null,
 });
 
 type SquadMember = {
@@ -65,7 +65,7 @@ const FILTERS = [
   { id: "oneoff", label: "One-Off Events" },
 ] as const;
 
-function GroupsPage() {
+export function GroupsPage() {
   const groups = useQuery({ queryKey: ["groups"], queryFn: useServerFn(listGroups) });
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
   const [createOpen, setCreateOpen] = useState(false);

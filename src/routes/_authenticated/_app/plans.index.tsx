@@ -49,7 +49,7 @@ export const Route = createFileRoute("/_authenticated/_app/plans/")({
       { property: "og:description", content: "Every plan across your groups in one place." },
     ],
   }),
-  component: PlansPage,
+  component: () => null,
 });
 
 type DashPlan = Awaited<ReturnType<typeof getDashboard>>["plans"][number];
@@ -96,7 +96,7 @@ function curfewState(endIso: string | null | undefined) {
   return past10 ? ("warn" as const) : ("ok" as const);
 }
 
-function PlansPage() {
+export function PlansPage() {
   const dash = useQuery({ queryKey: ["dashboard"], queryFn: useServerFn(getDashboard) });
   const qc = useQueryClient();
   const now = useNow();
