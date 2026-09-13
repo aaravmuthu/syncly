@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { motion } from "motion/react";
+import type { LucideIcon } from "lucide-react";
 import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export function Button({
   loading = false,
   ...rest
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost" | "outline" | "danger";
+  variant?: "primary" | "ghost" | "outline" | "danger" | "glass";
   loading?: boolean;
 }) {
   const variants: Record<string, string> = {
@@ -97,6 +98,11 @@ export function Button({
     ghost: "text-foreground hover:bg-secondary",
     outline: "border border-border text-foreground hover:bg-secondary",
     danger: "bg-destructive text-destructive-foreground hover:opacity-92",
+    // The app-wide floating-glass treatment (styles.css), for a button that
+    // needs to read as a floating control rather than a filled/outlined
+    // action -- rounded-full since glass surfaces are always a capsule/pill,
+    // never the app's default rounded-2xl card corner.
+    glass: "glass-pill rounded-full text-foreground",
   };
   return (
     <motion.button
@@ -185,4 +191,65 @@ export function Empty({ title, body, action }: { title: string; body: string; ac
 
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn("skeleton h-4 w-full", className)} />;
+}
+
+/**
+ * The app's shared floating-glass chrome primitive -- search bars, status
+ * pills, and the app-wide top/tab bars all wrap this instead of hand-rolling
+ * the frost treatment per screen. Originated on Radar's map controls, now
+ * the standard language everywhere content needs a control to float over it.
+ */
+export function GlassPill({
+  children,
+  className,
+  as: As = "div",
+}: {
+  children: ReactNode;
+  className?: string;
+  as?: "div" | "label" | "nav";
+}) {
+  return <As className={cn("glass-pill", className)}>{children}</As>;
+}
+
+/**
+ * Circular floating-glass action button (recenter, toggle layers, overflow
+ * menu, etc). `expanded` is for a button that shows/hides a panel
+ * (aria-expanded semantics) rather than one that toggles a persistent visual
+ * state (aria-pressed) -- pass at most one of `active`/`expanded`.
+ */
+export function GlassIconButton({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+  expanded,
+  className,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onClick?: () => void;
+  active?: boolean;
+  expanded?: boolean;
+  className?: string;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={expanded == null ? (active ?? undefined) : undefined}
+      aria-expanded={expanded}
+      whileTap={{ scale: 0.92 }}
+      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      className={cn(
+        // h-11/w-11 match tap-target's own min-height/min-width so the class
+        // list isn't lying about the actual rendered size.
+        "glass-pill tap-target grid h-11 w-11 place-items-center rounded-full transition-colors",
+        active ? "text-primary" : "text-foreground/80",
+        className,
+      )}
+    >
+      <Icon className="h-4.5 w-4.5" aria-hidden />
+    </motion.button>
+  );
 }

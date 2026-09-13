@@ -12,13 +12,24 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, House, MessageCircle, Radar, Settings, Users, Zap, type LucideIcon } from "lucide-react";
+import {
+  Bell,
+  House,
+  MessageCircle,
+  MoreHorizontal,
+  Radar,
+  Settings,
+  Users,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { haptic } from "@/lib/quorum/haptics";
 import { Wordmark } from "./Wordmark";
 import { ContextSwitcher } from "./ContextSwitcher";
 
 import { Avatar } from "./Avatar";
+import { Pill } from "./ui";
 import { InstallPrompt } from "./InstallPrompt";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
@@ -28,6 +39,13 @@ import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
 import { PageTransition } from "./interactions/PageTransition";
 import { AskSynclySheet } from "./ai/AskSynclySheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Settings/profile lives at the header gear + avatar tap, and Activity lives
 // at the header bell (below) — keeping the tab bar at 5 items per Apple's HIG
@@ -115,13 +133,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [optimisticTab, setOptimisticTab] = useState<TabPath | null>(null);
   const selectedTab = optimisticTab ?? routedTab;
   const visibleTab = optimisticTab ?? exactTab(pathname);
-  // Radar is map-native: its map is a fixed, full-viewport layer, so the
-  // header and bottom nav can't reserve their own flow space above/below it
-  // the way every other (normally scrolling) tab needs them to. On Radar
-  // they become floating glass overlays instead -- same content, just
-  // repositioned out of flow and given a frosted background instead of an
-  // opaque one, so the map reads through them at the very top/bottom edges.
-  const isRadar = visibleTab === "/radar";
   const navigationLock = useRef({ to: "" as TabPath | "", until: 0 });
   const blockNextClick = useRef(false);
   const clickCommitted = useRef(false);
@@ -248,22 +259,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         data-vaul-drawer-wrapper
         className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
-        {/* No backdrop-blur outside Radar: this header sits on screen through
-            every page transition, and blurring the animating content behind
-            it forces the browser to recomposite on every frame -- a real,
-            network-independent cost that a near-opaque background avoids.
-            On Radar the map behind it needs to actually read through, so it
-            switches to `fixed` (out of document flow entirely -- nothing
-            below it needs to know it exists) with the glass treatment; the
-            main-thread cost of blurring a mostly-static map is worth it
-            there specifically. */}
-        <header
-          className={cn(
-            "inset-x-0 top-0 z-30 border-b border-border/70 pt-[env(safe-area-inset-top)]",
-            isRadar ? "fixed map-glass-bar" : "sticky bg-background/95",
-          )}
-        >
-          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+        {/* The floating top bar: a Radar-style glass capsule with margin on
+            every side, not an edge-to-edge strip, on every screen -- this is
+            the app's one nav-chrome language now, not something special-
+            cased for the map. Blurring a `fixed` element that's always on
+            screen does cost more than the old opaque bar did (no free
+            lunch on the backdrop-filter recompositing cost), but that's the
+            deliberate tradeoff of making glass the standard look everywhere
+            instead of only where a map happened to make it free. */}
+        <header className="glass-pill fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 mx-auto max-w-3xl rounded-full">
+          <div className="flex items-center justify-between px-4 py-2.5">
             <Link to="/home" className="flex items-center gap-2">
               <Wordmark className="h-6" />
             </Link>
@@ -274,65 +279,73 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onPointerDown={primeTab}
                 onClick={commitTab}
               />
-              <ContextSwitcher />
-              <ThemeToggle />
-              <AskSynclySheet />
-              <Link
-                to="/activity"
-                aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
-                className="tap-target pressable active:pressable-active relative inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Bell className="size-5" aria-hidden />
-                {unread > 0 ? (
-                  <span className="absolute right-1 top-1 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-caption font-semibold leading-4 text-primary-foreground">
-                    {unread > 9 ? "9+" : unread}
-                  </span>
-                ) : null}
-              </Link>
-              <Link
-                to="/settings"
-                aria-label="Settings"
-                className="tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Settings className="size-5" aria-hidden />
-              </Link>
-              <Link
-                to="/settings"
-                aria-label="Your profile"
-                className="tap-target pressable active:pressable-active inline-flex items-center justify-center"
-              >
-                <Avatar
-                  url={me.data?.avatar_url}
-                  emoji={me.data?.avatar_emoji}
-                  name={me.data?.display_name}
-                  size={32}
-                  className="ring-1 ring-border"
+              {/* Desktop has room for the full icon row; mobile collapses it
+                  into one overflow trigger instead (see OverflowMenu). */}
+              <div className="hidden items-center gap-2 md:flex">
+                <ContextSwitcher />
+                <ThemeToggle />
+                <AskSynclySheet />
+                <Link
+                  to="/activity"
+                  aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}
+                  className="tap-target pressable active:pressable-active relative inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Bell className="size-5" aria-hidden />
+                  {unread > 0 ? (
+                    <span className="absolute right-1 top-1 inline-grid min-w-4 place-items-center rounded-full bg-primary px-1 text-caption font-semibold leading-4 text-primary-foreground">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  ) : null}
+                </Link>
+                <Link
+                  to="/settings"
+                  aria-label="Settings"
+                  className="tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Settings className="size-5" aria-hidden />
+                </Link>
+                <Link
+                  to="/settings"
+                  aria-label="Your profile"
+                  className="tap-target pressable active:pressable-active inline-flex items-center justify-center"
+                >
+                  <Avatar
+                    url={me.data?.avatar_url}
+                    emoji={me.data?.avatar_emoji}
+                    name={me.data?.display_name}
+                    size={32}
+                    className="ring-1 ring-border"
+                  />
+                </Link>
+              </div>
+              <div className="md:hidden">
+                <OverflowMenu
+                  unread={unread}
+                  avatarUrl={me.data?.avatar_url}
+                  avatarEmoji={me.data?.avatar_emoji}
+                  avatarName={me.data?.display_name}
                 />
-              </Link>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Radar's own map container is `fixed inset-0` -- already viewport-
-            relative and independent of this padding either way -- but every
-            OTHER tab sharing this same persistent host still needs it to
-            clear the now-`fixed` header/nav, so it's stripped only while
-            Radar is actually the visible tab, not removed outright. */}
-        <main className={cn("mx-auto w-full max-w-3xl", !isRadar && "px-4 pb-32 pt-6")}>
+        {/* Every screen's content runs full-bleed behind the floating
+            chrome now (the way Radar's map always did) instead of sitting
+            in a box the header/nav used to reserve -- --chrome-top/
+            --chrome-bottom (styles.css) are the one place that clearance is
+            defined, shared with every screen's own floating controls so
+            they can't drift out of sync with the bar they're clearing. */}
+        <main className="mx-auto w-full max-w-3xl px-4 pb-[var(--chrome-bottom)] pt-[var(--chrome-top)] md:pb-6">
           <InstallPrompt />
           <PersistentTabHost activeTab={visibleTab} />
           {visibleTab ? null : <PageTransition>{children}</PageTransition>}
         </main>
 
-        {/* Same reasoning as the header above: opaque everywhere except
-            Radar, where it floats over the full-bleed map as glass. */}
-        <nav
-          className={cn(
-            "fixed inset-x-0 bottom-0 z-50 border-t border-border/70 pb-[env(safe-area-inset-bottom)] md:hidden",
-            isRadar ? "map-glass-bar" : "bg-background/95",
-          )}
-        >
-          <div className="relative mx-auto flex max-w-md items-stretch justify-between px-2 py-1.5">
+        {/* Same floating-pill treatment as the header; hidden on desktop,
+            where DesktopTabs in the header already covers navigation. */}
+        <nav className="glass-pill fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-md rounded-full md:hidden">
+          <div className="relative flex items-stretch justify-between px-2 py-1.5">
             <div className="pointer-events-none absolute inset-x-2 top-1.5 h-0.5" aria-hidden>
               <span
                 className={cn(
@@ -383,6 +396,84 @@ export function AppShell({ children }: { children: ReactNode }) {
         <FriendProfileSheet />
       </div>
     </FriendProvider>
+  );
+}
+
+/**
+ * Mobile's collapsed replacement for the header's full desktop icon row --
+ * appearance, the AI entry point, activity, settings, and profile all live
+ * behind one trigger instead of each claiming their own tap target in an
+ * already-compact capsule. Each row keeps its own component's real click
+ * handling (ContextSwitcher/ThemeToggle/AskSynclySheet aren't "menu items",
+ * they're whole standalone components with their own state) rather than
+ * reimplementing their behavior here.
+ */
+function OverflowMenu({
+  unread,
+  avatarUrl,
+  avatarEmoji,
+  avatarName,
+}: {
+  unread: number;
+  avatarUrl?: string | null;
+  avatarEmoji?: string | null;
+  avatarName?: string | null;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={unread > 0 ? `More, ${unread} unread` : "More"}
+          className="tap-target pressable active:pressable-active relative inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <MoreHorizontal className="size-5" aria-hidden />
+          {unread > 0 ? (
+            <span
+              aria-hidden
+              className="absolute right-0.5 top-0.5 inline-grid min-w-3.5 place-items-center rounded-full bg-primary px-1 text-caption font-semibold leading-4 text-primary-foreground"
+            >
+              {unread > 9 ? "9+" : unread}
+            </span>
+          ) : null}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+          <span className="text-sm text-muted-foreground">Appearance</span>
+          <ThemeToggle />
+        </div>
+        <ContextSwitcher className="mx-2 mb-1.5" />
+        <div className="flex items-center gap-2.5 px-2 py-1.5">
+          <AskSynclySheet />
+          <span className="text-sm">Ask Syncly</span>
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/activity" className="flex w-full items-center gap-2">
+            <Bell className="size-4" aria-hidden />
+            Activity
+            {unread > 0 ? (
+              <Pill tone="accent" className="ml-auto">
+                {unread > 9 ? "9+" : unread}
+              </Pill>
+            ) : null}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="flex w-full items-center gap-2">
+            <Settings className="size-4" aria-hidden />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="flex w-full items-center gap-2">
+            <Avatar url={avatarUrl} emoji={avatarEmoji} name={avatarName} size={20} />
+            Your profile
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

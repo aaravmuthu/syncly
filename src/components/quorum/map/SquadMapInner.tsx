@@ -18,19 +18,20 @@ import {
   X,
 } from "lucide-react";
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
+import { GlassIconButton, GlassPill } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 
-// The map now renders full-viewport, behind AppShell's sticky header
-// (~3.5rem content + safe-area-inset-top) and, on mobile, its fixed bottom
-// nav (~3.5rem + safe-area-inset-bottom, absent on desktop where
-// DesktopTabs live in the header instead) -- every floating control here
-// has to clear that chrome explicitly instead of relying on the old
-// document-flow layout where the map already started below the header.
-const MAP_TOP_CLEAR = "top-[calc(env(safe-area-inset-top)+3.75rem)]";
-const MAP_CONTROLS_TOP = "top-[calc(env(safe-area-inset-top)+7.25rem)]";
+// The map renders full-viewport, behind AppShell's floating top bar and
+// bottom tab bar (both floating glass pills now, on every screen, not just
+// Radar) -- every control here clears them via the same --chrome-top/
+// --chrome-bottom variables AppShell's own content padding uses (styles.css),
+// so if that pill's size ever changes, this stays in sync automatically
+// instead of drifting out of alignment with its own hardcoded numbers.
+const MAP_TOP_CLEAR = "top-[var(--chrome-top)]";
+const MAP_CONTROLS_TOP = "top-[calc(var(--chrome-top)+3.5rem)]";
 // Clears the collapsed RadarSheet pill (radar.tsx), which floats above the
-// bottom nav on both mobile and desktop.
-const MAP_BOTTOM_CLEAR_SHEET = "bottom-[calc(env(safe-area-inset-bottom)+7.5rem)]";
+// bottom tab bar on both mobile and desktop.
+const MAP_BOTTOM_CLEAR_SHEET = "bottom-[calc(var(--chrome-bottom)+3rem)]";
 
 type Props = SquadMapData & {
   token: string;
@@ -414,7 +415,7 @@ export default function SquadMapInner({
 
       {/* Top floating search pill */}
       <div className={cn("pointer-events-none absolute inset-x-3 flex justify-center", MAP_TOP_CLEAR)}>
-        <label className="map-glass pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2">
+        <GlassPill as="label" className="pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             value={query}
@@ -433,26 +434,26 @@ export default function SquadMapInner({
               <X className="h-4 w-4 text-muted-foreground" aria-hidden />
             </button>
           ) : null}
-        </label>
+        </GlassPill>
       </div>
 
       {/* Right-side quick actions */}
       <div className={cn("absolute right-3 flex flex-col gap-2", MAP_CONTROLS_TOP)}>
-        <HudButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
-        <HudButton label="3D view tilt" onClick={toggleTilt} icon={Building2} active={tilted} />
-        <HudButton
+        <GlassIconButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
+        <GlassIconButton label="3D view tilt" onClick={toggleTilt} icon={Building2} active={tilted} />
+        <GlassIconButton
           label="Toggle routes"
           onClick={() => setShowRoutes((v) => !v)}
           icon={RouteIcon}
           active={showRoutes}
         />
-        <HudButton
+        <GlassIconButton
           label="Toggle safe zones"
           onClick={() => setShowZones((v) => !v)}
           icon={Shield}
           active={showZones}
         />
-        <HudButton
+        <GlassIconButton
           label={showList ? "Hide list view" : "Show list view"}
           onClick={() => setShowList((v) => !v)}
           icon={List}
@@ -465,7 +466,7 @@ export default function SquadMapInner({
       {showList ? (
         <div
           className={cn(
-            "map-glass absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl",
+            "glass-pill absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl",
             MAP_CONTROLS_TOP,
             MAP_BOTTOM_CLEAR_SHEET,
           )}
@@ -529,7 +530,7 @@ export default function SquadMapInner({
       {focus ? (
         <div
           className={cn(
-            "map-glass absolute inset-x-3 mx-auto max-w-sm rounded-3xl p-4",
+            "glass-pill absolute inset-x-3 mx-auto max-w-sm rounded-3xl p-4",
             MAP_BOTTOM_CLEAR_SHEET,
           )}
         >
@@ -586,41 +587,6 @@ export default function SquadMapInner({
         </div>
       ) : null}
     </div>
-  );
-}
-
-function HudButton({
-  label,
-  icon: Icon,
-  onClick,
-  active,
-  expanded,
-}: {
-  label: string;
-  icon: typeof Crosshair;
-  onClick: () => void;
-  active?: boolean;
-  /** Use for a button that shows/hides a panel (aria-expanded) rather than
-   * one that toggles a persistent visual state (aria-pressed). */
-  expanded?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      aria-pressed={expanded == null ? (active ?? undefined) : undefined}
-      aria-expanded={expanded}
-      className={cn(
-        // h-11/w-11 match what tap-target's min-height/min-width already
-        // enforce -- named explicitly instead of the old h-10/w-10 (40px)
-        // so the class list isn't lying about the actual rendered size.
-        "map-glass tap-target grid h-11 w-11 place-items-center rounded-full transition-transform active:scale-95",
-        active ? "text-primary" : "text-foreground/80",
-      )}
-    >
-      <Icon className="h-4.5 w-4.5" aria-hidden />
-    </button>
   );
 }
 

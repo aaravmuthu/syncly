@@ -92,8 +92,10 @@ export function GroupsPage() {
         subtitle="Your circles, live votes, and one-tap plan launches."
         action={
           <div className="flex gap-2">
-            <Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>
-            <Button variant="outline" onClick={() => setJoinOpen(true)}>
+            <Button variant="glass" className="text-primary" onClick={() => setCreateOpen(true)}>
+              + Create Group
+            </Button>
+            <Button variant="glass" onClick={() => setJoinOpen(true)}>
               <Link2 className="size-4" aria-hidden /> Join with Code
             </Button>
           </div>
@@ -113,10 +115,12 @@ export function GroupsPage() {
               setFilter(f.id);
             }}
             className={cn(
-              "tap-target inline-flex shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold backdrop-blur-md transition",
-              filter === f.id
-                ? "bg-primary text-primary-foreground shadow-lg"
-                : "bg-secondary/70 text-muted-foreground ring-1 ring-border hover:text-foreground",
+              "tap-target inline-flex shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold transition",
+              // Filled primary is a real selection indicator here (this is
+              // a segmented filter, not just "the more important button"),
+              // so the active pill stays solid while inactive ones get the
+              // floating-glass treatment instead of the old flat bg-secondary.
+              filter === f.id ? "bg-primary text-primary-foreground shadow-lg" : "glass-pill text-muted-foreground hover:text-foreground",
             )}
           >
             {f.label}

@@ -220,7 +220,12 @@ export function WeekStrip({
   const [legendOpen, setLegendOpen] = useState(false);
 
   return (
-    <Glass className="p-3">
+    // The app-wide floating-glass chrome treatment (styles.css), not the
+    // regular card material every other Glass usage below still uses --
+    // this is one of the few in-page elements the "floating over content"
+    // language now explicitly covers, alongside Home's Magic AI/Join
+    // buttons and the app-wide top/tab bars.
+    <div className="glass-pill rounded-3xl p-3">
       <div className="relative mb-2 flex items-center justify-between px-1">
         <button
           type="button"
@@ -332,7 +337,7 @@ export function WeekStrip({
           );
         })}
       </div>
-    </Glass>
+    </div>
   );
 }
 

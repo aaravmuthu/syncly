@@ -203,15 +203,18 @@ export function HomePage() {
           onShift={(d) => setWeekOffset((v) => v + d)}
         />
 
-        {/* Quick actions -- Magic AI plan is the hero action here, Join
-            code stays a smaller secondary affordance beside it. */}
-        <div className="flex items-stretch gap-2">
-          <Link to="/groups" className="flex-1">
-            <Button className="h-14 w-full text-base">
+        {/* Quick actions -- both float as glass pills now, matching Radar's
+            controls. Magic AI plan stays the hero (flex-[2], larger text)
+            beside the smaller secondary Join code affordance -- weight
+            comes from size within the shared glass language, not from
+            being the one filled button next to translucent ones. */}
+        <div className="flex items-stretch gap-2.5">
+          <Link to="/groups" className="flex-[2]">
+            <Button variant="glass" className="h-14 w-full text-base text-primary">
               <Sparkles className="h-5 w-5" /> Magic AI plan
             </Button>
           </Link>
-          <Button variant="outline" className="h-14" onClick={() => setJoinOpen(true)}>
+          <Button variant="glass" className="h-14 flex-1" onClick={() => setJoinOpen(true)}>
             <KeyRound className="h-4 w-4" /> Join code
           </Button>
         </div>

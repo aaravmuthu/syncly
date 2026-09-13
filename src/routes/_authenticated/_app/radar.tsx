@@ -297,12 +297,18 @@ export function RadarPage() {
 
   return (
     // The map IS the page: fixed, full-viewport, no page-level scroll at
-    // all. It renders behind the sticky header (z-30) and bottom nav
-    // (z-50, both opaque) at the very top/bottom edges -- that's fine, it's
-    // meant to run edge-to-edge under them, not just up to them. Everything
-    // that used to be separate scrollable sections below the map (search,
-    // controls, live-status cards) is now a floating overlay on top of it.
-    <div className="fixed inset-0 overflow-hidden bg-background">
+    // all. AppShell's floating top bar/tab bar (z-30/z-50) sit on top of it
+    // with margin on every side -- the map runs edge-to-edge underneath
+    // them, visible through the gaps around each pill. Everything that
+    // used to be a separate scrollable section (search, controls,
+    // live-status cards) is now a floating overlay on top of it too.
+    //
+    // `dark` here force-scopes every glass-pill/theme token in this
+    // subtree to the dark recipe regardless of the site's actual theme
+    // preference -- the Mapbox style is always dark-v11, so a
+    // light-adaptive control or a light RadarSheet card would wash out
+    // against it or clash with it outright.
+    <div className="dark fixed inset-0 overflow-hidden bg-background">
       {loading ? (
         <Skeleton className="h-full w-full rounded-none" />
       ) : hasPins ? (
@@ -348,11 +354,15 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 380, damping: 34 }}
-      className="map-glass pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
+      className="glass-pill pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
       style={{
-        bottom: open
-          ? "calc(env(safe-area-inset-bottom) + 0.75rem)"
-          : "calc(env(safe-area-inset-bottom) + 4.25rem)",
+        // Collapsed, it rests right where content would otherwise start --
+        // var(--chrome-bottom) (styles.css) is the same clearance every
+        // screen's own floating controls use, so this stays in sync with
+        // the tab bar's actual size instead of a separately-tuned number.
+        // Expanded, it's allowed to extend down near the true edge, tucking
+        // behind the tab bar's higher z-index rather than stopping short of it.
+        bottom: open ? "calc(env(safe-area-inset-bottom) + 0.75rem)" : "var(--chrome-bottom)",
       }}
     >
       {open ? (
