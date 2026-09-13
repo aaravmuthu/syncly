@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -71,7 +71,7 @@ export const Route = createFileRoute("/_authenticated/_app/radar")({
     ...(typeof s.lon === "number" ? { lon: s.lon } : {}),
     ...(typeof s.label === "string" ? { label: s.label } : {}),
   }),
-  component: RadarPage,
+  component: () => null,
 });
 
 const initials = (name: string) =>
@@ -125,10 +125,15 @@ function speedLabel(pos: GeolocationPosition) {
   return "Stationary";
 }
 
-function RadarPage() {
+export function RadarPage() {
   const navigate = useNavigate();
   const { alias, openFriend } = useFriends();
-  const focus = Route.useSearch();
+  const location = useRouterState({ select: (state) => state.location });
+  const focusRef = useRef<{ lat?: number; lon?: number; label?: string }>({});
+  if (location.pathname === "/radar") {
+    focusRef.current = location.search as { lat?: number; lon?: number; label?: string };
+  }
+  const focus = focusRef.current;
   const hub = useQuery({
     queryKey: ["guardian-hub"],
     queryFn: useServerFn(getGuardianHub),
