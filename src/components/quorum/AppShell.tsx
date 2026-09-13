@@ -153,9 +153,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (event.pointerType === "mouse" || event.button !== 0) return;
     event.preventDefault();
     const now = performance.now();
+    suppressClickUntil.current = now + 500;
     if (to === exactTab(pathname) || now < navigationLock.current.until) return;
     navigationLock.current = { to, until: now + 180 };
-    suppressClickUntil.current = now + 500;
     haptic("select");
     void navigate({ to });
   }, [navigate, pathname]);
@@ -416,6 +416,7 @@ function RadarMobileMenu({ unread }: { unread: number }) {
             <SunMoon aria-hidden />
             {resolved === "dark" ? "Light appearance" : "Dark appearance"}
           </DropdownMenuItem>
+          <AskSynclySheet trigger="menu" />
           <DropdownMenuItem asChild className="rounded-xl py-2.5">
             <Link to="/activity">
               <Bell aria-hidden />

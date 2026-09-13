@@ -32,7 +32,7 @@ type Turn = ConciergeTurn & { planRef?: SynclyPlanRef; action?: SynclyAction; la
  * calls the same already-authorized launchAiPlan a manual "Launch Plan"
  * button would.
  */
-export function AskSynclySheet() {
+export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu" }) {
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const qc = useQueryClient();
@@ -96,9 +96,14 @@ export function AskSynclySheet() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Ask Syncly"
-        className="tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className={
+          trigger === "menu"
+            ? "relative flex w-full cursor-default select-none items-center gap-2 rounded-xl px-2 py-2.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+            : "tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        }
       >
         <Sparkles className="size-5" aria-hidden />
+        {trigger === "menu" ? <span>Ask Syncly</span> : null}
       </button>
 
       <ChatSheetShell
