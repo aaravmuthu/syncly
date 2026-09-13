@@ -117,6 +117,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const visibleTab = optimisticTab ?? exactTab(pathname);
   const navigationLock = useRef({ to: "" as TabPath | "", until: 0 });
   const blockNextClick = useRef(false);
+  const clickCommitted = useRef(false);
+
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
   // AppShell is the "My Squad" experience for everyone -- Family Hub now has
@@ -128,9 +130,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (optimisticTab && routedTab === optimisticTab) setOptimisticTab(null);
   }, [optimisticTab, routedTab]);
 
+  // Safety net only: if a navigation somehow never lands, don't stay stuck on
+  // an optimistic tab forever. Deliberately long, so a slow-loading tab is
+  // never yanked back to the previous screen mid-navigation.
   useEffect(() => {
     if (!optimisticTab) return;
-    const timeout = window.setTimeout(() => setOptimisticTab(null), 900);
+    const timeout = window.setTimeout(() => setOptimisticTab(null), 6000);
     return () => window.clearTimeout(timeout);
   }, [optimisticTab]);
 
@@ -143,9 +148,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
 
     blockNextClick.current = false;
+    clickCommitted.current = false;
     navigationLock.current = { to, until: now + 180 };
     setOptimisticTab(to);
     if (window.matchMedia("(pointer: coarse)").matches) haptic("select");
+
+    // A touch that ends without a click (finger slid off the tab, scroll took
+    // over, browser cancelled the gesture) must not leave the optimistic tab
+    // selected — otherwise the shell shows a tab the router never navigated
+    // to and later snaps back.
+    const settle = () => {
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      if (!clickCommitted.current) setOptimisticTab((current) => (current === to ? null : current));
+    };
+    const onUp = () => window.setTimeout(settle, 120);
+    const onCancel = () => settle();
+    window.addEventListener("pointerup", onUp, { once: true });
+    window.addEventListener("pointercancel", onCancel, { once: true });
   }, []);
 
   const commitTab = useCallback((event: React.MouseEvent, to: TabPath) => {
@@ -155,16 +175,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       return;
     }
 
+    clickCommitted.current = true;
+
     if (event.detail === 0) {
       const now = performance.now();
-      if (now < navigationLock.current.until) {
+      if (now < navigationLock.current.until && navigationLock.current.to !== to) {
         event.preventDefault();
         return;
       }
       navigationLock.current = { to, until: now + 180 };
-      setOptimisticTab(to);
     }
+    setOptimisticTab(to);
   }, []);
+
 
   // Radar's map pulls in mapbox-gl -- ~500KB gzipped on its own, by far the
   // single heaviest thing this app ships -- which otherwise only starts
