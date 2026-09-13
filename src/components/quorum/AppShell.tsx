@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   lazy,
   Suspense,
@@ -7,7 +7,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -129,13 +128,23 @@ export function PageHeader({
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  // The URL is the ONLY source of truth for which tab is selected/visible --
+  // no parallel "optimistic" state that can desync from it. That used to
+  // exist (an optimisticTab flipped instantly on pointerdown, then reverted
+  // via a timing-sensitive settle() if a click hadn't "landed" yet) and was
+  // the actual root cause of tab switches snapping back to the previous
+  // screen: the revert was racing the browser's real click dispatch against
+  // a clock, and under heavier main-thread load (Radar's Mapbox render, for
+  // instance) that race could be lost. Removing the second state source
+  // removes the race entirely rather than tuning the clock -- see
+  // navigateOnTouch below for how a tap still feels instant despite
+  // navigating "for real" instead of optimistically.
   const routedTab = navTab(pathname);
-  const [optimisticTab, setOptimisticTab] = useState<TabPath | null>(null);
-  const selectedTab = optimisticTab ?? routedTab;
-  const visibleTab = optimisticTab ?? exactTab(pathname);
+  const selectedTab = routedTab;
+  const visibleTab = exactTab(pathname);
   const navigationLock = useRef({ to: "" as TabPath | "", until: 0 });
-  const blockNextClick = useRef(false);
-  const clickCommitted = useRef(false);
+  const suppressClickUntil = useRef(0);
 
   const { unread } = useNotifications();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
@@ -144,95 +153,32 @@ export function AppShell({ children }: { children: ReactNode }) {
   // a swapped nav tab here.
   const NAV: NavItem[] = [...BASE_NAV];
 
-  useEffect(() => {
-    if (optimisticTab && routedTab === optimisticTab) setOptimisticTab(null);
-  }, [optimisticTab, routedTab]);
-
-  // Safety net only: if a navigation somehow never lands, don't stay stuck on
-  // an optimistic tab forever. Deliberately long, so a slow-loading tab is
-  // never yanked back to the previous screen mid-navigation.
-  useEffect(() => {
-    if (!optimisticTab) return;
-    const timeout = window.setTimeout(() => setOptimisticTab(null), 6000);
-    return () => window.clearTimeout(timeout);
-  }, [optimisticTab]);
-
-  const primeTab = useCallback((event: ReactPointerEvent, to: TabPath) => {
-    const now = performance.now();
-    if (now < navigationLock.current.until) {
-      blockNextClick.current = true;
+  // Touch/pen taps navigate immediately on pointerdown instead of waiting for
+  // the click that follows touchend -- that's what makes switching feel
+  // instant without needing a separate optimistic-state layer to fake it.
+  // Mouse/keyboard fall through to the Link's own native click handling
+  // (desktop doesn't need this: there's no touchend-to-click delay to hide).
+  const navigateOnTouch = useCallback(
+    (event: React.PointerEvent<HTMLAnchorElement>, to: TabPath) => {
+      if (event.pointerType === "mouse" || event.button !== 0) return;
       event.preventDefault();
-      return;
-    }
-
-    blockNextClick.current = false;
-    clickCommitted.current = false;
-    navigationLock.current = { to, until: now + 180 };
-    setOptimisticTab(to);
-    if (window.matchMedia("(pointer: coarse)").matches) haptic("select");
-
-    const target = event.currentTarget;
-
-    // A touch that ends without a click (finger slid off the tab, scroll took
-    // over, browser cancelled the gesture) must not leave the optimistic tab
-    // selected — otherwise the shell shows a tab the router never navigated
-    // to and later snaps back. That's the ONLY case this should revert for.
-    //
-    // This used to revert on a flat 120ms timeout after pointerup instead,
-    // racing it against the browser's own (already-guaranteed, since
-    // touch-action: manipulation removes any tap/pan ambiguity) click
-    // dispatch. Under Radar's heavier main-thread load -- Mapbox render +
-    // marker layout work -- that dispatch could occasionally land after
-    // 120ms had already elapsed, so settle() reverted a tab switch that was
-    // genuinely still in flight, which is what actually caused switches
-    // away from Radar to snap back. A fixed timeout can't self-adjust to
-    // main-thread congestion; double requestAnimationFrame can, since it
-    // won't run until the browser is idle enough to paint a frame -- the
-    // same condition the pending click needs to actually dispatch. So this
-    // now only ever reverts on a real abandoned-gesture signal (pointerup
-    // landing outside the tapped element, or pointercancel), never on
-    // elapsed time alone.
-    const settle = () => {
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-      if (!clickCommitted.current) {
-        console.warn(`[tab-switch] "${to}" primed but no click landed -- reverting`);
-        setOptimisticTab((current) => (current === to ? null : current));
-      }
-    };
-    const onUp = (upEvent: PointerEvent) => {
-      const landedOnTarget =
-        target instanceof Node &&
-        (upEvent.target === target || target.contains(upEvent.target as Node));
-      if (landedOnTarget) {
-        requestAnimationFrame(() => requestAnimationFrame(settle));
-      } else {
-        settle();
-      }
-    };
-    const onCancel = () => settle();
-    window.addEventListener("pointerup", onUp, { once: true });
-    window.addEventListener("pointercancel", onCancel, { once: true });
-  }, []);
-
-  const commitTab = useCallback((event: React.MouseEvent, to: TabPath) => {
-    if (blockNextClick.current) {
-      blockNextClick.current = false;
-      event.preventDefault();
-      return;
-    }
-
-    clickCommitted.current = true;
-
-    if (event.detail === 0) {
       const now = performance.now();
-      if (now < navigationLock.current.until && navigationLock.current.to !== to) {
-        event.preventDefault();
-        return;
-      }
+      // The real click the browser still fires after this touch's touchend
+      // must not also navigate -- that would be a second, redundant
+      // navigation racing the one below. suppressTouchClick swallows it.
+      suppressClickUntil.current = now + 500;
+      if (to === exactTab(pathname) || now < navigationLock.current.until) return;
       navigationLock.current = { to, until: now + 180 };
-    }
-    setOptimisticTab(to);
+      haptic("select");
+      void navigate({ to });
+    },
+    [navigate, pathname],
+  );
+
+  const suppressTouchClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (performance.now() >= suppressClickUntil.current) return;
+    event.preventDefault();
+    suppressClickUntil.current = 0;
   }, []);
 
 
@@ -273,12 +219,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Wordmark className="h-6" />
             </Link>
             <div className="flex items-center gap-2">
-              <DesktopTabs
-                nav={NAV}
-                selectedTab={selectedTab}
-                onPointerDown={primeTab}
-                onClick={commitTab}
-              />
+              <DesktopTabs nav={NAV} selectedTab={selectedTab} />
               {/* Desktop has room for the full icon row; mobile collapses it
                   into one overflow trigger instead (see OverflowMenu). */}
               <div className="hidden items-center gap-2 md:flex">
@@ -366,8 +307,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={n.to}
                   to={n.to}
                   preload="intent"
-                  onPointerDown={(event) => primeTab(event, n.to as TabPath)}
-                  onClick={(event) => commitTab(event, n.to as TabPath)}
+                  onPointerDown={(event) => navigateOnTouch(event, n.to as TabPath)}
+                  onClick={suppressTouchClick}
                   className="flex flex-1"
                 >
                   <span
@@ -444,10 +385,7 @@ function OverflowMenu({
           <ThemeToggle />
         </div>
         <ContextSwitcher className="mx-2 mb-1.5" />
-        <div className="flex items-center gap-2.5 px-2 py-1.5">
-          <AskSynclySheet />
-          <span className="text-sm">Ask Syncly</span>
-        </div>
+        <AskSynclySheet trigger="menu" />
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/activity" className="flex w-full items-center gap-2">
@@ -480,13 +418,9 @@ function OverflowMenu({
 function DesktopTabs({
   nav,
   selectedTab,
-  onPointerDown,
-  onClick,
 }: {
   nav: NavItem[];
   selectedTab: TabPath | null;
-  onPointerDown: (event: ReactPointerEvent, to: TabPath) => void;
-  onClick: (event: React.MouseEvent, to: TabPath) => void;
 }) {
   const root = useRef<HTMLElement>(null);
   const items = useRef(new Map<TabPath, HTMLAnchorElement>());
@@ -527,8 +461,6 @@ function DesktopTabs({
             }}
             to={item.to}
             preload="intent"
-            onPointerDown={(event) => onPointerDown(event, item.to as TabPath)}
-            onClick={(event) => onClick(event, item.to as TabPath)}
             className={cn(
               "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
               active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",

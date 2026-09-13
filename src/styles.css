@@ -534,12 +534,12 @@
      an already-dark surface (Radar's map, this app's own dark background)
      reading as glass instead of just another solid dark rectangle. Light
      mode's own background is already bright enough without it. */
-  --glass-brightness: brightness(1.25);
+  --glass-brightness: brightness(1.32);
 }
 @utility glass-pill {
   background: rgb(var(--glass-tint) / var(--glass-bg-alpha));
-  backdrop-filter: blur(24px) saturate(180%) var(--glass-brightness, brightness(1));
-  -webkit-backdrop-filter: blur(24px) saturate(180%) var(--glass-brightness, brightness(1));
+  backdrop-filter: blur(28px) saturate(190%) var(--glass-brightness, brightness(1));
+  -webkit-backdrop-filter: blur(28px) saturate(190%) var(--glass-brightness, brightness(1));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }

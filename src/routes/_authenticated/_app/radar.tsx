@@ -356,13 +356,14 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
       transition={{ type: "spring", stiffness: 380, damping: 34 }}
       className="glass-pill pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
       style={{
-        // Collapsed, it rests right where content would otherwise start --
-        // var(--chrome-bottom) (styles.css) is the same clearance every
-        // screen's own floating controls use, so this stays in sync with
-        // the tab bar's actual size instead of a separately-tuned number.
-        // Expanded, it's allowed to extend down near the true edge, tucking
-        // behind the tab bar's higher z-index rather than stopping short of it.
-        bottom: open ? "calc(env(safe-area-inset-bottom) + 0.75rem)" : "var(--chrome-bottom)",
+        // Anchored at var(--chrome-bottom) (styles.css) whether collapsed or
+        // open -- the same clearance every screen's own floating controls
+        // use, so it stays in sync with the tab bar's actual size instead of
+        // a separately-tuned number. It only grows upward when expanded
+        // (via `layout` + its own max-h below), never re-anchoring closer to
+        // the true edge, so it never has to rely on z-index to stay clear of
+        // the floating tab bar underneath it.
+        bottom: "var(--chrome-bottom)",
       }}
     >
       {open ? (

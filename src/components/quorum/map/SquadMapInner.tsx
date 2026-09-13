@@ -27,11 +27,21 @@ import { cn } from "@/lib/utils";
 // --chrome-bottom variables AppShell's own content padding uses (styles.css),
 // so if that pill's size ever changes, this stays in sync automatically
 // instead of drifting out of alignment with its own hardcoded numbers.
-const MAP_TOP_CLEAR = "top-[var(--chrome-top)]";
-const MAP_CONTROLS_TOP = "top-[calc(var(--chrome-top)+3.5rem)]";
-// Clears the collapsed RadarSheet pill (radar.tsx), which floats above the
-// bottom tab bar on both mobile and desktop.
-const MAP_BOTTOM_CLEAR_SHEET = "bottom-[calc(var(--chrome-bottom)+3rem)]";
+//
+// On mobile, search and the action dock live in the bottom half of the
+// screen instead of up top -- one-thumb reachable, matching how Apple/
+// Google Maps place their own controls, and clear of the RadarSheet pill
+// (radar.tsx) which anchors at --chrome-bottom. Desktop has no such
+// ergonomic constraint (a mouse reaches anywhere equally), so it keeps the
+// original compact top placement. Each offset stacks on the previous one
+// with a consistent ~0.75rem gap so the whole dock reads as one group.
+const MAP_BOTTOM_CLEAR_SHEET = "bottom-[var(--chrome-bottom)]";
+const MAP_CONTROLS_POSITION =
+  "bottom-[calc(var(--chrome-bottom)+3.75rem)] md:bottom-auto md:top-[calc(var(--chrome-top)+3.5rem)]";
+const MAP_SEARCH_POSITION =
+  "bottom-[calc(var(--chrome-bottom)+7.25rem)] md:bottom-auto md:top-[var(--chrome-top)]";
+const MAP_LIST_POSITION =
+  "top-[var(--chrome-top)] bottom-[calc(var(--chrome-bottom)+3.75rem)] md:top-[calc(var(--chrome-top)+3.5rem)] md:bottom-[var(--chrome-bottom)]";
 
 type Props = SquadMapData & {
   token: string;
@@ -413,8 +423,8 @@ export default function SquadMapInner({
     <div className={cn("relative overflow-hidden rounded-surface", className)}>
       <div ref={container} className="h-full w-full" />
 
-      {/* Top floating search pill */}
-      <div className={cn("pointer-events-none absolute inset-x-3 flex justify-center", MAP_TOP_CLEAR)}>
+      {/* Floating search pill: bottom-half on mobile (thumb reach), top on desktop */}
+      <div className={cn("pointer-events-none absolute inset-x-3 z-10 flex justify-center", MAP_SEARCH_POSITION)}>
         <GlassPill as="label" className="pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
@@ -437,8 +447,8 @@ export default function SquadMapInner({
         </GlassPill>
       </div>
 
-      {/* Right-side quick actions */}
-      <div className={cn("absolute right-3 flex flex-col gap-2", MAP_CONTROLS_TOP)}>
+      {/* One-thumb control dock on mobile (horizontal row), vertical rail on desktop */}
+      <div className={cn("absolute right-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-row gap-2 md:flex-col", MAP_CONTROLS_POSITION)}>
         <GlassIconButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
         <GlassIconButton label="3D view tilt" onClick={toggleTilt} icon={Building2} active={tilted} />
         <GlassIconButton
@@ -467,8 +477,7 @@ export default function SquadMapInner({
         <div
           className={cn(
             "glass-pill absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl",
-            MAP_CONTROLS_TOP,
-            MAP_BOTTOM_CLEAR_SHEET,
+            MAP_LIST_POSITION,
           )}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
