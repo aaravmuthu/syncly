@@ -165,7 +165,13 @@ export default function SquadMapInner({
         zoom: 12,
         pitch: 0,
         attributionControl: false,
-        cooperativeGestures: true,
+        // cooperativeGestures (requires two fingers to pan) exists to stop a
+        // map from hijacking scroll on a page that scrolls around it -- this
+        // map IS the page (radar.tsx, position: fixed, no page scroll at
+        // all), so there's nothing left for a one-finger pan to conflict
+        // with. Leaving it on just added a "use two fingers" hint and forced
+        // friction onto what's supposed to be a one-handed map screen.
+        cooperativeGestures: false,
       });
       map.current = m;
       m.on("load", () => {
