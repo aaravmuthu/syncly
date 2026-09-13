@@ -350,9 +350,7 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
       transition={{ type: "spring", stiffness: 380, damping: 34 }}
       className="map-glass pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
       style={{
-        bottom: open
-          ? "calc(env(safe-area-inset-bottom) + 0.75rem)"
-          : "calc(env(safe-area-inset-bottom) + 4.25rem)",
+        bottom: "calc(env(safe-area-inset-bottom) + 5.75rem)",
       }}
     >
       {open ? (
