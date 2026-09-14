@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Bell,
+  ChevronLeft,
   House,
   MessageCircle,
   MoreHorizontal,
@@ -61,11 +62,15 @@ type NavItem = { to: string; label: string; icon: LucideIcon };
 
 type TabPath = (typeof BASE_NAV)[number]["to"];
 
-const HomeTab = lazy(() => import("@/routes/_authenticated/_app/home").then((m) => ({ default: m.HomePage })));
+const HomeTab = lazy(() =>
+  import("@/routes/_authenticated/_app/home").then((m) => ({ default: m.HomePage })),
+);
 const GroupsTab = lazy(() =>
   import("@/routes/_authenticated/_app/groups.index").then((m) => ({ default: m.GroupsPage })),
 );
-const RadarTab = lazy(() => import("@/routes/_authenticated/_app/radar").then((m) => ({ default: m.RadarPage })));
+const RadarTab = lazy(() =>
+  import("@/routes/_authenticated/_app/radar").then((m) => ({ default: m.RadarPage })),
+);
 const PlansTab = lazy(() =>
   import("@/routes/_authenticated/_app/plans.index").then((m) => ({ default: m.PlansPage })),
 );
@@ -116,6 +121,36 @@ export function PageHeader({
         {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
       </div>
       {action}
+    </motion.div>
+  );
+}
+
+/**
+ * Header for a one-level-deep drill-in sub-page (Settings' Profile/Account/
+ * Planning/Info sub-pages): a visible back control plus title. The rest of
+ * the app leans on SwipeBack alone for plan/group detail with no on-screen
+ * back affordance -- fine for a touch-first flow, but a hub of settings
+ * sub-pages is exactly the case HIG expects a real back button for (desktop
+ * pointer users and anyone who doesn't discover the swipe gesture), so this
+ * adds one rather than repeating the swipe-only gap here too.
+ */
+export function SubpageHeader({ title, backTo }: { title: string; backTo: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 320, damping: 28 }}
+      className="mb-6 flex items-center gap-1"
+    >
+      <Link
+        to={backTo}
+        onPointerDown={() => haptic("tap")}
+        aria-label="Back to Settings"
+        className="tap-target pressable active:pressable-active -ml-2 inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+      >
+        <ChevronLeft className="size-6" aria-hidden />
+      </Link>
+      <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
     </motion.div>
   );
 }
@@ -180,7 +215,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     event.preventDefault();
     suppressClickUntil.current = 0;
   }, []);
-
 
   // Radar's map pulls in mapbox-gl -- ~500KB gzipped on its own, by far the
   // single heaviest thing this app ships -- which otherwise only starts
@@ -294,7 +328,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                   selectedTab && "opacity-100",
                 )}
                 style={{
-                  transform: `translate3d(${Math.max(0, BASE_NAV.findIndex((item) => item.to === selectedTab)) * 100}%, 0, 0)`,
+                  transform: `translate3d(${
+                    Math.max(
+                      0,
+                      BASE_NAV.findIndex((item) => item.to === selectedTab),
+                    ) * 100
+                  }%, 0, 0)`,
                 }}
               >
                 <span className="h-0.5 w-8 rounded-full bg-primary" />
@@ -415,13 +454,7 @@ function OverflowMenu({
   );
 }
 
-function DesktopTabs({
-  nav,
-  selectedTab,
-}: {
-  nav: NavItem[];
-  selectedTab: TabPath | null;
-}) {
+function DesktopTabs({ nav, selectedTab }: { nav: NavItem[]; selectedTab: TabPath | null }) {
   const root = useRef<HTMLElement>(null);
   const items = useRef(new Map<TabPath, HTMLAnchorElement>());
   const [indicatorX, setIndicatorX] = useState<number | null>(null);
@@ -463,7 +496,9 @@ function DesktopTabs({
             preload="intent"
             className={cn(
               "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
-              active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
+              active
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {item.label}

@@ -9,6 +9,7 @@ import {
   BellOff,
   Car,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Crown,
   DollarSign,
@@ -22,22 +23,19 @@ import {
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Empty, Pill, Skeleton, Button } from "@/components/quorum/ui";
-import {
-  Magnetic,
-  PullToRefresh,
-  SpotlightCard,
-  SwipeRow,
-} from "@/components/quorum/interactions";
+import { Magnetic, PullToRefresh, SpotlightCard, SwipeRow } from "@/components/quorum/interactions";
 import { getDashboard } from "@/lib/quorum/plan.functions";
 import { confirmAttendance } from "@/lib/quorum/conflict.functions";
 import { categoryIcon } from "@/lib/quorum/icons";
 import { estCostLabel } from "@/lib/quorum/estcost";
 import { BudgetFitPill } from "@/components/quorum/DashboardParts";
 
-
 export const Route = createFileRoute("/_authenticated/_app/plans/")({
   loader: ({ context }) => {
-    void context.queryClient.ensureQueryData({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["dashboard"],
+      queryFn: () => getDashboard(),
+    });
   },
   head: () => ({
     meta: [
@@ -180,6 +178,34 @@ export function PlansPage() {
   );
 }
 
+/**
+ * A plan card used to stack up to five simultaneous badges (voting/locked,
+ * budget fit, conflicts, curfew, countdown) plus a full metadata row and a
+ * carpool strip -- all visible at once. `primaryPill` collapses that down to
+ * the single most urgent thing a glance actually needs; everything else
+ * (location, cost, consensus %, budget fit, and any status that isn't the
+ * one shown) moves behind the "Details" disclosure below, the same
+ * tap-to-reveal pattern TeenSafetyBar's "Safety tools" already uses.
+ */
+function primaryPill(args: {
+  finalized: boolean;
+  conflictCount: number;
+  curfew: "ok" | "warn" | null;
+  left: string | null;
+}): { tone: "good" | "bad" | "warn" | "accent"; icon: typeof Lock; label: string } {
+  if (args.finalized) return { tone: "good", icon: Lock, label: "Locked in" };
+  if (args.conflictCount > 0) {
+    return {
+      tone: "bad",
+      icon: XCircle,
+      label: `${args.conflictCount} conflict${args.conflictCount > 1 ? "s" : ""}`,
+    };
+  }
+  if (args.curfew === "warn") return { tone: "warn", icon: Clock, label: "Curfew warning" };
+  if (args.left) return { tone: "accent", icon: Clock, label: args.left };
+  return { tone: "accent", icon: Zap, label: "Voting active" };
+}
+
 function PlanCard({
   plan,
   now,
@@ -193,12 +219,15 @@ function PlanCard({
   muted?: boolean;
   myProfileId: string | null;
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const Icon = categoryIcon(plan.category);
   const group = plan.groups as { name?: string; emoji?: string } | null;
   const finalized = plan.status === "finalized" || plan.status === "completed";
-  const rec = plan.selected_recommendation as
-    | { title?: string; address?: string | null; location_name?: string | null }
-    | null;
+  const rec = plan.selected_recommendation as {
+    title?: string;
+    address?: string | null;
+    location_name?: string | null;
+  } | null;
 
   const total = Math.max(plan.participant_count, 1);
   const votedPct = Math.round((plan.responded_count / total) * 100);
@@ -207,6 +236,23 @@ function PlanCard({
   const when = whenLabel(plan.window_start);
   const curfew = curfewState(plan.window_end);
   const isOrganizer = Boolean(myProfileId) && plan.created_by === myProfileId;
+  const conflictCount = plan.conflicts.length;
+  const pill = primaryPill({ finalized, conflictCount, curfew, left });
+  // Anything not already surfaced as the one primary pill still belongs in
+  // the details disclosure below, so a real curfew warning or countdown
+  // never silently disappears just because a conflict took the primary slot.
+  const showCurfewInDetails = curfew === "warn" && pill.label !== "Curfew warning";
+  const showCountdownInDetails = Boolean(left) && pill.label !== left;
+  const showConflictsInDetails = conflictCount > 0 && !pill.label.includes("conflict");
+  const hasDetails =
+    Boolean(rec?.title || rec?.address || plan.location_area) ||
+    Boolean(cost) ||
+    plan.compatibility_score != null ||
+    Boolean(plan.budget_fit) ||
+    showCurfewInDetails ||
+    showCountdownInDetails ||
+    showConflictsInDetails ||
+    plan.rides.length > 0;
 
   return (
     <SpotlightCard
@@ -222,155 +268,184 @@ function PlanCard({
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 260, damping: 26, delay: Math.min(index, 6) * 0.04 }}
+        transition={{
+          type: "spring",
+          stiffness: 260,
+          damping: 26,
+          delay: Math.min(index, 6) * 0.04,
+        }}
       >
-      {/* Top bar */}
-
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-            <Icon className="size-4" />
-          </span>
-          <span className="truncate text-xs font-medium text-muted-foreground">
-            {group?.name ?? "Your squad"}
-          </span>
-          {isOrganizer ? (
-            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-warning">
-              <Crown className="size-3.5" aria-hidden /> You're the organizer
+        {/* Top bar -- one priority pill instead of stacking voting/locked +
+          budget-fit side by side; everything else that used to compete for
+          this row lives in the details disclosure below. */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+              <Icon className="size-4" />
             </span>
-          ) : null}
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-          {finalized ? (
-            <Pill tone="good">
-              <Lock className="size-3.5" /> Locked in
-            </Pill>
-          ) : (
-            <Pill tone="accent" className="animate-pulse">
-              <Zap className="size-3.5" /> Voting active
-            </Pill>
-          )}
-          <BudgetFitPill budgetFit={plan.budget_fit} />
-        </div>
-      </div>
-
-      {/* Hero */}
-      <h3 className="mt-3 font-display text-lg font-semibold">{plan.title}</h3>
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-        {rec?.title || rec?.address || plan.location_area ? (
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="size-3.5" />
-            {rec?.title ?? rec?.location_name ?? plan.location_area}
-            {rec?.address ? ` • ${rec.address}` : ""}
-          </span>
-        ) : null}
-        {cost ? (
-          <span className="inline-flex items-center gap-1">
-            <DollarSign className="size-3.5" />
-            {cost}
-          </span>
-        ) : null}
-        {when ? (
-          <span className="inline-flex items-center gap-1">
-            <Clock className="size-3.5" />
-            {when}
-          </span>
-        ) : null}
-      </div>
-
-      {/* Consensus */}
-      <div className="mt-4">
-        <div className="flex items-baseline justify-between text-xs">
-          <span className="text-muted-foreground">
-            {plan.responded_count} of {plan.participant_count} voted
-            {plan.compatibility_score != null
-              ? ` • ${plan.compatibility_score}% fair point match`
-              : ""}
-          </span>
-          <span className="font-semibold tabular-nums">{votedPct}%</span>
-        </div>
-        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary">
-          <motion.div
-            className="h-full rounded-full bg-primary"
-            initial={{ width: 0 }}
-            animate={{ width: `${votedPct}%` }}
-            transition={{ type: "spring", stiffness: 120, damping: 20 }}
-          />
-        </div>
-      </div>
-
-      {/* Members + badges */}
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <div className="flex -space-x-2">
-          {plan.participants.slice(0, 5).map((m) => (
-            <span key={m.profile_id} className="relative">
-              <Avatar
-                url={m.avatar_url}
-                emoji={m.emoji}
-                name={m.name}
-                size={30}
-                className="ring-2 ring-background"
-              />
-              {m.responded ? (
-                <CheckCircle2 className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-background text-success" />
-              ) : null}
+            <span className="truncate text-xs font-medium text-muted-foreground">
+              {group?.name ?? "Your squad"}
             </span>
-          ))}
-          {plan.participants.length > 5 ? (
-            <span className="grid size-[30px] place-items-center rounded-full bg-secondary text-caption font-semibold ring-2 ring-background">
-              +{plan.participants.length - 5}
-            </span>
-          ) : null}
+            {isOrganizer ? (
+              <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-warning">
+                <Crown className="size-3.5" aria-hidden /> Organizer
+              </span>
+            ) : null}
+          </div>
+          <Pill tone={pill.tone} className="shrink-0">
+            <pill.icon className="size-3.5" aria-hidden /> {pill.label}
+          </Pill>
         </div>
 
-        {plan.conflicts.length > 0 ? (
-          <Pill tone="bad">
-            <XCircle className="size-3.5" /> {plan.conflicts.length} conflict
-            {plan.conflicts.length > 1 ? "s" : ""}
-          </Pill>
-        ) : null}
+        {/* Hero */}
+        <h3 className="mt-3 font-display text-lg font-semibold">{plan.title}</h3>
 
-        {curfew === "ok" ? (
-          <Pill tone="good">
-            <CheckCircle2 className="size-3.5" /> Curfew compliant
-          </Pill>
-        ) : curfew === "warn" ? (
-          <Pill tone="warn">
-            <Clock className="size-3.5" /> Curfew warning (past 10 PM)
-          </Pill>
-        ) : null}
+        {/* Members + details toggle -- avatar stack stays visible (who's in,
+          at a glance); location/cost/consensus/budget-fit/carpool and any
+          status not already shown above wait behind this tap, the same
+          disclosure pattern TeenSafetyBar uses for its "Safety tools". */}
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="flex -space-x-2">
+            {plan.participants.slice(0, 5).map((m) => (
+              <span key={m.profile_id} className="relative">
+                <Avatar
+                  url={m.avatar_url}
+                  emoji={m.emoji}
+                  name={m.name}
+                  size={30}
+                  className="ring-2 ring-background"
+                />
+                {m.responded ? (
+                  <CheckCircle2 className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-background text-success" />
+                ) : null}
+              </span>
+            ))}
+            {plan.participants.length > 5 ? (
+              <span className="grid size-[30px] place-items-center rounded-full bg-secondary text-caption font-semibold ring-2 ring-background">
+                +{plan.participants.length - 5}
+              </span>
+            ) : null}
+          </div>
 
-        {left ? (
-          <Pill tone="accent">
-            <Clock className="size-3.5" /> {left}
-          </Pill>
-        ) : null}
-      </div>
-
-      {/* Carpool quick bar */}
-      {plan.rides.length > 0 ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {plan.rides.slice(0, 3).map((r) => (
-            <span
-              key={r.id}
-              className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs"
+          {hasDetails ? (
+            <button
+              type="button"
+              onClick={() => setDetailsOpen((v) => !v)}
+              aria-expanded={detailsOpen}
+              className="tap-target inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
             >
-              <Car className="size-3.5 text-primary" />
-              {r.driver_name ? `${r.driver_name} driving` : r.car_label} • {r.seats_taken} riders
-            </span>
-          ))}
+              Details
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${detailsOpen ? "rotate-180" : ""}`}
+                aria-hidden
+              />
+            </button>
+          ) : null}
         </div>
-      ) : null}
 
-      <Link to="/plans/$planId" params={{ planId: plan.id }} className="mt-4 block">
-        <Magnetic className="w-full">
-          <Button className="w-full">
-            Open plan dashboard <ArrowRight className="size-4" />
-          </Button>
-        </Magnetic>
-      </Link>
+        {hasDetails && detailsOpen ? (
+          <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
+            {rec?.title || rec?.address || plan.location_area || cost || when ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                {rec?.title || rec?.address || plan.location_area ? (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="size-3.5" />
+                    {rec?.title ?? rec?.location_name ?? plan.location_area}
+                    {rec?.address ? ` • ${rec.address}` : ""}
+                  </span>
+                ) : null}
+                {cost ? (
+                  <span className="inline-flex items-center gap-1">
+                    <DollarSign className="size-3.5" />
+                    {cost}
+                  </span>
+                ) : null}
+                {when ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="size-3.5" />
+                    {when}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Consensus */}
+            <div>
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {plan.responded_count} of {plan.participant_count} voted
+                  {plan.compatibility_score != null
+                    ? ` • ${plan.compatibility_score}% fair point match`
+                    : ""}
+                </span>
+                <span className="font-semibold tabular-nums">{votedPct}%</span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${votedPct}%` }}
+                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                />
+              </div>
+            </div>
+
+            {plan.budget_fit ||
+            showConflictsInDetails ||
+            curfew === "ok" ||
+            showCurfewInDetails ||
+            showCountdownInDetails ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <BudgetFitPill budgetFit={plan.budget_fit} />
+                {showConflictsInDetails ? (
+                  <Pill tone="bad">
+                    <XCircle className="size-3.5" /> {conflictCount} conflict
+                    {conflictCount > 1 ? "s" : ""}
+                  </Pill>
+                ) : null}
+                {curfew === "ok" ? (
+                  <Pill tone="good">
+                    <CheckCircle2 className="size-3.5" /> Curfew compliant
+                  </Pill>
+                ) : showCurfewInDetails ? (
+                  <Pill tone="warn">
+                    <Clock className="size-3.5" /> Curfew warning (past 10 PM)
+                  </Pill>
+                ) : null}
+                {showCountdownInDetails ? (
+                  <Pill tone="accent">
+                    <Clock className="size-3.5" /> {left}
+                  </Pill>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* Carpool quick bar */}
+            {plan.rides.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {plan.rides.slice(0, 3).map((r) => (
+                  <span
+                    key={r.id}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs"
+                  >
+                    <Car className="size-3.5 text-primary" />
+                    {r.driver_name ? `${r.driver_name} driving` : r.car_label} • {r.seats_taken}{" "}
+                    riders
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <Link to="/plans/$planId" params={{ planId: plan.id }} className="mt-4 block">
+          <Magnetic className="w-full">
+            <Button className="w-full">
+              Open plan dashboard <ArrowRight className="size-4" />
+            </Button>
+          </Magnetic>
+        </Link>
       </motion.div>
     </SpotlightCard>
-
   );
 }

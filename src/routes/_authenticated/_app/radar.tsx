@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/quorum/haptics";
+import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/nicknames";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
@@ -34,14 +35,16 @@ import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { FindMyFriends } from "@/components/quorum/sharing/FindMyFriends";
 import { getFriendPins } from "@/lib/quorum/sharing.functions";
 
-
 export const Route = createFileRoute("/_authenticated/_app/radar")({
   loader: ({ context }) => {
     void context.queryClient.ensureQueryData({
       queryKey: ["guardian-hub"],
       queryFn: () => getGuardianHub(),
     });
-    void context.queryClient.ensureQueryData({ queryKey: ["my-radar"], queryFn: () => getMyRadar() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["my-radar"],
+      queryFn: () => getMyRadar(),
+    });
     void context.queryClient.ensureQueryData({
       queryKey: ["friend-pins"],
       queryFn: () => getFriendPins(),
@@ -145,7 +148,6 @@ export function RadarPage() {
   // for a non-tab route (/activity, /settings, a group or plan detail) left
   // this stuck true and kept the body scroll lock below applied.
   const isActive = location.pathname === "/radar";
-
 
   // The map IS the page here, so page scroll is locked while Radar is the
   // visible tab -- released the instant the user switches away (before they
@@ -288,9 +290,7 @@ export function RadarPage() {
     }
 
     return { people, zones, places, hasPins: people.length > 0 || zones.length > 0 };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hub.data, mine.data, friendPins.data, alias, focus.lat, focus.lon, focus.label]);
-
 
   return (
     // The map IS the page: fixed, full-viewport, no page-level scroll at
@@ -337,11 +337,19 @@ export function RadarPage() {
 }
 
 /**
- * Bottom sheet overlay: collapsed to a small "Live radar" pill that clears
- * the bottom nav's safe area, expands upward (map stays partly visible and
- * interactive above it, matching Uber/Find My) to hold everything that used
- * to be separate scrollable sections -- FindMyFriends, family widgets, and
- * the "I arrived safely" status card.
+ * Bottom sheet overlay: collapsed to a small "Live radar" status chip that
+ * clears the bottom nav's safe area, expands upward (map stays partly
+ * visible and interactive above it, matching Uber/Find My) to hold
+ * everything that used to be separate scrollable sections -- FindMyFriends,
+ * family widgets, and the "I arrived safely" status card.
+ *
+ * Collapsed, this used to be a full `inset-x-3` bar the same width and
+ * shape as AppShell's bottom tab bar directly beneath it -- two stacked
+ * dark capsules reading as one redundant nav-adjacent element. It's still
+ * the same sheet (tapping it opens the identical panel below), just
+ * presented at rest as a small pulsing status chip -- the app's own
+ * live-presence grammar (DESIGN.md's expanding-ring language, reused here
+ * instead of a second full-width bar) -- rather than a second nav-sized bar.
  */
 function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | null }) {
   const [open, setOpen] = useState(false);
@@ -354,7 +362,13 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
       // (the prior 380/34 pair settled closer to 235ms) -- snappy without
       // enough overshoot to feel bouncy for a safety-relevant status sheet.
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
-      className="glass-pill pointer-events-auto absolute inset-x-3 z-10 overflow-hidden rounded-3xl"
+      className={cn(
+        "glass-pill pointer-events-auto absolute z-10 overflow-hidden",
+        // Collapsed: a compact, auto-width chip centered in the inset-x-3
+        // zone -- deliberately NOT the same full-bar shape as the tab bar
+        // below it. Expanded: the full-width panel, unchanged.
+        open ? "inset-x-3 rounded-3xl" : "inset-x-3 mx-auto w-fit rounded-full",
+      )}
       style={{
         // Anchored at var(--chrome-bottom) (styles.css) whether collapsed or
         // open -- the same clearance every screen's own floating controls
@@ -410,11 +424,24 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
             haptic("select");
             setOpen(true);
           }}
-          aria-label="Show live radar details"
+          aria-label={
+            empty ? "Show live radar details" : "Show live radar details — currently sharing"
+          }
           aria-expanded="false"
-          className="tap-target flex w-full items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold text-primary"
+          className="tap-target flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary"
         >
-          <ShieldCheck className="h-4 w-4" aria-hidden /> Live radar
+          <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
+            {!empty ? (
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+            ) : null}
+            <span
+              className={cn(
+                "relative inline-flex h-2 w-2 rounded-full",
+                empty ? "bg-muted-foreground/50" : "bg-success",
+              )}
+            />
+          </span>
+          Live radar
         </motion.button>
       )}
     </motion.div>
@@ -433,7 +460,6 @@ function FamilyRadar({ teens }: { teens: TeenCard[] }) {
     </section>
   );
 }
-
 
 function TeenWidget({ teen }: { teen: TeenCard }) {
   const Icon = motionIcon(teen.status.label);
@@ -514,8 +540,7 @@ function MyRadar({ data }: { data: MyRadarData }) {
     const label = speedLabel(pos);
     setStatus(label);
     const nearest = data.zones.find(
-      (z) =>
-        Math.hypot(z.lat - pos.coords.latitude, z.lon - pos.coords.longitude) * 111_000 <= 200,
+      (z) => Math.hypot(z.lat - pos.coords.latitude, z.lon - pos.coords.longitude) * 111_000 <= 200,
     );
     if (nearest && zoneRef.current !== nearest.id) {
       zoneRef.current = nearest.id;
@@ -551,12 +576,7 @@ function MyRadar({ data }: { data: MyRadarData }) {
       <h2 className="text-sm font-semibold text-muted-foreground">Your live status</h2>
 
       <Card className="flex items-center gap-3">
-        <Avatar
-          url={data.me.avatar_url}
-          emoji={data.me.emoji}
-          name={data.me.name}
-          size={40}
-        />
+        <Avatar url={data.me.avatar_url} emoji={data.me.emoji} name={data.me.name} size={40} />
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold">{data.me.name}</div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -587,8 +607,7 @@ function MyRadar({ data }: { data: MyRadarData }) {
             });
           }}
         >
-          <ShieldCheck className="h-5 w-5" aria-hidden />
-          I arrived safely
+          <ShieldCheck className="h-5 w-5" aria-hidden />I arrived safely
         </Button>
       </motion.div>
     </section>

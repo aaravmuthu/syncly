@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
 import { CheckCircle2, ChevronRight, Clock, MapPin, TriangleAlert } from "lucide-react";
-import { AvatarStack, CostBadge, WeatherChip, formatWhen, type DashPlan } from "./DashboardParts";
+import { AvatarStack, CostBadge, formatWhen, type DashPlan } from "./DashboardParts";
 import { QuickResponse } from "./QuickResponse";
 import { categoryIcon } from "@/lib/quorum/icons";
 import { cn } from "@/lib/utils";
@@ -121,7 +121,6 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
               <span className="truncate">{where}</span>
             </span>
           ) : null}
-          <WeatherChip planId={plan.id} />
           <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} />
         </div>
 

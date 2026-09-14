@@ -32,11 +32,15 @@ import { Route as AuthenticatedAppHomeRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
 import { Route as AuthenticatedAppRadarRouteImport } from './routes/_authenticated/_app/radar'
 import { Route as AuthenticatedAppRlsCheckRouteImport } from './routes/_authenticated/_app/rls-check'
-import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/_app/settings'
 import { Route as AuthenticatedAppGroupsIndexRouteImport } from './routes/_authenticated/_app/groups.index'
 import { Route as AuthenticatedAppGroupsGroupIdRouteImport } from './routes/_authenticated/_app/groups.$groupId'
 import { Route as AuthenticatedAppPlansIndexRouteImport } from './routes/_authenticated/_app/plans.index'
 import { Route as AuthenticatedAppPlansPlanIdRouteImport } from './routes/_authenticated/_app/plans.$planId'
+import { Route as AuthenticatedAppSettingsIndexRouteImport } from './routes/_authenticated/_app/settings.index'
+import { Route as AuthenticatedAppSettingsAccountRouteImport } from './routes/_authenticated/_app/settings.account'
+import { Route as AuthenticatedAppSettingsInfoRouteImport } from './routes/_authenticated/_app/settings.info'
+import { Route as AuthenticatedAppSettingsPlanningRouteImport } from './routes/_authenticated/_app/settings.planning'
+import { Route as AuthenticatedAppSettingsProfileRouteImport } from './routes/_authenticated/_app/settings.profile'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -157,12 +161,6 @@ const AuthenticatedAppRlsCheckRoute =
     path: '/rls-check',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
-const AuthenticatedAppSettingsRoute =
-  AuthenticatedAppSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedAppRouteRoute,
-  } as any)
 const AuthenticatedAppGroupsIndexRoute =
   AuthenticatedAppGroupsIndexRouteImport.update({
     id: '/groups/',
@@ -185,6 +183,36 @@ const AuthenticatedAppPlansPlanIdRoute =
   AuthenticatedAppPlansPlanIdRouteImport.update({
     id: '/plans/$planId',
     path: '/plans/$planId',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsIndexRoute =
+  AuthenticatedAppSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsAccountRoute =
+  AuthenticatedAppSettingsAccountRouteImport.update({
+    id: '/settings/account',
+    path: '/settings/account',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsInfoRoute =
+  AuthenticatedAppSettingsInfoRouteImport.update({
+    id: '/settings/info',
+    path: '/settings/info',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsPlanningRoute =
+  AuthenticatedAppSettingsPlanningRouteImport.update({
+    id: '/settings/planning',
+    path: '/settings/planning',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsProfileRoute =
+  AuthenticatedAppSettingsProfileRouteImport.update({
+    id: '/settings/profile',
+    path: '/settings/profile',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 
@@ -210,11 +238,15 @@ export interface FileRoutesByFullPath {
   '/messages': typeof AuthenticatedAppMessagesRoute
   '/radar': typeof AuthenticatedAppRadarRoute
   '/rls-check': typeof AuthenticatedAppRlsCheckRoute
-  '/settings': typeof AuthenticatedAppSettingsRoute
   '/groups/$groupId': typeof AuthenticatedAppGroupsGroupIdRoute
   '/plans/$planId': typeof AuthenticatedAppPlansPlanIdRoute
+  '/settings/account': typeof AuthenticatedAppSettingsAccountRoute
+  '/settings/info': typeof AuthenticatedAppSettingsInfoRoute
+  '/settings/planning': typeof AuthenticatedAppSettingsPlanningRoute
+  '/settings/profile': typeof AuthenticatedAppSettingsProfileRoute
   '/groups/': typeof AuthenticatedAppGroupsIndexRoute
   '/plans/': typeof AuthenticatedAppPlansIndexRoute
+  '/settings/': typeof AuthenticatedAppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -238,11 +270,15 @@ export interface FileRoutesByTo {
   '/messages': typeof AuthenticatedAppMessagesRoute
   '/radar': typeof AuthenticatedAppRadarRoute
   '/rls-check': typeof AuthenticatedAppRlsCheckRoute
-  '/settings': typeof AuthenticatedAppSettingsRoute
   '/groups/$groupId': typeof AuthenticatedAppGroupsGroupIdRoute
   '/plans/$planId': typeof AuthenticatedAppPlansPlanIdRoute
+  '/settings/account': typeof AuthenticatedAppSettingsAccountRoute
+  '/settings/info': typeof AuthenticatedAppSettingsInfoRoute
+  '/settings/planning': typeof AuthenticatedAppSettingsPlanningRoute
+  '/settings/profile': typeof AuthenticatedAppSettingsProfileRoute
   '/groups': typeof AuthenticatedAppGroupsIndexRoute
   '/plans': typeof AuthenticatedAppPlansIndexRoute
+  '/settings': typeof AuthenticatedAppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -269,11 +305,15 @@ export interface FileRoutesById {
   '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRoute
   '/_authenticated/_app/radar': typeof AuthenticatedAppRadarRoute
   '/_authenticated/_app/rls-check': typeof AuthenticatedAppRlsCheckRoute
-  '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/_app/groups/$groupId': typeof AuthenticatedAppGroupsGroupIdRoute
   '/_authenticated/_app/plans/$planId': typeof AuthenticatedAppPlansPlanIdRoute
+  '/_authenticated/_app/settings/account': typeof AuthenticatedAppSettingsAccountRoute
+  '/_authenticated/_app/settings/info': typeof AuthenticatedAppSettingsInfoRoute
+  '/_authenticated/_app/settings/planning': typeof AuthenticatedAppSettingsPlanningRoute
+  '/_authenticated/_app/settings/profile': typeof AuthenticatedAppSettingsProfileRoute
   '/_authenticated/_app/groups/': typeof AuthenticatedAppGroupsIndexRoute
   '/_authenticated/_app/plans/': typeof AuthenticatedAppPlansIndexRoute
+  '/_authenticated/_app/settings/': typeof AuthenticatedAppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -299,11 +339,15 @@ export interface FileRouteTypes {
     | '/messages'
     | '/radar'
     | '/rls-check'
-    | '/settings'
     | '/groups/$groupId'
     | '/plans/$planId'
+    | '/settings/account'
+    | '/settings/info'
+    | '/settings/planning'
+    | '/settings/profile'
     | '/groups/'
     | '/plans/'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -327,11 +371,15 @@ export interface FileRouteTypes {
     | '/messages'
     | '/radar'
     | '/rls-check'
-    | '/settings'
     | '/groups/$groupId'
     | '/plans/$planId'
+    | '/settings/account'
+    | '/settings/info'
+    | '/settings/planning'
+    | '/settings/profile'
     | '/groups'
     | '/plans'
+    | '/settings'
   id:
     | '__root__'
     | '/'
@@ -357,11 +405,15 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/messages'
     | '/_authenticated/_app/radar'
     | '/_authenticated/_app/rls-check'
-    | '/_authenticated/_app/settings'
     | '/_authenticated/_app/groups/$groupId'
     | '/_authenticated/_app/plans/$planId'
+    | '/_authenticated/_app/settings/account'
+    | '/_authenticated/_app/settings/info'
+    | '/_authenticated/_app/settings/planning'
+    | '/_authenticated/_app/settings/profile'
     | '/_authenticated/_app/groups/'
     | '/_authenticated/_app/plans/'
+    | '/_authenticated/_app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -545,13 +597,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRlsCheckRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
-    '/_authenticated/_app/settings': {
-      id: '/_authenticated/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
-      parentRoute: typeof AuthenticatedAppRouteRoute
-    }
     '/_authenticated/_app/groups/': {
       id: '/_authenticated/_app/groups/'
       path: '/groups'
@@ -580,6 +625,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPlansPlanIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/settings/': {
+      id: '/_authenticated/_app/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedAppSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/settings/account': {
+      id: '/_authenticated/_app/settings/account'
+      path: '/settings/account'
+      fullPath: '/settings/account'
+      preLoaderRoute: typeof AuthenticatedAppSettingsAccountRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/settings/info': {
+      id: '/_authenticated/_app/settings/info'
+      path: '/settings/info'
+      fullPath: '/settings/info'
+      preLoaderRoute: typeof AuthenticatedAppSettingsInfoRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/settings/planning': {
+      id: '/_authenticated/_app/settings/planning'
+      path: '/settings/planning'
+      fullPath: '/settings/planning'
+      preLoaderRoute: typeof AuthenticatedAppSettingsPlanningRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/settings/profile': {
+      id: '/_authenticated/_app/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof AuthenticatedAppSettingsProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
   }
 }
 
@@ -589,11 +669,15 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
   AuthenticatedAppRadarRoute: typeof AuthenticatedAppRadarRoute
   AuthenticatedAppRlsCheckRoute: typeof AuthenticatedAppRlsCheckRoute
-  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppGroupsGroupIdRoute: typeof AuthenticatedAppGroupsGroupIdRoute
   AuthenticatedAppPlansPlanIdRoute: typeof AuthenticatedAppPlansPlanIdRoute
+  AuthenticatedAppSettingsAccountRoute: typeof AuthenticatedAppSettingsAccountRoute
+  AuthenticatedAppSettingsInfoRoute: typeof AuthenticatedAppSettingsInfoRoute
+  AuthenticatedAppSettingsPlanningRoute: typeof AuthenticatedAppSettingsPlanningRoute
+  AuthenticatedAppSettingsProfileRoute: typeof AuthenticatedAppSettingsProfileRoute
   AuthenticatedAppGroupsIndexRoute: typeof AuthenticatedAppGroupsIndexRoute
   AuthenticatedAppPlansIndexRoute: typeof AuthenticatedAppPlansIndexRoute
+  AuthenticatedAppSettingsIndexRoute: typeof AuthenticatedAppSettingsIndexRoute
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
@@ -602,11 +686,15 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
   AuthenticatedAppRadarRoute: AuthenticatedAppRadarRoute,
   AuthenticatedAppRlsCheckRoute: AuthenticatedAppRlsCheckRoute,
-  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppGroupsGroupIdRoute: AuthenticatedAppGroupsGroupIdRoute,
   AuthenticatedAppPlansPlanIdRoute: AuthenticatedAppPlansPlanIdRoute,
+  AuthenticatedAppSettingsAccountRoute: AuthenticatedAppSettingsAccountRoute,
+  AuthenticatedAppSettingsInfoRoute: AuthenticatedAppSettingsInfoRoute,
+  AuthenticatedAppSettingsPlanningRoute: AuthenticatedAppSettingsPlanningRoute,
+  AuthenticatedAppSettingsProfileRoute: AuthenticatedAppSettingsProfileRoute,
   AuthenticatedAppGroupsIndexRoute: AuthenticatedAppGroupsIndexRoute,
   AuthenticatedAppPlansIndexRoute: AuthenticatedAppPlansIndexRoute,
+  AuthenticatedAppSettingsIndexRoute: AuthenticatedAppSettingsIndexRoute,
 }
 
 const AuthenticatedAppRouteRouteWithChildren =
