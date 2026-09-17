@@ -57,7 +57,6 @@ export const browseSpots = createServerFn({ method: "POST" })
       .maybeSingle();
     void supabase;
 
-
     const { geocodeZipServer } = await import("./location.server");
     const { searchVenuesGeoapify } = await import("./places.server");
     const { haversineMiles, milesToDriveMinutes, normalizeZip } = await import("./location");
@@ -77,7 +76,12 @@ export const browseSpots = createServerFn({ method: "POST" })
     if (!origin) return { origin: null, midpoint: null, needsHome: true, spots: [] };
 
     const seeds = await searchVenuesGeoapify({
-      origin: { lat: origin.lat, lon: origin.lon, label: origin.label, zip: profile?.zip_code ?? "" },
+      origin: {
+        lat: origin.lat,
+        lon: origin.lon,
+        label: origin.label,
+        zip: profile?.zip_code ?? "",
+      },
       category: data.kind === "activity" ? "hangout" : "dinner",
       categoriesOverride: data.categories ?? null,
       name: data.query ?? null,
@@ -117,7 +121,12 @@ export const browseSpots = createServerFn({ method: "POST" })
           .filter((m) => m.lat != null && m.lon != null && m.profileId !== profile?.id)
           .map((m) => {
             const mi = Math.round(haversineMiles({ lat: m.lat!, lon: m.lon! }, point) * 10) / 10;
-            return { profileId: m.profileId, name: m.name, miles: mi, minutes: milesToDriveMinutes(mi) };
+            return {
+              profileId: m.profileId,
+              name: m.name,
+              miles: mi,
+              minutes: milesToDriveMinutes(mi),
+            };
           })
           .sort((a, b) => a.miles - b.miles)
           .slice(0, 4),
@@ -194,6 +203,118 @@ export const addSpotToPlan = createServerFn({ method: "POST" })
     } as never);
     if (error) throw new Error(error.message);
 
-    await supabase.from("plans").update({ status: "voting" }).eq("id", planId).eq("status", "collecting");
+    await supabase
+      .from("plans")
+      .update({ status: "voting" })
+      .eq("id", planId)
+      .eq("status", "collecting");
     return { ok: true, duplicate: false };
+  });
+
+export type SavedPlace = {
+  key: string;
+  title: string;
+  subtitle: string | null;
+  address: string | null;
+  cuisine: string | null;
+  priceLevel: string | null;
+  kind: "food" | "activity";
+  costMin: number;
+  costMax: number;
+  lat: number;
+  lon: number;
+  miles: number | null;
+  minutes: number | null;
+};
+
+/** Bookmarks a browsed spot to the signed-in member's own saved list. */
+export const saveSpot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { spot: BrowseSpot }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { spot } = data;
+    const { data: me } = await supabase.rpc("my_profile_id");
+
+    const { error } = await supabase.from("saved_places").upsert(
+      {
+        profile_id: me as string,
+        key: spot.key,
+        title: spot.title,
+        subtitle: spot.subtitle,
+        address: spot.address,
+        cuisine: spot.cuisine,
+        price_level: spot.priceLevel,
+        kind: spot.kind,
+        cost_min: spot.costMin,
+        cost_max: spot.costMax,
+        lat: spot.lat,
+        lon: spot.lon,
+      } as never,
+      { onConflict: "profile_id,key" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Removes a spot from the signed-in member's saved list. */
+export const unsaveSpot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { key: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: me } = await supabase.rpc("my_profile_id");
+
+    const { error } = await supabase
+      .from("saved_places")
+      .delete()
+      .eq("profile_id", me as string)
+      .eq("key", data.key);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** The signed-in member's saved spots, nearest-home distance included when a home address is on file. */
+export const listSavedSpots = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<SavedPlace[]> => {
+    const { supabase, userId } = context;
+    const { data: rows, error } = await supabase
+      .from("saved_places")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("home_lat, home_lon")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const { haversineMiles, milesToDriveMinutes } = await import("./location");
+    const origin =
+      typeof profile?.home_lat === "number" && typeof profile?.home_lon === "number"
+        ? { lat: profile.home_lat, lon: profile.home_lon }
+        : null;
+
+    return (rows ?? []).map((r) => {
+      const miles = origin
+        ? Math.round(haversineMiles(origin, { lat: r.lat, lon: r.lon }) * 10) / 10
+        : null;
+      return {
+        key: r.key,
+        title: r.title,
+        subtitle: r.subtitle,
+        address: r.address,
+        cuisine: r.cuisine,
+        priceLevel: r.price_level,
+        kind: r.kind as "food" | "activity",
+        costMin: r.cost_min ?? 0,
+        costMax: r.cost_max ?? 0,
+        lat: r.lat,
+        lon: r.lon,
+        miles,
+        minutes: miles != null ? milesToDriveMinutes(miles) : null,
+      };
+    });
   });

@@ -1,17 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import {
   ArrowRight,
   CalendarCheck,
   Car,
   Check,
   Lock,
+  MapPin,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   Users,
   Zap,
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
+import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { MouseSpotlight } from "@/components/quorum/MouseSpotlight";
 import { GlowButton } from "@/components/quorum/GlowButton";
@@ -57,12 +61,6 @@ function Landing() {
           <Wordmark />
           <div className="flex items-center gap-2">
             <Link
-              to="/demo"
-              className="hidden rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
-            >
-              Demo
-            </Link>
-            <Link
               to="/auth"
               search={{ next: "/home", mode: "signin" }}
               className="rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -86,9 +84,9 @@ function Landing() {
         <section className="mx-auto max-w-6xl px-5 pt-14 pb-8 sm:pt-24">
           <RevealGroup stagger={0.09} className="mx-auto max-w-3xl text-center">
             <RevealItem lift={false} className="inline-block">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
-              <Lock className="size-3.5" /> Private by design
-            </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                <Lock className="size-3.5" /> Private by design
+              </span>
             </RevealItem>
             <RevealItem lift={false}>
               <h1 className="mt-5 text-[2.6rem] leading-[1.03] font-semibold sm:text-6xl">
@@ -99,11 +97,11 @@ function Landing() {
               <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
                 {DESCRIPTION}
               </p>
-              <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground/80">
-                Location sharing is optional and only turned on per plan.
-              </p>
             </RevealItem>
-            <RevealItem lift={false} className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <RevealItem
+              lift={false}
+              className="mt-8 flex flex-wrap items-center justify-center gap-3"
+            >
               <GlowButton
                 to="/auth"
                 search={{ next: "/home", mode: "signup" }}
@@ -121,26 +119,17 @@ function Landing() {
               >
                 Try the demo
               </GlowButton>
-              <a
-                href="#how"
-                className="inline-flex items-center gap-2 rounded-full border border-input bg-card px-6 py-3.5 text-sm font-semibold transition-colors hover:bg-secondary"
-              >
-                See how it works
-              </a>
             </RevealItem>
-            <RevealItem lift={false} className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <RevealItem lift={false} className="mt-6 flex items-center justify-center">
               <div className="inline-flex items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/5 px-4 py-2.5">
                 <Zap className="size-4 text-primary" strokeWidth={1.75} />
-                <div className="leading-tight">
+                <div className="leading-tight text-left">
                   <p className="font-display text-lg font-semibold">&lt;2min</p>
                   <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
                     Setup
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Stop planning around the loudest person.
-              </p>
             </RevealItem>
           </RevealGroup>
 
@@ -151,6 +140,24 @@ function Landing() {
 
         <TrendingPills />
         <WorksWithMarquee />
+
+        {/* Web <-> iPhone sync */}
+        <section className="mx-auto max-w-6xl px-5 py-16">
+          <Reveal className="mx-auto max-w-xl text-center">
+            <p className="text-sm font-semibold tracking-widest text-primary uppercase">
+              Everywhere, instantly
+            </p>
+            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
+              Change it on your phone. It's already there on the web.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              One plan, kept in sync live across every device your squad opens it on.
+            </p>
+          </Reveal>
+          <Reveal className="mt-12">
+            <SyncPreview />
+          </Reveal>
+        </section>
 
         {/* Problem */}
         <section className="mx-auto max-w-6xl px-5 py-16">
@@ -275,6 +282,17 @@ function Landing() {
               "Ride needs stay private",
             ]}
           />
+          <FeatureRow
+            icon={<MapPin className="size-5" />}
+            kicker="Live radar"
+            title="See who's close, without oversharing."
+            body="One clear switch in Settings, off by default. Turn it on and the squad sees live pins, ETAs and arrival status — no digging through a group chat to ask “where are you.”"
+            bullets={[
+              "One toggle controls sharing — no silent background tracking",
+              "Battery and ETA at a glance",
+              "Check or turn it off from Settings any time",
+            ]}
+          />
         </section>
 
         {/* Testimonial-ish */}
@@ -353,30 +371,128 @@ function FeatureRow({
   return (
     <Reveal>
       <SpotlightCard className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
-      <div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
-          {icon} {kicker}
-        </span>
-        <h3 className="mt-4 text-2xl font-semibold">{title}</h3>
-      </div>
-      <div>
-        <p className="text-muted-foreground">{body}</p>
-        <ul className="mt-4 space-y-2">
-          {bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-sm">
-              <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
+            {icon} {kicker}
+          </span>
+          <h3 className="mt-4 text-2xl font-semibold">{title}</h3>
+        </div>
+        <div>
+          <p className="text-muted-foreground">{body}</p>
+          <ul className="mt-4 space-y-2">
+            {bullets.map((b) => (
+              <li key={b} className="flex items-start gap-2 text-sm">
+                <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </SpotlightCard>
     </Reveal>
   );
 }
 
+/**
+ * Two mocked-up devices sharing the same plan snippet, with a "Live sync"
+ * connector pulsing between them — the update on the phone and its mirror
+ * on the web render as separately-styled but identically-valued cards
+ * rather than one screenshot split in half, so it's legible on its own
+ * even without the pulse animation (reduced motion / static export).
+ */
+function SyncPreview() {
+  const prefersReducedMotion = useReducedMotion();
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 sm:flex-row sm:justify-center">
+      <DeviceFrame variant="web">
+        <p className="text-sm font-semibold text-foreground">Saturday Night Out</p>
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">Your budget</span>
+          <span className="font-semibold text-foreground">$30</span>
+        </div>
+        <span className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-success">
+          <Check className="size-3.5" /> Synced
+        </span>
+      </DeviceFrame>
+
+      <div className="flex items-center gap-3 sm:flex-col sm:px-2">
+        <span className="h-px w-8 bg-border sm:h-8 sm:w-px" aria-hidden />
+        <motion.div
+          className="glass-pill inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground"
+          animate={prefersReducedMotion ? undefined : { scale: [1, 1.06, 1] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <RefreshCw className="size-3.5 text-primary" aria-hidden /> Live sync
+        </motion.div>
+        <span className="h-px w-8 bg-border sm:h-8 sm:w-px" aria-hidden />
+      </div>
+
+      <DeviceFrame variant="phone">
+        <p className="text-xs font-semibold text-foreground">Saturday Night Out</p>
+        <div className="mt-2.5 flex items-center justify-between rounded-lg bg-secondary/60 px-2.5 py-1.5 text-xs">
+          <span className="text-muted-foreground">Your budget</span>
+          <span className="font-semibold text-foreground">$30</span>
+        </div>
+        <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-success">
+          <span className="size-1.5 rounded-full bg-success" /> Updated just now
+        </span>
+      </DeviceFrame>
+    </div>
+  );
+}
+
+function DeviceFrame({ variant, children }: { variant: "web" | "phone"; children: ReactNode }) {
+  if (variant === "web") {
+    return (
+      <div className="dark w-full max-w-xs rounded-2xl border border-white/10 bg-neutral-950 p-1.5 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)] sm:max-w-sm">
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+          <span className="size-2 rounded-full bg-white/15" />
+          <span className="size-2 rounded-full bg-white/15" />
+          <span className="size-2 rounded-full bg-white/15" />
+        </div>
+        <div className="rounded-xl border border-white/10 bg-card/90 p-4 backdrop-blur-2xl">
+          {children}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="dark w-40 shrink-0 rounded-[1.8rem] bg-neutral-950 p-2 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)]">
+      <div className="rounded-[1.3rem] border border-white/10 bg-card/90 p-3.5 backdrop-blur-2xl">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const PREVIEW_TABS = [
+  { id: "progress", label: "Answering" },
+  { id: "results", label: "Results" },
+  { id: "radar", label: "Live radar" },
+] as const;
+type PreviewTab = (typeof PREVIEW_TABS)[number]["id"];
+
 function AppPreview() {
   const prefersReducedMotion = useReducedMotion();
+  const [tab, setTab] = useState<PreviewTab>("progress");
+  // Ref (not a `tab` dependency) so the interval is created once and always
+  // advances from whatever tab the visitor last landed on, whether that was
+  // autoplay or a manual click -- restarting the timer on every tab change
+  // would make a manual click always buy a full extra 4s before the next
+  // auto-advance, which reads as the UI fighting the click instead of
+  // just continuing on.
+  const tabRef = useRef<PreviewTab>("progress");
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    const id = window.setInterval(() => {
+      const i = PREVIEW_TABS.findIndex((t) => t.id === tabRef.current);
+      setTab(PREVIEW_TABS[(i + 1) % PREVIEW_TABS.length]!.id);
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [prefersReducedMotion]);
   // Tied to raw page scroll distance (not the panel's position relative to
   // the viewport) so it behaves the same on every screen size. The earlier
   // target-relative version only ever animated on narrow/mobile layouts —
@@ -438,83 +554,171 @@ function AppPreview() {
             </span>
           </div>
 
-          {/* Group progress — the actual first step of planning in the app:
-              everyone answers privately before any option is ranked. Mirrors
-              plans.$planId.tsx's real "Group progress" card (status line +
-              per-member response chips) instead of jumping straight to a
-              result, so the preview reads as a process, not a screenshot. */}
-          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-            <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold text-foreground">Group progress</p>
-              <span className="text-sm text-muted-foreground">Waiting on 1 more person</span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[
-                { name: "Maya", responded: true },
-                { name: "Jordan", responded: true },
-                { name: "Sam", responded: true },
-                { name: "Riley", responded: true },
-                { name: "Chris", responded: true },
-                { name: "Alex", responded: false },
-              ].map((m) => (
-                <span
-                  key={m.name}
-                  className={
-                    "rounded-full px-3 py-1.5 text-sm " +
-                    (m.responded
-                      ? "bg-success/15 text-success"
-                      : "bg-secondary text-muted-foreground")
-                  }
-                >
-                  {m.responded ? "✓ " : ""}
-                  {m.name}
-                </span>
-              ))}
-            </div>
+          {/* A real segmented control (same pattern as plans.$planId.tsx's
+              match/newest toggle) so the preview is something a visitor can
+              actually drive, not just watch — autoplay keeps it alive for
+              anyone who doesn't touch it. */}
+          <div className="mt-4 inline-flex rounded-full bg-secondary p-0.5 text-xs font-medium">
+            {PREVIEW_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition-colors",
+                  tab === t.id
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
-          {/* Results as a two-column layout (winning match + alternatives
-              stack) rather than one vertical column, so the wider tablet
-              frame reads as a genuine dashboard-width screen instead of a
-              phone layout stretched sideways with empty margins. */}
-          <div className="mt-4 grid gap-4 sm:grid-cols-[1.3fr_1fr]">
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center justify-between">
-                <p className="text-lg font-semibold text-foreground">TopGolf</p>
-                <span className="rounded-full bg-primary/12 px-3 py-1 text-sm font-semibold text-primary">
-                  91%
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">$24–$32 · 12 min away</p>
-              <ul className="mt-4 space-y-2 text-sm">
-                {[
-                  "Fits everyone's budget",
-                  "Works with every schedule",
-                  "Rides cover all seats",
-                ].map((r) => (
-                  <li key={r} className="flex items-center gap-2 text-muted-foreground">
-                    <Check className="size-4 text-primary" /> {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              {[
-                { t: "Bowling + Diner", s: "89%" },
-                { t: "Dinner + Movie", s: "85%" },
-              ].map((o) => (
-                <div
-                  key={o.t}
-                  className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5 text-sm"
-                >
-                  <span className="text-foreground">{o.t}</span>
-                  <span className="text-sm font-semibold text-muted-foreground">{o.s}</span>
-                </div>
-              ))}
-              <div className="flex-1 rounded-2xl border border-dashed border-border px-4 py-3.5 text-sm text-muted-foreground">
-                One option was hidden because it didn't meet every group member's requirements.
-              </div>
-            </div>
+          <div className="relative mt-4 min-h-[280px] sm:min-h-[248px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              >
+                {tab === "progress" ? (
+                  // Group progress — the actual first step of planning in the
+                  // app: everyone answers privately before any option is
+                  // ranked. Mirrors plans.$planId.tsx's real "Group progress"
+                  // card (status line + per-member response chips).
+                  <div className="rounded-2xl border border-border bg-card p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-foreground">Group progress</p>
+                      <span className="text-sm text-muted-foreground">
+                        Waiting on 1 more person
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {[
+                        { name: "Maya", responded: true },
+                        { name: "Jordan", responded: true },
+                        { name: "Sam", responded: true },
+                        { name: "Riley", responded: true },
+                        { name: "Chris", responded: true },
+                        { name: "Alex", responded: false },
+                      ].map((m) => (
+                        <span
+                          key={m.name}
+                          className={
+                            "rounded-full px-3 py-1.5 text-sm " +
+                            (m.responded
+                              ? "bg-success/15 text-success"
+                              : "bg-secondary text-muted-foreground")
+                          }
+                        >
+                          {m.responded ? "✓ " : ""}
+                          {m.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {tab === "results" ? (
+                  // Results as a two-column layout (winning match + alternatives
+                  // stack) rather than one vertical column, so the wider tablet
+                  // frame reads as a genuine dashboard-width screen instead of a
+                  // phone layout stretched sideways with empty margins.
+                  <div className="grid gap-4 sm:grid-cols-[1.3fr_1fr]">
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-semibold text-foreground">TopGolf</p>
+                        <span className="rounded-full bg-primary/12 px-3 py-1 text-sm font-semibold text-primary">
+                          91%
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">$24–$32 · 12 min away</p>
+                      <ul className="mt-4 space-y-2 text-sm">
+                        {[
+                          "Fits everyone's budget",
+                          "Works with every schedule",
+                          "Rides cover all seats",
+                        ].map((r) => (
+                          <li key={r} className="flex items-center gap-2 text-muted-foreground">
+                            <Check className="size-4 text-primary" /> {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                      {[
+                        { t: "Bowling + Diner", s: "89%" },
+                        { t: "Dinner + Movie", s: "85%" },
+                      ].map((o) => (
+                        <div
+                          key={o.t}
+                          className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5 text-sm"
+                        >
+                          <span className="text-foreground">{o.t}</span>
+                          <span className="text-sm font-semibold text-muted-foreground">{o.s}</span>
+                        </div>
+                      ))}
+                      <div className="flex-1 rounded-2xl border border-dashed border-border px-4 py-3.5 text-sm text-muted-foreground">
+                        One option was hidden because it didn't meet every group member's
+                        requirements.
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {tab === "radar" ? (
+                  // Live radar — a stand-in for the map (real Mapbox tiles
+                  // don't belong on a marketing page), but reuses the exact
+                  // pulse language the actual pin does (q-map-pin-pulse /
+                  // q-radar-pulse in styles.css) so it reads as the same
+                  // feature, not a lookalike.
+                  <div className="space-y-4">
+                    <div className="relative h-44 overflow-hidden rounded-2xl border border-border bg-secondary/50 sm:h-48">
+                      {[
+                        { name: "Maya", left: "28%", top: "32%", eta: "6 min" },
+                        { name: "Sam", left: "62%", top: "58%", eta: "2 min" },
+                        { name: "You", left: "46%", top: "78%", eta: null },
+                      ].map((pin) => (
+                        <div
+                          key={pin.name}
+                          className="absolute -translate-x-1/2 -translate-y-1/2"
+                          style={{ left: pin.left, top: pin.top }}
+                        >
+                          <div className="relative grid place-items-center">
+                            {pin.eta ? <span className="q-map-pin-pulse" aria-hidden /> : null}
+                            <span
+                              className={cn(
+                                "relative grid size-8 place-items-center rounded-full text-xs font-semibold ring-2 ring-card",
+                                pin.eta
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-foreground text-background",
+                              )}
+                            >
+                              {pin.name[0]}
+                            </span>
+                            {pin.eta ? (
+                              <span className="absolute top-9 whitespace-nowrap rounded-full bg-neutral-950/80 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
+                                {pin.eta}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 text-sm">
+                      <span className="text-foreground">Maya is 6 min away</span>
+                      <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                        <MapPin className="size-4" /> Sharing on
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
