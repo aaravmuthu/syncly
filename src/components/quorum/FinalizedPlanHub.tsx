@@ -52,6 +52,7 @@ export function FinalizedPlanHub({
     category: "dinner",
     headcount: Math.max(attendees.length, 1),
     carCount: cars.length || undefined,
+    requiresDriving: b.requiresDriving ?? cars.length > 0,
   });
 
   const dateLabel = windowStart

@@ -144,15 +144,17 @@ function DemoPage() {
         travelMinutes: top.option.travelMinutes,
         category,
         headcount: members.length,
+        requiresDriving: top.option.requiresDriving,
       })
     : null;
 
-  const transport = top
-    ? buildTransportPlan(
-        top.option,
-        members.map((m) => ({ profileId: m.id, name: m.name, constraints: m.constraints })),
-      )
-    : null;
+  const transport =
+    top && top.option.requiresDriving
+      ? buildTransportPlan(
+          top.option,
+          members.map((m) => ({ profileId: m.id, name: m.name, constraints: m.constraints })),
+        )
+      : null;
 
   return (
     <div className="paper-field min-h-dvh">

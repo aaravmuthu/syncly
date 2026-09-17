@@ -27,11 +27,16 @@ export function estimateCost(input: {
   category: string;
   headcount: number;
   carCount?: number;
+  /** False for options nobody needs to drive to (e.g. walkable venues) — no
+   *  car cost line should ever appear for those. Defaults true so existing
+   *  callers keep their current behavior until they pass this through. */
+  requiresDriving?: boolean;
 }): CostEstimate {
   const heads = Math.max(1, input.headcount);
   const cars = Math.max(1, input.carCount ?? Math.ceil(heads / 4));
   const miles =
     input.distanceMiles != null ? input.distanceMiles : (input.travelMinutes / 60) * MPH;
+  const requiresDriving = input.requiresDriving ?? true;
 
   const isFood = ["dinner", "party", "hangout"].includes(input.category);
   // Venue cost is a per-person ticket/entry unless the category is food-led,
@@ -40,7 +45,9 @@ export function estimateCost(input: {
   const entryMax = isFood ? 0 : Math.round(input.costMax);
   const foodMin = isFood ? Math.round(input.costMin) : Math.round(input.costMin * 0.35);
   const foodMax = isFood ? Math.round(input.costMax) : Math.round(input.costMax * 0.5);
-  const travel = Math.round(((miles * 2 * GAS_PER_MILE * cars) / heads) * 100) / 100;
+  const travel = requiresDriving
+    ? Math.round(((miles * 2 * GAS_PER_MILE * cars) / heads) * 100) / 100
+    : 0;
 
   const perPersonMin = Math.round(entryMin + foodMin + travel);
   const perPersonMax = Math.round(entryMax + foodMax + travel);
@@ -61,7 +68,14 @@ export function estimateCost(input: {
     lines: [
       ...(entryMax > 0 ? [{ label: "Entry / tickets", value: range(entryMin, entryMax) }] : []),
       { label: isFood ? "Food & drinks" : "Snacks & extras", value: range(foodMin, foodMax) },
-      { label: `Travel (${cars} ${cars === 1 ? "car" : "cars"}, split)`, value: money(travel) },
+      ...(requiresDriving
+        ? [
+            {
+              label: `Travel (${cars} ${cars === 1 ? "car" : "cars"}, split)`,
+              value: money(travel),
+            },
+          ]
+        : []),
     ],
   };
 }

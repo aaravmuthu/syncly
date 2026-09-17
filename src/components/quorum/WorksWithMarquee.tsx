@@ -1,13 +1,9 @@
-const BRANDS = [
-  "Google Maps",
-  "OpenStreetMap",
-  "Uber",
-  "Lyft",
-  "Venmo",
-  "Cash App",
-  "Supabase",
-  "Apple Pay",
-];
+// Every name here must be a service Syncly actually calls today — Mapbox
+// (map rendering), OpenStreetMap/Nominatim (geocoding), Geoapify (venue
+// search), Open-Meteo (weather) and Supabase (auth/data). Ride-hailing and
+// payment apps aren't wired up yet, so they don't belong in this row even
+// though "works with" reads softer than "powered by."
+const BRANDS = ["Mapbox", "OpenStreetMap", "Geoapify", "Open-Meteo", "Supabase"];
 
 export function WorksWithMarquee() {
   const row = [...BRANDS, ...BRANDS];

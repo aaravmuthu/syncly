@@ -159,6 +159,10 @@ export type ScoreBreakdown = {
   dietaryFit: number;
   transportFit: number;
   fairness: number;
+  /** Whether this option actually involves anyone driving. Drives whether a
+   *  per-car travel cost line or "Rides" plan should be shown at all — for
+   *  walkable options this is false and no car cost should ever appear. */
+  requiresDriving: boolean;
   /**
    * The actual number behind the headline score's largest input (62% weight):
    * a blend of the group's average preference satisfaction and its worst-off

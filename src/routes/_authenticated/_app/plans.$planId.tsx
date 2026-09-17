@@ -674,6 +674,7 @@ function PlanPage() {
                     distanceMiles: b.venue?.distanceMiles ?? null,
                     category: data.plan.category,
                     headcount,
+                    requiresDriving: b.requiresDriving,
                   });
                   return (
                     <div className="mt-4 rounded-2xl bg-secondary/60 p-3.5">
