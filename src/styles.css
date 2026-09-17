@@ -267,6 +267,21 @@
   animation: q-fade 0.22s ease-out both;
 }
 
+@keyframes q-typing-dot {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+@utility animate-typing-dot {
+  animation: q-typing-dot 1.1s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
 @keyframes q-shimmer {
   100% {
     transform: translateX(100%);

@@ -29,6 +29,10 @@ export default function VenueMapInner({
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const markers = useRef<Map<string, { marker: mapboxgl.Marker; el: HTMLButtonElement }>>(
+    new Map(),
+  );
+  const idKey = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
   // Only the first venue seeds the initial centre; keeping it out of the deps
   // stops the map from being torn down on every re-render.
@@ -59,17 +63,27 @@ export default function VenueMapInner({
     return () => {
       alive = false;
       setReady(false);
+      markers.current.forEach(({ marker }) => marker.remove());
+      markers.current.clear();
+      idKey.current = null;
       map.current?.remove();
       map.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  // Rebuilds markers only when the set of venues actually changes, so
+  // selecting one spot never tears down or hides the rest of the pins.
   useEffect(() => {
     const m = map.current;
     if (!m || !ready || venues.length === 0) return;
+    const key = venues.map((v) => v.id).join("|");
+    if (key === idKey.current) return;
+    idKey.current = key;
 
-    const markers: mapboxgl.Marker[] = [];
+    markers.current.forEach(({ marker }) => marker.remove());
+    markers.current.clear();
+
     try {
       const bounds = new mapboxgl.LngLatBounds();
 
@@ -114,7 +128,7 @@ export default function VenueMapInner({
           .setLngLat([v.lon, v.lat])
           .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(v.title))
           .addTo(m);
-        markers.push(marker);
+        markers.current.set(v.id, { marker, el });
         bounds.extend([v.lon, v.lat]);
       });
 
@@ -122,9 +136,21 @@ export default function VenueMapInner({
     } catch {
       /* a bad coordinate must never take the page down */
     }
-    return () => markers.forEach((mk) => mk.remove());
   }, [venues, onSelect, ready]);
 
+  // Highlights the selected pin and gently pans to it, without rebuilding
+  // or hiding the rest of the markers.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const selectedVenue = venues.find((v) => v.selected);
+    markers.current.forEach(({ el }, id) => {
+      el.classList.toggle("q-map-pin-active", id === selectedVenue?.id);
+    });
+    if (selectedVenue) {
+      m.easeTo({ center: [selectedVenue.lon, selectedVenue.lat], duration: 400 });
+    }
+  }, [venues, ready]);
 
   return <div ref={container} className={className ?? "h-64 w-full rounded-2xl sm:h-80"} />;
 }

@@ -416,7 +416,7 @@ function Dots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary"
+          className="h-1.5 w-1.5 animate-typing-dot rounded-full bg-primary"
           style={{ animationDelay: `${i * 120}ms` }}
         />
       ))}

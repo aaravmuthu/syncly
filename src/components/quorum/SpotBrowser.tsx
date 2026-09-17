@@ -117,17 +117,14 @@ export function SpotBrowser({
       lon: data.origin.lon,
       kind: "home" as const,
     };
-    const pins = (data.spots ?? [])
-      .filter((s) => (selected ? s.key === selected : true))
-      .slice(0, selected ? 1 : 12)
-      .map((s) => ({
-        id: s.key,
-        title: s.title,
-        lat: s.lat,
-        lon: s.lon,
-        selected: s.key === selected,
-        kind: s.kind,
-      }));
+    const pins = (data.spots ?? []).slice(0, 12).map((s) => ({
+      id: s.key,
+      title: s.title,
+      lat: s.lat,
+      lon: s.lon,
+      selected: s.key === selected,
+      kind: s.kind,
+    }));
     return [home, ...pins];
   }, [data, selected]);
 
