@@ -18,7 +18,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { CarpoolShield } from "@/components/quorum/guardian/CarpoolShield";
-import { WeatherCard, AvailabilityHeatmap } from "@/components/quorum/PlanInsights";
+import { PlanInsights } from "@/components/quorum/PlanInsights";
 import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
 import {
   CompromiseNote,
@@ -433,9 +433,8 @@ function PlanPage() {
           onAdded={() => void invalidate()}
         />
         <PlanConflictBanner planId={planId} title={data.plan.title} recs={data.recommendations} />
-        <WeatherCard planId={planId} />
         {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
-        <AvailabilityHeatmap planId={planId} />
+        <PlanInsights planId={planId} />
       </div>
 
       {data.recommendations.length > 0 ? (

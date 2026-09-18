@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
-import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "@/components/quorum/ui";
 import {
@@ -15,6 +14,7 @@ import { castVote } from "@/lib/quorum/plan.functions";
 import { applyAiCompromise } from "@/lib/quorum/ai.functions";
 import { sendMessage } from "@/lib/quorum/chat.functions";
 import { ChatSheetShell } from "./ChatSheetShell";
+import { AiGlyph } from "./AiGlyph";
 
 const STARTERS = [
   "Which option works best for everyone?",
@@ -116,7 +116,7 @@ export function ConciergeSheet({
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
       className="fixed bottom-24 left-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg"
     >
-      <Sparkles className="h-4 w-4" aria-hidden />
+      <AiGlyph className="h-4 w-4" />
       Ask AI
     </motion.button>
   );

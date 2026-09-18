@@ -15,11 +15,15 @@ export function PlaceAutocomplete({
   onChange,
   placeholder = "75034 or Frisco, TX",
   ariaLabel = "ZIP code or place",
+  showLocate = true,
 }: {
   value: string;
   onChange: (zip: string, place?: Suggestion) => void;
   placeholder?: string;
   ariaLabel?: string;
+  /** Hide the "Use my current location" link when a sibling field (e.g. an
+   *  address picker) already offers it and fills this field as a side effect. */
+  showLocate?: boolean;
 }) {
   const [text, setText] = useState(value);
   const [items, setItems] = useState<Suggestion[]>([]);
@@ -155,15 +159,17 @@ export function PlaceAutocomplete({
           </span>
         ) : null}
       </div>
-      <button
-        type="button"
-        onClick={useMyLocation}
-        disabled={locating}
-        className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
-      >
-        <span aria-hidden>📍</span>
-        {locating ? "Finding you…" : "Use my current location"}
-      </button>
+      {showLocate ? (
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={locating}
+          className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
+        >
+          <span aria-hidden>📍</span>
+          {locating ? "Finding you…" : "Use my current location"}
+        </button>
+      ) : null}
       {open && items.length > 0 ? (
         <ul className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
           {items.map((s) => (

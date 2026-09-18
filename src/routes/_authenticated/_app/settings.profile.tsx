@@ -30,6 +30,7 @@ function ProfilePage() {
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe) });
   const [form, setForm] = useState<Record<string, unknown>>({});
   const [uploading, setUploading] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const doUpload = useServerFn(uploadAvatar);
 
   useEffect(() => {
@@ -126,28 +127,44 @@ function ProfilePage() {
             ) : null}
           </div>
         </div>
-        <div>
-          <span className="text-sm font-medium">Avatar</span>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {AVATARS.map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => set("avatar_emoji", a)}
-                aria-label={`Use ${a} as avatar`}
-                aria-pressed={form["avatar_emoji"] === a}
-                className={cn(
-                  "tap-target h-11 w-11 rounded-2xl text-lg transition",
-                  form["avatar_emoji"] === a
-                    ? "bg-primary/15 ring-1 ring-primary/40"
-                    : "bg-secondary",
-                )}
-              >
-                {a}
-              </button>
-            ))}
+        {form["avatar_url"] && !showEmojiPicker ? (
+          <button
+            type="button"
+            className="text-left text-xs font-medium text-muted-foreground underline"
+            onClick={() => setShowEmojiPicker(true)}
+          >
+            Use an emoji instead
+          </button>
+        ) : (
+          <div>
+            <span className="text-sm font-medium">Avatar</span>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {AVATARS.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => {
+                    set("avatar_emoji", a);
+                    if (form["avatar_url"]) {
+                      set("avatar_url", null);
+                      save.mutate({ data: { avatar_url: null } });
+                    }
+                  }}
+                  aria-label={`Use ${a} as avatar`}
+                  aria-pressed={!form["avatar_url"] && form["avatar_emoji"] === a}
+                  className={cn(
+                    "tap-target h-11 w-11 rounded-2xl text-lg transition",
+                    !form["avatar_url"] && form["avatar_emoji"] === a
+                      ? "bg-primary/15 ring-1 ring-primary/40"
+                      : "bg-secondary",
+                  )}
+                >
+                  {a}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <Field label="Display name">
           <input
             className={inputClass}
@@ -210,7 +227,7 @@ function ProfilePage() {
       <Card className="mt-4 space-y-4">
         <SectionHeader
           icon={UserRound}
-          title="Phone"
+          title="Contact info"
           subtitle={
             isGuardian
               ? "Only shared with your linked teens if you allow it below."

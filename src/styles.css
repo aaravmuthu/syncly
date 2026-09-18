@@ -331,7 +331,8 @@
 
   /* An infinite animation just clamped to 0.01ms still cycles continuously —
      stop it outright instead of leaving a near-zero-duration loop running. */
-  .marquee-track {
+  .marquee-track,
+  .q-ai-pulse-ring {
     animation: none !important;
   }
 }
@@ -476,6 +477,17 @@
   width: 24px;
   background: color-mix(in oklab, var(--foreground) 12%, transparent);
   border: 1px dashed color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+/* Shared "this is AI, and it's alive" ring — reuses the radar-pulse grammar
+   at glyph scale. Uses currentColor so it reads correctly whether the
+   Sparkles icon sits on a tinted card (primary) or a solid pill (primary-foreground). */
+.q-ai-pulse-ring {
+  position: absolute;
+  inset: -40%;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in oklab, currentColor 60%, transparent);
+  animation: q-radar-pulse 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
 .q-map-pin-fair {
   height: 30px;

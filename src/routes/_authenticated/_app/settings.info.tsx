@@ -73,16 +73,10 @@ function InfoPage() {
       </Card>
 
       <Card className="mt-4 space-y-1">
-        <SectionHeader icon={ShieldCheck} title="Legal" />
+        <SectionHeader icon={ShieldCheck} title="Legal & support" />
         <div className="mt-1 divide-y divide-border">
           <LinkRow icon={Lock} label="Privacy Policy" to="/privacy" />
           <LinkRow icon={Info} label="Terms of Service" to="/terms" />
-        </div>
-      </Card>
-
-      <Card className="mt-4 space-y-1">
-        <SectionHeader icon={Mail} title="Support" />
-        <div className="mt-1">
           <LinkRow
             icon={Mail}
             label="Contact support"

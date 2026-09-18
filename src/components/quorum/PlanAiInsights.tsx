@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CloudRain, Sparkles } from "lucide-react";
+import { CloudRain } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Card } from "./ui";
+import { Button, Card, Pill } from "./ui";
 import { getCompromiseSummaries, getPlanBSuggestion, type PlanBSuggestion } from "@/lib/quorum/ai.functions";
 import { finalizePlan } from "@/lib/quorum/plan.functions";
+import { AiGlyph } from "./ai/AiGlyph";
 
 /** AI "why this works" lines, keyed by recommendation id. */
 export function useCompromiseSummaries(planId: string, enabled: boolean) {
@@ -21,7 +22,7 @@ export function CompromiseNote({ text }: { text?: string }) {
   if (!text) return null;
   return (
     <div className="mt-3 flex items-start gap-2 rounded-2xl border border-primary/25 bg-primary/5 px-3 py-2.5">
-      <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+      <AiGlyph className="mt-0.5 h-3.5 w-3.5 text-primary" />
       <p className="text-xs leading-relaxed">{text}</p>
     </div>
   );
@@ -57,7 +58,12 @@ export function PlanBGuardian({ planId }: { planId: string }) {
       <div className="flex items-start gap-3">
         <CloudRain className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">Weather guardian</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold">Weather guardian</p>
+            <Pill tone="accent" className="gap-1">
+              <AiGlyph className="h-3 w-3" /> AI
+            </Pill>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">{s.pitch}</p>
           {s.swapToId ? (
             <Button

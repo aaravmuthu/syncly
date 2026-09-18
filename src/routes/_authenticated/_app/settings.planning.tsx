@@ -121,13 +121,7 @@ function PlanningPage() {
             <PlaceAutocomplete
               value={String(form["zip_code"] ?? "")}
               onChange={(zip) => set("zip_code", zip)}
-            />
-          </Field>
-          <Field label="Home area" hint="Used only to estimate travel time">
-            <input
-              className={inputClass}
-              value={String(form["home_area"] ?? "")}
-              onChange={(e) => set("home_area", e.target.value)}
+              showLocate={false}
             />
           </Field>
           <Field label="Usual curfew" hint="Pre-fills your hard return time">

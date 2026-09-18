@@ -441,7 +441,7 @@ export function CreatePlanPanel({
               step={5}
               value={radius}
               onChange={(e) => setRadius(Number(e.target.value))}
-              className="mt-2 w-full accent-[hsl(var(--primary))]"
+              className="mt-2 w-full accent-primary"
             />
             <div className="flex justify-between text-[11px] text-muted-foreground">
               {RADIUS_OPTIONS.map((r) => (

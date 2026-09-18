@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
-import { Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/quorum/ui";
+import { Button, Pill } from "@/components/quorum/ui";
 import { vibeSearchSpots, type VibeSearchResult, type VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
+import { AiGlyph } from "./AiGlyph";
 
 const EXAMPLES = [
   "quiet patio, cheap, walkable",
@@ -46,9 +46,10 @@ export function VibeSearch({
 
   return (
     <div className="rounded-3xl border border-primary/25 bg-primary/5 p-4">
-      <div className="flex items-center gap-2">
-        <Wand2 className="h-4 w-4 text-primary" aria-hidden />
+      <div className="flex flex-wrap items-center gap-2">
+        <AiGlyph className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">Vibe search</h3>
+        <Pill tone="accent">AI</Pill>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
         Describe the mood, not the name. We'll match it to real spots near you.
@@ -126,7 +127,7 @@ export function VibeSearch({
                     </span>
                   </div>
                   <p className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" aria-hidden />
+                    <AiGlyph className="mt-0.5 h-3 w-3 text-primary" />
                     <span>{s.reason}</span>
                   </p>
                 </button>

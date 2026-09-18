@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
-import { ShieldCheck, Sparkles } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Card, Skeleton } from "@/components/quorum/ui";
 import { getGuardianAiSummary, type GuardianAiSummary as Summary } from "@/lib/quorum/aiplus.functions";
+import { AiGlyph } from "./AiGlyph";
 
 /** Plain-language AI evening summary for a parent about one linked teen. */
 export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: string | null }) {
@@ -30,7 +31,7 @@ export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: strin
   return (
     <Card className="border-primary/25 ring-1 ring-primary/10">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-primary" aria-hidden />
+        <AiGlyph className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold">Tonight, in plain language</h2>
       </div>
       <p className="mt-2 text-sm leading-relaxed">{s.summary}</p>

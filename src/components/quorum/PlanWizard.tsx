@@ -267,7 +267,7 @@ export function PlanWizard({
                       }}
                       className={`group relative overflow-hidden rounded-3xl border p-4 text-left transition-all duration-200 ease-out active:scale-95 hover:-translate-y-1 hover:shadow-2xl ${
                         active
-                          ? "border-primary/60 bg-primary/10 shadow-[0_0_35px_-8px_hsl(var(--primary))]"
+                          ? "border-primary/60 bg-primary/10 shadow-[0_0_35px_-8px_var(--primary)]"
                           : "border-border bg-secondary/40 hover:border-primary/40"
                       }`}
                     >
@@ -331,7 +331,7 @@ export function PlanWizard({
                       onClick={() => setBudget(b)}
                       className={`tap-target rounded-3xl border px-3 py-4 text-center transition active:scale-95 ${
                         active
-                          ? "border-primary/60 bg-primary/10 shadow-[0_0_28px_-10px_hsl(var(--primary))]"
+                          ? "border-primary/60 bg-primary/10 shadow-[0_0_28px_-10px_var(--primary)]"
                           : "border-border bg-secondary/40 hover:border-primary/40"
                       }`}
                     >
@@ -446,7 +446,7 @@ function RadarScan() {
           style={{
             animationDuration: "1.8s",
             background:
-              "conic-gradient(from 0deg, hsl(var(--primary) / 0.45), transparent 35%, transparent 100%)",
+              "conic-gradient(from 0deg, oklch(from var(--primary) l c h / 0.45), transparent 35%, transparent 100%)",
             maskImage: "radial-gradient(circle, black 62%, transparent 63%)",
             WebkitMaskImage: "radial-gradient(circle, black 62%, transparent 63%)",
           }}

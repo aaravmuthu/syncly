@@ -252,7 +252,7 @@ export function SpotBrowser({
                 step={5}
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
-                className="mt-1 w-full accent-[hsl(var(--primary))]"
+                className="mt-1 w-full accent-primary"
               />
             </div>
           </div>
