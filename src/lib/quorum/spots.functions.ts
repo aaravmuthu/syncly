@@ -260,7 +260,6 @@ export const saveSpot = createServerFn({ method: "POST" })
         lat: spot.lat,
         lon: spot.lon,
       } as never,
-      { onConflict: "profile_id,key" },
     );
     if (error) throw new Error(error.message);
     return { ok: true };
