@@ -236,7 +236,16 @@ export const saveSpot = createServerFn({ method: "POST" })
     const { spot } = data;
     const { data: me } = await supabase.rpc("my_profile_id");
 
-    const { error } = await supabase.from("saved_places").upsert(
+    // saved_places has no UPDATE policy, so an upsert's ON CONFLICT DO UPDATE
+    // path is blocked by RLS. Re-saving an existing bookmark deletes the old
+    // row first, then inserts fresh — both policies exist.
+    await supabase
+      .from("saved_places")
+      .delete()
+      .eq("profile_id", me as string)
+      .eq("key", spot.key);
+
+    const { error } = await supabase.from("saved_places").insert(
       {
         profile_id: me as string,
         key: spot.key,
@@ -251,7 +260,6 @@ export const saveSpot = createServerFn({ method: "POST" })
         lat: spot.lat,
         lon: spot.lon,
       } as never,
-      { onConflict: "profile_id,key" },
     );
     if (error) throw new Error(error.message);
     return { ok: true };
