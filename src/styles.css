@@ -322,17 +322,21 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  /* An infinite animation just clamped to 0.01ms still cycles continuously —
-     stop it outright instead of leaving a near-zero-duration loop running. */
+  /* Looping/decorative motion (marquees, pulse rings, shimmer, typing dots)
+     is what this preference exists to stop — kill it outright rather than
+     leaving a near-zero-duration loop cycling forever. Short, one-shot
+     interaction feedback (button presses, sheet slides, entrance fades) is
+     left untouched: it's brief, small-amplitude state feedback rather than
+     the sustained or parallax motion prefers-reduced-motion targets, and a
+     blanket 0.01ms clamp on every transition/animation was flattening it
+     into nothing. */
   .marquee-track,
-  .q-ai-pulse-ring {
+  .q-ai-pulse-ring,
+  .animate-typing-dot,
+  .skeleton-sheen,
+  .q-map-pin-pulse,
+  .q-avatar-pulse,
+  .q-mid-ring {
     animation: none !important;
   }
 }

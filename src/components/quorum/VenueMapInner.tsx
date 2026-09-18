@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Skeleton } from "@/components/quorum/ui";
+import { cn } from "@/lib/utils";
 
 export type MapVenue = {
   id: string;
@@ -152,5 +154,17 @@ export default function VenueMapInner({
     }
   }, [venues, ready]);
 
-  return <div ref={container} className={className ?? "h-64 w-full rounded-2xl sm:h-80"} />;
+  const shellClass = className ?? "h-64 w-full rounded-2xl sm:h-80";
+  return (
+    <div className={cn("relative overflow-hidden", shellClass)}>
+      <div ref={container} className="h-full w-full" />
+      {/* Mapbox's own style/tile load takes a beat after mount — cover the
+          empty container so that gap doesn't read as broken/frozen. */}
+      {!ready ? (
+        <div className="absolute inset-0">
+          <Skeleton className="h-full w-full rounded-none" />
+        </div>
+      ) : null}
+    </div>
+  );
 }

@@ -278,17 +278,15 @@ export function CreatePlanPanel({
           {venues.isFetching ? (
             <Skeleton className="h-24 rounded-3xl" />
           ) : venues.data?.venues.length ? (
-            venues.data.venues
-              .slice(0, 6)
-              .map((v) => (
-                <FairVenueCard
-                  key={v.key}
-                  venue={v}
-                  meProfileId={d?.me.profileId}
-                  selected={picked === v.key}
-                  onSelect={() => setPicked(picked === v.key ? null : v.key)}
-                />
-              ))
+            venues.data.venues.map((v) => (
+              <FairVenueCard
+                key={v.key}
+                venue={v}
+                meProfileId={d?.me.profileId}
+                selected={picked === v.key}
+                onSelect={() => setPicked(picked === v.key ? null : v.key)}
+              />
+            ))
           ) : (
             <p className="text-xs text-muted-foreground">
               No spots yet — add a ZIP below or widen the radius.

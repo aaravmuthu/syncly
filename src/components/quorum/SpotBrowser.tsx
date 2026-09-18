@@ -117,7 +117,7 @@ export function SpotBrowser({
       lon: data.origin.lon,
       kind: "home" as const,
     };
-    const pins = (data.spots ?? []).slice(0, 12).map((s) => ({
+    const pins = (data.spots ?? []).map((s) => ({
       id: s.key,
       title: s.title,
       lat: s.lat,

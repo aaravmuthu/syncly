@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** How many spots survive the group-midpoint shortlist (see browseSpots below). */
-const GROUP_SHORTLIST_SIZE = 9;
+const GROUP_SHORTLIST_SIZE = 24;
 
 export type BrowseSpot = {
   key: string;
@@ -86,7 +86,7 @@ export const browseSpots = createServerFn({ method: "POST" })
       categoriesOverride: data.categories ?? null,
       name: data.query ?? null,
       maxRadiusMiles: data.radiusMiles ?? 15,
-      limit: 20,
+      limit: 40,
     });
 
     let members: { profileId: string; name: string; lat: number | null; lon: number | null }[] = [];

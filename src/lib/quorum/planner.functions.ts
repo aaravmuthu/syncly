@@ -178,14 +178,14 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
         vibe: data.vibe ?? null,
         maxRadiusMiles: data.radiusMiles ?? 12,
         maxBudget: data.maxSpend ?? null,
-        limit: 8,
+        limit: 24,
       };
       const live = await searchVenuesGeoapify(query);
       const seeds = live.length ? live : queryVenuesNear(query);
 
       return {
         origin: { lat: origin.lat, lon: origin.lon, label: origin.label },
-        venues: seeds.slice(0, 8).map((v) => {
+        venues: seeds.slice(0, 24).map((v) => {
           const drives = drivesTo(bases, { lat: v.lat ?? null, lon: v.lon ?? null });
           const end = data.endTime ?? v.end;
           return {

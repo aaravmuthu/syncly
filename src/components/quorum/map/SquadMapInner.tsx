@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
-import { GlassIconButton, GlassPill } from "@/components/quorum/ui";
+import { GlassIconButton, GlassPill, Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 
 // The map renders full-viewport, behind AppShell's floating top bar and
@@ -428,6 +428,16 @@ export default function SquadMapInner({
   return (
     <div className={cn("relative overflow-hidden rounded-surface", className)}>
       <div ref={container} className="h-full w-full" />
+
+      {/* Mapbox's own style/tile load (after the chunk is already downloaded
+          and this component has mounted) can take a couple of seconds, during
+          which the container above is just an empty dark div — cover it with
+          a skeleton so that gap doesn't read as a frozen/broken page. */}
+      {!ready ? (
+        <div className="absolute inset-0 z-0">
+          <Skeleton className="h-full w-full rounded-none" />
+        </div>
+      ) : null}
 
       {/* Floating search pill: bottom-half on mobile (thumb reach), top on desktop */}
       <div className={cn("pointer-events-none absolute inset-x-3 z-10 flex justify-center", MAP_SEARCH_POSITION)}>
