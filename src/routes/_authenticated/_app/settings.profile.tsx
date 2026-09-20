@@ -71,7 +71,11 @@ function ProfilePage() {
       const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
       const res = await doUpload({ data: { dataUrl, ext } });
       set("avatar_url", res.avatar_url);
-      void qc.invalidateQueries({ queryKey: ["me"] });
+      qc.setQueryData(["me"], (old: unknown) =>
+        old && typeof old === "object"
+          ? { ...(old as Record<string, unknown>), avatar_url: res.avatar_url }
+          : old,
+      );
       toast.success("Photo updated");
     } catch (e) {
       toast.error("Couldn't upload that image", {
