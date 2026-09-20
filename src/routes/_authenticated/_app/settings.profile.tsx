@@ -41,8 +41,14 @@ function ProfilePage() {
 
   const save = useMutation({
     mutationFn: useServerFn(saveProfile),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["me"] });
+    onSuccess: (_res, vars) => {
+      // Merge the saved fields into the cached profile instead of
+      // invalidating — a refetch would reset the form and wipe fields the
+      // user is still editing (name, bio, a just-picked emoji).
+      const patch = (vars as { data?: Record<string, unknown> }).data ?? {};
+      qc.setQueryData(["me"], (old: unknown) =>
+        old && typeof old === "object" ? { ...(old as Record<string, unknown>), ...patch } : old,
+      );
       toast.success("Saved");
     },
     onError: (e: unknown) =>
