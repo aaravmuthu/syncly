@@ -147,7 +147,7 @@ function ProfilePage() {
                     set("avatar_emoji", a);
                     if (form["avatar_url"]) {
                       set("avatar_url", null);
-                      save.mutate({ data: { avatar_url: null } });
+                      save.mutate({ data: { avatar_url: null, avatar_emoji: a } });
                     }
                   }}
                   aria-label={`Use ${a} as avatar`}
