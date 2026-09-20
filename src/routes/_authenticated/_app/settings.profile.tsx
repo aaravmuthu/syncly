@@ -45,7 +45,7 @@ function ProfilePage() {
       // Merge the saved fields into the cached profile instead of
       // invalidating — a refetch would reset the form and wipe fields the
       // user is still editing (name, bio, a just-picked emoji).
-      const patch = (vars as { data?: Record<string, unknown> }).data ?? {};
+      const patch = (vars as unknown as { data?: Record<string, unknown> }).data ?? {};
       qc.setQueryData(["me"], (old: unknown) =>
         old && typeof old === "object" ? { ...(old as Record<string, unknown>), ...patch } : old,
       );
