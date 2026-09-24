@@ -84,7 +84,16 @@ export default {
       const headers = new Headers(request.headers);
       headers.set(CSP_NONCE_HEADER, nonce);
       const handler = await getServerEntry();
-      const response = await handler.fetch(new Request(request, { headers }), env, ctx);
+      const hasBody = request.method !== "GET" && request.method !== "HEAD";
+      const forwarded = new Request(request.url, {
+        method: request.method,
+        headers,
+        body: hasBody ? request.body : undefined,
+        redirect: request.redirect,
+        signal: request.signal,
+        ...(hasBody ? { duplex: "half" } : {}),
+      } as RequestInit);
+      const response = await handler.fetch(forwarded, env, ctx);
       const normalized = await normalizeCatastrophicSsrResponse(response);
       // normalizeCatastrophicSsrResponse swaps in the static error page on a crash.
       return withSecurityHeaders(normalized, normalized === response ? nonce : null);
