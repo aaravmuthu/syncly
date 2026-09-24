@@ -39,10 +39,16 @@ function ProfilePage() {
 
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
-  const save = useMutation({
+  const save = useMutation<unknown, Error, { data: Record<string, unknown> }>({
     mutationFn: useServerFn(saveProfile),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["me"] });
+    onSuccess: (_res, vars) => {
+      // Merge the saved fields into the cached profile instead of
+      // invalidating — a refetch would reset the form and wipe fields the
+      // user is still editing (name, bio, a just-picked emoji).
+      const patch = vars.data;
+      qc.setQueryData(["me"], (old: unknown) =>
+        old && typeof old === "object" ? { ...(old as Record<string, unknown>), ...patch } : old,
+      );
       toast.success("Saved");
     },
     onError: (e: unknown) =>
@@ -65,7 +71,11 @@ function ProfilePage() {
       const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
       const res = await doUpload({ data: { dataUrl, ext } });
       set("avatar_url", res.avatar_url);
-      void qc.invalidateQueries({ queryKey: ["me"] });
+      qc.setQueryData(["me"], (old: unknown) =>
+        old && typeof old === "object"
+          ? { ...(old as Record<string, unknown>), avatar_url: res.avatar_url }
+          : old,
+      );
       toast.success("Photo updated");
     } catch (e) {
       toast.error("Couldn't upload that image", {
@@ -147,7 +157,7 @@ function ProfilePage() {
                     set("avatar_emoji", a);
                     if (form["avatar_url"]) {
                       set("avatar_url", null);
-                      save.mutate({ data: { avatar_url: null } });
+                      save.mutate({ data: { avatar_url: null, avatar_emoji: a } });
                     }
                   }}
                   aria-label={`Use ${a} as avatar`}
