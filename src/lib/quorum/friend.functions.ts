@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveMyProfileId } from "./me";
 import type { FriendProfile } from "./friend";
 
 export const getFriendProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { profileId: string }) => d)
+  .inputValidator(z.object({ profileId: v.id }))
   .handler(async ({ data, context }): Promise<FriendProfile> => {
     const me = await resolveMyProfileId(context.supabase);
     const { buildFriendProfile } = await import("./friend.server");
@@ -22,7 +24,7 @@ export const getNicknames = createServerFn({ method: "GET" })
 
 export const setNickname = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { profileId: string; nickname: string }) => d)
+  .inputValidator(z.object({ profileId: v.id, nickname: v.text(60) }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { saveNickname } = await import("./friend.server");
@@ -31,7 +33,7 @@ export const setNickname = createServerFn({ method: "POST" })
 
 export const setContactGhost = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { profileId: string; hidden: boolean }) => d)
+  .inputValidator(z.object({ profileId: v.id, hidden: z.boolean() }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { setContactHidden } = await import("./friend.server");
@@ -40,7 +42,7 @@ export const setContactGhost = createServerFn({ method: "POST" })
 
 export const requestLocation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { profileId: string }) => d)
+  .inputValidator(z.object({ profileId: v.id }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { requestLocationFrom } = await import("./friend.server");

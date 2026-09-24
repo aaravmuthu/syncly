@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type {
   ConciergeAction,
@@ -49,7 +51,9 @@ export type ConciergeAnswer = {
  */
 export const askPlanConcierge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; question: string; history?: ConciergeTurn[] }) => d)
+  .inputValidator(
+    z.object({ planId: v.id, question: v.reqText(2000), history: v.conciergeHistory.optional() }),
+  )
   .handler(async ({ data, context }): Promise<ConciergeAnswer> => {
     const question = data.question.trim();
     if (!question) throw new Error("Ask a question first");
@@ -246,7 +250,9 @@ export type VibeSearchResult = {
  */
 export const vibeSearchSpots = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { query: string; kind?: "food" | "activity"; radiusMiles?: number | null }) => d)
+  .inputValidator(
+    z.object({ query: v.text(500), kind: v.spotKind.optional(), radiusMiles: v.optAmount(500) }),
+  )
   .handler(async ({ data, context }): Promise<VibeSearchResult> => {
     const query = data.query.trim();
     if (!query) throw new Error("Describe the vibe first");
@@ -339,7 +345,7 @@ export const vibeSearchSpots = createServerFn({ method: "POST" })
 /** Plain-language summary of one linked teen's plans, rides and check-ins. */
 export const getGuardianAiSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { teenProfileId?: string | null }) => d)
+  .inputValidator(z.object({ teenProfileId: v.optId }))
   .handler(async ({ data, context }): Promise<GuardianAiSummary> => {
     const { supabase } = context;
     const { data: myId } = await supabase.rpc("my_profile_id");
@@ -422,7 +428,7 @@ const LIVE_STATUSES = new Set(["collecting", "recommending", "voting"]);
  */
 export const askSyncly = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { question: string; history?: ConciergeTurn[] }) => d)
+  .inputValidator(z.object({ question: v.reqText(2000), history: v.conciergeHistory.optional() }))
   .handler(async ({ data, context }): Promise<SynclyAnswer> => {
     const question = data.question.trim();
     if (!question) throw new Error("Ask a question first");

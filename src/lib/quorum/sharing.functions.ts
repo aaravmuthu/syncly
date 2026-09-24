@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveMyProfileId } from "./me";
 import type { FriendPin, GhostChoice, ShareMode, SharePeer, SharingState } from "./sharing";
@@ -29,7 +31,9 @@ export const getSharingState = createServerFn({ method: "GET" })
 
 export const shareLocationWith = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { viewerProfileId: string; mode: ShareMode }) => d)
+  .inputValidator(
+    z.object({ viewerProfileId: v.id, mode: z.enum(["hour", "end_of_day", "indefinite"]) }),
+  )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { setShare } = await import("./sharing.server");
@@ -38,7 +42,7 @@ export const shareLocationWith = createServerFn({ method: "POST" })
 
 export const stopSharingWith = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { viewerProfileId: string }) => d)
+  .inputValidator(z.object({ viewerProfileId: v.id }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { stopShare } = await import("./sharing.server");
@@ -47,7 +51,7 @@ export const stopSharingWith = createServerFn({ method: "POST" })
 
 export const stopWatchingFriend = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { ownerProfileId: string }) => d)
+  .inputValidator(z.object({ ownerProfileId: v.id }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { stopWatching } = await import("./sharing.server");
@@ -56,7 +60,7 @@ export const stopWatchingFriend = createServerFn({ method: "POST" })
 
 export const setGhostMode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { choice: GhostChoice }) => d)
+  .inputValidator(z.object({ choice: z.enum(["hour", "tomorrow", "until_reenabled", "resume"]) }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { setGhostMode: apply } = await import("./sharing.server");
@@ -65,7 +69,7 @@ export const setGhostMode = createServerFn({ method: "POST" })
 
 export const nudgeFriendPin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { profileId: string }) => d)
+  .inputValidator(z.object({ profileId: v.id }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { nudgeFriend } = await import("./sharing.server");

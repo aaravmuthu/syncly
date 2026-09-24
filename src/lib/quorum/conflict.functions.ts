@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type PlanConflict = {
@@ -12,7 +14,7 @@ export type PlanConflict = {
 /** Open conflicts for a plan plus the AI/Geoapify alternatives on the ballot. */
 export const getPlanConflicts = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
@@ -47,7 +49,13 @@ export const CONFLICT_REASONS: { id: ConflictReason; label: string; detail: stri
  */
 export const flagConflict = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; kind?: ConflictReason; detail?: string }) => d)
+  .inputValidator(
+    z.object({
+      planId: v.id,
+      kind: z.enum(["budget", "curfew", "distance", "schedule", "manual"]).optional(),
+      detail: v.text(500).optional(),
+    }),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
@@ -112,7 +120,7 @@ export const flagConflict = createServerFn({ method: "POST" })
 /** Runs the automatic constraint sweep (curfew / budget / distance). */
 export const runConflictSweep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }) => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
@@ -128,7 +136,7 @@ export const runConflictSweep = createServerFn({ method: "POST" })
  */
 export const castResolutionVote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; recommendationId: string }) => d)
+  .inputValidator(z.object({ planId: v.id, recommendationId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -186,7 +194,7 @@ export const castResolutionVote = createServerFn({ method: "POST" })
 /** 1-tap attendance confirmation straight from the dashboard timeline. */
 export const confirmAttendance = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; attending: boolean }) => d)
+  .inputValidator(z.object({ planId: v.id, attending: z.boolean() }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");

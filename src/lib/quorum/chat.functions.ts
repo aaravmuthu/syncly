@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string; planId?: string | null }) => d)
+  .inputValidator(z.object({ groupId: v.id, planId: v.optId }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -47,13 +49,13 @@ export const listMessages = createServerFn({ method: "GET" })
 export const sendMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      groupId: string;
-      planId?: string | null;
-      content: string;
-      mediaUrl?: string | null;
-      replyToId?: string | null;
-    }) => d,
+    z.object({
+      groupId: v.id,
+      planId: v.optId,
+      content: v.text(4000),
+      mediaUrl: v.optHttpsUrl,
+      replyToId: v.optId,
+    }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -79,7 +81,7 @@ export const sendMessage = createServerFn({ method: "POST" })
 
 export const markRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { messageIds: string[] }) => d)
+  .inputValidator(z.object({ messageIds: z.array(v.id).max(500) }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const ids = (data.messageIds ?? []).slice(0, 200);
@@ -97,7 +99,7 @@ export const markRead = createServerFn({ method: "POST" })
 
 export const uploadChatImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { dataUrl: string; ext?: string }) => d)
+  .inputValidator(z.object({ dataUrl: v.dataUrl, ext: v.text(10).optional() }))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);
@@ -124,7 +126,9 @@ export const uploadChatImage = createServerFn({ method: "POST" })
 
 export const postRideUpdate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string; planId?: string | null; status: string; seats?: number | null }) => d)
+  .inputValidator(
+    z.object({ groupId: v.id, planId: v.optId, status: v.reqText(120), seats: v.optAmount(50) }),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");

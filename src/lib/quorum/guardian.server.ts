@@ -31,20 +31,42 @@ export function metersBetween(
 /* Pairing                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Every teen keeps one permanent 6-digit sync code. */
-export async function ensureSyncCode(profileId: string): Promise<string> {
+/** How long a revealed sync code stays usable. Long enough to text a parent. */
+const SYNC_CODE_TTL_MS = 60 * 60 * 1000;
+/** Failed pairing guesses allowed per account per hour before we lock them out. */
+const MAX_FAILED_LINKS_PER_HOUR = 5;
+
+/**
+ * A teen's current 6-digit sync code. Codes are short-lived and single-use: a
+ * 6-digit space is guessable if codes live forever, so each one expires an
+ * hour after it's issued and is cleared once a parent links with it.
+ */
+export async function ensureSyncCode(
+  profileId: string,
+): Promise<{ code: string; expiresAt: string }> {
   const db = await admin();
   const { data: row } = await db
     .from("profiles")
-    .select("sync_code")
+    .select("sync_code, sync_code_expires_at")
     .eq("id", profileId)
     .maybeSingle();
-  if (row?.sync_code) return row.sync_code;
+  if (row?.sync_code && row.sync_code_expires_at) {
+    // Reuse a code with plenty of life left so a re-opened card shows the same one.
+    const remaining = new Date(row.sync_code_expires_at).getTime() - Date.now();
+    if (remaining > SYNC_CODE_TTL_MS / 4) {
+      return { code: row.sync_code, expiresAt: row.sync_code_expires_at };
+    }
+  }
 
+  const { randomInt } = await import("node:crypto");
   for (let attempt = 0; attempt < 8; attempt++) {
-    const code = String(Math.floor(Math.random() * 1_000_000)).padStart(6, "0");
-    const { error } = await db.from("profiles").update({ sync_code: code }).eq("id", profileId);
-    if (!error) return code;
+    const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+    const expiresAt = new Date(Date.now() + SYNC_CODE_TTL_MS).toISOString();
+    const { error } = await db
+      .from("profiles")
+      .update({ sync_code: code, sync_code_expires_at: expiresAt })
+      .eq("id", profileId);
+    if (!error) return { code, expiresAt };
   }
   throw new Error("Could not generate a sync code — try again");
 }
@@ -54,14 +76,37 @@ export async function linkTeenByCode(guardianProfileId: string, rawCode: string)
   if (code.length !== 6) throw new Error("Enter the 6-digit code from your teen's profile");
 
   const db = await admin();
+  const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count: recentFailures } = await db
+    .from("guardian_link_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", guardianProfileId)
+    .eq("succeeded", false)
+    .gte("created_at", since);
+  if ((recentFailures ?? 0) >= MAX_FAILED_LINKS_PER_HOUR) {
+    throw new Error("Too many incorrect codes. Wait an hour, then ask your teen for a fresh code.");
+  }
+  const recordAttempt = (succeeded: boolean) =>
+    db.from("guardian_link_attempts").insert({ profile_id: guardianProfileId, succeeded });
+
   const { data: teen } = await db
     .from("profiles")
     .select("id, display_name, account_type")
     .eq("sync_code", code)
+    .gt("sync_code_expires_at", new Date().toISOString())
     .maybeSingle();
-  if (!teen) throw new Error("That code doesn't match any account");
+  if (!teen) {
+    await recordAttempt(false);
+    throw new Error("That code doesn't match, or it has expired. Ask your teen for a fresh one.");
+  }
   if (teen.id === guardianProfileId) throw new Error("That's your own code");
   if (teen.account_type === "guardian") throw new Error("That code belongs to a parent account");
+  await recordAttempt(true);
+  // Single-use: burn the code so it can't link a second account.
+  await db
+    .from("profiles")
+    .update({ sync_code: null, sync_code_expires_at: null })
+    .eq("id", teen.id);
 
   const { error } = await db
     .from("guardian_links")

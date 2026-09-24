@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 
 /**
  * Public, token-scoped. A parent sees exactly one plan's logistics — never the
  * group's members, private answers, or anything else about their child's account.
  */
 export const getApproval = createServerFn({ method: "GET" })
-  .inputValidator((d: { token: string }) => d)
+  .inputValidator(z.object({ token: v.token }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
@@ -62,7 +64,11 @@ export const getApproval = createServerFn({ method: "GET" })
 
 export const respondToApproval = createServerFn({ method: "POST" })
   .inputValidator(
-    (d: { token: string; decision: "approved" | "approved_with_condition" | "declined"; condition?: string }) => d,
+    z.object({
+      token: v.token,
+      decision: z.enum(["approved", "approved_with_condition", "declined"]),
+      condition: v.text(500).optional(),
+    }),
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -180,7 +186,7 @@ export type ParentSummary = {
  * curfew and home-distance.
  */
 export const getParentSummary = createServerFn({ method: "GET" })
-  .inputValidator((d: { planId: string; sig: string }) => d)
+  .inputValidator(z.object({ planId: v.id, sig: v.token }))
   .handler(async ({ data }): Promise<ParentSummary | null> => {
     const { verifyPlanSummarySig } = await import("./summary-link.server");
     if (!verifyPlanSummarySig(data.planId, data.sig)) return null;
@@ -368,7 +374,12 @@ export const getParentSummary = createServerFn({ method: "GET" })
  */
 export const parentRespondToPlan = createServerFn({ method: "POST" })
   .inputValidator(
-    (d: { planId: string; sig: string; decision: "approved" | "approved_with_condition"; note?: string }) => d,
+    z.object({
+      planId: v.id,
+      sig: v.token,
+      decision: z.enum(["approved", "approved_with_condition"]),
+      note: v.text(500).optional(),
+    }),
   )
   .handler(async ({ data }) => {
     const { verifyPlanSummarySig } = await import("./summary-link.server");

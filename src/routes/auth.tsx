@@ -6,12 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { SocialButtons } from "@/components/quorum/SocialButtons";
+import { safeRedirectPath } from "@/lib/safe-dom";
 
 type Mode = "signin" | "signup" | "reset";
 
 function safeNext(next: string | undefined) {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/home";
-  return next;
+  return safeRedirectPath(next, "/home");
 }
 
 const TITLE = `Sign in — ${BRAND.name}`;

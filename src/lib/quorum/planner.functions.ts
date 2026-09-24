@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { PlanCategory } from "./types";
 
@@ -36,7 +38,7 @@ export type PlanDefaults = {
 /** Everything the Create Plan screen needs to open pre-filled. */
 export const getPlanDefaults = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string }) => d)
+  .inputValidator(z.object({ groupId: v.id }))
   .handler(async ({ data, context }): Promise<PlanDefaults> => {
     const { supabase } = context;
     const { data: myId } = await supabase.rpc("my_profile_id");
@@ -138,15 +140,15 @@ export type FairVenue = {
 export const previewFairPointVenues = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      groupId: string;
-      category: PlanCategory;
-      vibe?: string | null;
-      radiusMiles?: number | null;
-      zipOverride?: string | null;
-      maxSpend?: number | null;
-      endTime?: string | null;
-    }) => d,
+    z.object({
+      groupId: v.id,
+      category: v.planCategory,
+      vibe: v.optText(500),
+      radiusMiles: v.optAmount(500),
+      zipOverride: v.optText(10),
+      maxSpend: v.optAmount(100_000),
+      endTime: v.optText(40),
+    }),
   )
   .handler(
     async ({
@@ -221,13 +223,13 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
 export const launchAiPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      groupId: string;
-      prompt: string;
-      useDefaults?: boolean;
-      estCostMin?: number | null;
-      estCostMax?: number | null;
-    }) => d,
+    z.object({
+      groupId: v.id,
+      prompt: v.reqText(2000),
+      useDefaults: z.boolean().optional(),
+      estCostMin: v.optAmount(100_000),
+      estCostMax: v.optAmount(100_000),
+    }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;

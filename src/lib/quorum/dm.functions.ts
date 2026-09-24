@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** Finds (or creates) the 1-on-1 thread between me and another profile. */
 export const openThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { peerId: string }) => d)
+  .inputValidator(z.object({ peerId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -151,7 +153,7 @@ export const listInbox = createServerFn({ method: "GET" })
 /** Full DM thread: messages, reactions, peer profile and their live telemetry. */
 export const getThread = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string }) => d)
+  .inputValidator(z.object({ threadId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -234,13 +236,14 @@ export const getThread = createServerFn({ method: "GET" })
 export const sendDirect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      threadId: string;
-      content?: string;
-      kind?: "text" | "location" | "venue" | "voice" | "system";
-      mediaUrl?: string | null;
-      meta?: Record<string, unknown>;
-    }) => d,
+    z.object({
+      threadId: v.id,
+      content: v.text(4000).optional(),
+      // "system" rows are server-generated only; clients can't forge them.
+      kind: z.enum(["text", "location", "venue", "voice"]).optional(),
+      mediaUrl: v.optHttpsUrl,
+      meta: v.messageMeta.optional(),
+    }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -273,7 +276,7 @@ export const sendDirect = createServerFn({ method: "POST" })
 
 export const markThreadRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string }) => d)
+  .inputValidator(z.object({ threadId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -289,7 +292,7 @@ export const markThreadRead = createServerFn({ method: "POST" })
 
 export const toggleReaction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { messageId: string; emoji: string }) => d)
+  .inputValidator(z.object({ messageId: v.id, emoji: v.emoji.min(1) }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -361,7 +364,7 @@ export const listContacts = createServerFn({ method: "GET" })
 /** Uploads a recorded voice note and returns a long-lived signed URL. */
 export const uploadVoiceNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { dataUrl: string }) => d)
+  .inputValidator(z.object({ dataUrl: v.dataUrl }))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);

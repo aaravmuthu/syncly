@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MagicDraft } from "./ai.server";
 import type { PlanCategory } from "./types";
@@ -18,7 +20,7 @@ export type MagicPlanResult = MagicDraft & {
  */
 export const magicPlanDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { prompt: string; fallbackZip?: string | null }) => d)
+  .inputValidator(z.object({ prompt: v.reqText(2000), fallbackZip: v.optText(10) }))
   .handler(async ({ data }): Promise<MagicPlanResult> => {
     const prompt = data.prompt.trim();
     if (!prompt) throw new Error("Describe the plan first");
@@ -69,7 +71,7 @@ export const magicPlanDraft = createServerFn({ method: "POST" })
  */
 export const getCompromiseSummaries = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }): Promise<Record<string, string>> => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
@@ -91,7 +93,7 @@ export type PlanBSuggestion = {
 /** Weather guardian: outdoor pick + bad forecast → one-click indoor swap. */
 export const getPlanBSuggestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }): Promise<PlanBSuggestion> => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
@@ -115,7 +117,7 @@ export type CompromisePlanResult = {
 /** Reads private constraints server-side and returns one group-safe compromise. */
 export const getAiCompromise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }): Promise<CompromisePlanResult> => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
@@ -138,9 +140,7 @@ export const getAiCompromise = createServerFn({ method: "POST" })
 /** Host-only: applies the suggested start time and/or option to the plan. */
 export const applyAiCompromise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(
-    (d: { planId: string; startTime?: string | null; recommendationId?: string | null }) => d,
-  )
+  .inputValidator(z.object({ planId: v.id, startTime: v.optText(40), recommendationId: v.optId }))
   .handler(async ({ data, context }) => {
     const { data: isOwner } = await context.supabase.rpc("is_plan_owner", { _plan_id: data.planId });
     if (!isOwner) throw new Error("Only the host can apply a compromise");

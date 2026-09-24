@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { oauth, type AuthorizationDetails } from "@/lib/oauth-consent";
+import { isHttpUrl } from "@/lib/safe-dom";
 
 
 export const Route = createFileRoute("/.lovable/oauth/consent")({
@@ -62,9 +63,9 @@ function Consent() {
       return;
     }
     const target = data?.redirect_url ?? data?.redirect_to;
-    if (!target) {
+    if (!target || !isHttpUrl(target)) {
       setBusy(false);
-      setError("No redirect returned by the authorization server.");
+      setError("No valid redirect returned by the authorization server.");
       return;
     }
     window.location.href = target;

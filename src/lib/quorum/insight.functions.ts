@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AVAILABILITY_SLOTS, type AvailabilityCell } from "./availability";
 import type { ConstraintPayload } from "./types";
@@ -10,7 +12,7 @@ import type { Forecast } from "./weather";
  */
 export const getAvailabilityHeatmap = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }): Promise<{ cells: AvailabilityCell[]; answered: number; total: number }> => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
@@ -43,7 +45,7 @@ export const getAvailabilityHeatmap = createServerFn({ method: "GET" })
 /** Live forecast anchored on the chosen venue's coordinates (ZIP as fallback). */
 export const getPlanWeather = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }): Promise<Forecast | null> => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) return null;
@@ -114,7 +116,12 @@ export const listNotifications = createServerFn({ method: "GET" })
 
 export const markNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { ids?: string[] } | undefined) => d ?? {})
+  .inputValidator(
+    z
+      .object({ ids: z.array(v.id).max(500).optional() })
+      .optional()
+      .transform((d) => d ?? {}),
+  )
   .handler(async ({ data, context }) => {
     const { data: me } = await context.supabase.rpc("my_profile_id");
     if (!me) return { ok: false };
@@ -127,7 +134,7 @@ export const markNotificationsRead = createServerFn({ method: "POST" })
 /** Group memory: aggregate patterns used to pre-fill future plans. */
 export const getGroupMemory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string }) => d)
+  .inputValidator(z.object({ groupId: v.id }))
   .handler(async ({ data, context }) => {
     const { data: allowed } = await context.supabase.rpc("is_group_member", { _group_id: data.groupId });
     if (!allowed) return null;

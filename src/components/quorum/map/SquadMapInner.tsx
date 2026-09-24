@@ -20,6 +20,7 @@ import {
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
 import { GlassIconButton, GlassPill, Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
+import { pinSpan, safeImageUrl } from "@/lib/safe-dom";
 
 // The map renders full-viewport, behind AppShell's floating top bar and
 // bottom tab bar (both floating glass pills now, on every screen, not just
@@ -340,20 +341,30 @@ export default function SquadMapInner({
         const speed =
           p.speedMph && p.speedMph >= 2 ? `${Math.round(p.speedMph)} mph` : (p.motion ?? "Idle");
         const lowBattery = p.batteryPct != null && p.batteryPct <= 20;
-        el.innerHTML = `
-          <span class="q-avatar-pulse"></span>
-          <span class="q-avatar-face">${
-            p.avatarUrl
-              ? `<img src="${p.avatarUrl}" alt="" />`
-              : `<span class="q-avatar-initials">${p.initials}</span>`
-          }</span>
-          ${
-            p.heading != null
-              ? `<span class="q-avatar-heading" style="transform:rotate(${p.heading}deg)"></span>`
-              : ""
-          }
-          ${lowBattery ? `<span class="q-avatar-battery-low" title="${p.batteryPct}% battery">${p.batteryPct}</span>` : ""}
-          <span class="q-avatar-meta">${speed}</span>`;
+        // Built node-by-node, never innerHTML: names, avatar URLs and status
+        // labels are user-controlled, so they may only reach the DOM as text.
+        const face = pinSpan("q-avatar-face");
+        const avatarSrc = safeImageUrl(p.avatarUrl);
+        if (avatarSrc) {
+          const img = document.createElement("img");
+          img.src = avatarSrc;
+          img.alt = "";
+          face.append(img);
+        } else {
+          face.append(pinSpan("q-avatar-initials", p.initials));
+        }
+        el.append(pinSpan("q-avatar-pulse"), face);
+        if (p.heading != null && Number.isFinite(Number(p.heading))) {
+          const heading = pinSpan("q-avatar-heading");
+          heading.style.transform = `rotate(${Number(p.heading)}deg)`;
+          el.append(heading);
+        }
+        if (lowBattery) {
+          const battery = pinSpan("q-avatar-battery-low", String(p.batteryPct));
+          battery.title = `${p.batteryPct}% battery`;
+          el.append(battery);
+        }
+        el.append(pinSpan("q-avatar-meta", speed));
         el.addEventListener("click", () => {
           setSelected(p.id);
           m.easeTo({ center: [p.lon, p.lat], zoom: 15, duration: 900, essential: true });
@@ -382,7 +393,7 @@ export default function SquadMapInner({
       el.type = "button";
       el.className = cn("q-place-pin", pl.active && "q-place-pin-active");
       el.setAttribute("aria-label", pl.title);
-      el.innerHTML = `<span class="q-place-dot"></span><span class="q-place-label">${pl.title}</span>`;
+      el.append(pinSpan("q-place-dot"), pinSpan("q-place-label", pl.title));
       el.addEventListener("click", () =>
         m.easeTo({ center: [pl.lon, pl.lat], zoom: 15, duration: 900, essential: true }),
       );
@@ -392,7 +403,12 @@ export default function SquadMapInner({
     if (mid) {
       const el = document.createElement("div");
       el.className = "q-mid-pin";
-      el.innerHTML = `<span class="q-mid-ring"></span><span class="q-mid-ring q-mid-ring-2"></span><span class="q-mid-core"></span><span class="q-mid-label">Fair midpoint</span>`;
+      el.append(
+        pinSpan("q-mid-ring"),
+        pinSpan("q-mid-ring q-mid-ring-2"),
+        pinSpan("q-mid-core"),
+        pinSpan("q-mid-label", "Fair midpoint"),
+      );
       add(el, mid.lat, mid.lon);
     }
 

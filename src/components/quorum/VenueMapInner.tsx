@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
+import { pinSpan } from "@/lib/safe-dom";
 
 export type MapVenue = {
   id: string;
@@ -117,13 +118,15 @@ export default function VenueMapInner({
                 : v.kind === "activity"
                   ? "\u2726"
                   : "\u25CF";
-        el.innerHTML =
-          v.kind === "person"
-            ? `<span class="q-map-pin-pulse"></span><span class="q-map-pin-initials">${v.initials ?? "?"}</span>`
-            : `<span class="q-map-pin-icon">${icon}</span>` +
-              (v.kind === "home" || v.kind === "fair" || v.kind === "zone"
-                ? ""
-                : `<span class="q-map-pin-rank">${v.rank ?? "\u2022"}</span>`);
+        // Text only -- initials come from user display names, so never innerHTML.
+        if (v.kind === "person") {
+          el.append(pinSpan("q-map-pin-pulse"), pinSpan("q-map-pin-initials", v.initials ?? "?"));
+        } else {
+          el.append(pinSpan("q-map-pin-icon", icon));
+          if (v.kind !== "home" && v.kind !== "fair" && v.kind !== "zone") {
+            el.append(pinSpan("q-map-pin-rank", String(v.rank ?? "\u2022")));
+          }
+        }
         el.setAttribute("aria-label", v.title);
         el.addEventListener("click", () => onSelect?.(v.id));
         const marker = new mapboxgl.Marker({ element: el })

@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /** How many spots survive the group-midpoint shortlist (see browseSpots below). */
@@ -37,13 +39,13 @@ export type BrowseSpotsResult = {
 export const browseSpots = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      categories?: string | null;
-      query?: string | null;
-      radiusMiles?: number | null;
-      groupId?: string | null;
-      kind?: "food" | "activity";
-    }) => d,
+    z.object({
+      categories: v.optText(500),
+      query: v.optText(500),
+      radiusMiles: v.optAmount(500),
+      groupId: v.optId,
+      kind: v.spotKind.optional(),
+    }),
   )
   .handler(async ({ data, context }): Promise<BrowseSpotsResult> => {
     const { supabase, userId } = context;
@@ -160,7 +162,7 @@ export const browseSpots = createServerFn({ method: "POST" })
 /** Adds a browsed spot to a plan as a votable option (plan host only). */
 export const addSpotToPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; spot: BrowseSpot }) => d)
+  .inputValidator(z.object({ planId: v.id, spot: v.browseSpot }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { spot, planId } = data;
@@ -230,7 +232,7 @@ export type SavedPlace = {
 /** Bookmarks a browsed spot to the signed-in member's own saved list. */
 export const saveSpot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { spot: BrowseSpot }) => d)
+  .inputValidator(z.object({ spot: v.browseSpot }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { spot } = data;
@@ -268,7 +270,7 @@ export const saveSpot = createServerFn({ method: "POST" })
 /** Removes a spot from the signed-in member's saved list. */
 export const unsaveSpot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { key: string }) => d)
+  .inputValidator(z.object({ key: v.reqText(300) }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");

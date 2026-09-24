@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { VenueInsight } from "./reviews.server";
 
@@ -6,13 +8,13 @@ import type { VenueInsight } from "./reviews.server";
 export const getVenueInsight = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      name: string;
-      address?: string | null;
-      cuisine?: string | null;
-      kind?: string | null;
-      priceLevel?: string | null;
-    }) => d,
+    z.object({
+      name: v.reqText(300),
+      address: v.optText(500),
+      cuisine: v.optText(200),
+      kind: v.optText(40),
+      priceLevel: v.optText(20),
+    }),
   )
   .handler(async ({ data }): Promise<VenueInsight> => {
     const { generateVenueInsight } = await import("./reviews.server");

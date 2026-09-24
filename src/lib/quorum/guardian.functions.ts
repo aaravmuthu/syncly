@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveMyProfileId } from "./me";
 
@@ -8,12 +10,12 @@ export const getMySyncCode = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { ensureSyncCode } = await import("./guardian.server");
-    return { code: await ensureSyncCode(me) };
+    return ensureSyncCode(me);
   });
 
 export const linkTeen = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { code: string }) => d)
+  .inputValidator(z.object({ code: v.text(20) }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { linkTeenByCode } = await import("./guardian.server");
@@ -22,7 +24,7 @@ export const linkTeen = createServerFn({ method: "POST" })
 
 export const unlinkGuardian = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { linkId: string }) => d)
+  .inputValidator(z.object({ linkId: v.id }))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("guardian_links")
@@ -56,7 +58,7 @@ export const getGuardianHub = createServerFn({ method: "GET" })
 
 export const setLocationSharing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { enabled: boolean }) => d)
+  .inputValidator(z.object({ enabled: z.boolean() }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { error } = await context.supabase
@@ -70,14 +72,14 @@ export const setLocationSharing = createServerFn({ method: "POST" })
 export const pushLocation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      lat: number;
-      lon: number;
-      accuracyM?: number | null;
-      batteryPct?: number | null;
-      statusLabel?: string | null;
-      planId?: string | null;
-    }) => d,
+    z.object({
+      lat: v.lat,
+      lon: v.lon,
+      accuracyM: v.optAmount(1_000_000),
+      batteryPct: v.optAmount(100),
+      statusLabel: v.optText(80),
+      planId: v.optId,
+    }),
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
@@ -123,14 +125,14 @@ export const pushLocation = createServerFn({ method: "POST" })
 export const addSafeZone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      teenProfileId: string;
-      label: string;
-      kind: string;
-      lat: number;
-      lon: number;
-      radiusM: number;
-    }) => d,
+    z.object({
+      teenProfileId: v.id,
+      label: v.reqText(80),
+      kind: v.reqText(40),
+      lat: v.lat,
+      lon: v.lon,
+      radiusM: v.amount(100_000),
+    }),
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
@@ -152,7 +154,7 @@ export const addSafeZone = createServerFn({ method: "POST" })
 
 export const removeSafeZone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { zoneId: string }) => d)
+  .inputValidator(z.object({ zoneId: v.id }))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("safe_zones").delete().eq("id", data.zoneId);
     if (error) throw new Error(error.message);
@@ -162,11 +164,11 @@ export const removeSafeZone = createServerFn({ method: "POST" })
 export const decidePlanApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      approvalId: string;
-      decision: "approved" | "approved_with_condition" | "declined";
-      condition?: string | null;
-    }) => d,
+    z.object({
+      approvalId: v.id,
+      decision: z.enum(["approved", "approved_with_condition", "declined"]),
+      condition: v.optText(500),
+    }),
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
@@ -176,7 +178,7 @@ export const decidePlanApproval = createServerFn({ method: "POST" })
 
 export const askForCheckin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { teenProfileId: string; note?: string | null }) => d)
+  .inputValidator(z.object({ teenProfileId: v.id, note: v.optText(500) }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { requestCheckin } = await import("./guardian.server");
@@ -186,7 +188,7 @@ export const askForCheckin = createServerFn({ method: "POST" })
 export const respondToCheckin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: { id: string; lat?: number | null; lon?: number | null; placeLabel?: string | null }) => d,
+    z.object({ id: v.id, lat: v.lat.nullish(), lon: v.lon.nullish(), placeLabel: v.optText(200) }),
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
@@ -210,7 +212,7 @@ export const getMyCheckins = createServerFn({ method: "GET" })
 
 export const sendDelay = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId?: string | null; reason: string; minutes: number }) => d)
+  .inputValidator(z.object({ planId: v.optId, reason: v.reqText(300), minutes: v.amount(24 * 60) }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { sendDelayPing } = await import("./guardian.server");
@@ -219,7 +221,7 @@ export const sendDelay = createServerFn({ method: "POST" })
 
 export const raiseSos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { lat?: number | null; lon?: number | null; note?: string | null }) => d)
+  .inputValidator(z.object({ lat: v.lat.nullish(), lon: v.lon.nullish(), note: v.optText(500) }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { alertGuardians, recordPing } = await import("./guardian.server");
@@ -242,7 +244,7 @@ export const raiseSos = createServerFn({ method: "POST" })
 
 export const markRideLeaving = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { assignmentId: string }) => d)
+  .inputValidator(z.object({ assignmentId: v.id }))
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { markRideDeparted } = await import("./guardian.server");
@@ -252,13 +254,13 @@ export const markRideLeaving = createServerFn({ method: "POST" })
 export const saveVehicleDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      assignmentId: string;
-      vehicleDesc?: string | null;
-      vehicleColor?: string | null;
-      vehiclePlate?: string | null;
-      etaMinutes?: number | null;
-    }) => d,
+    z.object({
+      assignmentId: v.id,
+      vehicleDesc: v.optText(100),
+      vehicleColor: v.optText(40),
+      vehiclePlate: v.optText(20),
+      etaMinutes: v.optAmount(24 * 60),
+    }),
   )
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
@@ -351,12 +353,12 @@ export const getMyRadar = createServerFn({ method: "GET" })
 export const arrivedSafely = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      lat?: number | null;
-      lon?: number | null;
-      batteryPct?: number | null;
-      placeLabel?: string | null;
-    }) => d,
+    z.object({
+      lat: v.lat.nullish(),
+      lon: v.lon.nullish(),
+      batteryPct: v.optAmount(100),
+      placeLabel: v.optText(200),
+    }),
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);

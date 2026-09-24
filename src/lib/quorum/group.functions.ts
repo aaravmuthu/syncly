@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 
@@ -6,7 +8,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const leaveGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string; transferToProfileId?: string }) => d)
+  .inputValidator(z.object({ groupId: v.id, transferToProfileId: v.id.optional() }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -63,7 +65,7 @@ export const leaveGroup = createServerFn({ method: "POST" })
 
 export const transferGroupOwnership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string; toProfileId: string }) => d)
+  .inputValidator(z.object({ groupId: v.id, toProfileId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -111,7 +113,7 @@ export const transferGroupOwnership = createServerFn({ method: "POST" })
 
 export const deleteGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string }) => d)
+  .inputValidator(z.object({ groupId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -137,14 +139,14 @@ export const deleteGroup = createServerFn({ method: "POST" })
 export const updateGroupLook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      groupId: string;
-      name?: string;
-      emoji?: string;
-      avatarUrl?: string | null;
-      coverTheme?: string;
-      kind?: "permanent" | "temporary";
-    }) => d,
+    z.object({
+      groupId: v.id,
+      name: v.reqText(80).optional(),
+      emoji: v.emoji.optional(),
+      avatarUrl: v.optHttpsUrl,
+      coverTheme: v.text(40).optional(),
+      kind: z.enum(["permanent", "temporary"]).optional(),
+    }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -171,7 +173,7 @@ export const updateGroupLook = createServerFn({ method: "POST" })
 /** Uploads a group profile picture to storage and returns a long-lived URL. */
 export const uploadGroupImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { dataUrl: string; ext?: string }) => d)
+  .inputValidator(z.object({ dataUrl: v.dataUrl, ext: v.text(10).optional() }))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);

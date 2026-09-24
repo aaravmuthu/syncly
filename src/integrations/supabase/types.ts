@@ -716,6 +716,35 @@ export type Database = {
           },
         ]
       }
+      guardian_link_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          succeeded: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          succeeded: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          succeeded?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_link_attempts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guardian_links: {
         Row: {
           created_at: string
@@ -1255,6 +1284,7 @@ export type Database = {
           school: string | null
           share_contact_with_parents: boolean
           sync_code: string | null
+          sync_code_expires_at: string | null
           theme_preference: string
           transport_features_enabled: boolean
           updated_at: string
@@ -1293,6 +1323,7 @@ export type Database = {
           school?: string | null
           share_contact_with_parents?: boolean
           sync_code?: string | null
+          sync_code_expires_at?: string | null
           theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string
@@ -1331,6 +1362,7 @@ export type Database = {
           school?: string | null
           share_contact_with_parents?: boolean
           sync_code?: string | null
+          sync_code_expires_at?: string | null
           theme_preference?: string
           transport_features_enabled?: boolean
           updated_at?: string

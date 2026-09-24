@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { optionsForCategory } from "./catalog";
 import { buildTransportPlan, rankOptions, type MemberInput } from "./engine";
@@ -62,7 +64,8 @@ export const getMe = createServerFn({ method: "GET" })
 
 export const saveProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: Record<string, unknown>) => d)
+  // Settings forms hold loosely-typed values; the schema is the real gate.
+  .inputValidator((d: Record<string, unknown>) => v.profilePatch.parse(d))
   .handler(async ({ data, context }) => {
     const { userId } = context;
     const allowed = [
@@ -154,7 +157,7 @@ export const saveProfile = createServerFn({ method: "POST" })
 /** Uploads an avatar image (data URL) and returns a long-lived signed URL. */
 export const uploadAvatar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { dataUrl: string; ext: string }) => d)
+  .inputValidator(z.object({ dataUrl: v.dataUrl, ext: v.text(10) }))
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
     const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);
@@ -265,14 +268,14 @@ export const listGroups = createServerFn({ method: "GET" })
 export const createGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      name: string;
-      emoji?: string;
-      kind?: "permanent" | "temporary";
-      purpose?: string;
-      avatarUrl?: string | null;
-      coverTheme?: string;
-    }) => d,
+    z.object({
+      name: v.reqText(80),
+      emoji: v.emoji.optional(),
+      kind: z.enum(["permanent", "temporary"]).optional(),
+      purpose: v.text(300).optional(),
+      avatarUrl: v.optHttpsUrl,
+      coverTheme: v.text(40).optional(),
+    }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -307,7 +310,7 @@ export const createGroup = createServerFn({ method: "POST" })
 
 export const joinGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { code: string }) => d)
+  .inputValidator(z.object({ code: v.token }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -344,7 +347,7 @@ export const joinGroup = createServerFn({ method: "POST" })
 
 export const getGroup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { groupId: string }) => d)
+  .inputValidator(z.object({ groupId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -558,20 +561,20 @@ export const listActivity = createServerFn({ method: "GET" })
 export const createPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: {
-      groupId: string;
-      title: string;
-      category: PlanCategory;
-      windowStart?: string | null;
-      windowEnd?: string | null;
-      locationArea?: string | null;
-      zipCode?: string | null;
-      foodVibe?: string | null;
-      radiusMiles?: number | null;
-      estCostMin?: number | null;
-      estCostMax?: number | null;
-      participantIds?: string[];
-    }) => d,
+    z.object({
+      groupId: v.id,
+      title: v.reqText(120),
+      category: v.planCategory,
+      windowStart: v.optTimeish,
+      windowEnd: v.optTimeish,
+      locationArea: v.optText(200),
+      zipCode: v.optText(10),
+      foodVibe: v.optText(200),
+      radiusMiles: v.optAmount(500),
+      estCostMin: v.optAmount(100_000),
+      estCostMax: v.optAmount(100_000),
+      participantIds: z.array(v.id).max(100).optional(),
+    }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
@@ -638,7 +641,7 @@ export const createPlan = createServerFn({ method: "POST" })
 
 export const getPlan = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -692,7 +695,7 @@ export const getPlan = createServerFn({ method: "GET" })
 
 export const submitConstraints = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; payload: ConstraintPayload }) => d)
+  .inputValidator(z.object({ planId: v.id, payload: v.constraintPayload }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -737,7 +740,7 @@ export const submitConstraints = createServerFn({ method: "POST" })
 
 export const generateRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; shuffle?: number }) => d)
+  .inputValidator(z.object({ planId: v.id, shuffle: v.amount(1_000_000).optional() }))
   .handler(async ({ data, context }) => {
     // Authorize as the user first — only a plan participant may run this.
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
@@ -754,7 +757,7 @@ export const generateRecommendations = createServerFn({ method: "POST" })
 
 export const castVote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; recommendationId: string }) => d)
+  .inputValidator(z.object({ planId: v.id, recommendationId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -778,7 +781,7 @@ export const castVote = createServerFn({ method: "POST" })
 
 export const finalizePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; recommendationId: string }) => d)
+  .inputValidator(z.object({ planId: v.id, recommendationId: v.id }))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { error } = await supabase
@@ -827,7 +830,13 @@ export const finalizePlan = createServerFn({ method: "POST" })
 
 export const requestParentApproval = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string; parentName?: string; parentEmail?: string }) => d)
+  .inputValidator(
+    z.object({
+      planId: v.id,
+      parentName: v.text(100).optional(),
+      parentEmail: z.union([z.string().trim().email().max(254), z.literal("")]).optional(),
+    }),
+  )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -874,7 +883,7 @@ export const requestParentApproval = createServerFn({ method: "POST" })
  */
 export const getSummaryShareLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { planId: string }) => d)
+  .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }) => {
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");

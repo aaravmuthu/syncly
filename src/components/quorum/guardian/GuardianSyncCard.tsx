@@ -15,7 +15,8 @@ import {
 } from "@/lib/quorum/guardian.functions";
 
 /**
- * Teen-side pairing card: reveal-on-tap 6-digit sync code with a real
+ * Teen-side pairing card: reveal-on-tap 6-digit sync code (single-use,
+ * expires an hour after it's issued -- see ensureSyncCode) with a real
  * scannable QR code plus share-sheet/copy/SMS actions, who is currently
  * linked, and the single switch that controls location sharing. This is the
  * one pairing UI in the app -- it used to be split between this bare
@@ -32,8 +33,12 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
     queryKey: ["sync-code"],
     queryFn: () => codeFn(),
     enabled: revealed,
-    staleTime: Infinity,
+    // The server hands back the same code until it's near expiry, so a short
+    // stale time just keeps the card from showing a code that already lapsed.
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
+  const expiresAt = code.data?.expiresAt ? new Date(code.data.expiresAt) : null;
   const guardians = useQuery({ queryKey: ["my-guardians"], queryFn: useServerFn(getMyGuardians) });
 
   const share = useMutation({
@@ -99,6 +104,12 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
               <div className="font-display text-3xl font-semibold tracking-[0.35em] tabular-nums">
                 {code.data?.code}
               </div>
+              {expiresAt ? (
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Works once, until{" "}
+                  {expiresAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                </div>
+              ) : null}
             </div>
             {inviteUrl ? (
               <div className="flex justify-center">
