@@ -7,7 +7,7 @@ import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
-import { ConflictCard, QuickActions } from "@/components/quorum/ConflictCard";
+import { ConflictCard } from "@/components/quorum/ConflictCard";
 import { LiveActivityCard } from "@/components/quorum/LiveActivityCard";
 import { SquadDigestCard } from "@/components/quorum/ai/SquadDigest";
 import { FindMySquad } from "@/components/quorum/FindMySquad";
@@ -15,17 +15,10 @@ import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import { PullToRefresh, SpotlightCard } from "@/components/quorum/interactions";
 
 import {
-  ActionCard,
-  AvatarStack,
   ConfirmedCard,
   Glass,
   GroupsRail,
-  MapThumb,
-  Progress,
-  StatusTag,
-  WeatherChip,
   WeekStrip,
-  CostBadge,
   type DashPlan,
 } from "@/components/quorum/DashboardParts";
 import { dayKey, formatWhen, startOfWeek } from "@/components/quorum/dashboard-format";

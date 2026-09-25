@@ -3,11 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CloudRain } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "./ui";
-import {
-  getCompromiseSummaries,
-  getPlanBSuggestion,
-  type PlanBSuggestion,
-} from "@/lib/quorum/ai.functions";
+import { getPlanBSuggestion, type PlanBSuggestion } from "@/lib/quorum/ai.functions";
 import { finalizePlan } from "@/lib/quorum/plan.functions";
 import { AiGlyph } from "./ai/AiGlyph";
 

@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Moon,
   Navigation,
-  Pencil,
   Radio,
   Sparkle,
   X,
