@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 /** Simple, non-branded marks so the buttons read clearly without copying vendor artwork. */
 function GoogleMark() {
   return (
-    <span className="grid size-5 place-items-center rounded-full border border-border bg-background text-[13px] font-bold leading-none text-foreground">
+    <span className="grid size-5 place-items-center rounded-full border border-border bg-background text-sm font-bold leading-none text-foreground">
       G
     </span>
   );

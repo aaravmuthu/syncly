@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Clapperboard, Trophy, Utensils, Radar } from "lucide-react";
+import { ArrowLeft, Clapperboard, Trophy, Utensils } from "lucide-react";
+import { ThinkingOrb } from "thinking-orbs";
 import { toast } from "sonner";
 import { Button, Card, Skeleton } from "./ui";
 import { FairVenueCard } from "./FairPointVenues";
@@ -226,7 +227,7 @@ export function PlanWizard({
         <button
           type="button"
           onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
-          className="tap-target inline-flex items-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm text-muted-foreground transition active:scale-95 hover:text-foreground"
+          className="tap-target inline-flex items-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm text-muted-foreground transition active:scale-[0.97] hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden /> {step === 0 ? "Close" : "Back"}
         </button>
@@ -234,7 +235,7 @@ export function PlanWizard({
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
+              className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ease-out ${
                 i === step ? "w-7 bg-primary" : i < step ? "w-4 bg-primary/50" : "w-4 bg-secondary"
               }`}
             />
@@ -265,7 +266,7 @@ export function PlanWizard({
                         setPicked(null);
                         setTimeout(() => setStep(1), 180);
                       }}
-                      className={`group relative overflow-hidden rounded-3xl border p-4 text-left transition-all duration-200 ease-out active:scale-95 hover:-translate-y-1 hover:shadow-2xl ${
+                      className={`group relative overflow-hidden rounded-3xl border p-4 text-left transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.97] hover:-translate-y-0.5 hover:shadow-lg ${
                         active
                           ? "border-primary/60 bg-primary/10 shadow-[0_0_35px_-8px_var(--primary)]"
                           : "border-border bg-secondary/40 hover:border-primary/40"
@@ -329,7 +330,7 @@ export function PlanWizard({
                       key={b.id}
                       type="button"
                       onClick={() => setBudget(b)}
-                      className={`tap-target rounded-3xl border px-3 py-4 text-center transition active:scale-95 ${
+                      className={`tap-target rounded-3xl border px-3 py-4 text-center transition active:scale-[0.97] ${
                         active
                           ? "border-primary/60 bg-primary/10 shadow-[0_0_28px_-10px_var(--primary)]"
                           : "border-border bg-secondary/40 hover:border-primary/40"
@@ -391,7 +392,7 @@ export function PlanWizard({
                       top3.map((v, i) => (
                         <div key={v.key} className="relative">
                           <span
-                            className="pointer-events-none absolute -left-1 -top-1 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground"
+                            className="pointer-events-none absolute -left-1 -top-1 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-caption font-bold text-primary-foreground"
                             aria-hidden
                           >
                             {v.kind === "activity" ? (
@@ -432,29 +433,12 @@ export function PlanWizard({
   );
 }
 
-/** Animated radar sweep shown while the midpoint venues resolve. */
+/** Shown while the engine balances drive times and resolves midpoint venues. */
 function RadarScan() {
   return (
-    <div className="flex flex-col items-center py-14">
-      <div className="relative h-44 w-44">
-        <span className="absolute inset-0 rounded-full border border-primary/30" />
-        <span className="absolute inset-6 rounded-full border border-primary/20" />
-        <span className="absolute inset-12 rounded-full border border-primary/10" />
-        <span className="absolute inset-0 animate-ping rounded-full bg-primary/10" />
-        <span
-          className="absolute inset-0 animate-spin rounded-full"
-          style={{
-            animationDuration: "1.8s",
-            background:
-              "conic-gradient(from 0deg, oklch(from var(--primary) l c h / 0.45), transparent 35%, transparent 100%)",
-            maskImage: "radial-gradient(circle, black 62%, transparent 63%)",
-            WebkitMaskImage: "radial-gradient(circle, black 62%, transparent 63%)",
-          }}
-          aria-hidden
-        />
-        <Radar className="absolute inset-0 m-auto h-9 w-9 text-primary" aria-hidden />
-      </div>
-      <p className="mt-6 font-display text-lg font-semibold">Calculating fair midpoint…</p>
+    <div role="status" aria-live="polite" className="flex flex-col items-center py-14">
+      <ThinkingOrb state="solving" size={64} aria-hidden="true" />
+      <p className="mt-5 font-display text-lg font-semibold">Calculating fair midpoint…</p>
       <p className="mt-1 text-sm text-muted-foreground">Balancing drive times across the squad</p>
       <div className="mt-6 w-full max-w-sm space-y-2">
         <Skeleton className="h-16 rounded-3xl" />

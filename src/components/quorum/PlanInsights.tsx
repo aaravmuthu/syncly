@@ -27,7 +27,7 @@ function WeatherBody({ planId }: { planId: string }) {
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm font-medium text-foreground">{forecastSummary(f)}</p>
           {f.currentTempF != null ? (
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-caption font-medium text-secondary-foreground">
               Now at the spot · {f.currentTempF}°F {f.currentLabel}
             </span>
           ) : null}
@@ -73,7 +73,7 @@ function AvailabilityBody({ planId }: { planId: string }) {
                 style={{ backgroundColor: `color-mix(in oklab, var(--color-primary) ${Math.round(tone * 100)}%, transparent)` }}
                 title={`${c.free} of ${c.total} free at ${prettySlot(c.slot)}`}
               />
-              <span className="mt-1 block text-[11px] text-muted-foreground">{prettySlot(c.slot)}</span>
+              <span className="mt-1 block text-caption text-muted-foreground">{prettySlot(c.slot)}</span>
             </div>
           );
         })}
@@ -122,7 +122,7 @@ export function PlanInsights({ planId }: { planId: string }) {
           </span>
           <span className="text-sm font-semibold">Plan insights</span>
           {hasAlert ? (
-            <span className="rounded-full bg-destructive/12 px-2 py-0.5 text-[11px] font-medium text-destructive">
+            <span className="rounded-full bg-destructive/12 px-2 py-0.5 text-caption font-medium text-destructive">
               Weather alert
             </span>
           ) : null}

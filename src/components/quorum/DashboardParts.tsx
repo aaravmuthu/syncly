@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
-import { DollarSign, Info, MapPin, Scale } from "lucide-react";
+import { ChevronLeft, ChevronRight, DollarSign, Info, MapPin, Scale } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { Button, Pill, statusTone, statusToneClasses } from "./ui";
 import { cn } from "@/lib/utils";
@@ -193,7 +193,7 @@ export function Progress({ done, total }: { done: number; total: number }) {
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-foreground/10">
         <div
-          className="h-full rounded-full bg-primary transition-[width] duration-500"
+          className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -256,7 +256,7 @@ export function WeekStrip({
           className="tap-target rounded-lg px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground active:bg-secondary active:text-foreground"
           aria-label="Previous week"
         >
-          ‹
+          <ChevronLeft className="size-4" aria-hidden />
         </button>
         <span className="flex items-center gap-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -278,7 +278,7 @@ export function WeekStrip({
           className="tap-target rounded-lg px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground active:bg-secondary active:text-foreground"
           aria-label="Next week"
         >
-          ›
+          <ChevronRight className="size-4" aria-hidden />
         </button>
         <AnimatePresence>
           {legendOpen ? (

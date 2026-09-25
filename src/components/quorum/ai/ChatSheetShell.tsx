@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Send } from "lucide-react";
 import { Modal } from "@/components/quorum/Modal";
-import { Button, Spinner } from "@/components/quorum/ui";
+import { Button } from "@/components/quorum/ui";
+import { AiActivity } from "./AiActivity";
 
 export type BaseTurn = { role: "user" | "assistant"; content: string };
 
@@ -101,9 +102,11 @@ export function ChatSheetShell<T extends BaseTurn>({
         </AnimatePresence>
 
         {pending ? (
-          <div className="mr-auto inline-flex items-center gap-2 rounded-2xl border border-border px-3.5 py-2.5 text-sm text-muted-foreground">
-            <Spinner className="h-3.5 w-3.5" /> Thinking…
-          </div>
+          <AiActivity
+            state="solving"
+            label="Thinking…"
+            className="mr-auto w-fit rounded-2xl border border-border px-3.5 py-2.5"
+          />
         ) : null}
       </div>
 

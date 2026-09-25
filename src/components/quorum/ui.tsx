@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { motion } from "motion/react";
+import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import type { LucideIcon } from "lucide-react";
 import { haptic } from "@/lib/quorum/haptics";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 
@@ -88,11 +90,19 @@ export function Button({
   variant = "primary",
   className,
   loading = false,
+  orb,
   ...rest
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "ghost" | "outline" | "danger" | "glass";
   loading?: boolean;
+  /** AI work: show a thinking orb in this state instead of the plain spinner. */
+  orb?: OrbState;
 }) {
+  const { resolved } = useTheme();
+  // Filled variants invert the page: light ink on evergreen by day, dark ink
+  // on the lifted evergreen at night.
+  const filled = variant === "primary" || variant === "danger";
+  const orbTheme = filled ? (resolved === "dark" ? "light" : "dark") : "auto";
   const variants: Record<string, string> = {
     primary: "bg-primary text-primary-foreground hover:opacity-92",
     ghost: "text-foreground hover:bg-secondary",
@@ -111,17 +121,25 @@ export function Button({
         if (!rest.disabled && !loading) haptic("tap");
         rest.onPointerDown?.(e);
       }}
-      whileHover={rest.disabled || loading ? undefined : { scale: 1.02, y: -2 }}
-      whileTap={rest.disabled || loading ? undefined : { scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      whileTap={rest.disabled || loading ? undefined : { scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 520, damping: 34 }}
       disabled={rest.disabled || loading}
+      aria-busy={loading || undefined}
       className={cn(
         "tap-target inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-out disabled:opacity-55",
+        // A busy button is still the thing you pressed; only real disabling dims it.
+        loading && "disabled:opacity-100",
         variants[variant],
         className,
       )}
     >
-      {loading ? <Spinner /> : null}
+      {loading ? (
+        orb ? (
+          <ThinkingOrb state={orb} size={20} theme={orbTheme} aria-hidden="true" />
+        ) : (
+          <Spinner />
+        )
+      ) : null}
       {children}
     </motion.button>
   );
@@ -173,7 +191,7 @@ export function Meter({ value, label }: { value: number; label: string }) {
         <span className="font-semibold tabular-nums">{value}</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
-        <div className={cn("h-full rounded-full transition-all", tone)} style={{ width: `${value}%` }} />
+        <div className={cn("h-full rounded-full transition-[width,background-color] duration-300 ease-out", tone)} style={{ width: `${value}%` }} />
       </div>
     </div>
   );
@@ -239,8 +257,8 @@ export function GlassIconButton({
       aria-label={label}
       aria-pressed={expanded == null ? (active ?? undefined) : undefined}
       aria-expanded={expanded}
-      whileTap={{ scale: 0.92 }}
-      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+      whileTap={{ scale: 0.94 }}
+      transition={{ type: "spring", stiffness: 520, damping: 34 }}
       className={cn(
         // h-11/w-11 match tap-target's own min-height/min-width so the class
         // list isn't lying about the actual rendered size.

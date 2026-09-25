@@ -51,7 +51,7 @@ export function GuardianShell({
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
             <Link to="/guardian" className="flex items-center gap-2">
               <Wordmark className="h-6" />
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-foreground">
+              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-foreground">
                 Family
               </span>
             </Link>
@@ -116,7 +116,7 @@ export function GuardianShell({
                     animate={{ scale: active ? 1.06 : 1, y: active ? -1 : 0 }}
                     transition={{ type: "spring", stiffness: 460, damping: 24 }}
                     className={cn(
-                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-[11px] font-medium",
+                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium",
                       active ? "text-foreground" : "text-muted-foreground",
                     )}
                   >

@@ -170,7 +170,7 @@ export function FriendProfileSheet() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-display truncate text-xl font-semibold">{shown}</h2>
                     {friend.nickname ? (
-                      <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                      <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-caption font-semibold text-emerald-300">
                         {friend.name}
                       </span>
                     ) : null}
@@ -180,13 +180,13 @@ export function FriendProfileSheet() {
                     {friend.circles.slice(0, 4).map((c) => (
                       <span
                         key={c.id}
-                        className="rounded-full bg-white/8 px-2 py-0.5 text-[11px] text-white/70"
+                        className="rounded-full bg-white/8 px-2 py-0.5 text-caption text-white/70"
                       >
                         {c.emoji} {c.name}
                       </span>
                     ))}
                     {friend.circles.length === 0 ? (
-                      <span className="text-[11px] text-white/40">No shared circles yet</span>
+                      <span className="text-caption text-white/40">No shared circles yet</span>
                     ) : null}
                   </div>
                 </div>
@@ -194,7 +194,7 @@ export function FriendProfileSheet() {
                   type="button"
                   onClick={closeFriend}
                   aria-label="Close"
-                  className="tap-target grid shrink-0 place-items-center rounded-full bg-white/8 p-2 text-white/70 transition active:scale-90"
+                  className="tap-target grid shrink-0 place-items-center rounded-full bg-white/8 p-2 text-white/70 transition active:scale-[0.97]"
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
@@ -214,7 +214,7 @@ export function FriendProfileSheet() {
                       "border-white/15 bg-white/5 text-white placeholder:text-white/35",
                     )}
                   />
-                  <p className="mt-2 text-[11px] text-white/40">
+                  <p className="mt-2 text-caption text-white/40">
                     Only you see this. It replaces their name on your map, chats, plans and feed.
                   </p>
                   <div className="mt-3 flex justify-end gap-2">

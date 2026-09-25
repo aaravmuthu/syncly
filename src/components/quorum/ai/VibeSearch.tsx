@@ -68,7 +68,7 @@ export function VibeSearch({
           aria-label="Describe the vibe you want"
           className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 text-sm outline-none focus:border-primary/60"
         />
-        <Button type="submit" className="h-11 px-4" loading={search.isPending} disabled={!query.trim()}>
+        <Button type="submit" className="h-11 px-4" loading={search.isPending} orb="searching" disabled={!query.trim()}>
           Match
         </Button>
       </form>

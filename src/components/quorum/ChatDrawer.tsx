@@ -38,7 +38,7 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
                     toast.error("Could not post your ride status");
                   }
                 }}
-                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:border-emerald-400/40 hover:bg-emerald-400/10"
+                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-caption text-white/75 hover:border-emerald-400/40 hover:bg-emerald-400/10"
               >
                 {r.label}
               </button>

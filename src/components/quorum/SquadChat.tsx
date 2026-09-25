@@ -429,7 +429,7 @@ function Bubble({
                 key={e}
                 type="button"
                 onClick={() => onReact(e)}
-                className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-125 hover:bg-primary/10"
+                className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-110 hover:bg-primary/10"
               >
                 {e}
               </button>

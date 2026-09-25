@@ -385,6 +385,7 @@ function PlanPage() {
           <Button
             variant={responded === total ? "primary" : "outline"}
             loading={generate.isPending}
+            orb="searching"
             className="shrink-0"
             onClick={() => generate.mutate({ data: { planId, shuffle } })}
           >
@@ -532,7 +533,7 @@ function PlanPage() {
                           className="h-32 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                         />
                         <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
                             {b.venue?.rating != null ? (
                               <>
                                 <Star className="size-3 fill-current" aria-hidden /> {b.venue.rating}
@@ -541,7 +542,7 @@ function PlanPage() {
                               venueStats(r.id).ratingLabel
                             )}
                           </span>
-                          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                          <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
                             {b.venue?.priceLevel ?? "$$"}
                           </span>
                         </span>
@@ -765,6 +766,7 @@ function PlanPage() {
             <Button
               variant="ghost"
               loading={generate.isPending}
+              orb="searching"
               onClick={() => {
                 const next = shuffle + 1;
                 setShuffle(next);

@@ -10,6 +10,7 @@ import {
   Lock,
   MessageCircle,
   Pencil,
+  Plus,
   Settings as SettingsIcon,
   ThumbsUp,
   X,
@@ -110,7 +111,7 @@ function GroupPage() {
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`tap-target relative z-10 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 ${
+            className={`tap-target relative z-10 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-[0.97] ${
               tab === t.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -129,7 +130,9 @@ function GroupPage() {
                   <SquadStats
                     plans={plans as unknown as { status: string; location_area?: string | null }[]}
                   />
-                  <Button onClick={() => setWizard(true)}>+ Launch New Plan</Button>
+                  <Button onClick={() => setWizard(true)}>
+                    <Plus className="size-4" aria-hidden /> Launch New Plan
+                  </Button>
                 </div>
 
                 {plans.length === 0 ? (
@@ -325,7 +328,7 @@ function PlanCard({ plan }: { plan: GroupPlan }) {
 
   return (
     <Link to="/plans/$planId" params={{ planId: plan.id }} className="block">
-      <div className="surface p-4 transition-all hover:border-primary/30 active:scale-[0.99]">
+      <div className="surface p-4 transition-[transform,border-color] duration-150 ease-out hover:border-primary/30 active:scale-[0.99]">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/25">

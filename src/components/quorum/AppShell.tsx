@@ -111,14 +111,16 @@ export function PageHeader({
   if (!title) return null;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 320, damping: 28 }}
-      className="mb-6 flex items-start justify-between gap-4"
+      transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+      className="mb-6 flex items-start justify-between gap-4 pt-3"
     >
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
+        <h1 className="font-display text-3xl leading-tight font-semibold tracking-tight text-balance">
+          {title}
+        </h1>
+        {subtitle ? <p className="mt-1.5 max-w-prose text-sm text-muted-foreground">{subtitle}</p> : null}
       </div>
       {action}
     </motion.div>
@@ -137,10 +139,10 @@ export function PageHeader({
 export function SubpageHeader({ title, backTo }: { title: string; backTo: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 320, damping: 28 }}
-      className="mb-6 flex items-center gap-1"
+      transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+      className="mb-6 flex items-center gap-1 pt-3"
     >
       <Link
         to={backTo}
@@ -352,15 +354,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 >
                   <span
                     className={cn(
-                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium transition-[transform,opacity] duration-150 ease-out active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
+                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium transition-[transform,opacity] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
                     <span className="relative leading-none">
                       <n.icon
                         className={cn(
-                          "h-5 w-5 transition-transform duration-150 ease-out motion-reduce:transition-none",
-                          active && "scale-110",
+                          "h-5 w-5",
                         )}
                         aria-hidden
                       />
@@ -495,7 +496,7 @@ function DesktopTabs({ nav, selectedTab }: { nav: NavItem[]; selectedTab: TabPat
             to={item.to}
             preload="intent"
             className={cn(
-              "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
+              "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity,color,background-color] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
               active
                 ? "bg-secondary text-foreground"
                 : "text-muted-foreground hover:text-foreground",

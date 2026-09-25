@@ -467,9 +467,8 @@ function TeenWidget({ teen }: { teen: TeenCard }) {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      transition={{ type: "spring", stiffness: 520, damping: 34 }}
       className="glass-card p-4"
     >
       <div className="flex items-center gap-3">
@@ -591,7 +590,7 @@ function MyRadar({ data }: { data: MyRadarData }) {
         </Pill>
       </Card>
 
-      <motion.div whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }}>
+      <motion.div whileTap={{ scale: 0.97 }}>
         <Button
           className="w-full py-4 text-base"
           loading={beacon.isPending}

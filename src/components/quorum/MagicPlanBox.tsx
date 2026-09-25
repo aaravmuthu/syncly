@@ -63,6 +63,7 @@ export function MagicPlanBox({
       <Button
         className="mt-3 w-full"
         loading={run.isPending}
+        orb="solving"
         disabled={!prompt.trim()}
         onClick={() => run.mutate({ data: { prompt, fallbackZip: fallbackZip ?? null } })}
       >

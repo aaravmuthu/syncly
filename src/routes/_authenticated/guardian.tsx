@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { GuardianShell } from "@/components/quorum/GuardianShell";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -129,9 +130,7 @@ function GuardianHub() {
             Live pins, battery levels and curfew countdowns for every teen.
           </span>
         </span>
-        <span className="text-primary" aria-hidden>
-          →
-        </span>
+        <ChevronRight className="size-4 shrink-0 text-primary" aria-hidden />
       </Link>
       {invite ? (
         <Card className="mb-4 border-primary/40">

@@ -232,6 +232,7 @@ export function CreatePlanPanel({
           <Button
             className="flex-1"
             loading={launch.isPending}
+            orb="shaping"
             disabled={!prompt.trim()}
             onClick={() => launch.mutate({
                 data: {
@@ -441,7 +442,7 @@ export function CreatePlanPanel({
               onChange={(e) => setRadius(Number(e.target.value))}
               className="mt-2 w-full accent-primary"
             />
-            <div className="flex justify-between text-[11px] text-muted-foreground">
+            <div className="flex justify-between text-caption text-muted-foreground">
               {RADIUS_OPTIONS.map((r) => (
                 <span key={r}>{r} mi</span>
               ))}

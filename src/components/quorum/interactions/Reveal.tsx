@@ -2,7 +2,7 @@ import type { ElementType, ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 
-const spring = { type: "spring", stiffness: 220, damping: 26, mass: 0.7 } as const;
+const spring = { type: "spring", stiffness: 380, damping: 36, mass: 0.7 } as const;
 
 /**
  * Scroll-triggered reveal: children rise, fade and settle with spring physics
@@ -12,7 +12,7 @@ export function Reveal({
   children,
   className,
   delay = 0,
-  y = 26,
+  y = 14,
   blur = true,
   as = "div",
 }: {
@@ -30,7 +30,7 @@ export function Reveal({
 
   return (
     <Tag
-      initial={{ opacity: 0, y, filter: blur ? "blur(10px)" : "blur(0px)" }}
+      initial={{ opacity: 0, y, filter: blur ? "blur(6px)" : "blur(0px)" }}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
       viewport={{ once: true, margin: "-12% 0px -8% 0px" }}
       transition={{ ...spring, delay }}
@@ -86,10 +86,10 @@ export function RevealItem({
   return (
     <Tag
       variants={{
-        hidden: { opacity: 0, y: 24, scale: 0.97, filter: "blur(8px)" },
+        hidden: { opacity: 0, y: 12, scale: 0.98, filter: "blur(4px)" },
         show: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: spring },
       }}
-      whileHover={lift ? { y: -6, scale: 1.015 } : undefined}
+      whileHover={lift ? { y: -2 } : undefined}
       transition={spring}
       className={cn(className)}
     >

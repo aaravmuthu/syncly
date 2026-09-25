@@ -60,10 +60,10 @@ export function VenueDetailModal({
             className="h-40 w-full object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-3">
-            <span className="rounded-full bg-white/15 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur">
+            <span className="rounded-full bg-white/15 px-2 py-1 text-caption font-semibold text-white backdrop-blur">
               {stats.ratingLabel}
             </span>
-            <span className="rounded-full bg-white/15 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur">
+            <span className="rounded-full bg-white/15 px-2 py-1 text-caption font-semibold text-white backdrop-blur">
               {venue.priceLevel ?? "$$"}
             </span>
           </div>
@@ -77,7 +77,7 @@ export function VenueDetailModal({
           <div className="space-y-3">
             {data.popularDishes.length ? (
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">
                   Popular picks
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -108,7 +108,7 @@ export function VenueDetailModal({
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-caption text-muted-foreground">
               {data.aiGenerated
                 ? "AI summary of what people say about spots like this — check Google for verified reviews."
                 : "Sample highlights — check Google for verified reviews."}

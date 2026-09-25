@@ -177,7 +177,7 @@ export function AddressPicker({
           }}
         />
         {locked ? (
-          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-medium text-success">
+          <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-success/15 px-2 py-0.5 text-caption font-medium text-success">
             ✓ Address saved
           </span>
         ) : null}

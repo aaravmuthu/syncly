@@ -168,7 +168,7 @@ function StatusChip({
       <Avatar url={avatar} emoji={emoji} name={name} size={32} />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{name}</p>
-        <p className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+        <p className="flex items-center gap-1 text-caption font-medium text-muted-foreground">
           <Icon className="h-3 w-3" aria-hidden />
           <span className="max-w-28 truncate">{status}</span>
           <span aria-hidden>·</span>
@@ -178,7 +178,7 @@ function StatusChip({
       {battery != null ? (
         <span
           className={cn(
-            "inline-flex items-center gap-0.5 text-[11px] font-semibold",
+            "inline-flex items-center gap-0.5 text-caption font-semibold",
             battery <= 20 ? "text-destructive" : "text-muted-foreground",
           )}
         >

@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
 import { Sparkles } from "lucide-react";
 import { Card, Skeleton } from "@/components/quorum/ui";
+import { AiActivity } from "./AiActivity";
 import { getSquadDigest, type SquadDigest as Digest } from "@/lib/quorum/aiplus.functions";
 
 /** AI recap of the week plus a "next best plan" nudge, for the home screen. */
@@ -17,7 +18,7 @@ export function SquadDigestCard() {
   if (q.isPending) {
     return (
       <Card>
-        <Skeleton className="h-4 w-40" />
+        <AiActivity state="composing" label="Writing your squad digest…" />
         <Skeleton className="mt-3 h-3 w-full" />
         <Skeleton className="mt-2 h-3 w-4/5" />
       </Card>
@@ -29,13 +30,7 @@ export function SquadDigestCard() {
   return (
     <Card className="border-primary/25 ring-1 ring-primary/10">
       <div className="flex items-center gap-2">
-        <motion.span
-          animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}
-          transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-          className="inline-flex"
-        >
-          <Sparkles className="h-4 w-4 text-primary" aria-hidden />
-        </motion.span>
+        <Sparkles className="h-4 w-4 text-primary" aria-hidden />
         <h2 className="text-sm font-semibold">Your squad digest</h2>
       </div>
       <p className="mt-2 text-base font-semibold tracking-tight">{d.headline}</p>

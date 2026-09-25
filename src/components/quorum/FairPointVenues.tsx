@@ -58,7 +58,7 @@ export function FairVenueCard({
         </Pill>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-caption">
         {venue.cuisine ? <Pill>{venue.cuisine}</Pill> : null}
         <Pill>{venue.priceLevel}</Pill>
         {venue.fairMiles != null ? <Pill>{venue.fairMiles} mi from fair point</Pill> : null}

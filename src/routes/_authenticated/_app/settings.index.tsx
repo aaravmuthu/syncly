@@ -7,9 +7,12 @@ import {
   ChevronRight,
   Info,
   MapPinned,
+  Moon,
   Palette,
   ShieldCheck,
   SlidersHorizontal,
+  Sun,
+  SunMoon,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -229,9 +232,9 @@ function SettingsHub() {
           <div id="settings-appearance-panel" className="grid grid-cols-3 gap-2">
             {(
               [
-                { id: "light", label: "Light", icon: "☀" },
-                { id: "dark", label: "Dark", icon: "☾" },
-                { id: "system", label: "System", icon: "◐" },
+                { id: "light", label: "Light", icon: Sun },
+                { id: "dark", label: "Dark", icon: Moon },
+                { id: "system", label: "System", icon: SunMoon },
               ] as const
             ).map((opt) => (
               <button
@@ -246,9 +249,7 @@ function SettingsHub() {
                     : "border-border hover:bg-secondary",
                 )}
               >
-                <span className="mr-1.5" aria-hidden>
-                  {opt.icon}
-                </span>
+                <opt.icon className="mr-1.5 size-4" aria-hidden />
                 {opt.label}
               </button>
             ))}

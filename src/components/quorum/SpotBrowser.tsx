@@ -298,7 +298,7 @@ export function SpotBrowser({
                         .join(" • ")}
                     </p>
                   ) : null}
-                  <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-caption">
                     {s.cuisine ? <Pill>{s.cuisine}</Pill> : null}
                     <Pill>{s.priceLevel}</Pill>
                   </div>
@@ -317,10 +317,10 @@ export function SpotBrowser({
                       className="h-28 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                     />
                     <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
-                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
                         {venueStats(s.key).ratingLabel}
                       </span>
-                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
                         {s.priceLevel}
                       </span>
                     </span>
@@ -544,7 +544,7 @@ function TabRow({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">
         {title}
       </p>
       <div className="mt-1.5 flex flex-wrap gap-2">

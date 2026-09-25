@@ -343,7 +343,7 @@ function DemoPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-semibold tabular-nums">{r.score}</div>
-                    <div className="text-[11px] text-muted-foreground">Overall Match</div>
+                    <div className="text-caption text-muted-foreground">Overall Match</div>
                   </div>
                 </div>
 

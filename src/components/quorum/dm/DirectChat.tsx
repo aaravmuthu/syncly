@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "motion/react";
-import { BatteryLow, BatteryFull, MapPin, Mic, Navigation, Square } from "lucide-react";
+import { BatteryLow, BatteryFull, MapPin, Mic, Navigation, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -276,7 +276,7 @@ export function DirectChat({
           <button
             type="button"
             onClick={() => flyTo(telemetry.lat, telemetry.lon, peerName)}
-            className="tap-target inline-flex items-center gap-1 rounded-full border border-border bg-secondary/50 px-3 text-caption font-semibold text-secondary-foreground transition active:scale-95"
+            className="tap-target inline-flex items-center gap-1 rounded-full border border-border bg-secondary/50 px-3 text-caption font-semibold text-secondary-foreground transition active:scale-[0.97]"
           >
             <Navigation className="h-3.5 w-3.5" aria-hidden /> View on Map
           </button>
@@ -286,9 +286,9 @@ export function DirectChat({
             type="button"
             onClick={onClose}
             aria-label="Close chat"
-            className="tap-target rounded-full px-2 text-muted-foreground hover:bg-secondary"
+            className="tap-target grid place-items-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
-            ✕
+            <X className="size-4" aria-hidden />
           </button>
         ) : null}
       </header>
@@ -348,7 +348,7 @@ export function DirectChat({
                 if (p.includes("live location")) void shareMyLocation();
                 else void submit({ threadId, content: p });
               }}
-              className="tap-target shrink-0 rounded-full border border-border bg-secondary/50 px-3 text-caption font-medium text-secondary-foreground transition active:scale-95 hover:border-primary/40 hover:bg-primary/10"
+              className="tap-target shrink-0 rounded-full border border-border bg-secondary/50 px-3 text-caption font-medium text-secondary-foreground transition active:scale-[0.97] hover:border-primary/40 hover:bg-primary/10"
             >
               {p}
             </button>
@@ -365,7 +365,7 @@ export function DirectChat({
             type="button"
             onClick={() => void shareMyLocation()}
             aria-label="Send my location"
-            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 text-muted-foreground transition active:scale-95 hover:bg-secondary"
+            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 text-muted-foreground transition active:scale-[0.97] hover:bg-secondary"
           >
             <MapPin className="h-4 w-4" aria-hidden />
           </button>
@@ -374,7 +374,7 @@ export function DirectChat({
             onClick={() => void toggleRecording()}
             aria-label={recording ? "Stop recording" : "Record a voice note"}
             className={cn(
-              "tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition active:scale-95",
+              "tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition active:scale-[0.97]",
               recording
                 ? "animate-pulse border-destructive/50 bg-destructive/20 text-destructive"
                 : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary",
@@ -470,7 +470,7 @@ function DmBubble({
                     void onReact(e);
                     setOpen(false);
                   }}
-                  className="rounded-full px-2 py-0.5 text-base transition hover:scale-125 hover:bg-primary/10"
+                  className="rounded-full px-2 py-0.5 text-base transition hover:scale-110 hover:bg-primary/10"
                 >
                   {e}
                 </button>
@@ -529,7 +529,7 @@ function DmBubble({
               type="button"
               onClick={() => void onReact(emoji)}
               className={cn(
-                "rounded-full border px-1.5 py-0.5 text-caption transition active:scale-90",
+                "rounded-full border px-1.5 py-0.5 text-caption transition active:scale-[0.97]",
                 reactions.some((r) => r.emoji === emoji && r.profile_id === myId)
                   ? "border-primary/50 bg-primary/15 text-primary"
                   : "border-border bg-secondary/50 text-muted-foreground",
@@ -562,7 +562,7 @@ function SystemChip({
         onClick={() => tappable && onFly(meta.lat!, meta.lon!, meta.label)}
         className={cn(
           "tap-target rounded-full border border-border bg-secondary/40 px-3.5 text-caption text-muted-foreground backdrop-blur",
-          tappable && "transition active:scale-95 hover:border-primary/40 hover:text-foreground",
+          tappable && "transition active:scale-[0.97] hover:border-primary/40 hover:text-foreground",
         )}
       >
         {msg.content} · {time(msg.created_at)}

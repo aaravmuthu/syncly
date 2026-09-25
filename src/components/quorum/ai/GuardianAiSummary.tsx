@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { ShieldCheck } from "lucide-react";
 import { Card, Skeleton } from "@/components/quorum/ui";
 import { getGuardianAiSummary, type GuardianAiSummary as Summary } from "@/lib/quorum/aiplus.functions";
+import { AiActivity } from "./AiActivity";
 import { AiGlyph } from "./AiGlyph";
 
 /** Plain-language AI evening summary for a parent about one linked teen. */
@@ -19,7 +20,7 @@ export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: strin
   if (q.isPending) {
     return (
       <Card>
-        <Skeleton className="h-4 w-44" />
+        <AiActivity state="composing" label="Summarizing tonight…" />
         <Skeleton className="mt-3 h-3 w-full" />
         <Skeleton className="mt-2 h-3 w-3/4" />
       </Card>

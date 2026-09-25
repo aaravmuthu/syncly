@@ -111,7 +111,6 @@ export function ConciergeSheet({
     <motion.button
       type="button"
       onClick={() => setOpen(true)}
-      whileHover={{ scale: 1.04, y: -2 }}
       whileTap={{ scale: 0.94 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
       className="fixed bottom-24 left-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg"

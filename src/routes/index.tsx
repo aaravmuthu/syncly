@@ -125,7 +125,7 @@ function Landing() {
                 <Zap className="size-4 text-primary" strokeWidth={1.75} />
                 <div className="leading-tight text-left">
                   <p className="font-display text-lg font-semibold">&lt;2min</p>
-                  <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
+                  <p className="text-caption tracking-[0.16em] text-muted-foreground uppercase">
                     Setup
                   </p>
                 </div>
@@ -144,10 +144,7 @@ function Landing() {
         {/* Web <-> iPhone sync */}
         <section className="mx-auto max-w-6xl px-5 py-16">
           <Reveal className="mx-auto max-w-xl text-center">
-            <p className="text-sm font-semibold tracking-widest text-primary uppercase">
-              Everywhere, instantly
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
+            <h2 className="text-3xl font-semibold sm:text-4xl">
               Change it on your phone. It's already there on the web.
             </h2>
             <p className="mt-4 text-muted-foreground">
@@ -198,10 +195,7 @@ function Landing() {
         <section id="how" className="border-y border-border bg-surface/60 py-20">
           <div className="mx-auto max-w-6xl px-5">
             <Reveal>
-              <p className="text-sm font-semibold tracking-widest text-primary uppercase">
-                How it works
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold sm:text-4xl">
+              <h2 className="text-3xl font-semibold sm:text-4xl">
                 Four steps. No negotiating.
               </h2>
             </Reveal>

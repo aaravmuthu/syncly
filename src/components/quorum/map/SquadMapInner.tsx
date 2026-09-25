@@ -653,7 +653,7 @@ function MiniAction({
     <button
       type="button"
       onClick={onClick}
-      className="tap-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold transition-transform active:scale-95"
+      className="tap-target flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold transition-transform active:scale-[0.97]"
     >
       <Icon className="h-3.5 w-3.5" aria-hidden />
       {children}

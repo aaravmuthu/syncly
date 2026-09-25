@@ -41,7 +41,7 @@ export function SpringTooltip({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 460, damping: 26 }}
             className={cn(
-              "pointer-events-none absolute z-50 whitespace-nowrap rounded-xl border border-white/10 bg-card/80 px-2.5 py-1.5 text-[11px] font-semibold text-foreground shadow-xl backdrop-blur-2xl",
+              "pointer-events-none absolute z-50 whitespace-nowrap rounded-xl border border-white/10 bg-card/80 px-2.5 py-1.5 text-caption font-semibold text-foreground shadow-xl backdrop-blur-2xl",
               pos[side],
             )}
           >

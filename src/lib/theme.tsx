@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { Moon, Sun } from "lucide-react";
 
 export type ThemeChoice = "light" | "dark" | "system";
 
@@ -94,7 +95,11 @@ export function ThemeToggle({ className }: { className?: string }) {
         (className ?? "")
       }
     >
-      {resolved === "dark" ? "☾" : "☀"}
+      {resolved === "dark" ? (
+        <Moon className="size-4" aria-hidden />
+      ) : (
+        <Sun className="size-4" aria-hidden />
+      )}
     </button>
   );
 }

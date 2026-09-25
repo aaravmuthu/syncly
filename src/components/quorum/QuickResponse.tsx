@@ -155,8 +155,7 @@ export function QuickResponse({
             <motion.button
               type="button"
               disabled={busy}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.97 }}
               transition={spring}
               onClick={() => confirm.mutate({ data: { planId, attending: true } })}
               className={cn(
@@ -172,8 +171,7 @@ export function QuickResponse({
             <motion.button
               type="button"
               disabled={busy}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.97 }}
               transition={spring}
               onClick={() => setPicking(true)}
               className={cn(
@@ -220,7 +218,7 @@ export function QuickResponse({
             </span>
             <motion.button
               type="button"
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setEditing(true)}
               className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
             >
@@ -244,8 +242,7 @@ export function QuickResponse({
                 key={r.id}
                 type="button"
                 disabled={flag.isPending}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.97 }}
                 transition={spring}
                 onClick={() => flag.mutate({ data: { planId, kind: r.id } })}
                 className="tap-target flex items-center gap-2.5 rounded-2xl border border-border bg-foreground/[0.04] px-4 py-3 text-left text-sm font-medium backdrop-blur-xl transition hover:border-primary/50 hover:bg-primary/8 disabled:opacity-60"

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Link2, Moon, Rocket, Zap } from "lucide-react";
+import { Link2, Moon, Plus, Rocket, Zap } from "lucide-react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Empty, Skeleton, statusToneClasses } from "@/components/quorum/ui";
@@ -92,7 +92,7 @@ export function GroupsPage() {
         action={
           <div className="flex gap-2">
             <Button variant="glass" className="text-primary" onClick={() => setCreateOpen(true)}>
-              + Create Group
+              <Plus className="size-4" aria-hidden /> Create Group
             </Button>
             <Button variant="glass" onClick={() => setJoinOpen(true)}>
               <Link2 className="size-4" aria-hidden /> Join with Code
@@ -156,7 +156,9 @@ export function GroupsPage() {
                 ? "Try another tab, or launch a plan to light one up."
                 : "Create a squad or join one with a six-character code."
             }
-            action={<Button onClick={() => setCreateOpen(true)}>+ Create Group</Button>}
+            action={<Button onClick={() => setCreateOpen(true)}>
+                <Plus className="size-4" aria-hidden /> Create Group
+              </Button>}
           />
         ) : null}
 
@@ -184,7 +186,7 @@ function SquadCard({ squad }: { squad: Squad }) {
   const extra = Math.max(0, squad.member_count - squad.members.length);
 
   return (
-    <article className="surface group overflow-hidden transition-all hover:border-primary/40 active:scale-[0.99]">
+    <article className="surface group overflow-hidden transition-[transform,border-color] duration-150 ease-out hover:border-primary/40 active:scale-[0.99]">
       <Link to="/groups/$groupId" params={{ groupId: squad.id }} className="block">
         <div className={cn("relative h-24", theme.banner)}>
           <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />

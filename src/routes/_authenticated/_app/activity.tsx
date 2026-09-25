@@ -87,7 +87,7 @@ const KIND: Record<
   },
   conflict: {
     badge: AlertTriangle,
-    badgeClass: "bg-warning text-background",
+    badgeClass: "bg-warning text-foreground dark:text-background",
     glow: "from-warning/18",
     hover: "hover:border-warning/35",
     label: "Conflict",
@@ -118,7 +118,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
     <SpotlightCard
       as="article"
       className={cn(
-        "group surface relative overflow-hidden rounded-3xl p-4 transition-all",
+        "group surface relative overflow-hidden rounded-3xl p-4 transition-[border-color,box-shadow] duration-200 ease-out",
         k.hover,
         item.unread ? "ring-1 ring-primary/25" : "",
       )}
@@ -169,11 +169,11 @@ function ActivityCard({ item }: { item: FeedItem }) {
             params={{ planId: item.plan_id }}
             onClick={item.onOpen}
             className={cn(
-              "shrink-0 self-center rounded-full px-3.5 py-2 text-xs font-semibold transition-all",
+              "shrink-0 self-center rounded-full px-3.5 py-2 text-xs font-semibold transition-[opacity,background-color,transform] ease-out active:scale-[0.97]",
               item.kind === "action"
                 ? "bg-primary text-primary-foreground hover:opacity-90"
                 : item.kind === "conflict"
-                  ? "bg-warning text-background hover:opacity-90"
+                  ? "bg-warning text-foreground hover:opacity-90 dark:text-background"
                   : "border border-border bg-secondary/70 text-foreground hover:bg-secondary",
             )}
           >
@@ -287,7 +287,7 @@ function ActivityPage() {
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all",
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,transform] ease-out active:scale-[0.97]",
               filter === f.id
                 ? "border-primary/40 bg-primary/15 text-foreground"
                 : "border-border bg-secondary/70 text-muted-foreground hover:border-foreground/20",

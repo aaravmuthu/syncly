@@ -167,7 +167,7 @@ export function TimePicker({
             className="h-2 w-full cursor-pointer appearance-none rounded-full bg-background/70 accent-primary"
           />
         </div>
-        <div className="mt-1.5 flex justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
+        <div className="mt-1.5 flex justify-between text-caption uppercase tracking-wide text-muted-foreground">
           <span>12 AM</span>
           <span>Noon</span>
           <span>6 PM</span>

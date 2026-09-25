@@ -11,6 +11,13 @@
  */
 
 @theme inline {
+  /* Motion: every bare `transition`/`transition-colors` and every `ease-out`
+     class resolves to one strong ease-out curve, so responses start fast and
+     settle instead of Tailwind's symmetric ease-in-out default. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --default-transition-duration: 160ms;
+  --default-transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
@@ -47,7 +54,7 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --font-display: "Bricolage Grotesque", ui-serif, Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", ui-sans-serif, "Segoe UI", system-ui, sans-serif;
   --font-brand: "Gloock", ui-serif, Georgia, serif;
   --text-display-lg: 2.5rem;
   --text-display-lg--line-height: 1.1;
