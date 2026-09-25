@@ -1,7 +1,7 @@
 // Server-only. Lovable AI Gateway provider for the AI SDK.
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { APICallError, RetryError } from "ai";
+import { APICallError, RetryError, wrapLanguageModel, type LanguageModelMiddleware } from "ai";
 
 const LOVABLE_AIG_RUN_ID_HEADER = "X-Lovable-AIG-Run-ID";
 
@@ -82,21 +82,64 @@ export const SYNCLY_AI_MODEL = "google/gemini-3.6-flash";
  */
 export const GEMINI_MODEL = "gemini-3.5-flash-lite";
 
+function geminiModel(apiKey: string) {
+  const google = createGoogleGenerativeAI({
+    apiKey,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta",
+  });
+  return google(GEMINI_MODEL);
+}
+
 /**
- * Primary AI model. Reads GEMINI_API_KEY at call time (never module scope) and
- * talks straight to Google's REST endpoint:
+ * Wraps a primary Gemini model so a 429/quota error on it is retried once
+ * against each fallback key in turn, instead of failing the whole call.
+ * Google buckets daily quota per API key, so a second key (its own free-tier
+ * project) gives real extra headroom, not just a retry of the same limit.
+ * Every fallback key is a separate `gemini-3.5-flash-lite` call under the
+ * hood, so this only ever swaps identity, never model behavior.
+ */
+function quotaFallbackMiddleware(fallbackKeys: string[]): LanguageModelMiddleware {
+  return {
+    wrapGenerate: async ({ doGenerate, params }) => {
+      try {
+        return await doGenerate();
+      } catch (error) {
+        if (!isQuotaError(error)) throw error;
+        for (const key of fallbackKeys) {
+          try {
+            console.warn("[ai] Gemini key hit its quota, retrying with fallback key");
+            return await geminiModel(key).doGenerate(params);
+          } catch (fallbackError) {
+            if (!isQuotaError(fallbackError)) throw fallbackError;
+            /* this fallback key is also exhausted -- fall through to the next one */
+          }
+        }
+        throw error;
+      }
+    },
+  };
+}
+
+/**
+ * Primary AI model. Reads GEMINI_API_KEY (and optionally GEMINI_API_KEY_2) at
+ * call time (never module scope) and talks straight to Google's REST endpoint:
  * https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key=...
+ * When GEMINI_API_KEY_2 is set, a quota error (HTTP 429) on the primary key
+ * automatically retries the same call against the second key instead of
+ * failing -- see quotaFallbackMiddleware above.
  * Falls back to the Lovable AI Gateway when no Gemini key is configured.
  * Throws a friendly error when neither is available so callers can degrade.
  */
 export function lovableAiModel() {
   const geminiKey = process.env["GEMINI_API_KEY"];
   if (geminiKey) {
-    const google = createGoogleGenerativeAI({
-      apiKey: geminiKey,
-      baseURL: "https://generativelanguage.googleapis.com/v1beta",
+    const primary = geminiModel(geminiKey);
+    const fallbackKey = process.env["GEMINI_API_KEY_2"];
+    if (!fallbackKey) return primary;
+    return wrapLanguageModel({
+      model: primary,
+      middleware: quotaFallbackMiddleware([fallbackKey]),
     });
-    return google(GEMINI_MODEL);
   }
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) {
