@@ -67,7 +67,14 @@ function Onboarding() {
   const [linkCode, setLinkCode] = useState("");
   const link = useMutation({
     mutationFn: useServerFn(linkTeen),
-    onSuccess: () => save.mutate({ data: { ...form, onboarded: true } }),
+    onSuccess: (r: { teenName: string; status: "pending" | "linked" }) => {
+      if (r.status === "pending") {
+        toast.success(`Request sent to ${r.teenName}`, {
+          description: "Once they approve it, they'll show up on your Family Hub.",
+        });
+      }
+      save.mutate({ data: { ...form, onboarded: true } });
+    },
     onError: (e: unknown) =>
       toast.error("Couldn't link that code", {
         description: e instanceof Error ? e.message : "Check the code and try again, or skip for now.",
@@ -239,7 +246,8 @@ function Onboarding() {
 
   const linkTeenStep = {
     title: "Link your first teen",
-    caption: "Enter the 6-digit code from your teen's Syncly profile. You can always do this later.",
+    caption:
+      "Enter the 6-digit code from your teen's Syncly profile — they'll approve the link on their end. You can always do this later.",
     body: (
       <div className="space-y-4">
         <Field label="Teen's sync code">

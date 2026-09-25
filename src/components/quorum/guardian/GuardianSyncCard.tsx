@@ -8,7 +8,9 @@ import { QrCode } from "@/components/quorum/QrCode";
 import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { Switch } from "@/components/ui/switch";
 import {
+  answerLinkRequest,
   getMyGuardians,
+  getMyLinkRequests,
   getMySyncCode,
   setLocationSharing,
   unlinkGuardian,
@@ -17,8 +19,9 @@ import {
 /**
  * Teen-side pairing card: reveal-on-tap 6-digit sync code (single-use,
  * expires an hour after it's issued -- see ensureSyncCode) with a real
- * scannable QR code plus share-sheet/copy/SMS actions, who is currently
- * linked, and the single switch that controls location sharing. This is the
+ * scannable QR code plus share-sheet/copy/SMS actions, parent link requests
+ * waiting on the teen's approval (a code alone never links anyone), who is
+ * currently linked, and the single switch that controls location sharing. This is the
  * one pairing UI in the app -- it used to be split between this bare
  * text-code reveal and a separate, richer GuardianInvite card that (by a
  * placement bug) was also showing up on the *guardian's* own hub screen with
@@ -40,6 +43,25 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
   });
   const expiresAt = code.data?.expiresAt ? new Date(code.data.expiresAt) : null;
   const guardians = useQuery({ queryKey: ["my-guardians"], queryFn: useServerFn(getMyGuardians) });
+  const requests = useQuery({
+    queryKey: ["my-link-requests"],
+    queryFn: useServerFn(getMyLinkRequests),
+    refetchInterval: 30_000,
+  });
+  const answer = useMutation({
+    mutationFn: useServerFn(answerLinkRequest),
+    onSuccess: (r: { approved: boolean }) => {
+      void qc.invalidateQueries({ queryKey: ["my-link-requests"] });
+      void qc.invalidateQueries({ queryKey: ["my-guardians"] });
+      toast.success(r.approved ? "Parent linked" : "Request declined");
+    },
+    onError: (e: unknown) => {
+      void qc.invalidateQueries({ queryKey: ["my-link-requests"] });
+      toast.error("Couldn't answer that request", {
+        description: e instanceof Error ? e.message : "Try again.",
+      });
+    },
+  });
 
   const share = useMutation({
     mutationFn: useServerFn(setLocationSharing),
@@ -168,6 +190,49 @@ export function GuardianSyncCard({ sharing }: { sharing: boolean }) {
           aria-label="Share live location"
         />
       </div>
+
+      {(requests.data ?? []).length > 0 ? (
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Wants to link</div>
+          <p className="text-xs text-muted-foreground">
+            Only approve someone you know. Once linked they can see your plans, rides and — if you
+            share it — your live location.
+          </p>
+          {(requests.data ?? []).map((r) => (
+            <div
+              key={r.id}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-primary/40 px-3 py-2"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <Avatar
+                  url={r.guardian?.avatar_url ?? null}
+                  emoji={r.guardian?.avatar_emoji}
+                  name={r.guardian?.display_name}
+                  size={30}
+                />
+                <div className="truncate text-sm font-medium">
+                  {r.guardian?.display_name ?? "Parent"}
+                </div>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <Button
+                  variant="ghost"
+                  disabled={answer.isPending}
+                  onClick={() => answer.mutate({ data: { requestId: r.id, approve: false } })}
+                >
+                  Decline
+                </Button>
+                <Button
+                  disabled={answer.isPending}
+                  onClick={() => answer.mutate({ data: { requestId: r.id, approve: true } })}
+                >
+                  Approve
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="space-y-2">
         <div className="text-sm font-medium">Linked parents</div>

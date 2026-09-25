@@ -35,6 +35,8 @@ export function metersBetween(
 const SYNC_CODE_TTL_MS = 60 * 60 * 1000;
 /** Failed pairing guesses allowed per account per hour before we lock them out. */
 const MAX_FAILED_LINKS_PER_HOUR = 5;
+/** How long a parent's link request waits for the teen before it lapses. */
+const LINK_REQUEST_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * A teen's current 6-digit sync code. Codes are short-lived and single-use: a
@@ -108,25 +110,137 @@ export async function linkTeenByCode(guardianProfileId: string, rawCode: string)
     .update({ sync_code: null, sync_code_expires_at: null })
     .eq("id", teen.id);
 
+  const teenName = teen.display_name as string;
+  const { data: existing } = await db
+    .from("guardian_links")
+    .select("id")
+    .eq("guardian_profile_id", guardianProfileId)
+    .eq("teen_profile_id", teen.id)
+    .maybeSingle();
+  if (existing) return { teenId: teen.id, teenName, status: "linked" as const };
+
+  // A code alone never grants access: it files a request the teen must approve.
+  const { error } = await db.from("guardian_link_requests").upsert(
+    {
+      guardian_profile_id: guardianProfileId,
+      teen_profile_id: teen.id,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + LINK_REQUEST_TTL_MS).toISOString(),
+    },
+    { onConflict: "guardian_profile_id,teen_profile_id" },
+  );
+  if (error) throw new Error(error.message);
+
+  const { data: guardian } = await db
+    .from("profiles")
+    .select("display_name")
+    .eq("id", guardianProfileId)
+    .maybeSingle();
+  await db.from("notifications").insert({
+    profile_id: teen.id,
+    type: "parent_response",
+    title: `${guardian?.display_name ?? "Someone"} wants to link as your parent`,
+    body: "Approve or decline in Settings → Account. Nothing is shared until you approve.",
+  });
+  return { teenId: teen.id, teenName, status: "pending" as const };
+}
+
+/** Unexpired link requests waiting on this teen, with who is asking. */
+export async function pendingLinkRequestsForTeen(teenProfileId: string) {
+  const db = await admin();
+  const { data, error } = await db
+    .from("guardian_link_requests")
+    .select(
+      "id, created_at, guardian:profiles!guardian_link_requests_guardian_profile_id_fkey(display_name, avatar_emoji, avatar_url)",
+    )
+    .eq("teen_profile_id", teenProfileId)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    createdAt: r.created_at as string,
+    guardian: r.guardian as unknown as {
+      display_name?: string;
+      avatar_emoji?: string;
+      avatar_url?: string | null;
+    } | null,
+  }));
+}
+
+/** Names of teens this guardian has asked to link with and is still waiting on. */
+export async function pendingLinkRequestsForGuardian(guardianProfileId: string) {
+  const db = await admin();
+  const { data } = await db
+    .from("guardian_link_requests")
+    .select("id, teen:profiles!guardian_link_requests_teen_profile_id_fkey(display_name)")
+    .eq("guardian_profile_id", guardianProfileId)
+    .gt("expires_at", new Date().toISOString());
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    teenName:
+      (r.teen as unknown as { display_name?: string } | null)?.display_name ?? "Your teen",
+  }));
+}
+
+/**
+ * The teen's answer to a link request. Only the teen named on the request can
+ * answer it; approving creates the guardian link, declining just drops it.
+ */
+export async function respondToLinkRequest(
+  teenProfileId: string,
+  requestId: string,
+  approve: boolean,
+) {
+  const db = await admin();
+  const { data: request } = await db
+    .from("guardian_link_requests")
+    .select("id, guardian_profile_id, expires_at")
+    .eq("id", requestId)
+    .eq("teen_profile_id", teenProfileId)
+    .maybeSingle();
+  if (!request) throw new Error("That request is no longer waiting on you");
+  await db.from("guardian_link_requests").delete().eq("id", request.id);
+  if (new Date(request.expires_at).getTime() <= Date.now()) {
+    throw new Error("That request expired. Share a fresh code if you still want to link.");
+  }
+
+  const guardianId = request.guardian_profile_id as string;
+  const { data: teen } = await db
+    .from("profiles")
+    .select("display_name")
+    .eq("id", teenProfileId)
+    .maybeSingle();
+  const teenName = teen?.display_name ?? "Your teen";
+
+  if (!approve) {
+    await db.from("notifications").insert({
+      profile_id: guardianId,
+      type: "parent_response",
+      title: `${teenName} didn't approve your link request`,
+    });
+    return { approved: false };
+  }
+
   const { error } = await db
     .from("guardian_links")
     .upsert(
-      { guardian_profile_id: guardianProfileId, teen_profile_id: teen.id },
+      { guardian_profile_id: guardianId, teen_profile_id: teenProfileId },
       { onConflict: "guardian_profile_id,teen_profile_id" },
     );
   if (error) throw new Error(error.message);
 
   // Guardian links imply indefinite visibility so the safety radar never gaps.
   const { ensureGuardianShare } = await import("./sharing.server");
-  await ensureGuardianShare(teen.id, guardianProfileId);
+  await ensureGuardianShare(teenProfileId, guardianId);
 
   await db.from("notifications").insert({
-    profile_id: teen.id,
+    profile_id: guardianId,
     type: "parent_response",
-    title: "A parent linked to your account",
-    body: "They can see your plans, rides and shared location. Unlink any time in your profile.",
+    title: `${teenName} approved your link`,
+    body: "Their plans, rides and shared location are now on your family hub.",
   });
-  return { teenId: teen.id, teenName: teen.display_name as string };
+  return { approved: true };
 }
 
 export async function guardianIdsFor(teenProfileId: string): Promise<string[]> {
@@ -312,8 +426,9 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
     .filter(Boolean) as Record<string, unknown>[];
   const teenIds = teens.map((t) => t["id"] as string);
 
+  const pendingRequests = await pendingLinkRequestsForGuardian(guardianProfileId);
   if (!teenIds.length) {
-    return { teens: [] as TeenCard[], alerts: [], unreadAlerts: 0 };
+    return { teens: [] as TeenCard[], alerts: [], unreadAlerts: 0, pendingRequests };
   }
 
   const [
@@ -619,6 +734,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
       created_at: a.created_at as string,
     })),
     unreadAlerts: (alerts ?? []).filter((a) => !a.read).length,
+    pendingRequests,
   };
 }
 

@@ -745,6 +745,45 @@ export type Database = {
           },
         ]
       }
+      guardian_link_requests: {
+        Row: {
+          created_at: string
+          expires_at: string
+          guardian_profile_id: string
+          id: string
+          teen_profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          guardian_profile_id: string
+          id?: string
+          teen_profile_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          guardian_profile_id?: string
+          id?: string
+          teen_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardian_link_requests_guardian_profile_id_fkey"
+            columns: ["guardian_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guardian_link_requests_teen_profile_id_fkey"
+            columns: ["teen_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guardian_links: {
         Row: {
           created_at: string

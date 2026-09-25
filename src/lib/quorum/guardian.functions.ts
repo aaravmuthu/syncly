@@ -4,7 +4,6 @@ import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveMyProfileId } from "./me";
 
-
 export const getMySyncCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -22,14 +21,28 @@ export const linkTeen = createServerFn({ method: "POST" })
     return linkTeenByCode(me, data.code);
   });
 
+export const getMyLinkRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const me = await resolveMyProfileId(context.supabase);
+    const { pendingLinkRequestsForTeen } = await import("./guardian.server");
+    return pendingLinkRequestsForTeen(me);
+  });
+
+export const answerLinkRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ requestId: v.id, approve: z.boolean() }))
+  .handler(async ({ data, context }) => {
+    const me = await resolveMyProfileId(context.supabase);
+    const { respondToLinkRequest } = await import("./guardian.server");
+    return respondToLinkRequest(me, data.requestId, data.approve);
+  });
+
 export const unlinkGuardian = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ linkId: v.id }))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("guardian_links")
-      .delete()
-      .eq("id", data.linkId);
+    const { error } = await context.supabase.from("guardian_links").delete().eq("id", data.linkId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -120,7 +133,6 @@ export const pushLocation = createServerFn({ method: "POST" })
     }
     return result;
   });
-
 
 export const addSafeZone = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -392,4 +404,3 @@ export const arrivedSafely = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
-

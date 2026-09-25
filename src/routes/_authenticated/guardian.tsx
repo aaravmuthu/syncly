@@ -75,14 +75,18 @@ function GuardianHub() {
 
   const link = useMutation({
     mutationFn: useServerFn(linkTeen),
-    onSuccess: (r: { teenName: string }) => {
+    onSuccess: (r: { teenName: string; status: "pending" | "linked" }) => {
       haptic("success");
       setCode("");
       void navigate({ search: {}, replace: true });
       void qc.invalidateQueries({ queryKey: ["guardian-hub"] });
-      toast.success(`Linked to ${r.teenName}`, {
-        description: "Their live radar is now on your family hub.",
-      });
+      if (r.status === "linked") {
+        toast.success(`You're already linked to ${r.teenName}`);
+      } else {
+        toast.success(`Request sent to ${r.teenName}`, {
+          description: "Once they approve it in Syncly, their radar shows up here.",
+        });
+      }
     },
     onError: (e: unknown) => {
       haptic("warn");
@@ -132,16 +136,26 @@ function GuardianHub() {
       {invite ? (
         <Card className="mb-4 border-primary/40">
           <div className="text-sm font-semibold">
-            {link.isPending ? "Linking your account…" : "Invite from your teen"}
+            {link.isPending ? "Sending your link request…" : "Invite from your teen"}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Code {invite} · once linked you'll see their live radar, plans and check-ins here.
+            Code {invite} · once your teen approves, you'll see their live radar, plans and
+            check-ins here.
           </p>
           {!link.isPending && link.isError ? (
             <Button className="mt-3" onClick={() => link.mutate({ data: { code: invite } })}>
               Try linking again
             </Button>
           ) : null}
+        </Card>
+      ) : null}
+      {(hub.data?.pendingRequests ?? []).length > 0 ? (
+        <Card className="mb-4">
+          <div className="text-sm font-semibold">Waiting for approval</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {(hub.data?.pendingRequests ?? []).map((r) => r.teenName).join(", ")} still needs to
+            approve your link request in their Syncly settings.
+          </p>
         </Card>
       ) : null}
       {hub.isLoading ? (
