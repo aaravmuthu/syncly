@@ -125,7 +125,8 @@ export function PlanWizard({
   }, [defaults.data]);
 
   const startTime = useMemo(() => {
-    if (respectCurfew && earliestCurfew) return clock(Math.max(11 * 60, mins(earliestCurfew) - 150));
+    if (respectCurfew && earliestCurfew)
+      return clock(Math.max(11 * 60, mins(earliestCurfew) - 150));
     return "18:30";
   }, [respectCurfew, earliestCurfew]);
   const endTime = useMemo(() => clock(mins(startTime) + 150), [startTime]);
@@ -164,7 +165,17 @@ export function PlanWizard({
   const pins: MapVenue[] = useMemo(() => {
     const fp = defaults.data?.fairPoint;
     return [
-      ...(fp ? [{ id: "fair-point", title: "Group fair point", lat: fp.lat, lon: fp.lon, kind: "fair" as const }] : []),
+      ...(fp
+        ? [
+            {
+              id: "fair-point",
+              title: "Group fair point",
+              lat: fp.lat,
+              lon: fp.lon,
+              kind: "fair" as const,
+            },
+          ]
+        : []),
       ...top3
         .filter((v) => v.lat != null && v.lon != null)
         .map((v, i) => ({
@@ -184,7 +195,9 @@ export function PlanWizard({
     onSuccess: (plan) => {
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["plans"] });
-      toast.success("Plan launched", { description: "Everyone gets their own private questionnaire." });
+      toast.success("Plan launched", {
+        description: "Everyone gets their own private questionnaire.",
+      });
       onClose();
       void navigate({ to: "/plans/$planId", params: { planId: (plan as { id: string }).id } });
     },
@@ -413,7 +426,8 @@ export function PlanWizard({
                     ) : (
                       <Card>
                         <p className="text-sm text-muted-foreground">
-                          No spots matched that vibe and budget nearby. Go back and try another vibe.
+                          No spots matched that vibe and budget nearby. Go back and try another
+                          vibe.
                         </p>
                       </Card>
                     )}

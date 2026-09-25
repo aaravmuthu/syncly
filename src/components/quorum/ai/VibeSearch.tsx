@@ -4,7 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { Button, Pill } from "@/components/quorum/ui";
-import { vibeSearchSpots, type VibeSearchResult, type VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
+import {
+  vibeSearchSpots,
+  type VibeSearchResult,
+  type VibeSearchSpot,
+} from "@/lib/quorum/aiplus.functions";
 import { AiGlyph } from "./AiGlyph";
 
 const EXAMPLES = [
@@ -68,7 +72,13 @@ export function VibeSearch({
           aria-label="Describe the vibe you want"
           className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 text-sm outline-none focus:border-primary/60"
         />
-        <Button type="submit" className="h-11 px-4" loading={search.isPending} orb="searching" disabled={!query.trim()}>
+        <Button
+          type="submit"
+          className="h-11 px-4"
+          loading={search.isPending}
+          orb="searching"
+          disabled={!query.trim()}
+        >
           Match
         </Button>
       </form>

@@ -200,7 +200,9 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
               onClick={() => setKind(k)}
               className={cn(
                 "flex-1 rounded-2xl px-3 py-2 text-sm font-medium transition",
-                kind === k ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
+                kind === k
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground",
               )}
             >
               {k === "permanent" ? "Ongoing" : "One-off"}

@@ -156,7 +156,9 @@ export function FindMyFriends() {
           </Button>
           <Button
             variant={gh?.active ? "primary" : "ghost"}
-            onClick={() => (gh?.active ? ghost.mutate({ data: { choice: "resume" } }) : setSheet("ghost"))}
+            onClick={() =>
+              gh?.active ? ghost.mutate({ data: { choice: "resume" } }) : setSheet("ghost")
+            }
             loading={ghost.isPending}
           >
             <Ghost className="h-4 w-4" aria-hidden /> {gh?.active ? "Go live" : "Ghost"}
@@ -177,10 +179,17 @@ export function FindMyFriends() {
                 onClick={() => openFriend(p.profileId)}
                 className="glass-card flex w-full items-center gap-3 p-3.5 text-left"
               >
-                <Avatar url={p.avatarUrl} emoji={p.emoji} name={alias(p.profileId, p.name)} size={44} />
+                <Avatar
+                  url={p.avatarUrl}
+                  emoji={p.emoji}
+                  name={alias(p.profileId, p.name)}
+                  size={44}
+                />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2">
-                    <span className="truncate text-sm font-semibold">{alias(p.profileId, p.name)}</span>
+                    <span className="truncate text-sm font-semibold">
+                      {alias(p.profileId, p.name)}
+                    </span>
                     <span aria-hidden>{p.statusEmoji}</span>
                   </span>
                   <span className="mt-0.5 block truncate text-xs text-muted-foreground">
@@ -198,7 +207,9 @@ export function FindMyFriends() {
                         p.batteryPct <= 20 ? "text-destructive" : "text-muted-foreground",
                       )}
                     >
-                      {p.batteryPct <= 20 ? <BatteryLow className="h-3.5 w-3.5" aria-hidden /> : null}
+                      {p.batteryPct <= 20 ? (
+                        <BatteryLow className="h-3.5 w-3.5" aria-hidden />
+                      ) : null}
                       {p.batteryPct}%
                     </span>
                   ) : null}
@@ -229,7 +240,12 @@ export function FindMyFriends() {
           ) : null}
           {(peers.data ?? []).map((peer) => (
             <div key={peer.profileId} className="surface flex items-center gap-3 rounded-2xl p-3">
-              <Avatar url={peer.avatarUrl} emoji={peer.emoji} name={alias(peer.profileId, peer.name)} size={40} />
+              <Avatar
+                url={peer.avatarUrl}
+                emoji={peer.emoji}
+                name={alias(peer.profileId, peer.name)}
+                size={40}
+              />
               <div className="min-w-0 flex-1">
                 <button
                   type="button"
@@ -271,7 +287,11 @@ export function FindMyFriends() {
       <Modal
         open={Boolean(durationFor)}
         onClose={() => setDurationFor(null)}
-        title={durationFor ? `Share with ${alias(durationFor.profileId, durationFor.name)}` : "Share location"}
+        title={
+          durationFor
+            ? `Share with ${alias(durationFor.profileId, durationFor.name)}`
+            : "Share location"
+        }
         description="You can stop at any time."
       >
         <div className="space-y-2">
@@ -296,7 +316,9 @@ export function FindMyFriends() {
                 <span className="block text-xs text-muted-foreground">{opt.detail}</span>
               </span>
               {opt.mode === "hour" ? <Clock className="h-4 w-4 opacity-60" aria-hidden /> : null}
-              {opt.mode === "end_of_day" ? <Moon className="h-4 w-4 opacity-60" aria-hidden /> : null}
+              {opt.mode === "end_of_day" ? (
+                <Moon className="h-4 w-4 opacity-60" aria-hidden />
+              ) : null}
               {opt.mode === "indefinite" ? (
                 <InfinityIcon className="h-4 w-4 opacity-60" aria-hidden />
               ) : null}
@@ -343,7 +365,9 @@ export function FindMyFriends() {
             <div className="flex flex-wrap gap-2">
               <Pill tone="accent">
                 <MapPin className="h-3 w-3" aria-hidden />{" "}
-                {focus.distanceMiles != null ? `${focus.distanceMiles} mi away` : "Distance unknown"}
+                {focus.distanceMiles != null
+                  ? `${focus.distanceMiles} mi away`
+                  : "Distance unknown"}
               </Pill>
               {focus.driveMinutes != null ? (
                 <Pill>

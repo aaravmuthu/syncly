@@ -23,5 +23,4 @@ type OAuthApi = {
 };
 
 /** Supabase OAuth server helpers are not yet in the generated client types. */
-export const oauth = (): OAuthApi =>
-  (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
+export const oauth = (): OAuthApi => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;

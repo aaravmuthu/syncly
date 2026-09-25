@@ -23,7 +23,10 @@ export const Route = createFileRoute("/_authenticated/_app/messages")({
     ...(typeof s.group === "string" ? { group: s.group } : {}),
   }),
   loader: ({ context }) => {
-    void context.queryClient.ensureQueryData({ queryKey: ["dm-inbox"], queryFn: () => listInbox() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["dm-inbox"],
+      queryFn: () => listInbox(),
+    });
     void context.queryClient.ensureQueryData({
       queryKey: ["dm-contacts"],
       queryFn: () => listContacts(),
@@ -70,7 +73,11 @@ export function MessagesPage() {
   const fetchContacts = useServerFn(listContacts);
   const open = useServerFn(openThread);
 
-  const inbox = useQuery({ queryKey: ["dm-inbox"], queryFn: () => fetchInbox(), refetchInterval: 30_000 });
+  const inbox = useQuery({
+    queryKey: ["dm-inbox"],
+    queryFn: () => fetchInbox(),
+    refetchInterval: 30_000,
+  });
   const contacts = useQuery({ queryKey: ["dm-contacts"], queryFn: () => fetchContacts() });
 
   const [query, setQuery] = useState("");
@@ -115,7 +122,9 @@ export function MessagesPage() {
     return (contacts.data ?? []).filter(
       (c) =>
         !existing.has(c.id) &&
-        (!q || c.name.toLowerCase().includes(q) || c.circles.some((x) => x.toLowerCase().includes(q))),
+        (!q ||
+          c.name.toLowerCase().includes(q) ||
+          c.circles.some((x) => x.toLowerCase().includes(q))),
     );
   }, [contacts.data, inbox.data, q]);
 
@@ -159,9 +168,7 @@ export function MessagesPage() {
             <>
               {threads.length > 0 ? (
                 <section className="space-y-2">
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    Direct messages
-                  </h2>
+                  <h2 className="text-sm font-semibold text-muted-foreground">Direct messages</h2>
                   {threads.map((t) => (
                     <Row
                       key={t.id}
@@ -176,7 +183,9 @@ export function MessagesPage() {
                       }
                       title={alias(t.peer?.id, t.peer?.display_name)}
                       preview={
-                        t.last ? `${t.last.mine ? "You: " : ""}${t.last.content}` : "Start the conversation"
+                        t.last
+                          ? `${t.last.mine ? "You: " : ""}${t.last.content}`
+                          : "Start the conversation"
                       }
                       at={stamp(t.lastAt)}
                       unread={t.unread}
@@ -187,9 +196,7 @@ export function MessagesPage() {
 
               {squads.length > 0 ? (
                 <section className="space-y-2">
-                  <h2 className="text-sm font-semibold text-muted-foreground">
-                    Squad chats
-                  </h2>
+                  <h2 className="text-sm font-semibold text-muted-foreground">Squad chats</h2>
                   {squads.map((s) => (
                     <Row
                       key={s.id}
@@ -227,7 +234,12 @@ export function MessagesPage() {
                         key={c.id}
                         onClick={() => void startWith(c.id)}
                         avatar={
-                          <Avatar url={c.avatar_url} emoji={c.avatar_emoji} name={c.name} size={44} />
+                          <Avatar
+                            url={c.avatar_url}
+                            emoji={c.avatar_emoji}
+                            name={c.name}
+                            size={44}
+                          />
                         }
                         title={c.name}
                         preview={c.circles.join(" · ") || "In your circles"}
@@ -329,4 +341,3 @@ function Row({
     </button>
   );
 }
-

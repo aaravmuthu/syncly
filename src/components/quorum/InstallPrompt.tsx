@@ -18,10 +18,7 @@ function isDismissed() {
 
 function dismiss() {
   try {
-    window.localStorage.setItem(
-      DISMISS_KEY,
-      String(Date.now() + DISMISS_DAYS * 24 * 3600_000),
-    );
+    window.localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DAYS * 24 * 3600_000));
   } catch {
     /* private browsing / storage disabled — just won't persist the dismissal */
   }

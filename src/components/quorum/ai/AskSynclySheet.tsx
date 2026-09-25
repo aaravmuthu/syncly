@@ -21,7 +21,11 @@ const STARTERS = [
 ];
 
 type LaunchedPlan = { planId: string; title: string };
-type Turn = ConciergeTurn & { planRef?: SynclyPlanRef; action?: SynclyAction; launched?: LaunchedPlan };
+type Turn = ConciergeTurn & {
+  planRef?: SynclyPlanRef;
+  action?: SynclyAction;
+  launched?: LaunchedPlan;
+};
 
 /**
  * Site-wide AI entry point, reachable from every page (mounted in AppShell's
@@ -59,7 +63,9 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
   const confirmCreatePlan = async (index: number, action: SynclyAction) => {
     setLaunchingAt(index);
     try {
-      const result = (await runLaunch({ data: { groupId: action.groupId, prompt: action.prompt } })) as {
+      const result = (await runLaunch({
+        data: { groupId: action.groupId, prompt: action.prompt },
+      })) as {
         planId: string;
         title: string;
         optionCount: number;

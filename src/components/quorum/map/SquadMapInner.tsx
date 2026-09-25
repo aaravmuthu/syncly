@@ -97,7 +97,9 @@ function clusterByScreenProximity(m: mapboxgl.Map, people: MapPerson[]) {
     used.add(i);
     for (let j = i + 1; j < points.length; j++) {
       if (used.has(j)) continue;
-      if (Math.hypot(points[i]!.x - points[j]!.x, points[i]!.y - points[j]!.y) <= CLUSTER_PIXEL_RADIUS) {
+      if (
+        Math.hypot(points[i]!.x - points[j]!.x, points[i]!.y - points[j]!.y) <= CLUSTER_PIXEL_RADIUS
+      ) {
         group.push(points[j]!);
         used.add(j);
       }
@@ -456,8 +458,16 @@ export default function SquadMapInner({
       ) : null}
 
       {/* Floating search pill: bottom-half on mobile (thumb reach), top on desktop */}
-      <div className={cn("pointer-events-none absolute inset-x-3 z-10 flex justify-center", MAP_SEARCH_POSITION)}>
-        <GlassPill as="label" className="pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2">
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-3 z-10 flex justify-center",
+          MAP_SEARCH_POSITION,
+        )}
+      >
+        <GlassPill
+          as="label"
+          className="pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2"
+        >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             value={query}
@@ -480,9 +490,19 @@ export default function SquadMapInner({
       </div>
 
       {/* One-thumb control dock on mobile (horizontal row), vertical rail on desktop */}
-      <div className={cn("absolute right-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-row gap-2 md:flex-col", MAP_CONTROLS_POSITION)}>
+      <div
+        className={cn(
+          "absolute right-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-row gap-2 md:flex-col",
+          MAP_CONTROLS_POSITION,
+        )}
+      >
         <GlassIconButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
-        <GlassIconButton label="3D view tilt" onClick={toggleTilt} icon={Building2} active={tilted} />
+        <GlassIconButton
+          label="3D view tilt"
+          onClick={toggleTilt}
+          icon={Building2}
+          active={tilted}
+        />
         <GlassIconButton
           label="Toggle routes"
           onClick={() => setShowRoutes((v) => !v)}
@@ -554,9 +574,7 @@ export default function SquadMapInner({
                     {p.name}
                   </span>
                   {p.batteryPct != null && p.batteryPct <= 20 ? (
-                    <span className="text-caption font-semibold text-warning">
-                      {p.batteryPct}%
-                    </span>
+                    <span className="text-caption font-semibold text-warning">{p.batteryPct}%</span>
                   ) : null}
                 </button>
               ))

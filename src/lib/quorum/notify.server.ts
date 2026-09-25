@@ -14,7 +14,13 @@ export type NotifyKind =
 
 export async function notifyProfiles(
   profileIds: string[],
-  payload: { type: NotifyKind; title: string; body?: string; planId?: string | null; groupId?: string | null },
+  payload: {
+    type: NotifyKind;
+    title: string;
+    body?: string;
+    planId?: string | null;
+    groupId?: string | null;
+  },
 ) {
   const ids = [...new Set(profileIds.filter(Boolean))];
   if (!ids.length) return;
@@ -46,9 +52,7 @@ export async function notifyPlanParticipants(
     .from("plan_participants")
     .select("profile_id")
     .eq("plan_id", planId);
-  const ids = (participants ?? [])
-    .map((p) => p.profile_id)
-    .filter((id) => id !== payload.exclude);
+  const ids = (participants ?? []).map((p) => p.profile_id).filter((id) => id !== payload.exclude);
   await notifyProfiles(ids, {
     type: payload.type,
     title: payload.title,

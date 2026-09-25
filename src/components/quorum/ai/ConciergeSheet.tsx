@@ -52,7 +52,8 @@ export function ConciergeSheet({
   const askFn = useServerFn(askPlanConcierge);
   const ask = useMutation({
     mutationFn: (question: string) => askFn({ data: { planId, question, history: turns } }),
-    onSuccess: (r) => setTurns((prev) => [...prev, { role: "assistant", content: r.answer, action: r.action }]),
+    onSuccess: (r) =>
+      setTurns((prev) => [...prev, { role: "assistant", content: r.answer, action: r.action }]),
     onError: (e: unknown) => {
       setTurns((prev) => prev.slice(0, -1));
       toast.error("The concierge couldn't answer", {

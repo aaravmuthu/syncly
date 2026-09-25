@@ -468,7 +468,9 @@ export function ActionCard({ plan }: { plan: DashPlan }) {
             <p className="truncate text-caption text-muted-foreground">
               {plan.groups?.emoji ?? "✨"} {plan.groups?.name ?? "Group"}
             </p>
-            <h3 className="mt-0.5 line-clamp-2 font-display text-base font-semibold">{plan.title}</h3>
+            <h3 className="mt-0.5 line-clamp-2 font-display text-base font-semibold">
+              {plan.title}
+            </h3>
             <CostBadge min={plan.est_cost_min} max={plan.est_cost_max} className="mt-1" />
           </div>
           <StatusTag status={plan.status} />
@@ -505,7 +507,12 @@ export function ConfirmedCard({ plan }: { plan: DashPlan }) {
         <MapThumb lat={rec?.lat} lon={rec?.lon} className="h-24 w-24 shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <span className={cn("rounded-lg px-2 py-0.5 text-caption font-semibold ring-1", statusToneClasses("finalized"))}>
+            <span
+              className={cn(
+                "rounded-lg px-2 py-0.5 text-caption font-semibold ring-1",
+                statusToneClasses("finalized"),
+              )}
+            >
               {formatWhen(plan.window_start)}
             </span>
             <WeatherChip planId={plan.id} />

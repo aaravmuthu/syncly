@@ -13,9 +13,13 @@ const PATTERNS: Record<HapticKind, number | number[]> = {
 
 export function haptic(kind: HapticKind = "tap") {
   if (typeof navigator === "undefined") return;
-  if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+  if (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  )
     return;
-  const vibrate = (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }).vibrate;
+  const vibrate = (navigator as Navigator & { vibrate?: (p: number | number[]) => boolean })
+    .vibrate;
   if (!vibrate) return;
   try {
     vibrate.call(navigator, PATTERNS[kind] as number[]);

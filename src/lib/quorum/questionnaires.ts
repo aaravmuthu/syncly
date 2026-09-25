@@ -2,7 +2,14 @@ import type { ConstraintPayload } from "./types";
 
 export type Field =
   | { kind: "money"; key: keyof ConstraintPayload; label: string; hint?: string; hard?: boolean }
-  | { kind: "number"; key: keyof ConstraintPayload; label: string; hint?: string; suffix?: string; hard?: boolean }
+  | {
+      kind: "number";
+      key: keyof ConstraintPayload;
+      label: string;
+      hint?: string;
+      suffix?: string;
+      hard?: boolean;
+    }
   | { kind: "time"; key: keyof ConstraintPayload; label: string; hint?: string; hard?: boolean }
   | { kind: "toggle"; key: keyof ConstraintPayload; label: string; hint?: string }
   | {
@@ -39,7 +46,13 @@ const dinner: Step[] = [
     title: "What's comfortable to spend?",
     caption: "Nobody sees this number. It only filters options out.",
     fields: [
-      { kind: "money", key: "maxSpend", label: "Most I'd spend", hint: "Per person, all-in", hard: true },
+      {
+        kind: "money",
+        key: "maxSpend",
+        label: "Most I'd spend",
+        hint: "Per person, all-in",
+        hard: true,
+      },
       {
         kind: "chips",
         key: "venueStyle",
@@ -63,7 +76,13 @@ const dinner: Step[] = [
     title: "Getting there and back",
     caption: "Ride needs stay private. We only publish the finished car plan.",
     fields: [
-      { kind: "number", key: "maxTravelMinutes", label: "Furthest I'd travel", suffix: "min", hard: true },
+      {
+        kind: "number",
+        key: "maxTravelMinutes",
+        label: "Furthest I'd travel",
+        suffix: "min",
+        hard: true,
+      },
       { kind: "toggle", key: "needsRide", label: "I need a ride" },
       { kind: "toggle", key: "canDrive", label: "I can drive others" },
       { kind: "number", key: "seats", label: "Seats I can offer", suffix: "seats" },
@@ -97,7 +116,12 @@ const event: Step[] = [
     fields: [
       { kind: "money", key: "maxTicketPrice", label: "Most for a ticket", hard: true },
       { kind: "money", key: "maxSpend", label: "Most for the whole night", hard: true },
-      { kind: "chips", key: "likedTags", label: "What you're into", options: ["music", "indie", "pop", "arena", "outdoor", "all-ages"] },
+      {
+        kind: "chips",
+        key: "likedTags",
+        label: "What you're into",
+        options: ["music", "indie", "pop", "arena", "outdoor", "all-ages"],
+      },
     ],
   },
   {
@@ -105,7 +129,13 @@ const event: Step[] = [
     title: "Travel and rides",
     caption: "",
     fields: [
-      { kind: "number", key: "maxTravelMinutes", label: "Furthest I'd travel", suffix: "min", hard: true },
+      {
+        kind: "number",
+        key: "maxTravelMinutes",
+        label: "Furthest I'd travel",
+        suffix: "min",
+        hard: true,
+      },
       { kind: "toggle", key: "needsRide", label: "I need a ride" },
       { kind: "toggle", key: "canDrive", label: "I can drive others" },
       { kind: "number", key: "seats", label: "Seats I can offer", suffix: "seats" },
@@ -145,14 +175,25 @@ const trip: Step[] = [
     title: "How far, and how",
     caption: "",
     fields: [
-      { kind: "number", key: "maxTravelMinutes", label: "Max travel time", suffix: "min", hard: true },
+      {
+        kind: "number",
+        key: "maxTravelMinutes",
+        label: "Max travel time",
+        suffix: "min",
+        hard: true,
+      },
       {
         kind: "chips",
         key: "destinationTypes",
         label: "Kinds of places you like",
         options: ["beach", "city", "mountains", "nature", "warm", "walkable"],
       },
-      { kind: "chips", key: "dislikedTags", label: "Rather avoid", options: ["hiking", "swimming", "museums", "long drives", "camping"] },
+      {
+        kind: "chips",
+        key: "dislikedTags",
+        label: "Rather avoid",
+        options: ["hiking", "swimming", "museums", "long drives", "camping"],
+      },
     ],
   },
   {
@@ -183,7 +224,12 @@ const general: Step[] = [
         label: "What sounds good",
         options: ["active", "chill", "games", "outdoor", "indoor", "cheap", "food"],
       },
-      { kind: "chips", key: "dislikedTags", label: "Rather avoid", options: ["active", "loud", "outdoor", "long drives", "crowds"] },
+      {
+        kind: "chips",
+        key: "dislikedTags",
+        label: "Rather avoid",
+        options: ["active", "loud", "outdoor", "long drives", "crowds"],
+      },
     ],
   },
   {
@@ -191,7 +237,13 @@ const general: Step[] = [
     title: "Getting there",
     caption: "",
     fields: [
-      { kind: "number", key: "maxTravelMinutes", label: "Furthest I'd travel", suffix: "min", hard: true },
+      {
+        kind: "number",
+        key: "maxTravelMinutes",
+        label: "Furthest I'd travel",
+        suffix: "min",
+        hard: true,
+      },
       { kind: "toggle", key: "needsRide", label: "I need a ride" },
       { kind: "toggle", key: "canDrive", label: "I can drive others" },
       { kind: "number", key: "seats", label: "Seats I can offer", suffix: "seats" },

@@ -20,13 +20,7 @@ const sizes = {
  * App mark (dark): dark glass squircle with a glowing emerald rounded "S" and a
  * radar pulse at its core. Matches /icon.svg exactly.
  */
-export function LogoMarkDark({
-  size = 36,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
+export function LogoMarkDark({ size = 36, className }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}
@@ -39,12 +33,26 @@ export function LogoMarkDark({
       aria-label={`${BRAND.name} logo`}
     >
       <defs>
-        <linearGradient id="sy-tile" x1="120" y1="24" x2="400" y2="488" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="sy-tile"
+          x1="120"
+          y1="24"
+          x2="400"
+          y2="488"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#2A3A38" />
           <stop offset="0.45" stopColor="#151E1D" />
           <stop offset="1" stopColor="#080D0C" />
         </linearGradient>
-        <linearGradient id="sy-rim" x1="256" y1="8" x2="256" y2="504" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="sy-rim"
+          x1="256"
+          y1="8"
+          x2="256"
+          y2="504"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#7FFFD8" stopOpacity="0.4" />
           <stop offset="0.4" stopColor="#ffffff" stopOpacity="0.05" />
           <stop offset="1" stopColor="#000000" stopOpacity="0.35" />
@@ -54,7 +62,14 @@ export function LogoMarkDark({
           <stop offset="0.6" stopColor="#ffffff" stopOpacity="0.02" />
           <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="sy-glyph" x1="180" y1="130" x2="340" y2="390" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="sy-glyph"
+          x1="180"
+          y1="130"
+          x2="340"
+          y2="390"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#8CFFDD" />
           <stop offset="0.5" stopColor="#2FE0A8" />
           <stop offset="1" stopColor="#0E9C77" />
@@ -76,7 +91,16 @@ export function LogoMarkDark({
 
       <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#sy-tile)" />
       <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#sy-sheen)" />
-      <rect x="17.5" y="17.5" width="477" height="477" rx="114.5" fill="none" stroke="url(#sy-rim)" strokeWidth="3" />
+      <rect
+        x="17.5"
+        y="17.5"
+        width="477"
+        height="477"
+        rx="114.5"
+        fill="none"
+        stroke="url(#sy-rim)"
+        strokeWidth="3"
+      />
 
       <g stroke="#2FE0A8" fill="none" opacity="0.28">
         <circle cx="256" cy="256" r="46" strokeWidth="6" />
@@ -103,13 +127,7 @@ export function LogoMarkDark({
  * App mark (light): pearl-glass squircle with the same emerald "S" + radar core,
  * tuned for light backgrounds. Matches /icon-light.svg.
  */
-export function LogoMarkLight({
-  size = 36,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
+export function LogoMarkLight({ size = 36, className }: { size?: number; className?: string }) {
   return (
     <svg
       width={size}
@@ -122,12 +140,26 @@ export function LogoMarkLight({
       aria-label={`${BRAND.name} logo`}
     >
       <defs>
-        <linearGradient id="syl-tile" x1="120" y1="24" x2="400" y2="488" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="syl-tile"
+          x1="120"
+          y1="24"
+          x2="400"
+          y2="488"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#FFFFFF" />
           <stop offset="0.5" stopColor="#F0F7F4" />
           <stop offset="1" stopColor="#DCE9E4" />
         </linearGradient>
-        <linearGradient id="syl-rim" x1="256" y1="8" x2="256" y2="504" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="syl-rim"
+          x1="256"
+          y1="8"
+          x2="256"
+          y2="504"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#FFFFFF" stopOpacity="0.9" />
           <stop offset="0.45" stopColor="#0E9C77" stopOpacity="0.12" />
           <stop offset="1" stopColor="#04564A" stopOpacity="0.22" />
@@ -137,7 +169,14 @@ export function LogoMarkLight({
           <stop offset="0.6" stopColor="#FFFFFF" stopOpacity="0.1" />
           <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="syl-glyph" x1="180" y1="130" x2="340" y2="390" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="syl-glyph"
+          x1="180"
+          y1="130"
+          x2="340"
+          y2="390"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#2FD3A0" />
           <stop offset="0.5" stopColor="#0FA97F" />
           <stop offset="1" stopColor="#046B57" />
@@ -149,7 +188,16 @@ export function LogoMarkLight({
 
       <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#syl-tile)" />
       <rect x="16" y="16" width="480" height="480" rx="116" fill="url(#syl-sheen)" />
-      <rect x="17.5" y="17.5" width="477" height="477" rx="114.5" fill="none" stroke="url(#syl-rim)" strokeWidth="3" />
+      <rect
+        x="17.5"
+        y="17.5"
+        width="477"
+        height="477"
+        rx="114.5"
+        fill="none"
+        stroke="url(#syl-rim)"
+        strokeWidth="3"
+      />
 
       <g stroke="#0FA97F" fill="none" opacity="0.22">
         <circle cx="256" cy="256" r="46" strokeWidth="6" />
@@ -167,7 +215,15 @@ export function LogoMarkLight({
           strokeLinejoin="round"
         />
         <circle cx="256" cy="256" r="21" fill="#FFFFFF" />
-        <circle cx="256" cy="256" r="21" fill="none" stroke="#0FA97F" strokeWidth="4" opacity="0.5" />
+        <circle
+          cx="256"
+          cy="256"
+          r="21"
+          fill="none"
+          stroke="#0FA97F"
+          strokeWidth="4"
+          opacity="0.5"
+        />
       </g>
     </svg>
   );
@@ -186,7 +242,10 @@ export function LogoMark({ size = 36, className }: { size?: number; className?: 
 export function Logo({ className, size = "md", showText = true, href, onClick }: LogoProps) {
   const s = sizes[size];
   const sharedMotion = {
-    whileHover: { scale: 1.06, transition: { type: "spring" as const, stiffness: 260, damping: 16 } },
+    whileHover: {
+      scale: 1.06,
+      transition: { type: "spring" as const, stiffness: 260, damping: 16 },
+    },
     whileTap: { scale: 0.96 },
   };
 
@@ -194,9 +253,7 @@ export function Logo({ className, size = "md", showText = true, href, onClick }:
     <>
       <LogoMark size={s.icon} className="rounded-[22%]" />
       {showText ? (
-        <span
-          className={cn("ml-2.5 font-brand tracking-[-0.01em] text-foreground", s.text)}
-        >
+        <span className={cn("ml-2.5 font-brand tracking-[-0.01em] text-foreground", s.text)}>
           {BRAND.name}
         </span>
       ) : null}
@@ -214,7 +271,11 @@ export function Logo({ className, size = "md", showText = true, href, onClick }:
   }
 
   return (
-    <motion.span className={cn(classes, onClick && "cursor-pointer")} onClick={onClick} {...sharedMotion}>
+    <motion.span
+      className={cn(classes, onClick && "cursor-pointer")}
+      onClick={onClick}
+      {...sharedMotion}
+    >
       {logoBody}
     </motion.span>
   );

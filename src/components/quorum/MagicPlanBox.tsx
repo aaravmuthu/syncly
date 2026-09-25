@@ -76,8 +76,12 @@ export function MagicPlanBox({
             <Chip>{result.category}</Chip>
             {result.date ? <Chip>{result.date}</Chip> : null}
             {result.time ? <Chip>{result.time}</Chip> : null}
-            {result.maxSpendPerPerson != null ? <Chip>≤ ${result.maxSpendPerPerson}/person</Chip> : null}
-            {result.searchRadiusMiles != null ? <Chip>{result.searchRadiusMiles} mi radius</Chip> : null}
+            {result.maxSpendPerPerson != null ? (
+              <Chip>≤ ${result.maxSpendPerPerson}/person</Chip>
+            ) : null}
+            {result.searchRadiusMiles != null ? (
+              <Chip>{result.searchRadiusMiles} mi radius</Chip>
+            ) : null}
             {result.areaLabel ? <Chip>{result.areaLabel}</Chip> : null}
           </div>
           {result.candidates.length ? (

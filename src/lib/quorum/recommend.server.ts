@@ -24,7 +24,8 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
     .eq("plan_id", planId);
 
   const constraintsFor = (profileId: string) =>
-    ((constraintRows ?? []).find((c) => c.profile_id === profileId)?.payload as ConstraintPayload) ?? {};
+    ((constraintRows ?? []).find((c) => c.profile_id === profileId)
+      ?.payload as ConstraintPayload) ?? {};
 
   const attending = (participants ?? []).filter((p) => p.attending !== false);
   const members: MemberInput[] = attending.map((p) => ({
@@ -37,21 +38,29 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
   const { data: profileRows } = await supabaseAdmin
     .from("profiles")
     .select("id, zip_code")
-    .in("id", attending.length ? attending.map((p) => p.profile_id) : ["00000000-0000-0000-0000-000000000000"]);
+    .in(
+      "id",
+      attending.length
+        ? attending.map((p) => p.profile_id)
+        : ["00000000-0000-0000-0000-000000000000"],
+    );
 
   const memberZip = (profileRows ?? []).map((r) => normalizeZip(r.zip_code)).find(Boolean) ?? null;
-  const constraintZip = members.map((m) => normalizeZip(m.constraints.zipCode)).find(Boolean) ?? null;
+  const constraintZip =
+    members.map((m) => normalizeZip(m.constraints.zipCode)).find(Boolean) ?? null;
   const zip = normalizeZip(plan.location_area) ?? constraintZip ?? memberZip;
 
-  const numbers = (vals: (number | null | undefined)[]) => vals.filter((v): v is number => v != null);
+  const numbers = (vals: (number | null | undefined)[]) =>
+    vals.filter((v): v is number => v != null);
   const radii = numbers(members.map((m) => m.constraints.maxDistanceMiles));
-  const budgets = numbers(members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice));
+  const budgets = numbers(
+    members.map((m) => m.constraints.maxSpend ?? m.constraints.maxTicketPrice),
+  );
 
   // Fair-Point: geographic midpoint of every attending member's saved home.
   // Falls back to the plan/host ZIP centroid when nobody has coordinates.
-  const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } = await import(
-    "./fairpoint.server"
-  );
+  const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } =
+    await import("./fairpoint.server");
   const allBases = await loadMemberBases(plan.group_id);
   const attendingIds = new Set(attending.map((p) => p.profile_id));
   const bases = allBases.filter((b) => attendingIds.has(b.profileId));
@@ -77,7 +86,6 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
     const live = await searchVenuesGeoapify({ origin, ...venueQuery });
     options = live.length ? live : queryVenuesNear({ origin, ...venueQuery });
   }
-
 
   // ---- Live weather (keyless, Open-Meteo) ---------------------------------
   let forecast: Forecast | null = null;
@@ -160,7 +168,8 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
 
   // Shuffle rotates through the pool in batches of three.
   const batch = 3;
-  const offset = pool.length > batch ? ((shuffle % Math.ceil(pool.length / batch)) * batch) % pool.length : 0;
+  const offset =
+    pool.length > batch ? ((shuffle % Math.ceil(pool.length / batch)) * batch) % pool.length : 0;
   const rotated = [...pool.slice(offset), ...pool.slice(0, offset)];
 
   // Option A = fairest midpoint, B = highest rated / most popular,
@@ -175,7 +184,7 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
       .filter((r) => !picked.includes(r))
       .sort(
         (a, b) =>
-          ((b.breakdown.venue?.rating ?? 0) - (a.breakdown.venue?.rating ?? 0)) || b.score - a.score,
+          (b.breakdown.venue?.rating ?? 0) - (a.breakdown.venue?.rating ?? 0) || b.score - a.score,
       )[0],
   );
   take(
@@ -223,7 +232,6 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
         feasible: r.feasible,
         breakdown: r.breakdown as never,
       })),
-
     )
     .select("id, feasible");
   if (error) throw new Error(error.message);
@@ -235,7 +243,9 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
     .update({
       status: plan.status === "finalized" && stillFinalizable ? "finalized" : "voting",
       compatibility_score: best?.score ?? null,
-      ...(plan.status === "finalized" && !stillFinalizable ? { selected_recommendation_id: null } : {}),
+      ...(plan.status === "finalized" && !stillFinalizable
+        ? { selected_recommendation_id: null }
+        : {}),
     })
     .eq("id", planId);
 

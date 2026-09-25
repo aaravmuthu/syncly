@@ -120,7 +120,9 @@ export function PageHeader({
         <h1 className="font-display text-3xl leading-tight font-semibold tracking-tight text-balance">
           {title}
         </h1>
-        {subtitle ? <p className="mt-1.5 max-w-prose text-sm text-muted-foreground">{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="mt-1.5 max-w-prose text-sm text-muted-foreground">{subtitle}</p>
+        ) : null}
       </div>
       {action}
     </motion.div>
@@ -359,12 +361,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     )}
                   >
                     <span className="relative leading-none">
-                      <n.icon
-                        className={cn(
-                          "h-5 w-5",
-                        )}
-                        aria-hidden
-                      />
+                      <n.icon className={cn("h-5 w-5")} aria-hidden />
                     </span>
                     {n.label}
                   </span>

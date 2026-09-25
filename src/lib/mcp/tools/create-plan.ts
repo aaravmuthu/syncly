@@ -45,6 +45,8 @@ export default defineTool({
       .from("plan_participants")
       .insert({ plan_id: plan.id, profile_id: me, responded: true, attending: true });
 
-    return textResult(`Created "${plan.title}" (id: ${plan.id}). You're marked as attending.`, { plan });
+    return textResult(`Created "${plan.title}" (id: ${plan.id}). You're marked as attending.`, {
+      plan,
+    });
   },
 });

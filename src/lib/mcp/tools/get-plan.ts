@@ -42,7 +42,8 @@ export default defineTool({
     ]);
 
     const voteCount = new Map<string, number>();
-    for (const v of votes ?? []) voteCount.set(v.recommendation_id, (voteCount.get(v.recommendation_id) ?? 0) + 1);
+    for (const v of votes ?? [])
+      voteCount.set(v.recommendation_id, (voteCount.get(v.recommendation_id) ?? 0) + 1);
 
     const g = plan.groups as unknown as { name: string; emoji: string } | null;
     const roster = (parts ?? []).map((p) => {
@@ -63,10 +64,17 @@ export default defineTool({
 
     const lines = [
       `${plan.title} — ${plan.status}${g ? ` in ${g.emoji} ${g.name}` : ""}`,
-      plan.window_start ? `When: ${plan.window_start}${plan.window_end ? ` → ${plan.window_end}` : ""}` : null,
+      plan.window_start
+        ? `When: ${plan.window_start}${plan.window_end ? ` → ${plan.window_end}` : ""}`
+        : null,
       plan.location_area ? `Area: ${plan.location_area}` : null,
       roster.length
-        ? `Going: ${roster.filter((r) => r.attending).map((r) => r.name).join(", ") || "nobody yet"}`
+        ? `Going: ${
+            roster
+              .filter((r) => r.attending)
+              .map((r) => r.name)
+              .join(", ") || "nobody yet"
+          }`
         : null,
       options.length
         ? `Options:\n${options.map((o) => `  • ${o.title}${o.locationName ? ` (${o.locationName})` : ""} — ${o.votes} vote(s)${o.selected ? " · picked" : ""}`).join("\n")}`

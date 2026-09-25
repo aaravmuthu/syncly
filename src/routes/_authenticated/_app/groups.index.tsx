@@ -10,7 +10,12 @@ import { CreateGroupModal } from "@/components/quorum/CreateGroupModal";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
 import { coverTheme } from "@/lib/quorum/covers";
 import { listGroups } from "@/lib/quorum/plan.functions";
-import { PullToRefresh, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
+import {
+  PullToRefresh,
+  RevealGroup,
+  RevealItem,
+  SpotlightCard,
+} from "@/components/quorum/interactions";
 import { motion } from "motion/react";
 import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
@@ -101,52 +106,54 @@ export function GroupsPage() {
         }
       />
       <PullToRefresh onRefresh={async () => void (await groups.refetch())}>
-      <div
-        role="tablist"
-        aria-label="Filter squads"
-        className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1"
-      >
-        {FILTERS.map((f) => (
-          <motion.button
-            key={f.id}
-            type="button"
-            role="tab"
-            aria-selected={filter === f.id}
-            whileTap={{ scale: 0.94 }}
-            animate={{ scale: filter === f.id ? 1.03 : 1 }}
-            transition={{ type: "spring", stiffness: 420, damping: 26 }}
-            onClick={() => {
-              haptic("select");
-              setFilter(f.id);
-            }}
-            className={cn(
-              "tap-target inline-flex shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold transition",
-              // Filled primary is a real selection indicator here (this is
-              // a segmented filter, not just "the more important button"),
-              // so the active pill stays solid while inactive ones get the
-              // floating-glass treatment instead of the old flat bg-secondary.
-              filter === f.id ? "bg-primary text-primary-foreground shadow-lg" : "glass-pill text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {f.label}
-          </motion.button>
-        ))}
-      </div>
-
-      {groups.isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Skeleton className="h-64 rounded-2xl" />
-          <Skeleton className="h-64 rounded-2xl" />
+        <div
+          role="tablist"
+          aria-label="Filter squads"
+          className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1"
+        >
+          {FILTERS.map((f) => (
+            <motion.button
+              key={f.id}
+              type="button"
+              role="tab"
+              aria-selected={filter === f.id}
+              whileTap={{ scale: 0.94 }}
+              animate={{ scale: filter === f.id ? 1.03 : 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 26 }}
+              onClick={() => {
+                haptic("select");
+                setFilter(f.id);
+              }}
+              className={cn(
+                "tap-target inline-flex shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold transition",
+                // Filled primary is a real selection indicator here (this is
+                // a segmented filter, not just "the more important button"),
+                // so the active pill stays solid while inactive ones get the
+                // floating-glass treatment instead of the old flat bg-secondary.
+                filter === f.id
+                  ? "bg-primary text-primary-foreground shadow-lg"
+                  : "glass-pill text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {f.label}
+            </motion.button>
+          ))}
         </div>
-      ) : null}
 
-      {groups.isError ? (
-        <Empty
-          title="Couldn't load your squads"
-          body="Check your connection and try again."
-          action={<Button onClick={() => groups.refetch()}>Try again</Button>}
-        />
-      ) : null}
+        {groups.isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-64 rounded-2xl" />
+            <Skeleton className="h-64 rounded-2xl" />
+          </div>
+        ) : null}
+
+        {groups.isError ? (
+          <Empty
+            title="Couldn't load your squads"
+            body="Check your connection and try again."
+            action={<Button onClick={() => groups.refetch()}>Try again</Button>}
+          />
+        ) : null}
 
         {!groups.isLoading && !groups.isError && shown.length === 0 ? (
           <Empty
@@ -156,22 +163,23 @@ export function GroupsPage() {
                 ? "Try another tab, or launch a plan to light one up."
                 : "Create a squad or join one with a six-character code."
             }
-            action={<Button onClick={() => setCreateOpen(true)}>
+            action={
+              <Button onClick={() => setCreateOpen(true)}>
                 <Plus className="size-4" aria-hidden /> Create Group
-              </Button>}
+              </Button>
+            }
           />
         ) : null}
 
-      <RevealGroup className="grid gap-4 sm:grid-cols-2" stagger={0.07}>
-        {shown.map((g) => (
-          <RevealItem key={g.id}>
-            <SpotlightCard tilt className="rounded-surface">
-              <SquadCard squad={g} />
-            </SpotlightCard>
-          </RevealItem>
-        ))}
-      </RevealGroup>
-
+        <RevealGroup className="grid gap-4 sm:grid-cols-2" stagger={0.07}>
+          {shown.map((g) => (
+            <RevealItem key={g.id}>
+              <SpotlightCard tilt className="rounded-surface">
+                <SquadCard squad={g} />
+              </SpotlightCard>
+            </RevealItem>
+          ))}
+        </RevealGroup>
       </PullToRefresh>
 
       <CreateGroupModal open={createOpen} onClose={() => setCreateOpen(false)} />
@@ -235,7 +243,9 @@ function SquadCard({ squad }: { squad: Squad }) {
           <div
             className={cn(
               "mt-3 inline-flex max-w-full items-center gap-1.5 truncate rounded-full px-3 py-1.5 text-xs font-semibold ring-1",
-              squad.active_plan ? statusToneClasses("voting") : "bg-secondary text-muted-foreground ring-border",
+              squad.active_plan
+                ? statusToneClasses("voting")
+                : "bg-secondary text-muted-foreground ring-border",
             )}
           >
             {squad.active_plan ? (

@@ -38,15 +38,14 @@ const DraftSchema = z.object({
 /** Deterministic fallback when AI is unavailable. */
 function heuristicDraft(prompt: string): MagicDraft {
   const text = prompt.toLowerCase();
-  const category =
-    (CATEGORIES.find((c) => text.includes(c.id))?.id ??
-      (text.includes("eat") || text.includes("dinner") || text.includes("food")
-        ? "dinner"
-        : text.includes("movie")
-          ? "movie"
-          : text.includes("concert") || text.includes("show")
-            ? "concert"
-            : "hangout")) as PlanCategory;
+  const category = (CATEGORIES.find((c) => text.includes(c.id))?.id ??
+    (text.includes("eat") || text.includes("dinner") || text.includes("food")
+      ? "dinner"
+      : text.includes("movie")
+        ? "movie"
+        : text.includes("concert") || text.includes("show")
+          ? "concert"
+          : "hangout")) as PlanCategory;
   const money = text.match(/\$\s?(\d{1,4})/);
   const zip = text.match(/\b(\d{5})\b/);
   const miles = text.match(/(\d{1,3})\s?(?:mi|mile)/);
@@ -110,8 +109,9 @@ function coerceDraft(raw: unknown, prompt: string): MagicDraft {
     time: time && /^\d{1,2}:\d{2}/.test(time) ? time.slice(0, 5).padStart(5, "0") : null,
     budgetTier: tier === "low" || tier === "medium" || tier === "high" ? tier : null,
     maxSpendPerPerson:
-      num(pick(o, ["max_spend_per_person", "budget_per_person", "maxSpendPerPerson", "max_budget"])) ??
-      base.maxSpendPerPerson,
+      num(
+        pick(o, ["max_spend_per_person", "budget_per_person", "maxSpendPerPerson", "max_budget"]),
+      ) ?? base.maxSpendPerPerson,
     searchRadiusMiles: num(pick(o, ["search_radius_miles", "radius_miles", "radius"])),
     targetCityOrZip:
       str(pick(o, ["target_city_zip", "zip", "zip_code", "city", "location", "area"])) ??
@@ -186,14 +186,20 @@ const SummarySchema = z.object({
 });
 
 function fallbackSummary(f: CompromiseFacts): string {
-  const budget = f.tightestBudget != null ? `the group's tightest $${f.tightestBudget} cap` : "everyone's budget";
-  const travel = f.tightestTravelMinutes != null ? `${f.tightestTravelMinutes} min` : `${f.travelMinutes} min`;
+  const budget =
+    f.tightestBudget != null
+      ? `the group's tightest $${f.tightestBudget} cap`
+      : "everyone's budget";
+  const travel =
+    f.tightestTravelMinutes != null ? `${f.tightestTravelMinutes} min` : `${f.travelMinutes} min`;
   return f.feasible
     ? `${f.score}% group match — fits ${budget} at $${f.costMin}–${f.costMax} per person and keeps drive time near ${travel} for everyone.`
     : `${f.score}% group match — ${f.blockedCount} of ${f.memberCount} still have a hard conflict here, usually budget or curfew.`;
 }
 
-export async function summarizeCompromises(facts: CompromiseFacts[]): Promise<Record<string, string>> {
+export async function summarizeCompromises(
+  facts: CompromiseFacts[],
+): Promise<Record<string, string>> {
   const fallback = Object.fromEntries(facts.map((f) => [f.id, fallbackSummary(f)]));
   if (!facts.length) return fallback;
 
@@ -250,7 +256,10 @@ export async function summarizeCompromises(facts: CompromiseFacts[]): Promise<Re
   }
 }
 
-function mergeSummaries(fallback: Record<string, string>, items: unknown[]): Record<string, string> {
+function mergeSummaries(
+  fallback: Record<string, string>,
+  items: unknown[],
+): Record<string, string> {
   const map = { ...fallback };
   for (const item of items) {
     if (!item || typeof item !== "object") continue;
@@ -328,7 +337,13 @@ export type ConflictFacts = {
   tightestBudget: number | null;
   topCostMin: number | null;
   topCostMax: number | null;
-  voteSplit: { title: string; votes: number; id: string; costMin: number | null; costMax: number | null }[];
+  voteSplit: {
+    title: string;
+    votes: number;
+    id: string;
+    costMin: number | null;
+    costMax: number | null;
+  }[];
   /** Forecast for the top option's location/date, when available. */
   weather: { summary: string; precipProbability: number | null; alert: boolean } | null;
   dietaryNeeds: string[];

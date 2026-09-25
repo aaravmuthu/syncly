@@ -68,12 +68,21 @@ export function GroupAppearance({
       <div className={cn("relative h-20 overflow-hidden rounded-2xl", theme.banner)}>
         <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />
         <span className="absolute bottom-3 left-3 grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-background/70 text-xl ring-1 ring-white/20 backdrop-blur">
-          {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : emoji}
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            emoji
+          )}
         </span>
       </div>
 
       <Field label="Squad name">
-        <input className={inputClass} value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+        <input
+          className={inputClass}
+          value={name}
+          maxLength={60}
+          onChange={(e) => setName(e.target.value)}
+        />
       </Field>
 
       <div>
@@ -90,7 +99,12 @@ export function GroupAppearance({
               e.target.value = "";
             }}
           />
-          <Button type="button" variant="outline" loading={uploading} onClick={() => fileRef.current?.click()}>
+          <Button
+            type="button"
+            variant="outline"
+            loading={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
             {uploading ? "Uploading…" : "Upload"}
           </Button>
           {GROUP_PRESET_IMAGES.map((url) => (
@@ -163,7 +177,9 @@ export function GroupAppearance({
         className="w-full"
         loading={save.isPending}
         disabled={!name.trim() || uploading}
-        onClick={() => save.mutate({ data: { groupId, name, emoji, avatarUrl, coverTheme: cover } })}
+        onClick={() =>
+          save.mutate({ data: { groupId, name, emoji, avatarUrl, coverTheme: cover } })
+        }
       >
         Save look
       </Button>

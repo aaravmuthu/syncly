@@ -24,12 +24,14 @@ export const listMessages = createServerFn({ method: "GET" })
 
     const ids = (messages ?? []).map((m) => m.id);
     const reads = ids.length
-      ? (
+      ? ((
           await supabase
             .from("message_reads")
-            .select("message_id, profile_id, profiles:profile_id(display_name, avatar_emoji, avatar_url)")
+            .select(
+              "message_id, profile_id, profiles:profile_id(display_name, avatar_emoji, avatar_url)",
+            )
             .in("message_id", ids)
-        ).data ?? []
+        ).data ?? [])
       : [];
 
     const { data: owner } = await supabase
@@ -88,12 +90,10 @@ export const markRead = createServerFn({ method: "POST" })
     if (ids.length === 0) return { ok: true };
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) return { ok: true };
-    await supabase
-      .from("message_reads")
-      .upsert(
-        ids.map((message_id) => ({ message_id, profile_id: me as string })),
-        { onConflict: "message_id,profile_id", ignoreDuplicates: true },
-      );
+    await supabase.from("message_reads").upsert(
+      ids.map((message_id) => ({ message_id, profile_id: me as string })),
+      { onConflict: "message_id,profile_id", ignoreDuplicates: true },
+    );
     return { ok: true };
   });
 

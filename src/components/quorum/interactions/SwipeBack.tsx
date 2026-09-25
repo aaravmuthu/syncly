@@ -61,7 +61,12 @@ export function SwipeBack({ children }: { children: ReactNode }) {
   if (prefersReducedMotion()) return <>{children}</>;
 
   return (
-    <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
+    <div
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchEnd}
+    >
       <motion.div style={{ x }}>{children}</motion.div>
     </div>
   );

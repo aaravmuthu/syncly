@@ -50,7 +50,6 @@ describe("avatars storage object policies (avatars_no_delete_check_used_select_o
     }
     expect(byCmd(list, "ALL")).toEqual([]);
   });
-
 });
 
 describe("group_messages policies (group_messages_no_update_delete_policy)", () => {

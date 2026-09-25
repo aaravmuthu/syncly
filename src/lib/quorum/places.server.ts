@@ -63,9 +63,7 @@ export async function suggestPlacesServer(
   // real address (e.g. querying "...Frisco, TX 75034" also matches a
   // postcode feature for "Frisco, TX 75034"), which rendered as redundant,
   // ZIP-only dropdown rows.
-  const types = opts.addressOnly
-    ? "address"
-    : "postcode,place,locality,neighborhood,address";
+  const types = opts.addressOnly ? "address" : "postcode,place,locality,neighborhood,address";
 
   const token = mapboxToken();
   if (token) {
@@ -161,7 +159,6 @@ export async function suggestPlacesServer(
   }
 }
 
-
 // -------------------------------------------------------------- venue search
 
 const GEOAPIFY_CATEGORIES: Record<PlanCategory, string> = {
@@ -199,7 +196,10 @@ type GeoapifyFeature = {
 };
 
 /** Rough cost band derived from the place's categories + OSM price hints. */
-function costBand(categories: string[], raw: Record<string, unknown> | undefined): [number, number] {
+function costBand(
+  categories: string[],
+  raw: Record<string, unknown> | undefined,
+): [number, number] {
   const c = categories.join(" ");
   if (c.includes("fast_food")) return [9, 16];
   if (c.includes("cafe")) return [8, 18];
@@ -233,8 +233,13 @@ function dietaryFrom(raw: Record<string, unknown> | undefined, categories: strin
 }
 
 /** Human cuisine / activity label from the provider's category list. */
-function cuisineFrom(categories: string[], raw: Record<string, unknown> | undefined): string | undefined {
-  const rawCuisine = String(raw?.["cuisine"] ?? "").split(";")[0]?.trim();
+function cuisineFrom(
+  categories: string[],
+  raw: Record<string, unknown> | undefined,
+): string | undefined {
+  const rawCuisine = String(raw?.["cuisine"] ?? "")
+    .split(";")[0]
+    ?.trim();
   const pretty = (s: string) =>
     s
       .replace(/_/g, " ")
@@ -329,7 +334,10 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
           start: q.category === "dinner" ? "18:30" : "18:00",
           end: q.category === "dinner" ? "20:30" : "21:00",
           location: `${p.city ?? city} · ${distanceMiles} mi`,
-          tags: [...cats.map((c) => c.split(".").pop()!).slice(0, 5), outdoor ? "outdoor" : "indoor"],
+          tags: [
+            ...cats.map((c) => c.split(".").pop()!).slice(0, 5),
+            outdoor ? "outdoor" : "indoor",
+          ],
           dietaryFriendly: dietaryFrom(p.datasource?.raw, cats),
           style: outdoor ? "outdoor" : cats.join(" ").includes("catering") ? "sit-down" : "venue",
           requiresDriving: distanceMiles > 1.2,

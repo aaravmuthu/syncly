@@ -19,7 +19,6 @@ export type Forecast = {
   alertText: string | null;
 };
 
-
 const CODES: Record<number, { label: string; emoji: string }> = {
   0: { label: "Clear", emoji: "☀️" },
   1: { label: "Mostly clear", emoji: "🌤" },

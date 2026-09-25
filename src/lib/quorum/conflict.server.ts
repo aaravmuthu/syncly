@@ -215,13 +215,7 @@ export async function generateAlternatives(planId: string) {
       maxRadiusMiles: kinds.has("distance") ? 6 : (plan.search_radius_miles ?? 12),
       // Budget flags aim clearly below the host's estimate (default: under $10).
       maxBudget: kinds.has("budget")
-        ? Math.max(
-            5,
-            Math.min(
-              10,
-              plan.est_cost_min != null ? Number(plan.est_cost_min) - 5 : 10,
-            ),
-          )
+        ? Math.max(5, Math.min(10, plan.est_cost_min != null ? Number(plan.est_cost_min) - 5 : 10))
         : null,
       limit: 6,
     };

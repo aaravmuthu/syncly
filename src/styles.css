@@ -54,7 +54,9 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --font-display: "Bricolage Grotesque", ui-serif, Georgia, serif;
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", ui-sans-serif, "Segoe UI", system-ui, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", ui-sans-serif, "Segoe UI", system-ui,
+    sans-serif;
   --font-brand: "Gloock", ui-serif, Georgia, serif;
   --text-display-lg: 2.5rem;
   --text-display-lg--line-height: 1.1;
@@ -556,8 +558,7 @@
   --glass-bg-alpha: 0.55;
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 24px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7),
     inset 0 -1px 0 rgba(0, 0, 0, 0.03);
 }
 .dark {
@@ -571,8 +572,7 @@
   --glass-bg-alpha: 0.4;
   --glass-border: rgba(255, 255, 255, 0.16);
   --glass-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 8px 28px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.18);
   /* Only dark mode needs a brightness lift -- it's what keeps a frost over
      an already-dark surface (Radar's map, this app's own dark background)
@@ -736,8 +736,14 @@
   backdrop-filter: blur(10px);
 }
 @keyframes q-map-pulse {
-  0% { transform: scale(0.7); opacity: 0.7; }
-  100% { transform: scale(1.7); opacity: 0; }
+  0% {
+    transform: scale(0.7);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
 }
 
 .q-place-pin {
@@ -799,7 +805,9 @@
   border: 1.5px solid color-mix(in oklab, var(--success) 60%, transparent);
   animation: q-map-pulse 3s ease-out infinite;
 }
-.q-mid-ring-2 { animation-delay: 1.5s; }
+.q-mid-ring-2 {
+  animation-delay: 1.5s;
+}
 .q-mid-label {
   position: absolute;
   bottom: -16px;

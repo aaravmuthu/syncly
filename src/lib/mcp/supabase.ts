@@ -45,7 +45,9 @@ function supabasePublishableKey(): string {
   }
   const legacy = configuredEnv(["SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]);
   if (legacy) return legacy;
-  throw new Error("SUPABASE_PUBLISHABLE_KEY, SUPABASE_PUBLISHABLE_KEYS, or SUPABASE_ANON_KEY is required");
+  throw new Error(
+    "SUPABASE_PUBLISHABLE_KEY, SUPABASE_PUBLISHABLE_KEYS, or SUPABASE_ANON_KEY is required",
+  );
 }
 
 /** Forwards the verified bearer token so row-level security runs as the signed-in member. */
@@ -59,12 +61,13 @@ export function supabaseForUser(ctx: ToolContext) {
 }
 
 /** Resolves the caller's Syncly profile row id from their token. */
-export async function myProfileId(
-  supabase: ReturnType<typeof supabaseForUser>,
-): Promise<string> {
+export async function myProfileId(supabase: ReturnType<typeof supabaseForUser>): Promise<string> {
   const { data, error } = await supabase.rpc("my_profile_id");
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("No Syncly profile exists for this account yet. Finish onboarding in the app first.");
+  if (!data)
+    throw new Error(
+      "No Syncly profile exists for this account yet. Finish onboarding in the app first.",
+    );
   return data as string;
 }
 

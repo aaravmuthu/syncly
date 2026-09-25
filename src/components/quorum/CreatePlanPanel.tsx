@@ -82,7 +82,6 @@ export function CreatePlanPanel({
     }
   }, [defaults.data, useSaved]);
 
-
   const endTime = useMemo(() => {
     const [h, m] = startTime.split(":");
     const total = Number(h) * 60 + Number(m ?? 0) + 150;
@@ -234,7 +233,8 @@ export function CreatePlanPanel({
             loading={launch.isPending}
             orb="shaping"
             disabled={!prompt.trim()}
-            onClick={() => launch.mutate({
+            onClick={() =>
+              launch.mutate({
                 data: {
                   groupId,
                   prompt,
@@ -242,7 +242,8 @@ export function CreatePlanPanel({
                   estCostMin: estCost?.min ?? null,
                   estCostMax: estCost?.max ?? null,
                 },
-              })}
+              })
+            }
           >
             <Rocket className="h-4 w-4" aria-hidden />
             {launch.isPending ? "Building your plan…" : "Launch Plan Now"}
@@ -370,9 +371,7 @@ export function CreatePlanPanel({
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() =>
-                      setEstCost(active ? null : { min: p.min, max: p.max })
-                    }
+                    onClick={() => setEstCost(active ? null : { min: p.min, max: p.max })}
                     className={`rounded-full border px-3.5 py-1.5 text-sm transition ${
                       active
                         ? "border-primary/50 bg-primary/10 text-foreground"

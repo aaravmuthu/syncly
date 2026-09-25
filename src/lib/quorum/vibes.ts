@@ -36,7 +36,8 @@ export const VIBES: Vibe[] = [
     id: "boba-cafes",
     label: "Boba & Cafes",
     emoji: "🧋",
-    categories: "catering.cafe,catering.cafe.bubble_tea,catering.cafe.coffee_shop,catering.ice_cream",
+    categories:
+      "catering.cafe,catering.cafe.bubble_tea,catering.cafe.coffee_shop,catering.ice_cream",
     kind: "food",
   },
   {

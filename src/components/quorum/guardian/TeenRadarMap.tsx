@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { SquadMap, type MapPerson, type MapPlace, type MapZone } from "@/components/quorum/map/SquadMap";
+import {
+  SquadMap,
+  type MapPerson,
+  type MapPlace,
+  type MapZone,
+} from "@/components/quorum/map/SquadMap";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 
 /**

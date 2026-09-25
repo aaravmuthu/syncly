@@ -10,7 +10,13 @@ export type MagicPlanResult = MagicDraft & {
   zip: string | null;
   areaLabel: string | null;
   /** Live venue candidates found for the parsed parameters. */
-  candidates: { title: string; subtitle: string; costMin: number; costMax: number; distanceMiles: number | null }[];
+  candidates: {
+    title: string;
+    subtitle: string;
+    costMin: number;
+    costMax: number;
+    distanceMiles: number | null;
+  }[];
 };
 
 /**
@@ -31,7 +37,8 @@ export const magicPlanDraft = createServerFn({ method: "POST" })
 
     const { normalizeZip, queryVenuesNear } = await import("./location");
     const { geocodeZipServer } = await import("./location.server");
-    const { searchVenuesGeoapify, suggestPlacesServer, reverseZipServer } = await import("./places.server");
+    const { searchVenuesGeoapify, suggestPlacesServer, reverseZipServer } =
+      await import("./places.server");
 
     // ZIP resolution: explicit ZIP → geocoded place name → the caller's ZIP.
     let zip = normalizeZip(draft.targetCityOrZip);
@@ -142,7 +149,9 @@ export const applyAiCompromise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: v.id, startTime: v.optText(40), recommendationId: v.optId }))
   .handler(async ({ data, context }) => {
-    const { data: isOwner } = await context.supabase.rpc("is_plan_owner", { _plan_id: data.planId });
+    const { data: isOwner } = await context.supabase.rpc("is_plan_owner", {
+      _plan_id: data.planId,
+    });
     if (!isOwner) throw new Error("Only the host can apply a compromise");
 
     const { data: plan, error: readError } = await context.supabase

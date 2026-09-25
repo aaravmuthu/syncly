@@ -37,11 +37,12 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
     return (
       <Card className="text-center">
         <div className="text-4xl">🔎</div>
-        <h1 className="mt-3 font-display text-xl font-semibold">This plan link is invalid or has expired</h1>
+        <h1 className="mt-3 font-display text-xl font-semibold">
+          This plan link is invalid or has expired
+        </h1>
         <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
           The plan may have been cancelled or the link is no longer valid. Ask for a fresh link.
         </p>
-
       </Card>
     );
 
@@ -79,7 +80,9 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
           <div className="mt-4">
             <Pill tone="good">💚 You approved this plan</Pill>
             {s.parentDecision?.note ? (
-              <p className="mt-2 text-sm text-muted-foreground">Your note: {s.parentDecision.note}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Your note: {s.parentDecision.note}
+              </p>
             ) : null}
           </div>
         ) : (
@@ -118,7 +121,9 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
                 </Button>
               </div>
             ) : null}
-            {sent ? <p className="text-sm text-success">Sent — they'll see it right away.</p> : null}
+            {sent ? (
+              <p className="text-sm text-success">Sent — they'll see it right away.</p>
+            ) : null}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </div>
         )}
@@ -232,8 +237,8 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
         <div className="mt-3 space-y-2 text-sm">
           {s.cars.length === 0 ? (
             <p className="text-muted-foreground">
-              No carpool arranged yet — members are getting there on their own (walking, dropped off,
-              or rideshare).
+              No carpool arranged yet — members are getting there on their own (walking, dropped
+              off, or rideshare).
             </p>
           ) : (
             s.cars.map((c, i) => (
@@ -248,7 +253,9 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
                   <Pill tone="neutral">{c.leg === "return" ? "Ride home" : "Ride there"}</Pill>
                 </div>
                 <p className="mt-1 text-muted-foreground">
-                  {c.riders.length ? `Passengers: ${c.riders.join(", ")}` : "No passengers assigned yet"}
+                  {c.riders.length
+                    ? `Passengers: ${c.riders.join(", ")}`
+                    : "No passengers assigned yet"}
                 </p>
               </div>
             ))
@@ -277,6 +284,8 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</h2>
+    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {children}
+    </h2>
   );
 }

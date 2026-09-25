@@ -77,7 +77,11 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
   }
 
   // ---- HARD: distance radius (miles, from live location data) -------------
-  if (c.maxDistanceMiles != null && option.distanceMiles != null && option.distanceMiles > c.maxDistanceMiles) {
+  if (
+    c.maxDistanceMiles != null &&
+    option.distanceMiles != null &&
+    option.distanceMiles > c.maxDistanceMiles
+  ) {
     hard.push("travel");
   }
 
@@ -221,7 +225,8 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
     else reasons.push("No transportation required");
     if (avgSoft > 0.7) reasons.push("Matches most stated preferences");
     if (minSoft < 0.45) cautions.push("One member's preferences are only partly met");
-    if (option.travelMinutes > 25) cautions.push("Travel time is on the longer side for this group");
+    if (option.travelMinutes > 25)
+      cautions.push("Travel time is on the longer side for this group");
     if (option.distanceMiles != null) {
       reasons.push(`Within every member's travel radius — ${option.distanceMiles} miles away`);
     }
@@ -232,12 +237,21 @@ export function scoreOption(option: OptionSeed, members: MemberInput[]): ScoredO
 
   const breakdown: ScoreBreakdown = {
     hardFailures: blocked + (transport.ok ? 0 : 1),
-    budgetFit: Math.round(clamp01(1 - countKind(evals, "budget") / Math.max(members.length, 1)) * 100),
-    scheduleFit: Math.round(
-      clamp01(1 - (countKind(evals, "schedule") + countKind(evals, "curfew")) / Math.max(members.length, 1)) * 100,
+    budgetFit: Math.round(
+      clamp01(1 - countKind(evals, "budget") / Math.max(members.length, 1)) * 100,
     ),
-    travelFit: Math.round(clamp01(1 - countKind(evals, "travel") / Math.max(members.length, 1)) * 100),
-    dietaryFit: Math.round(clamp01(1 - countKind(evals, "dietary") / Math.max(members.length, 1)) * 100),
+    scheduleFit: Math.round(
+      clamp01(
+        1 -
+          (countKind(evals, "schedule") + countKind(evals, "curfew")) / Math.max(members.length, 1),
+      ) * 100,
+    ),
+    travelFit: Math.round(
+      clamp01(1 - countKind(evals, "travel") / Math.max(members.length, 1)) * 100,
+    ),
+    dietaryFit: Math.round(
+      clamp01(1 - countKind(evals, "dietary") / Math.max(members.length, 1)) * 100,
+    ),
     preferenceFit: Math.round(avgSoft * 100),
     transportFit: Math.round(transport.ratio * 100),
     fairness: Math.round(fairness * 100),
@@ -291,7 +305,7 @@ export function buildTransportPlan(
   );
   const riders = members.filter((m) => m.constraints?.needsRide && !m.constraints?.canDrive);
   const cars: { label: string; driver: string; passengers: string[] }[] = [];
-  let queue = [...riders];
+  const queue = [...riders];
   drivers.forEach((d, i) => {
     const seats = Math.max(0, d.constraints.seats ?? 3);
     const passengers = queue.splice(0, seats).map((p) => p.name);

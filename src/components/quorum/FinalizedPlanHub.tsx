@@ -67,7 +67,8 @@ export function FinalizedPlanHub({
 
   const event = {
     title: `${planTitle} — ${rec.title}`,
-    description: `${rec.subtitle ?? ""}\nAbout ${perPerson} per person. Planned with Syncly.`.trim(),
+    description:
+      `${rec.subtitle ?? ""}\nAbout ${perPerson} per person. Planned with Syncly.`.trim(),
     location: b.venue?.address ?? rec.location_name ?? rec.title,
     date: windowStart,
     start: rec.suggested_start,
@@ -90,7 +91,15 @@ export function FinalizedPlanHub({
         <Pill tone="good">Locked in</Pill>
         <span className="text-xs text-muted-foreground">{rec.score}% group match</span>
         {approvalStatus ? (
-          <Pill tone={approvalStatus === "declined" ? "bad" : approvalStatus === "pending" ? "neutral" : "warn"}>
+          <Pill
+            tone={
+              approvalStatus === "declined"
+                ? "bad"
+                : approvalStatus === "pending"
+                  ? "neutral"
+                  : "warn"
+            }
+          >
             Parent: {approvalStatus.replace(/_/g, " ")}
           </Pill>
         ) : null}
@@ -102,7 +111,9 @@ export function FinalizedPlanHub({
 
       {attendees.length ? (
         <div className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Going</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Going
+          </p>
           <p className="mt-1 text-sm">{attendees.join(", ")}</p>
         </div>
       ) : null}

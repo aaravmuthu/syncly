@@ -24,9 +24,7 @@ export function estCostLabel(min: number | null | undefined, max: number | null 
 
 /** Matches an existing estimate back to a preset chip id. */
 export function presetIdFor(min: number | null, max: number | null) {
-  return (
-    EST_COST_PRESETS.find((p) => p.min === (min ?? -1) && p.max === (max ?? -1))?.id ?? null
-  );
+  return EST_COST_PRESETS.find((p) => p.min === (min ?? -1) && p.max === (max ?? -1))?.id ?? null;
 }
 
 /**

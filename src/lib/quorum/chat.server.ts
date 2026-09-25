@@ -9,11 +9,7 @@ export type SystemEvent =
  * Drops an automated card into the squad chat feed. Never throws — chat cards
  * must not be able to break the plan flow that triggered them.
  */
-export async function postSystemEvent(
-  groupId: string,
-  planId: string | null,
-  event: SystemEvent,
-) {
+export async function postSystemEvent(groupId: string, planId: string | null, event: SystemEvent) {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("group_messages").insert({

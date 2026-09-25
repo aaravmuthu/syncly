@@ -81,7 +81,8 @@ export const listInbox = createServerFn({ method: "GET" })
       const last = mine_msgs[0] ?? null;
       const since = readAt.get(t.id as string);
       const unread = mine_msgs.filter(
-        (m) => m.sender_id !== mine && (!since || new Date(m.created_at as string) > new Date(since)),
+        (m) =>
+          m.sender_id !== mine && (!since || new Date(m.created_at as string) > new Date(since)),
       ).length;
       return {
         id: t.id as string,
@@ -133,7 +134,9 @@ export const listInbox = createServerFn({ method: "GET" })
       } | null;
       const rows = (gmsgs ?? []).filter((x) => x.group_id === m.group_id);
       const last = rows[0] ?? null;
-      const unread = rows.filter((x) => x.sender_id !== mine && !readIds.has(x.id as string)).length;
+      const unread = rows.filter(
+        (x) => x.sender_id !== mine && !readIds.has(x.id as string),
+      ).length;
       return {
         id: m.group_id as string,
         name: g?.name ?? "Squad",
@@ -187,15 +190,17 @@ export const getThread = createServerFn({ method: "GET" })
 
     const ids = (messages ?? []).map((m) => m.id as string);
     const { data: reactions } = ids.length
-      ? await supabase.from("direct_reactions").select("message_id, profile_id, emoji").in("message_id", ids)
+      ? await supabase
+          .from("direct_reactions")
+          .select("message_id, profile_id, emoji")
+          .in("message_id", ids)
       : { data: [] as never[] };
 
     const { data: reads } = await supabase
       .from("direct_reads")
       .select("profile_id, last_read_at")
       .eq("thread_id", data.threadId);
-    const peerReadAt =
-      (reads ?? []).find((r) => r.profile_id !== mine)?.last_read_at ?? null;
+    const peerReadAt = (reads ?? []).find((r) => r.profile_id !== mine)?.last_read_at ?? null;
 
     let telemetry: {
       lat: number;
@@ -281,12 +286,14 @@ export const markThreadRead = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) return { ok: true };
-    await supabase
-      .from("direct_reads")
-      .upsert(
-        { thread_id: data.threadId, profile_id: me as string, last_read_at: new Date().toISOString() },
-        { onConflict: "thread_id,profile_id" },
-      );
+    await supabase.from("direct_reads").upsert(
+      {
+        thread_id: data.threadId,
+        profile_id: me as string,
+        last_read_at: new Date().toISOString(),
+      },
+      { onConflict: "thread_id,profile_id" },
+    );
     return { ok: true };
   });
 
@@ -307,7 +314,10 @@ export const toggleReaction = createServerFn({ method: "POST" })
       .eq("emoji", emoji)
       .maybeSingle();
     if (existing?.id) {
-      await supabase.from("direct_reactions").delete().eq("id", existing.id as string);
+      await supabase
+        .from("direct_reactions")
+        .delete()
+        .eq("id", existing.id as string);
       return { on: false };
     }
     const { error } = await supabase
@@ -333,11 +343,19 @@ export const listContacts = createServerFn({ method: "GET" })
     if (groupIds.length === 0) return [];
     const { data: rows } = await supabase
       .from("group_members")
-      .select("profile_id, groups:group_id(name), profiles:profile_id(id, display_name, avatar_url, avatar_emoji)")
+      .select(
+        "profile_id, groups:group_id(name), profiles:profile_id(id, display_name, avatar_url, avatar_emoji)",
+      )
       .in("group_id", groupIds);
     const seen = new Map<
       string,
-      { id: string; name: string; avatar_url: string | null; avatar_emoji: string | null; circles: string[] }
+      {
+        id: string;
+        name: string;
+        avatar_url: string | null;
+        avatar_emoji: string | null;
+        circles: string[];
+      }
     >();
     for (const r of rows ?? []) {
       const p = (Array.isArray(r.profiles) ? r.profiles[0] : r.profiles) as {
@@ -383,6 +401,7 @@ export const uploadVoiceNote = createServerFn({ method: "POST" })
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("avatars")
       .createSignedUrl(path, 60 * 60 * 24 * 3650);
-    if (signErr || !signed) throw new Error(signErr?.message ?? "Could not read the recording back");
+    if (signErr || !signed)
+      throw new Error(signErr?.message ?? "Could not read the recording back");
     return { url: signed.signedUrl };
   });

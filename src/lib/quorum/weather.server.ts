@@ -73,5 +73,4 @@ export async function fetchForecast(
   } catch {
     return null;
   }
-
 }

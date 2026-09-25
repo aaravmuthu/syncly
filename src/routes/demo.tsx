@@ -117,12 +117,16 @@ function DemoPage() {
 
   const update = (patch: Partial<ConstraintPayload>) =>
     setMembers((prev) =>
-      prev.map((m) => (m.id === activeId ? { ...m, constraints: { ...m.constraints, ...patch } } : m)),
+      prev.map((m) =>
+        m.id === activeId ? { ...m, constraints: { ...m.constraints, ...patch } } : m,
+      ),
     );
 
   const toggleIn = (key: "likedTags" | "dislikedTags" | "dietary", value: string) => {
     const list = active.constraints[key] ?? [];
-    update({ [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] } as never);
+    update({
+      [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value],
+    } as never);
   };
 
   const ranked = useMemo(() => {
@@ -220,7 +224,9 @@ function DemoPage() {
                   type="button"
                   onClick={() => setActiveId(m.id)}
                   className={`pressable rounded-2xl border px-3 py-2 text-sm ${
-                    m.id === activeId ? "border-primary bg-primary/10 font-semibold" : "border-border"
+                    m.id === activeId
+                      ? "border-primary bg-primary/10 font-semibold"
+                      : "border-border"
                   }`}
                 >
                   <span className="mr-1">{m.emoji}</span>
@@ -348,7 +354,9 @@ function DemoPage() {
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  <Pill>${r.option.costMin}–${r.option.costMax}</Pill>
+                  <Pill>
+                    ${r.option.costMin}–${r.option.costMax}
+                  </Pill>
                   <Pill>{r.option.travelMinutes} min away</Pill>
                   <Pill>
                     {r.option.start}–{r.option.end}
@@ -371,9 +379,9 @@ function DemoPage() {
                       <Meter label="Fairness" value={r.breakdown.fairness} />
                     </div>
                     <p className="mt-2.5 text-xs text-muted-foreground">
-                      Overall Match is 62% preference fit, 28% fairness, 10% ride coverage.
-                      Budget, schedule, and travel are pass/fail requirements — already reflected
-                      in "Works for all {members.length}" above, not a percentage.
+                      Overall Match is 62% preference fit, 28% fairness, 10% ride coverage. Budget,
+                      schedule, and travel are pass/fail requirements — already reflected in "Works
+                      for all {members.length}" above, not a percentage.
                     </p>
                   </>
                 )}
@@ -425,7 +433,9 @@ function DemoPage() {
                     <li key={c.label}>
                       <span className="font-medium text-foreground">{c.label}</span> — {c.driver}{" "}
                       driving
-                      {c.passengers.length ? ` with ${c.passengers.join(", ")}` : " (no riders yet)"}
+                      {c.passengers.length
+                        ? ` with ${c.passengers.join(", ")}`
+                        : " (no riders yet)"}
                     </li>
                   ))}
                   {transport.unseated.length > 0 && (
@@ -484,7 +494,9 @@ function Chip({
       type="button"
       onClick={onClick}
       className={`pressable rounded-full border px-3 py-1.5 text-xs transition-colors ${
-        on ? "border-primary bg-primary/10 font-semibold text-primary" : "border-border text-muted-foreground"
+        on
+          ? "border-primary bg-primary/10 font-semibold text-primary"
+          : "border-border text-muted-foreground"
       }`}
     >
       {children}

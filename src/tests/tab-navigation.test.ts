@@ -8,7 +8,9 @@ function tabFromUrl(pathname: string): TabPath | null {
   return tabs.find((tab) => tab === pathname) ?? null;
 }
 
-const pairs = tabs.flatMap((from) => tabs.filter((to) => to !== from).map((to) => [from, to] as const));
+const pairs = tabs.flatMap((from) =>
+  tabs.filter((to) => to !== from).map((to) => [from, to] as const),
+);
 
 describe("tab navigation URL authority", () => {
   it.each(pairs)("keeps %s → %s on the destination route", (from, to) => {

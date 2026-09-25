@@ -280,14 +280,14 @@ function PrivacyPage() {
             "Account and profile information is kept for as long as your account is active.",
             "Live location pings are currently kept as history for as long as your account exists — there is not yet an automatic deletion window that clears location data after a plan ends or after a fixed number of days.",
             "Messages and plan data are kept for as long as the relevant plan or group exists, or until you delete them.",
-            "Guardian-link data is kept for as long as the link is active. Unlinking stops future sharing but does not retroactively delete data already shared — see \"Consent & control over the link\" above.",
+            'Guardian-link data is kept for as long as the link is active. Unlinking stops future sharing but does not retroactively delete data already shared — see "Consent & control over the link" above.',
             "We may retain limited data after account deletion where required for legal, security, or fraud-prevention purposes.",
           ]}
         />
         <p>
           <Ph>
-            [If you want location history to actually expire after a short window (e.g. 24 hours,
-            or when a plan ends), that needs to be built — it does not exist yet. Once it's built,
+            [If you want location history to actually expire after a short window (e.g. 24 hours, or
+            when a plan ends), that needs to be built — it does not exist yet. Once it's built,
             update the bullet above to state the real number instead of "kept as history
             indefinitely."]
           </Ph>
@@ -313,23 +313,22 @@ function PrivacyPage() {
 
       <Section id="delete" title="8. Deleting your account & data">
         <p>
-          You can delete your account and associated personal data at any time from Settings, or
-          by emailing <Ph>[privacy/support contact email]</Ph> from the email address on your
-          account.
+          You can delete your account and associated personal data at any time from Settings, or by
+          emailing <Ph>[privacy/support contact email]</Ph> from the email address on your account.
         </p>
         <p>
           When you delete your account, we remove or de-identify your profile, messages, and
           location data within <Ph>[X days, e.g. 30]</Ph>, except where we're required to keep
           limited records for legal, security, or safety reasons (for example, records relevant to
           an open guardian dispute or a legal request). Deleting your account also removes any
-          active guardian link, though the other party is not currently notified automatically
-          when that happens.{" "}
+          active guardian link, though the other party is not currently notified automatically when
+          that happens.{" "}
           <Ph>
-            [The deletion path currently removes the account directly; whether it fully removes
-            data from every table (not just the profile) has not been independently verified end
-            to end. Confirm this actually works as described — including whether unlinked
-            guardians get notified, if you want that — before this section makes the removal
-            promise above as a firm commitment.]
+            [The deletion path currently removes the account directly; whether it fully removes data
+            from every table (not just the profile) has not been independently verified end to end.
+            Confirm this actually works as described — including whether unlinked guardians get
+            notified, if you want that — before this section makes the removal promise above as a
+            firm commitment.]
           </Ph>
         </p>
       </Section>

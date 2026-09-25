@@ -43,7 +43,10 @@ export const Route = createFileRoute("/_authenticated/_app/home")({
   loader: ({ context }) => {
     void context.queryClient.ensureQueryData({ queryKey: ["me"], queryFn: () => getMe() });
     void context.queryClient.ensureQueryData({ queryKey: ["groups"], queryFn: () => listGroups() });
-    void context.queryClient.ensureQueryData({ queryKey: ["dashboard"], queryFn: () => getDashboard() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["dashboard"],
+      queryFn: () => getDashboard(),
+    });
   },
   head: () => ({
     meta: [
@@ -123,8 +126,7 @@ export function HomePage() {
         (p) =>
           !conflicted.includes(p) &&
           p.i_attending == null &&
-          ((p.status === "collecting" && !p.i_responded) ||
-            (p.status === "voting" && !p.i_voted)),
+          ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
       );
       const answeredActive = dayFiltered.filter(
         (p) =>
@@ -161,7 +163,15 @@ export function HomePage() {
       const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
       const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
 
-      return { conflicted, needsAction, answeredActive, otherActive, activeNow, upcoming, memories };
+      return {
+        conflicted,
+        needsAction,
+        answeredActive,
+        otherActive,
+        activeNow,
+        upcoming,
+        memories,
+      };
     }, [dayFiltered]);
 
   const groupList = useMemo(
@@ -193,191 +203,189 @@ export function HomePage() {
           await Promise.all([dash.refetch(), groups.refetch()]);
         }}
       >
-      <div className="space-y-6">
+        <div className="space-y-6">
+          <WeekStrip
+            weekStart={weekStart}
+            selected={selectedDay}
+            onSelect={setSelectedDay}
+            marks={marks}
+            onShift={(d) => setWeekOffset((v) => v + d)}
+          />
 
-        <WeekStrip
-          weekStart={weekStart}
-          selected={selectedDay}
-          onSelect={setSelectedDay}
-          marks={marks}
-          onShift={(d) => setWeekOffset((v) => v + d)}
-        />
-
-        {/* Quick actions -- both float as glass pills now, matching Radar's
+          {/* Quick actions -- both float as glass pills now, matching Radar's
             controls. Magic AI plan stays the hero (flex-[2], larger text)
             beside the smaller secondary Join code affordance -- weight
             comes from size within the shared glass language, not from
             being the one filled button next to translucent ones. */}
-        <div className="flex items-stretch gap-2.5">
-          <Link to="/groups" className="flex-[2]">
-            <Button variant="glass" className="h-14 w-full text-base text-primary">
-              <Sparkles className="h-5 w-5" /> Magic AI plan
+          <div className="flex items-stretch gap-2.5">
+            <Link to="/groups" className="flex-[2]">
+              <Button variant="glass" className="h-14 w-full text-base text-primary">
+                <Sparkles className="h-5 w-5" /> Magic AI plan
+              </Button>
+            </Link>
+            <Button variant="glass" className="h-14 flex-1" onClick={() => setJoinOpen(true)}>
+              <KeyRound className="h-4 w-4" /> Join code
             </Button>
-          </Link>
-          <Button variant="glass" className="h-14 flex-1" onClick={() => setJoinOpen(true)}>
-            <KeyRound className="h-4 w-4" /> Join code
-          </Button>
-        </div>
-
-        {dash.isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-44 rounded-3xl" />
-            <Skeleton className="h-28 rounded-3xl" />
           </div>
-        ) : null}
 
-        {/* A failed fetch previously fell through to the same "No plans
+          {dash.isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-44 rounded-3xl" />
+              <Skeleton className="h-28 rounded-3xl" />
+            </div>
+          ) : null}
+
+          {/* A failed fetch previously fell through to the same "No plans
             yet" empty state as genuinely having zero plans -- indistinguishable
             to the user. */}
-        {dash.isError ? (
-          <Empty
-            title="Couldn't load your week"
-            body="Check your connection and try again."
-            action={<Button onClick={() => dash.refetch()}>Try again</Button>}
-          />
-        ) : null}
-
-        {empty ? (
-          <Empty
-            title="No plans yet"
-            body="Create a group, invite the people you actually make plans with, then start a plan. Everyone fills out their own private questionnaire."
-            action={
-              <Link to="/groups">
-                <Button>Set up a group</Button>
-              </Link>
-            }
-          />
-        ) : null}
-
-        {selectedDay && dayFiltered.length === 0 ? (
-          <Glass className="text-center text-sm text-muted-foreground">
-            Nothing scheduled on{" "}
-            {new Date(`${selectedDay}T12:00:00`).toLocaleDateString(undefined, {
-              weekday: "long",
-              month: "short",
-              day: "numeric",
-            })}
-            .{" "}
-            <button
-              type="button"
-              className="font-semibold text-primary"
-              onClick={() => setSelectedDay(null)}
-            >
-              Show the whole week
-            </button>
-          </Glass>
-        ) : null}
-
-        {conflicted.length > 0 ? (
-          <Section title="Conflicts" accent="text-foreground">
-            <div className="grid gap-3">
-              {conflicted.map((p) => (
-                <ConflictCard
-                  key={p.id}
-                  planId={p.id}
-                  title={p.title}
-                  conflicts={p.conflicts ?? []}
-                  alternatives={p.alternatives ?? []}
-                  original={p.original_option ?? null}
-                />
-              ))}
-            </div>
-          </Section>
-        ) : null}
-
-        <LayoutGroup>
-          {activeNow.length > 0 ? (
-            <section className="space-y-3">
-              <h2 className="text-title font-semibold tracking-tight">Active right now</h2>
-              <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <AnimatePresence initial={false} mode="popLayout">
-                  {activeNow.map((p) => (
-                    <motion.div
-                      key={p.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.97 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={cardSpring}
-                      className="w-[88%] shrink-0 snap-start sm:w-[420px]"
-                    >
-                      <SpotlightCard tilt className="rounded-surface">
-                        <LiveActivityCard plan={p} />
-                      </SpotlightCard>
-                    </motion.div>
-
-                  ))}
-                </AnimatePresence>
-              </div>
-            </section>
-          ) : null}
-        </LayoutGroup>
-
-        {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
-            <p className="text-sm">
-              <span className="mr-1">📍</span>
-              Add your home address to get exact drive distances to every spot.
-            </p>
-            <Link to="/settings">
-              <Button variant="outline">Set address</Button>
-            </Link>
-          </div>
-        ) : null}
-        {me.data && me.data.account_type !== "guardian" ? (
-          <TeenSafetyBar sharing={Boolean(me.data.location_sharing_enabled)} />
-        ) : null}
-
-        <SquadDigestCard />
-
-        <FindMySquad />
-
-        {upcoming.length > 0 || memories.length > 0 ? (
-          <section className="space-y-3">
-            <h2 className="text-title font-semibold tracking-tight">Upcoming &amp; memories</h2>
-            <div className="grid gap-3">
-              {upcoming.map((p) => (
-                <ConfirmedCard key={p.id} plan={p} />
-              ))}
-              {memories.map((p) => (
-                <Link
-                  key={p.id}
-                  to="/plans/$planId"
-                  params={{ planId: p.id }}
-                  className="flex items-center gap-3 rounded-surface border border-border bg-card/30 px-4 py-3 backdrop-blur-3xl"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-muted-foreground">
-                      {p.title}
-                    </p>
-                    <p className="truncate text-xs font-medium text-muted-foreground/70">
-                      {formatWhen(p.window_start)} · {p.groups?.name ?? "Group"}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {groupList.length > 0 ? (
-          <Section title="Active circles">
-            <GroupsRail groups={groupList} />
-          </Section>
-        ) : !groups.isLoading ? (
-          <Section title="Active circles">
+          {dash.isError ? (
             <Empty
-              title="No groups yet"
-              body="Create a squad or join one with a six-character code to start planning together."
+              title="Couldn't load your week"
+              body="Check your connection and try again."
+              action={<Button onClick={() => dash.refetch()}>Try again</Button>}
+            />
+          ) : null}
+
+          {empty ? (
+            <Empty
+              title="No plans yet"
+              body="Create a group, invite the people you actually make plans with, then start a plan. Everyone fills out their own private questionnaire."
               action={
                 <Link to="/groups">
                   <Button>Set up a group</Button>
                 </Link>
               }
             />
-          </Section>
-        ) : null}
-      </div>
+          ) : null}
+
+          {selectedDay && dayFiltered.length === 0 ? (
+            <Glass className="text-center text-sm text-muted-foreground">
+              Nothing scheduled on{" "}
+              {new Date(`${selectedDay}T12:00:00`).toLocaleDateString(undefined, {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+              })}
+              .{" "}
+              <button
+                type="button"
+                className="font-semibold text-primary"
+                onClick={() => setSelectedDay(null)}
+              >
+                Show the whole week
+              </button>
+            </Glass>
+          ) : null}
+
+          {conflicted.length > 0 ? (
+            <Section title="Conflicts" accent="text-foreground">
+              <div className="grid gap-3">
+                {conflicted.map((p) => (
+                  <ConflictCard
+                    key={p.id}
+                    planId={p.id}
+                    title={p.title}
+                    conflicts={p.conflicts ?? []}
+                    alternatives={p.alternatives ?? []}
+                    original={p.original_option ?? null}
+                  />
+                ))}
+              </div>
+            </Section>
+          ) : null}
+
+          <LayoutGroup>
+            {activeNow.length > 0 ? (
+              <section className="space-y-3">
+                <h2 className="text-title font-semibold tracking-tight">Active right now</h2>
+                <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {activeNow.map((p) => (
+                      <motion.div
+                        key={p.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.96 }}
+                        transition={cardSpring}
+                        className="w-[88%] shrink-0 snap-start sm:w-[420px]"
+                      >
+                        <SpotlightCard tilt className="rounded-surface">
+                          <LiveActivityCard plan={p} />
+                        </SpotlightCard>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </section>
+            ) : null}
+          </LayoutGroup>
+
+          {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
+              <p className="text-sm">
+                <span className="mr-1">📍</span>
+                Add your home address to get exact drive distances to every spot.
+              </p>
+              <Link to="/settings">
+                <Button variant="outline">Set address</Button>
+              </Link>
+            </div>
+          ) : null}
+          {me.data && me.data.account_type !== "guardian" ? (
+            <TeenSafetyBar sharing={Boolean(me.data.location_sharing_enabled)} />
+          ) : null}
+
+          <SquadDigestCard />
+
+          <FindMySquad />
+
+          {upcoming.length > 0 || memories.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-title font-semibold tracking-tight">Upcoming &amp; memories</h2>
+              <div className="grid gap-3">
+                {upcoming.map((p) => (
+                  <ConfirmedCard key={p.id} plan={p} />
+                ))}
+                {memories.map((p) => (
+                  <Link
+                    key={p.id}
+                    to="/plans/$planId"
+                    params={{ planId: p.id }}
+                    className="flex items-center gap-3 rounded-surface border border-border bg-card/30 px-4 py-3 backdrop-blur-3xl"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-muted-foreground">
+                        {p.title}
+                      </p>
+                      <p className="truncate text-xs font-medium text-muted-foreground/70">
+                        {formatWhen(p.window_start)} · {p.groups?.name ?? "Group"}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {groupList.length > 0 ? (
+            <Section title="Active circles">
+              <GroupsRail groups={groupList} />
+            </Section>
+          ) : !groups.isLoading ? (
+            <Section title="Active circles">
+              <Empty
+                title="No groups yet"
+                body="Create a squad or join one with a six-character code to start planning together."
+                action={
+                  <Link to="/groups">
+                    <Button>Set up a group</Button>
+                  </Link>
+                }
+              />
+            </Section>
+          ) : null}
+        </div>
       </PullToRefresh>
     </>
   );

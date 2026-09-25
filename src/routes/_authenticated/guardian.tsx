@@ -186,80 +186,86 @@ function GuardianHub() {
         </div>
       ) : (
         <PullToRefresh onRefresh={() => hub.refetch()}>
-        <div className="space-y-4">
-          <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
-            {teens.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setActiveTeen(t.id)}
-                className={cn(
-                  "tap-target flex snap-start items-center gap-2 rounded-2xl border px-3 py-2 transition",
-                  t.id === teen?.id
-                    ? "border-emerald-500/50 bg-emerald-500/10"
-                    : "border-border hover:bg-secondary",
-                )}
-              >
-                <Avatar url={t.avatar_url} emoji={t.emoji} name={t.name} size={28} />
-                <span className="whitespace-nowrap text-sm font-medium">{t.name}</span>
-                <span className="text-xs text-muted-foreground">{t.status.emoji}</span>
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setActiveTeen("__add")}
-              className="tap-target snap-start whitespace-nowrap rounded-2xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground"
-            >
-              + Add teen
-            </button>
-          </div>
-
-          {activeTeen === "__add" ? (
-            <div className="space-y-4">
-              <Card className="space-y-3">
-                <div className="text-sm font-semibold">Link another teen</div>
-                <div className="flex gap-2">
-                  <input
-                    className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="000000"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  />
-                  <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
-                    Link
-                  </Button>
-                </div>
-              </Card>
-            </div>
-          ) : teen ? (
-            <TeenPanel teen={teen} />
-          ) : null}
-
-          {(hub.data?.alerts ?? []).length > 0 ? (
-            <Card className="space-y-2">
-              <div className="text-sm font-semibold">Recent alerts</div>
-              {(hub.data?.alerts ?? []).slice(0, 8).map((a) => (
-                <div
-                  key={a.id}
+          <div className="space-y-4">
+            <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1">
+              {teens.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveTeen(t.id)}
                   className={cn(
-                    "rounded-2xl border px-3 py-2",
-                    a.priority === "high"
-                      ? "border-destructive/40 bg-destructive/10"
-                      : "border-border",
+                    "tap-target flex snap-start items-center gap-2 rounded-2xl border px-3 py-2 transition",
+                    t.id === teen?.id
+                      ? "border-emerald-500/50 bg-emerald-500/10"
+                      : "border-border hover:bg-secondary",
                   )}
                 >
-                  <div className="text-sm font-medium">{a.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {a.body ? `${a.body} · ` : ""}
-                    {ago(a.created_at)}
-                  </div>
-                </div>
+                  <Avatar url={t.avatar_url} emoji={t.emoji} name={t.name} size={28} />
+                  <span className="whitespace-nowrap text-sm font-medium">{t.name}</span>
+                  <span className="text-xs text-muted-foreground">{t.status.emoji}</span>
+                </button>
               ))}
-            </Card>
-          ) : null}
-        </div>
+              <button
+                type="button"
+                onClick={() => setActiveTeen("__add")}
+                className="tap-target snap-start whitespace-nowrap rounded-2xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground"
+              >
+                + Add teen
+              </button>
+            </div>
+
+            {activeTeen === "__add" ? (
+              <div className="space-y-4">
+                <Card className="space-y-3">
+                  <div className="text-sm font-semibold">Link another teen</div>
+                  <div className="flex gap-2">
+                    <input
+                      className={cn(
+                        inputClass,
+                        "text-center text-lg tracking-[0.3em] tabular-nums",
+                      )}
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="000000"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    />
+                    <Button
+                      loading={link.isPending}
+                      onClick={() => link.mutate({ data: { code } })}
+                    >
+                      Link
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            ) : teen ? (
+              <TeenPanel teen={teen} />
+            ) : null}
+
+            {(hub.data?.alerts ?? []).length > 0 ? (
+              <Card className="space-y-2">
+                <div className="text-sm font-semibold">Recent alerts</div>
+                {(hub.data?.alerts ?? []).slice(0, 8).map((a) => (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      "rounded-2xl border px-3 py-2",
+                      a.priority === "high"
+                        ? "border-destructive/40 bg-destructive/10"
+                        : "border-border",
+                    )}
+                  >
+                    <div className="text-sm font-medium">{a.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {a.body ? `${a.body} · ` : ""}
+                      {ago(a.created_at)}
+                    </div>
+                  </div>
+                ))}
+              </Card>
+            ) : null}
+          </div>
         </PullToRefresh>
       )}
     </GuardianShell>

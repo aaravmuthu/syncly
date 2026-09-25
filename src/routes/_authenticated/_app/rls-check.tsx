@@ -18,7 +18,8 @@ export const Route = createFileRoute("/_authenticated/_app/rls-check")({
       { property: "og:title", content: "Security self-check · Syncly" },
       {
         property: "og:description",
-        content: "Verify that other members can never edit or delete your plans, profile or alerts.",
+        content:
+          "Verify that other members can never edit or delete your plans, profile or alerts.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -32,7 +33,10 @@ function RlsCheckPage() {
 
   return (
     <>
-      <PageHeader title="Security self-check" subtitle="Confirm nobody else can edit or delete your data" />
+      <PageHeader
+        title="Security self-check"
+        subtitle="Confirm nobody else can edit or delete your data"
+      />
       <Card className="space-y-4">
         <p className="text-sm text-muted-foreground">
           This runs a live probe against the database: temporary rows are created for a fake other

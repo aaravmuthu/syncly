@@ -15,9 +15,7 @@ export type VenueInsight = {
 const Schema = z.object({
   popular_dishes: z.array(z.string()),
   vibes: z.array(z.string()),
-  reviews: z.array(
-    z.object({ author: z.string(), rating: z.number(), text: z.string() }),
-  ),
+  reviews: z.array(z.object({ author: z.string(), rating: z.number(), text: z.string() })),
 });
 
 function fallback(input: { name: string; kind: string }): VenueInsight {

@@ -4,7 +4,8 @@ import { errorResult, myProfileId, supabaseForUser, textResult } from "../supaba
 export default defineTool({
   name: "list_circles",
   title: "List my circles",
-  description: "List the Syncly circles (groups) the signed-in member belongs to, with their invite kind and role.",
+  description:
+    "List the Syncly circles (groups) the signed-in member belongs to, with their invite kind and role.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {
@@ -35,7 +36,9 @@ export default defineTool({
     });
     if (!circles.length) return textResult("You are not in any circles yet.", { circles });
     return textResult(
-      circles.map((c) => `${c.emoji} ${c.name} — ${c.kind}, you are ${c.myRole} (id: ${c.id})`).join("\n"),
+      circles
+        .map((c) => `${c.emoji} ${c.name} — ${c.kind}, you are ${c.myRole} (id: ${c.id})`)
+        .join("\n"),
       { circles },
     );
   },

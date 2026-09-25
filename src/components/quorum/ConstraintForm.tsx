@@ -57,7 +57,9 @@ export function ConstraintForm({
         <button
           type="button"
           className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          onClick={() => (stepIndex === 0 ? onSubmit({ ...value, skipped: true }) : setStepIndex(stepIndex - 1))}
+          onClick={() =>
+            stepIndex === 0 ? onSubmit({ ...value, skipped: true }) : setStepIndex(stepIndex - 1)
+          }
         >
           {stepIndex === 0 ? "Skip — no strong opinions" : "Back"}
         </button>
@@ -193,7 +195,9 @@ function FieldRenderer({
                 }
                 className={cn(
                   "rounded-full px-3 py-1.5 text-sm capitalize transition",
-                  on ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
+                  on
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary text-secondary-foreground",
                 )}
               >
                 {o}
@@ -258,7 +262,11 @@ function FieldRenderer({
           onChange={(e) =>
             onChange(
               field.key,
-              e.target.value === "" ? null : type === "number" ? Number(e.target.value) : e.target.value,
+              e.target.value === ""
+                ? null
+                : type === "number"
+                  ? Number(e.target.value)
+                  : e.target.value,
             )
           }
         />

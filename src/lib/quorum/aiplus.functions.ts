@@ -11,7 +11,14 @@ import type {
   VibeRank,
 } from "./aiplus.server";
 
-export type { ConciergeAction, ConciergeTurn, GuardianAiSummary, SquadDigest, SynclyPlanRef, VibeRank };
+export type {
+  ConciergeAction,
+  ConciergeTurn,
+  GuardianAiSummary,
+  SquadDigest,
+  SynclyPlanRef,
+  VibeRank,
+};
 
 /**
  * Human relative-day label ("today", "this weekend", "in 3 days", "Sep 12")
@@ -23,7 +30,9 @@ function relativeDay(iso: string | null): string | null {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
-  const days = Math.round((startOfDay(d).getTime() - startOfDay(new Date()).getTime()) / 86_400_000);
+  const days = Math.round(
+    (startOfDay(d).getTime() - startOfDay(new Date()).getTime()) / 86_400_000,
+  );
   if (days < 0) return null;
   if (days === 0) return "today";
   if (days === 1) return "tomorrow";
@@ -73,7 +82,9 @@ export const askPlanConcierge = createServerFn({ method: "POST" })
           .maybeSingle(),
         supabase
           .from("recommendations")
-          .select("id, title, subtitle, cost_min, cost_max, travel_minutes, address, tags, score, rank")
+          .select(
+            "id, title, subtitle, cost_min, cost_max, travel_minutes, address, tags, score, rank",
+          )
           .eq("plan_id", data.planId)
           .order("rank"),
         supabase
@@ -152,7 +163,9 @@ export const getSquadDigest = createServerFn({ method: "GET" })
             .from("plan_participants")
             .select("plan_id, profile_id, responded")
             .in("plan_id", ids)
-        : Promise.resolve({ data: [] as { plan_id: string; profile_id: string; responded: boolean }[] }),
+        : Promise.resolve({
+            data: [] as { plan_id: string; profile_id: string; responded: boolean }[],
+          }),
       ids.length
         ? supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids)
         : Promise.resolve({ data: [] as { plan_id: string; profile_id: string }[] }),
@@ -285,7 +298,12 @@ export const vibeSearchSpots = createServerFn({ method: "POST" })
     if (!origin) return { needsHome: true, originLabel: null, aiGenerated: false, spots: [] };
 
     const seeds = await searchVenuesGeoapify({
-      origin: { lat: origin.lat, lon: origin.lon, label: origin.label, zip: profile?.zip_code ?? "" },
+      origin: {
+        lat: origin.lat,
+        lon: origin.lon,
+        label: origin.label,
+        zip: profile?.zip_code ?? "",
+      },
       category: data.kind === "activity" ? "hangout" : "dinner",
       maxRadiusMiles: data.radiusMiles ?? 12,
       limit: 20,
@@ -357,7 +375,11 @@ export const getGuardianAiSummary = createServerFn({ method: "POST" })
       ? dash.teens.find((t) => t.id === data.teenProfileId)
       : dash.teens[0];
     if (!teen) {
-      return { summary: "No linked teens yet — share a sync code to get started.", watchouts: [], aiGenerated: false };
+      return {
+        summary: "No linked teens yet — share a sync code to get started.",
+        watchouts: [],
+        aiGenerated: false,
+      };
     }
 
     // Delays/checkins have no plan_id — correlate by time proximity instead
@@ -415,7 +437,12 @@ export const getGuardianAiSummary = createServerFn({ method: "POST" })
 /* ------------------------------------------------------------------ */
 
 /** Resolved, client-facing action -- groupId is filled in server-side from an authoritative membership query, never taken from the model. */
-export type SynclyAction = { type: "create_plan"; groupId: string; groupName: string; prompt: string };
+export type SynclyAction = {
+  type: "create_plan";
+  groupId: string;
+  groupName: string;
+  prompt: string;
+};
 
 export type SynclyAnswer = { answer: string; planRef?: SynclyPlanRef; action?: SynclyAction };
 
@@ -455,7 +482,10 @@ export const askSyncly = createServerFn({ method: "POST" })
       // policy grants roster visibility (every member of a group you're in),
       // so an unfiltered select here would return one row per fellow member,
       // duplicating each group once per person in it.
-      supabase.from("group_members").select("groups(id, name)").eq("profile_id", myId as string),
+      supabase
+        .from("group_members")
+        .select("groups(id, name)")
+        .eq("profile_id", myId as string),
     ]);
     const list = plans ?? [];
     const ids = list.map((p) => p.id as string);
@@ -465,8 +495,13 @@ export const askSyncly = createServerFn({ method: "POST" })
 
     const [{ data: parts }, { data: votes }] = await Promise.all([
       ids.length
-        ? supabase.from("plan_participants").select("plan_id, profile_id, responded").in("plan_id", ids)
-        : Promise.resolve({ data: [] as { plan_id: string; profile_id: string; responded: boolean }[] }),
+        ? supabase
+            .from("plan_participants")
+            .select("plan_id, profile_id, responded")
+            .in("plan_id", ids)
+        : Promise.resolve({
+            data: [] as { plan_id: string; profile_id: string; responded: boolean }[],
+          }),
       ids.length
         ? supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids)
         : Promise.resolve({ data: [] as { plan_id: string; profile_id: string }[] }),
@@ -487,9 +522,15 @@ export const askSyncly = createServerFn({ method: "POST" })
     const facts = {
       needsYou: list
         .filter((p) => {
-          const mine = (parts ?? []).find((r) => r.plan_id === p.id && r.profile_id === (myId as string));
-          const voted = (votes ?? []).some((v) => v.plan_id === p.id && v.profile_id === (myId as string));
-          return (p.status === "collecting" && !mine?.responded) || (p.status === "voting" && !voted);
+          const mine = (parts ?? []).find(
+            (r) => r.plan_id === p.id && r.profile_id === (myId as string),
+          );
+          const voted = (votes ?? []).some(
+            (v) => v.plan_id === p.id && v.profile_id === (myId as string),
+          );
+          return (
+            (p.status === "collecting" && !mine?.responded) || (p.status === "voting" && !voted)
+          );
         })
         .slice(0, 5)
         .map((p) => ({
@@ -500,7 +541,10 @@ export const askSyncly = createServerFn({ method: "POST" })
         })),
       upcoming: list
         .filter(
-          (p) => p.status === "finalized" && p.window_start && new Date(p.window_start as string).getTime() > now,
+          (p) =>
+            p.status === "finalized" &&
+            p.window_start &&
+            new Date(p.window_start as string).getTime() > now,
         )
         .slice(0, 5)
         .map((p) => ({
@@ -511,7 +555,10 @@ export const askSyncly = createServerFn({ method: "POST" })
         })),
       // Every group the member is actually in, not just ones with an active
       // plan right now -- so "plan something with X" works for a quiet group too.
-      groups: groupRoster.map((g) => ({ name: g.name, activePlans: activeByGroup.get(g.name) ?? 0 })),
+      groups: groupRoster.map((g) => ({
+        name: g.name,
+        activePlans: activeByGroup.get(g.name) ?? 0,
+      })),
       recentActivity: (activity ?? []).map((a) => ({
         message: a.message,
         when: relativeDay(a.created_at as string),

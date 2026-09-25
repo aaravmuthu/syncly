@@ -70,10 +70,14 @@ function AvailabilityBody({ planId }: { planId: string }) {
             <div key={c.slot} className="text-center">
               <div
                 className="h-9 rounded-lg border border-border/60"
-                style={{ backgroundColor: `color-mix(in oklab, var(--color-primary) ${Math.round(tone * 100)}%, transparent)` }}
+                style={{
+                  backgroundColor: `color-mix(in oklab, var(--color-primary) ${Math.round(tone * 100)}%, transparent)`,
+                }}
                 title={`${c.free} of ${c.total} free at ${prettySlot(c.slot)}`}
               />
-              <span className="mt-1 block text-caption text-muted-foreground">{prettySlot(c.slot)}</span>
+              <span className="mt-1 block text-caption text-muted-foreground">
+                {prettySlot(c.slot)}
+              </span>
             </div>
           );
         })}
@@ -128,7 +132,10 @@ export function PlanInsights({ planId }: { planId: string }) {
           ) : null}
         </span>
         <ChevronDown
-          className={cn("size-4 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")}
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform",
+            expanded && "rotate-180",
+          )}
           aria-hidden
         />
       </button>
@@ -138,7 +145,9 @@ export function PlanInsights({ planId }: { planId: string }) {
           <AvailabilityBody planId={planId} />
         </div>
       ) : (
-        <p className="mt-1 text-xs text-muted-foreground">Weather forecast and group availability</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Weather forecast and group availability
+        </p>
       )}
     </Card>
   );

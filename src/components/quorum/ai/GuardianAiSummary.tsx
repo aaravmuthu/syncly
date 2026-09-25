@@ -3,7 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion } from "motion/react";
 import { ShieldCheck } from "lucide-react";
 import { Card, Skeleton } from "@/components/quorum/ui";
-import { getGuardianAiSummary, type GuardianAiSummary as Summary } from "@/lib/quorum/aiplus.functions";
+import {
+  getGuardianAiSummary,
+  type GuardianAiSummary as Summary,
+} from "@/lib/quorum/aiplus.functions";
 import { AiActivity } from "./AiActivity";
 import { AiGlyph } from "./AiGlyph";
 

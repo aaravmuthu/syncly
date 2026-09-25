@@ -27,7 +27,11 @@ const MotionLink = motion.create(Link);
  */
 export function GlowButton({ children, className, to, href, search, glow = "primary" }: Props) {
   const gestures = {
-    whileHover: { y: -3, boxShadow: GLOW_SHADOW[glow], transition: { duration: 0.18, ease: "easeOut" as const } },
+    whileHover: {
+      y: -3,
+      boxShadow: GLOW_SHADOW[glow],
+      transition: { duration: 0.18, ease: "easeOut" as const },
+    },
     whileTap: { scale: 0.97, transition: { duration: 0.1, ease: "easeOut" as const } },
   };
 

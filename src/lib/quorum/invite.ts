@@ -4,7 +4,10 @@ const KEY = "syncly:pending-invite";
 export const CODE_ALPHABET = /^[A-Z0-9]{4,8}$/;
 
 export function normalizeCode(raw: string) {
-  return (raw ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+  return (raw ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 8);
 }
 
 export function isValidCode(raw: string) {

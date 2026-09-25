@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { oauth, type AuthorizationDetails } from "@/lib/oauth-consent";
 import { isHttpUrl } from "@/lib/safe-dom";
 
-
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
@@ -78,9 +77,7 @@ function Consent() {
         <p className="mt-2 text-sm text-muted-foreground">
           {clientName} will be able to call Syncly&apos;s tools while you are signed in.
         </p>
-        {email ? (
-          <p className="mt-3 text-xs text-muted-foreground">Signed in as {email}</p>
-        ) : null}
+        {email ? <p className="mt-3 text-xs text-muted-foreground">Signed in as {email}</p> : null}
         {details?.scope ? (
           <p className="mt-3 text-xs text-muted-foreground">Requested access: {details.scope}</p>
         ) : null}

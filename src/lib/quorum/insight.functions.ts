@@ -13,34 +13,45 @@ import type { Forecast } from "./weather";
 export const getAvailabilityHeatmap = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: v.id }))
-  .handler(async ({ data, context }): Promise<{ cells: AvailabilityCell[]; answered: number; total: number }> => {
-    const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
-    if (!allowed) throw new Error("Forbidden");
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ cells: AvailabilityCell[]; answered: number; total: number }> => {
+      const { data: allowed } = await context.supabase.rpc("can_see_plan", {
+        _plan_id: data.planId,
+      });
+      if (!allowed) throw new Error("Forbidden");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: participants } = await supabaseAdmin
-      .from("plan_participants")
-      .select("profile_id, attending")
-      .eq("plan_id", data.planId);
-    const { data: rows } = await supabaseAdmin
-      .from("plan_constraints")
-      .select("profile_id, payload")
-      .eq("plan_id", data.planId);
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: participants } = await supabaseAdmin
+        .from("plan_participants")
+        .select("profile_id, attending")
+        .eq("plan_id", data.planId);
+      const { data: rows } = await supabaseAdmin
+        .from("plan_constraints")
+        .select("profile_id, payload")
+        .eq("plan_id", data.planId);
 
-    const attending = (participants ?? []).filter((p) => p.attending !== false);
-    const total = attending.length;
-    const marked = attending
-      .map((p) => (rows ?? []).find((r) => r.profile_id === p.profile_id)?.payload as ConstraintPayload | undefined)
-      .filter((p): p is ConstraintPayload => Boolean(p?.availability?.length));
+      const attending = (participants ?? []).filter((p) => p.attending !== false);
+      const total = attending.length;
+      const marked = attending
+        .map(
+          (p) =>
+            (rows ?? []).find((r) => r.profile_id === p.profile_id)?.payload as
+              ConstraintPayload | undefined,
+        )
+        .filter((p): p is ConstraintPayload => Boolean(p?.availability?.length));
 
-    const cells: AvailabilityCell[] = AVAILABILITY_SLOTS.map((slot) => ({
-      slot,
-      free: marked.filter((m) => (m.availability ?? []).includes(slot)).length,
-      total,
-    }));
+      const cells: AvailabilityCell[] = AVAILABILITY_SLOTS.map((slot) => ({
+        slot,
+        free: marked.filter((m) => (m.availability ?? []).includes(slot)).length,
+        total,
+      }));
 
-    return { cells, answered: marked.length, total };
-  });
+      return { cells, answered: marked.length, total };
+    },
+  );
 
 /** Live forecast anchored on the chosen venue's coordinates (ZIP as fallback). */
 export const getPlanWeather = createServerFn({ method: "GET" })
@@ -98,7 +109,6 @@ export const getPlanWeather = createServerFn({ method: "GET" })
     return fetchForecast(origin.lat, origin.lon, plan.window_start);
   });
 
-
 /* ------------------------------------------------------------------ */
 /* Notifications                                                       */
 /* ------------------------------------------------------------------ */
@@ -125,7 +135,11 @@ export const markNotificationsRead = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: me } = await context.supabase.rpc("my_profile_id");
     if (!me) return { ok: false };
-    let q = context.supabase.from("notifications").update({ read: true }).eq("profile_id", me).eq("read", false);
+    let q = context.supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("profile_id", me)
+      .eq("read", false);
     if (data.ids?.length) q = q.in("id", data.ids);
     await q;
     return { ok: true };
@@ -136,7 +150,9 @@ export const getGroupMemory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ groupId: v.id }))
   .handler(async ({ data, context }) => {
-    const { data: allowed } = await context.supabase.rpc("is_group_member", { _group_id: data.groupId });
+    const { data: allowed } = await context.supabase.rpc("is_group_member", {
+      _group_id: data.groupId,
+    });
     if (!allowed) return null;
     const { data: row } = await context.supabase
       .from("group_preferences")

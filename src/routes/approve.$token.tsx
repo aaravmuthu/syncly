@@ -48,7 +48,10 @@ function ApprovePage() {
 function TokenApproval({ token }: { token: string }) {
   const qc = useQueryClient();
   const fetchApproval = useServerFn(getApproval);
-  const q = useQuery({ queryKey: ["approval", token], queryFn: () => fetchApproval({ data: { token } }) });
+  const q = useQuery({
+    queryKey: ["approval", token],
+    queryFn: () => fetchApproval({ data: { token } }),
+  });
   const [condition, setCondition] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -83,12 +86,18 @@ function TokenApproval({ token }: { token: string }) {
             <Row label="Plan" value={q.data.planTitle} />
             {q.data.details ? (
               <>
-                <Row label="Where" value={`${q.data.details.title} · ${q.data.details.location_name ?? ""}`} />
+                <Row
+                  label="Where"
+                  value={`${q.data.details.title} · ${q.data.details.location_name ?? ""}`}
+                />
                 <Row
                   label="When"
                   value={`${q.data.date ?? "Date TBC"} · ${q.data.details.suggested_start}–${q.data.details.suggested_end}`}
                 />
-                <Row label="Cost" value={`$${q.data.details.cost_min}–$${q.data.details.cost_max} per person`} />
+                <Row
+                  label="Cost"
+                  value={`$${q.data.details.cost_min}–$${q.data.details.cost_max} per person`}
+                />
               </>
             ) : (
               <Row label="When" value={q.data.date ?? "Date to be confirmed"} />
@@ -105,7 +114,11 @@ function TokenApproval({ token }: { token: string }) {
             <div className="mt-6">
               <Pill
                 tone={
-                  q.data.status === "declined" ? "bad" : q.data.status === "approved" ? "good" : "warn"
+                  q.data.status === "declined"
+                    ? "bad"
+                    : q.data.status === "approved"
+                      ? "good"
+                      : "warn"
                 }
               >
                 You responded: {q.data.status.replace(/_/g, " ")}

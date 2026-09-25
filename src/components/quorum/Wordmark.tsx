@@ -10,13 +10,7 @@ export function Mark({ className }: { className?: string }) {
   );
 }
 
-export function Wordmark({
-  size = "md",
-  className,
-}: {
-  size?: "sm" | "md";
-  className?: string;
-}) {
+export function Wordmark({ size = "md", className }: { size?: "sm" | "md"; className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <Mark className={size === "sm" ? "size-7" : "size-8"} />

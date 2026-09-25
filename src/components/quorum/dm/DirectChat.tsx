@@ -332,7 +332,9 @@ export function DirectChat({
         ) : null}
 
         {peerReadAt && messages.some((m) => m.sender_id === me) ? (
-          <p className="pr-1 text-right text-caption text-muted-foreground">Read {time(peerReadAt)}</p>
+          <p className="pr-1 text-right text-caption text-muted-foreground">
+            Read {time(peerReadAt)}
+          </p>
         ) : null}
       </div>
 
@@ -562,7 +564,8 @@ function SystemChip({
         onClick={() => tappable && onFly(meta.lat!, meta.lon!, meta.label)}
         className={cn(
           "tap-target rounded-full border border-border bg-secondary/40 px-3.5 text-caption text-muted-foreground backdrop-blur",
-          tappable && "transition active:scale-[0.97] hover:border-primary/40 hover:text-foreground",
+          tappable &&
+            "transition active:scale-[0.97] hover:border-primary/40 hover:text-foreground",
         )}
       >
         {msg.content} · {time(msg.created_at)}

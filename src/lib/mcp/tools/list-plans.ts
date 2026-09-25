@@ -10,7 +10,15 @@ export default defineTool({
   inputSchema: {
     circleId: z.string().uuid().optional().describe("Only return plans in this circle."),
     status: z
-      .enum(["draft", "collecting", "recommending", "voting", "finalized", "cancelled", "completed"])
+      .enum([
+        "draft",
+        "collecting",
+        "recommending",
+        "voting",
+        "finalized",
+        "cancelled",
+        "completed",
+      ])
       .optional()
       .describe("Only return plans with this status."),
   },
@@ -21,7 +29,9 @@ export default defineTool({
     await myProfileId(supabase);
     let query = supabase
       .from("plans")
-      .select("id, title, category, status, window_start, window_end, location_area, group_id, groups(name, emoji)")
+      .select(
+        "id, title, category, status, window_start, window_end, location_area, group_id, groups(name, emoji)",
+      )
       .order("created_at", { ascending: false })
       .limit(25);
     if (circleId) query = query.eq("group_id", circleId);

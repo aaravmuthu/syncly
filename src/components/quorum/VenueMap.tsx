@@ -50,11 +50,15 @@ export function VenueMap({
       <ErrorBoundary label="venue-map" fallback={null}>
         <ClientOnly fallback={<Skeleton className="h-64 rounded-2xl" />}>
           <Suspense fallback={<Skeleton className="h-64 rounded-2xl" />}>
-            <Inner token={token.data} venues={venues} onSelect={onSelect} className={mapClassName} />
+            <Inner
+              token={token.data}
+              venues={venues}
+              onSelect={onSelect}
+              className={mapClassName}
+            />
           </Suspense>
         </ClientOnly>
       </ErrorBoundary>
     </Card>
   );
 }
-

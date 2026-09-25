@@ -32,7 +32,6 @@ export const suggestPlaces = createServerFn({ method: "POST" })
     });
   });
 
-
 /** Public Mapbox GL token for the browser. Empty string when maps are disabled. */
 export const getMapToken = createServerFn({ method: "GET" }).handler(async (): Promise<string> => {
   const { publicMapToken } = await import("./places.server");

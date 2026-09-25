@@ -176,7 +176,9 @@ function isQuotaError(error: unknown): boolean {
 export async function recordAiFailure(feature: string, error: unknown): Promise<void> {
   const quota = isQuotaError(error);
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[ai:${feature}] ${quota ? "quota exceeded" : "call failed"}: ${message.slice(0, 300)}`);
+  console.error(
+    `[ai:${feature}] ${quota ? "quota exceeded" : "call failed"}: ${message.slice(0, 300)}`,
+  );
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("ai_quota_events").insert({

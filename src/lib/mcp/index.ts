@@ -20,5 +20,12 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [listCirclesTool, listPlansTool, getPlanTool, createPlanTool, rsvpPlanTool, sendCircleMessageTool],
+  tools: [
+    listCirclesTool,
+    listPlansTool,
+    getPlanTool,
+    createPlanTool,
+    rsvpPlanTool,
+    sendCircleMessageTool,
+  ],
 });

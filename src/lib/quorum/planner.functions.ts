@@ -61,7 +61,6 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
       .eq("id", myId ?? "")
       .maybeSingle();
 
-
     const { loadMemberBases, fairPointFor } = await import("./fairpoint.server");
     const bases = await loadMemberBases(data.groupId);
     const fp = await fairPointFor(bases, (mine?.zip_code as string | null) ?? null);
@@ -252,7 +251,6 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       .select("zip_code, curfew_time")
       .eq("id", me)
       .maybeSingle();
-
 
     const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } =
       await import("./fairpoint.server");

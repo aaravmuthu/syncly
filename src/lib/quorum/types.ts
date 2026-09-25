@@ -54,9 +54,28 @@ export const CATEGORIES: {
     questionnaire: "trip",
     topLevel: true,
   },
-  { id: "party", label: "Party", emoji: "🎉", blurb: "Hosting and headcounts", questionnaire: "general", topLevel: true },
-  { id: "movie", label: "Movie", emoji: "🎬", blurb: "Showtimes and seats", questionnaire: "general" },
-  { id: "shopping", label: "Shopping", emoji: "🛍️", blurb: "Malls, thrifting, outlets", questionnaire: "general" },
+  {
+    id: "party",
+    label: "Party",
+    emoji: "🎉",
+    blurb: "Hosting and headcounts",
+    questionnaire: "general",
+    topLevel: true,
+  },
+  {
+    id: "movie",
+    label: "Movie",
+    emoji: "🎬",
+    blurb: "Showtimes and seats",
+    questionnaire: "general",
+  },
+  {
+    id: "shopping",
+    label: "Shopping",
+    emoji: "🛍️",
+    blurb: "Malls, thrifting, outlets",
+    questionnaire: "general",
+  },
   {
     id: "sports",
     label: "Sports & Rec",
@@ -65,9 +84,28 @@ export const CATEGORIES: {
     questionnaire: "general",
     topLevel: true,
   },
-  { id: "daytrip", label: "Day Trip", emoji: "🚗", blurb: "Out and back in a day", questionnaire: "trip" },
-  { id: "roadtrip", label: "Road Trip", emoji: "🛣️", blurb: "Longer drives, split costs", questionnaire: "trip" },
-  { id: "custom", label: "Custom", emoji: "✨", blurb: "Anything else", questionnaire: "general", topLevel: true },
+  {
+    id: "daytrip",
+    label: "Day Trip",
+    emoji: "🚗",
+    blurb: "Out and back in a day",
+    questionnaire: "trip",
+  },
+  {
+    id: "roadtrip",
+    label: "Road Trip",
+    emoji: "🛣️",
+    blurb: "Longer drives, split costs",
+    questionnaire: "trip",
+  },
+  {
+    id: "custom",
+    label: "Custom",
+    emoji: "✨",
+    blurb: "Anything else",
+    questionnaire: "general",
+    topLevel: true,
+  },
 ];
 
 /** The general, non-overlapping choices offered in category pickers. Movie,
@@ -193,5 +231,4 @@ export type ScoreBreakdown = {
     lat?: number;
     lon?: number;
   };
-
 };

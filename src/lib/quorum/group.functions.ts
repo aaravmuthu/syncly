@@ -3,9 +3,6 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-
-
-
 export const leaveGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ groupId: v.id, transferToProfileId: v.id.optional() }))

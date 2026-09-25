@@ -29,7 +29,11 @@ const isLive = (r: { expires_at: string | null }) =>
 /** Drops rows whose 1-hour / end-of-day window has already closed. */
 export async function sweepExpiredShares() {
   const db = await admin();
-  await db.from("location_shares").delete().not("expires_at", "is", null).lt("expires_at", new Date().toISOString());
+  await db
+    .from("location_shares")
+    .delete()
+    .not("expires_at", "is", null)
+    .lt("expires_at", new Date().toISOString());
 }
 
 function ghostActive(p: {
@@ -37,7 +41,9 @@ function ghostActive(p: {
   location_pause_indefinite: boolean;
 }) {
   if (p.location_pause_indefinite) return true;
-  return p.location_paused_until != null && new Date(p.location_paused_until).getTime() > Date.now();
+  return (
+    p.location_paused_until != null && new Date(p.location_paused_until).getTime() > Date.now()
+  );
 }
 
 /** Owners whose live pin the caller is currently allowed to see. */
@@ -183,7 +189,13 @@ async function profilesById(ids: string[]): Promise<Map<string, ProfileLite>> {
 async function latestPings(ids: string[]) {
   const map = new Map<
     string,
-    { lat: number; lon: number; battery_pct: number | null; status_label: string | null; created_at: string }
+    {
+      lat: number;
+      lon: number;
+      battery_pct: number | null;
+      status_label: string | null;
+      created_at: string;
+    }
   >();
   if (!ids.length) return map;
   const db = await admin();

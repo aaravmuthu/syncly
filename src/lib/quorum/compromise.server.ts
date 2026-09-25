@@ -32,8 +32,7 @@ async function loadPlanContext(planId: string) {
     .map(
       (p) =>
         (constraintRows ?? []).find((c) => c.profile_id === p.profile_id)?.payload as
-          | ConstraintPayload
-          | undefined,
+          ConstraintPayload | undefined,
     )
     .filter((p): p is ConstraintPayload => Boolean(p));
 
@@ -106,7 +105,9 @@ export async function buildPlanBSuggestion(planId: string): Promise<PlanBSuggest
         !isOutdoorOption({ title: r.title, tags: (r.tags as string[] | null) ?? [] }),
     ) ??
     ctx.recs.find(
-      (r) => r.id !== current.id && !isOutdoorOption({ title: r.title, tags: (r.tags as string[] | null) ?? [] }),
+      (r) =>
+        r.id !== current.id &&
+        !isOutdoorOption({ title: r.title, tags: (r.tags as string[] | null) ?? [] }),
     ) ??
     null;
 
@@ -160,7 +161,9 @@ export async function buildConflictFacts(planId: string) {
 
   const attending = (parts ?? []).filter((p) => p.attending !== false);
   const curfews = attending
-    .map((p) => ((p.profiles as { curfew_time?: string | null } | null)?.curfew_time ?? null)?.slice(0, 5))
+    .map((p) =>
+      ((p.profiles as { curfew_time?: string | null } | null)?.curfew_time ?? null)?.slice(0, 5),
+    )
     .filter((c): c is string => Boolean(c))
     .sort();
 

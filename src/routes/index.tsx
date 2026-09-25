@@ -195,9 +195,7 @@ function Landing() {
         <section id="how" className="border-y border-border bg-surface/60 py-20">
           <div className="mx-auto max-w-6xl px-5">
             <Reveal>
-              <h2 className="text-3xl font-semibold sm:text-4xl">
-                Four steps. No negotiating.
-              </h2>
+              <h2 className="text-3xl font-semibold sm:text-4xl">Four steps. No negotiating.</h2>
             </Reveal>
             <RevealGroup as="ol" stagger={0.1} className="mt-10 grid gap-5 md:grid-cols-4">
               {[

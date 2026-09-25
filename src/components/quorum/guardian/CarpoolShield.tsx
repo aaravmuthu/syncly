@@ -60,7 +60,9 @@ export function CarpoolShield({
     <Card className="mb-6 space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="font-display font-semibold">Carpool shield</h3>
-        <Pill tone="neutral">{rides.length} car{rides.length === 1 ? "" : "s"}</Pill>
+        <Pill tone="neutral">
+          {rides.length} car{rides.length === 1 ? "" : "s"}
+        </Pill>
       </div>
 
       {rides.map((r) => {
@@ -141,9 +143,7 @@ export function CarpoolShield({
                             vehicleDesc: form["desc"] ?? r.vehicle_desc ?? null,
                             vehicleColor: form["color"] ?? r.vehicle_color ?? null,
                             vehiclePlate: form["plate"] ?? r.vehicle_plate ?? null,
-                            etaMinutes: form["eta"]
-                              ? Number(form["eta"])
-                              : (r.eta_minutes ?? null),
+                            etaMinutes: form["eta"] ? Number(form["eta"]) : (r.eta_minutes ?? null),
                           },
                         })
                       }

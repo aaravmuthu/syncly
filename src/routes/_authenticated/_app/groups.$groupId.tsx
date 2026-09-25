@@ -96,148 +96,150 @@ function GroupPage() {
         subtitle={`${members.length} member${members.length === 1 ? "" : "s"}`}
       />
       <SwipeBack>
-      {/* Sub-tab bar */}
-      <div className="relative mt-1 grid grid-cols-3 gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
-        <span
-          className="absolute inset-y-1 left-1 rounded-xl bg-primary/15 ring-1 ring-primary/40 transition-transform duration-300 ease-out"
-          style={{
-            width: "calc((100% - 0.5rem) / 3)",
-            transform: `translateX(${activeIndex * 100}%)`,
-          }}
-          aria-hidden
-        />
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`tap-target relative z-10 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-[0.97] ${
-              tab === t.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <t.icon className="size-3.5" aria-hidden />
-            {t.label}
-          </button>
-        ))}
-      </div>
+        {/* Sub-tab bar */}
+        <div className="relative mt-1 grid grid-cols-3 gap-1 rounded-2xl border border-border bg-secondary/50 p-1">
+          <span
+            className="absolute inset-y-1 left-1 rounded-xl bg-primary/15 ring-1 ring-primary/40 transition-transform duration-300 ease-out"
+            style={{
+              width: "calc((100% - 0.5rem) / 3)",
+              transform: `translateX(${activeIndex * 100}%)`,
+            }}
+            aria-hidden
+          />
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={`tap-target relative z-10 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-[0.97] ${
+                tab === t.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <t.icon className="size-3.5" aria-hidden />
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-      <div className="overflow-hidden">
-        <div key={tab} className="animate-fade-in mt-4">
-          {tab === "plans" ? (
-            <PullToRefresh onRefresh={() => q.refetch()}>
-              <section className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <SquadStats
-                    plans={plans as unknown as { status: string; location_area?: string | null }[]}
+        <div className="overflow-hidden">
+          <div key={tab} className="animate-fade-in mt-4">
+            {tab === "plans" ? (
+              <PullToRefresh onRefresh={() => q.refetch()}>
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <SquadStats
+                      plans={
+                        plans as unknown as { status: string; location_area?: string | null }[]
+                      }
+                    />
+                    <Button onClick={() => setWizard(true)}>
+                      <Plus className="size-4" aria-hidden /> Launch New Plan
+                    </Button>
+                  </div>
+
+                  {plans.length === 0 ? (
+                    <Card>
+                      <p className="text-sm text-muted-foreground">
+                        No plans yet — tap “Launch New Plan” to pick a vibe.
+                      </p>
+                    </Card>
+                  ) : null}
+
+                  {(plans as unknown as GroupPlan[]).map((p) => (
+                    <PlanCard key={p.id} plan={p} />
+                  ))}
+                </section>
+              </PullToRefresh>
+            ) : null}
+
+            {tab === "chat" ? (
+              <SquadChat
+                groupId={groupId}
+                className="h-[calc(100dvh-11rem)] min-h-[520px] md:h-[calc(100vh-220px)]"
+              />
+            ) : null}
+
+            {tab === "settings" ? (
+              <section className="space-y-6">
+                <InviteCard
+                  code={group.invite_code}
+                  groupName={group.name}
+                  groupEmoji={(group as { emoji?: string }).emoji}
+                  inviterName={myDisplayName}
+                />
+
+                {canManage ? (
+                  <GroupAppearance
+                    groupId={groupId}
+                    initial={{
+                      name: group.name,
+                      emoji: (group as { emoji?: string }).emoji,
+                      avatar_url: (group as { avatar_url?: string | null }).avatar_url ?? null,
+                      cover_theme: (group as { cover_theme?: string | null }).cover_theme ?? null,
+                    }}
                   />
-                  <Button onClick={() => setWizard(true)}>
-                    <Plus className="size-4" aria-hidden /> Launch New Plan
-                  </Button>
-                </div>
-
-                {plans.length === 0 ? (
-                  <Card>
-                    <p className="text-sm text-muted-foreground">
-                      No plans yet — tap “Launch New Plan” to pick a vibe.
-                    </p>
-                  </Card>
                 ) : null}
 
-                {(plans as unknown as GroupPlan[]).map((p) => (
-                  <PlanCard key={p.id} plan={p} />
-                ))}
-              </section>
-            </PullToRefresh>
-          ) : null}
-
-          {tab === "chat" ? (
-            <SquadChat
-              groupId={groupId}
-              className="h-[calc(100dvh-11rem)] min-h-[520px] md:h-[calc(100vh-220px)]"
-            />
-          ) : null}
-
-          {tab === "settings" ? (
-            <section className="space-y-6">
-              <InviteCard
-                code={group.invite_code}
-                groupName={group.name}
-                groupEmoji={(group as { emoji?: string }).emoji}
-                inviterName={myDisplayName}
-              />
-
-              {canManage ? (
-                <GroupAppearance
-                  groupId={groupId}
-                  initial={{
-                    name: group.name,
-                    emoji: (group as { emoji?: string }).emoji,
-                    avatar_url: (group as { avatar_url?: string | null }).avatar_url ?? null,
-                    cover_theme: (group as { cover_theme?: string | null }).cover_theme ?? null,
-                  }}
-                />
-              ) : null}
-
-              <div>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Members
-                </h2>
-                <Card className="divide-y divide-border">
-                  {members.map((m) => {
-                    const p = m.profiles as {
-                      display_name?: string;
-                      avatar_emoji?: string;
-                      avatar_url?: string | null;
-                      bio?: string | null;
-                      school?: string | null;
-                      grad_year?: number | null;
-                    } | null;
-                    const meta = [p?.school, p?.grad_year ? `Class of ${p.grad_year}` : null]
-                      .filter(Boolean)
-                      .join(" · ");
-                    return (
-                      <div
-                        key={m.profile_id}
-                        className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
-                      >
-                        <Avatar
-                          url={p?.avatar_url}
-                          emoji={p?.avatar_emoji}
-                          name={p?.display_name}
-                          size={36}
-                        />
-                        <div className="flex-1">
-                          <span className="block text-sm font-medium">
-                            {p?.display_name ?? "Member"}
-                          </span>
-                          {meta ? (
-                            <span className="block text-xs text-muted-foreground">{meta}</span>
-                          ) : null}
-                          {p?.bio ? (
-                            <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p>
-                          ) : null}
+                <div>
+                  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Members
+                  </h2>
+                  <Card className="divide-y divide-border">
+                    {members.map((m) => {
+                      const p = m.profiles as {
+                        display_name?: string;
+                        avatar_emoji?: string;
+                        avatar_url?: string | null;
+                        bio?: string | null;
+                        school?: string | null;
+                        grad_year?: number | null;
+                      } | null;
+                      const meta = [p?.school, p?.grad_year ? `Class of ${p.grad_year}` : null]
+                        .filter(Boolean)
+                        .join(" · ");
+                      return (
+                        <div
+                          key={m.profile_id}
+                          className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+                        >
+                          <Avatar
+                            url={p?.avatar_url}
+                            emoji={p?.avatar_emoji}
+                            name={p?.display_name}
+                            size={36}
+                          />
+                          <div className="flex-1">
+                            <span className="block text-sm font-medium">
+                              {p?.display_name ?? "Member"}
+                            </span>
+                            {meta ? (
+                              <span className="block text-xs text-muted-foreground">{meta}</span>
+                            ) : null}
+                            {p?.bio ? (
+                              <p className="mt-0.5 text-xs text-muted-foreground">{p.bio}</p>
+                            ) : null}
+                          </div>
+                          <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
                         </div>
-                        <span className="text-xs capitalize text-muted-foreground">{m.role}</span>
-                      </div>
-                    );
-                  })}
-                </Card>
-              </div>
+                      );
+                    })}
+                  </Card>
+                </div>
 
-              <GroupSettings
-                groupId={groupId}
-                groupName={group.name}
-                members={members as never}
-                myProfileId={myProfileId}
-              />
-            </section>
-          ) : null}
+                <GroupSettings
+                  groupId={groupId}
+                  groupName={group.name}
+                  members={members as never}
+                  myProfileId={myProfileId}
+                />
+              </section>
+            ) : null}
+          </div>
         </div>
-      </div>
 
-      {wizard ? (
-        <PlanWizard groupId={groupId} memberIds={memberIds} onClose={() => setWizard(false)} />
-      ) : null}
+        {wizard ? (
+          <PlanWizard groupId={groupId} memberIds={memberIds} onClose={() => setWizard(false)} />
+        ) : null}
       </SwipeBack>
     </>
   );

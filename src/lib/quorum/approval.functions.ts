@@ -81,7 +81,7 @@ export const respondToApproval = createServerFn({ method: "POST" })
     if (new Date(row.expires_at) < new Date()) throw new Error("This link has expired");
 
     const condition =
-      data.decision === "approved_with_condition" ? (data.condition?.trim() || null) : null;
+      data.decision === "approved_with_condition" ? data.condition?.trim() || null : null;
 
     const { error } = await supabaseAdmin
       .from("parent_approvals")
@@ -109,7 +109,8 @@ export const respondToApproval = createServerFn({ method: "POST" })
     });
 
     if (condition) {
-      const { applyParentCondition, regenerateRecommendations } = await import("./recommend.server");
+      const { applyParentCondition, regenerateRecommendations } =
+        await import("./recommend.server");
       await applyParentCondition(row.plan_id, row.profile_id, condition);
       try {
         await regenerateRecommendations(row.plan_id);
@@ -160,7 +161,13 @@ export type ParentSummary = {
     curfewOk: boolean | null;
     distanceMiles: number | null;
   }[];
-  cars: { car_label: string; driver: string; leg: string; riders: string[]; seatsLeft: number | null }[];
+  cars: {
+    car_label: string;
+    driver: string;
+    leg: string;
+    riders: string[];
+    seatsLeft: number | null;
+  }[];
   venue: {
     title: string;
     address: string | null;
@@ -222,7 +229,8 @@ export const getParentSummary = createServerFn({ method: "GET" })
       } | null;
     };
     const rows = (parts ?? []) as unknown as P[];
-    const nameOf = (id: string) => rows.find((r) => r.profile_id === id)?.profiles?.display_name ?? "A member";
+    const nameOf = (id: string) =>
+      rows.find((r) => r.profile_id === id)?.profiles?.display_name ?? "A member";
 
     let venue: ParentSummary["venue"] = null;
     let startTime: string | null = null;
@@ -232,7 +240,9 @@ export const getParentSummary = createServerFn({ method: "GET" })
     if (plan.selected_recommendation_id) {
       const { data: rec } = await supabaseAdmin
         .from("recommendations")
-        .select("title, subtitle, category, address, location_name, lat, lon, suggested_start, suggested_end, cost_min, cost_max")
+        .select(
+          "title, subtitle, category, address, location_name, lat, lon, suggested_start, suggested_end, cost_min, cost_max",
+        )
         .eq("id", plan.selected_recommendation_id)
         .maybeSingle();
       if (rec) {
@@ -250,8 +260,10 @@ export const getParentSummary = createServerFn({ method: "GET" })
         costMax = rec.cost_max;
       }
     }
-    if (!startTime && plan.window_start) startTime = new Date(plan.window_start).toISOString().slice(11, 16);
-    if (!endTime && plan.window_end) endTime = new Date(plan.window_end).toISOString().slice(11, 16);
+    if (!startTime && plan.window_start)
+      startTime = new Date(plan.window_start).toISOString().slice(11, 16);
+    if (!endTime && plan.window_end)
+      endTime = new Date(plan.window_end).toISOString().slice(11, 16);
 
     // Per-member curfew + distance-from-home, computed once the venue and end
     // time are known.
@@ -318,7 +330,8 @@ export const getParentSummary = createServerFn({ method: "GET" })
     const mins = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
     const curfewOk =
       curfewLimit && endTime
-        ? (mins(endTime) === 0 ? 1440 : mins(endTime)) <= (mins(curfewLimit) === 0 ? 1440 : mins(curfewLimit))
+        ? (mins(endTime) === 0 ? 1440 : mins(endTime)) <=
+          (mins(curfewLimit) === 0 ? 1440 : mins(curfewLimit))
         : null;
 
     const { data: approval } = await supabaseAdmin
@@ -383,7 +396,8 @@ export const parentRespondToPlan = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { verifyPlanSummarySig } = await import("./summary-link.server");
-    if (!verifyPlanSummarySig(data.planId, data.sig)) throw new Error("This plan link is not valid");
+    if (!verifyPlanSummarySig(data.planId, data.sig))
+      throw new Error("This plan link is not valid");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: plan } = await supabaseAdmin
       .from("plans")

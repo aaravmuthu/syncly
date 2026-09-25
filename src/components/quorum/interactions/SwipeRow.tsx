@@ -85,9 +85,13 @@ export function SwipeRow({
         style={{ x }}
         dragElastic={0.18}
         dragMomentum={false}
-        dragConstraints={{ left: right ? -threshold * 1.35 : 0, right: left ? threshold * 1.35 : 0 }}
+        dragConstraints={{
+          left: right ? -threshold * 1.35 : 0,
+          right: left ? threshold * 1.35 : 0,
+        }}
         onDrag={(_, info) => {
-          const next = info.offset.x > threshold ? "left" : info.offset.x < -threshold ? "right" : null;
+          const next =
+            info.offset.x > threshold ? "left" : info.offset.x < -threshold ? "right" : null;
           if (next !== armed) {
             if (next) haptic("select");
             setArmed(next);

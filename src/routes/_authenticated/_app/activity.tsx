@@ -21,7 +21,10 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/_app/activity")({
   loader: ({ context }) => {
-    void context.queryClient.ensureQueryData({ queryKey: ["activity"], queryFn: () => listActivity() });
+    void context.queryClient.ensureQueryData({
+      queryKey: ["activity"],
+      queryFn: () => listActivity(),
+    });
   },
   head: () => ({
     meta: [

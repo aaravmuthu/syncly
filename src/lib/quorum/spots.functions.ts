@@ -247,22 +247,20 @@ export const saveSpot = createServerFn({ method: "POST" })
       .eq("profile_id", me as string)
       .eq("key", spot.key);
 
-    const { error } = await supabase.from("saved_places").insert(
-      {
-        profile_id: me as string,
-        key: spot.key,
-        title: spot.title,
-        subtitle: spot.subtitle,
-        address: spot.address,
-        cuisine: spot.cuisine,
-        price_level: spot.priceLevel,
-        kind: spot.kind,
-        cost_min: spot.costMin,
-        cost_max: spot.costMax,
-        lat: spot.lat,
-        lon: spot.lon,
-      } as never,
-    );
+    const { error } = await supabase.from("saved_places").insert({
+      profile_id: me as string,
+      key: spot.key,
+      title: spot.title,
+      subtitle: spot.subtitle,
+      address: spot.address,
+      cuisine: spot.cuisine,
+      price_level: spot.priceLevel,
+      kind: spot.kind,
+      cost_min: spot.costMin,
+      cost_max: spot.costMax,
+      lat: spot.lat,
+      lon: spot.lon,
+    } as never);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -178,8 +178,7 @@ export async function pendingLinkRequestsForGuardian(guardianProfileId: string) 
     .gt("expires_at", new Date().toISOString());
   return (data ?? []).map((r) => ({
     id: r.id as string,
-    teenName:
-      (r.teen as unknown as { display_name?: string } | null)?.display_name ?? "Your teen",
+    teenName: (r.teen as unknown as { display_name?: string } | null)?.display_name ?? "Your teen",
   }));
 }
 
@@ -379,7 +378,9 @@ export async function recordPing(teenProfileId: string, input: PingInput) {
       await alertGuardians(teenProfileId, {
         type: c.kind === "arrive" ? "geofence_arrive" : "geofence_depart",
         title:
-          c.kind === "arrive" ? `${name} arrived at ${c.zone_label}` : `${name} left ${c.zone_label}`,
+          c.kind === "arrive"
+            ? `${name} arrived at ${c.zone_label}`
+            : `${name} left ${c.zone_label}`,
         body: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
       });
     }
@@ -397,7 +398,13 @@ function statusFor(
   const hit = zones.find((z) => metersBetween(ping, z) <= z.radius_m);
   if (hit) {
     const emoji =
-      hit.kind === "home" ? "🏠" : hit.kind === "school" ? "📚" : hit.kind === "venue" ? "⚽" : "📍";
+      hit.kind === "home"
+        ? "🏠"
+        : hit.kind === "school"
+          ? "📚"
+          : hit.kind === "venue"
+            ? "⚽"
+            : "📍";
     return { label: `At ${hit.label}`, emoji, tone: "good" as const };
   }
   if (ping.status_label) return { label: ping.status_label, emoji: "🚗", tone: "accent" as const };
@@ -450,10 +457,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
       .from("safe_zones")
       .select("id, teen_profile_id, label, kind, lat, lon, radius_m")
       .in("teen_profile_id", teenIds),
-    db
-      .from("plan_participants")
-      .select("plan_id, profile_id, attending")
-      .in("profile_id", teenIds),
+    db.from("plan_participants").select("plan_id, profile_id, attending").in("profile_id", teenIds),
     db
       .from("parent_approvals")
       .select("id, plan_id, profile_id, status, condition_text, created_at")
@@ -544,7 +548,13 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
       }));
     const ping = (pings ?? []).find((p) => p.profile_id === id) ?? null;
     const status = statusFor(
-      ping ? { lat: ping.lat as number, lon: ping.lon as number, status_label: ping.status_label as string | null } : null,
+      ping
+        ? {
+            lat: ping.lat as number,
+            lon: ping.lon as number,
+            status_label: ping.status_label as string | null,
+          }
+        : null,
       myZones,
     );
 
@@ -625,9 +635,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
             };
           });
 
-        const approval = (approvals ?? []).find(
-          (a) => a.plan_id === p.id && a.profile_id === id,
-        );
+        const approval = (approvals ?? []).find((a) => a.plan_id === p.id && a.profile_id === id);
 
         const venueLat = (rec?.["lat"] as number | null) ?? null;
         const venueLon = (rec?.["lon"] as number | null) ?? null;
@@ -651,7 +659,8 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
           est_cost_max: (p.est_cost_max as number | null) ?? null,
           adult_supervised: Boolean(p.adult_supervised),
           supervision_note: (p.supervision_note as string | null) ?? null,
-          group_name: ((p.groups as unknown as { name?: string } | null)?.name ?? "Squad") as string,
+          group_name: ((p.groups as unknown as { name?: string } | null)?.name ??
+            "Squad") as string,
           venue: (rec?.["title"] as string | null) ?? (rec?.["location_name"] as string | null),
           address: (rec?.["address"] as string | null) ?? null,
           lat: venueLat,
@@ -813,10 +822,7 @@ export async function markRideDeparted(actorProfileId: string, assignmentId: str
   }
 
   const departedAt = new Date().toISOString();
-  await db
-    .from("transport_assignments")
-    .update({ departed_at: departedAt })
-    .eq("id", assignmentId);
+  await db.from("transport_assignments").update({ departed_at: departedAt }).eq("id", assignmentId);
 
   const { data: driver } = ride.driver_profile_id
     ? await db

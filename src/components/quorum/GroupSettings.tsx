@@ -167,9 +167,7 @@ export function GroupSettings({
                   className="w-full"
                   loading={leave.isPending}
                   disabled={!heir}
-                  onClick={() =>
-                    leave.mutate({ data: { groupId, transferToProfileId: heir } })
-                  }
+                  onClick={() => leave.mutate({ data: { groupId, transferToProfileId: heir } })}
                 >
                   Transfer & leave
                 </Button>

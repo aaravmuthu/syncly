@@ -27,14 +27,9 @@ async function mutualCircles(a: string, b: string): Promise<MutualCircle[]> {
     db.from("group_members").select("group_id").eq("profile_id", b),
   ]);
   const theirSet = new Set((theirs ?? []).map((r) => r.group_id));
-  const shared = [...new Set((mine ?? []).map((r) => r.group_id))].filter((id) =>
-    theirSet.has(id),
-  );
+  const shared = [...new Set((mine ?? []).map((r) => r.group_id))].filter((id) => theirSet.has(id));
   if (!shared.length) return [];
-  const { data: groups } = await db
-    .from("groups")
-    .select("id, name, emoji")
-    .in("id", shared);
+  const { data: groups } = await db.from("groups").select("id, name, emoji").in("id", shared);
   return (groups ?? []).map((g) => ({ id: g.id, name: g.name, emoji: g.emoji }));
 }
 
@@ -196,7 +191,9 @@ async function sharedPlans(a: string, b: string) {
     .in("profile_id", [a, b]);
   const mine = new Set((rows ?? []).filter((r) => r.profile_id === a).map((r) => r.plan_id));
   const both = [
-    ...new Set((rows ?? []).filter((r) => r.profile_id === b && mine.has(r.plan_id)).map((r) => r.plan_id)),
+    ...new Set(
+      (rows ?? []).filter((r) => r.profile_id === b && mine.has(r.plan_id)).map((r) => r.plan_id),
+    ),
   ];
   if (!both.length) return { upcoming: [] as SharedPlan[], memories: [] as SharedPlan[] };
 
@@ -271,12 +268,8 @@ export async function buildFriendProfile(
     sharedPlans(viewerProfileId, targetProfileId),
   ]);
 
-  const outgoing = (shares ?? []).find(
-    (s) => s.owner_profile_id === viewerProfileId && live(s),
-  );
-  const incoming = (shares ?? []).find(
-    (s) => s.owner_profile_id === targetProfileId && live(s),
-  );
+  const outgoing = (shares ?? []).find((s) => s.owner_profile_id === viewerProfileId && live(s));
+  const incoming = (shares ?? []).find((s) => s.owner_profile_id === targetProfileId && live(s));
 
   const visible = Boolean(incoming && !incoming.hidden) || guardianLinked;
 
@@ -289,13 +282,26 @@ export async function buildFriendProfile(
     bio: prof.bio,
     school: prof.school,
     gradYear: prof.grad_year,
-    handle: `@${prof.display_name.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 16) || "member"}`,
+    handle: `@${
+      prof.display_name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "")
+        .slice(0, 16) || "member"
+    }`,
     circles,
     sharingWithThem: outgoing
-      ? { mode: outgoing.mode as ShareMode, expiresAt: outgoing.expires_at, hidden: outgoing.hidden }
+      ? {
+          mode: outgoing.mode as ShareMode,
+          expiresAt: outgoing.expires_at,
+          hidden: outgoing.hidden,
+        }
       : null,
     sharingWithMe: incoming
-      ? { mode: incoming.mode as ShareMode, expiresAt: incoming.expires_at, hidden: incoming.hidden }
+      ? {
+          mode: incoming.mode as ShareMode,
+          expiresAt: incoming.expires_at,
+          hidden: incoming.hidden,
+        }
       : null,
     guardianLinked,
     telemetry: await telemetryFor(viewerProfileId, targetProfileId, visible),

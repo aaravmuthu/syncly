@@ -194,9 +194,13 @@ export async function writeSquadDigest(facts: {
 }): Promise<SquadDigest> {
   const fallbackBullets = [
     ...facts.needsYou.slice(0, 2).map((p) => `${p.title} in ${p.group} is waiting on your answer.`),
-    ...facts.upcoming.slice(0, 2).map((p) =>
-      p.when ? `${p.title} with ${p.group} is ${p.when}.` : `${p.title} with ${p.group} is locked in.`,
-    ),
+    ...facts.upcoming
+      .slice(0, 2)
+      .map((p) =>
+        p.when
+          ? `${p.title} with ${p.group} is ${p.when}.`
+          : `${p.title} with ${p.group} is locked in.`,
+      ),
     ...facts.stalled
       .slice(0, 1)
       .map((p) => `${p.title} has ${p.responded} of ${p.total} answers in.`),
@@ -230,9 +234,11 @@ export async function writeSquadDigest(facts: {
     }
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      const parsed = extractJson(error.text) as
-        | { headline?: string; bullets?: unknown; next_best?: string }
-        | null;
+      const parsed = extractJson(error.text) as {
+        headline?: string;
+        bullets?: unknown;
+        next_best?: string;
+      } | null;
       const bullets = Array.isArray(parsed?.bullets)
         ? parsed!.bullets.filter((b): b is string => typeof b === "string").slice(0, 4)
         : [];
@@ -332,9 +338,10 @@ export async function rankByVibe(
     /* fall through */
   }
   return {
-    ranks: spots
-      .slice(0, 5)
-      .map((s) => ({ key: s.key, reason: `${s.miles} mi away · about $${s.costMin}–${s.costMax} each.` })),
+    ranks: spots.slice(0, 5).map((s) => ({
+      key: s.key,
+      reason: `${s.miles} mi away · about $${s.costMin}–${s.costMax} each.`,
+    })),
     aiGenerated: false,
   };
 }
@@ -453,10 +460,14 @@ const synclyTools = {
       " free-text description of what to plan. Only call this when the member is clearly asking" +
       " to create/start/plan/organize something new -- never for a question about an existing plan.",
     inputSchema: z.object({
-      groupName: z.string().describe("Must match one of the group names given in the facts, as exactly as possible"),
+      groupName: z
+        .string()
+        .describe("Must match one of the group names given in the facts, as exactly as possible"),
       prompt: z
         .string()
-        .describe("A clean restatement of what to plan, keeping any date/time/budget/vibe the member mentioned"),
+        .describe(
+          "A clean restatement of what to plan, keeping any date/time/budget/vibe the member mentioned",
+        ),
     }),
   }),
 };
@@ -476,10 +487,7 @@ const SYNCLY_FALLBACK =
   "I can't reach the AI service right now — your groups and plans are all still on the Home and Groups tabs.";
 
 /** Best-effort "which plan is this about" from the facts already given, since there's no structured plan_ref field now that this uses tool-calling. */
-function findMentionedPlan(
-  answer: string,
-  facts: unknown,
-): SynclyPlanRef | undefined {
+function findMentionedPlan(answer: string, facts: unknown): SynclyPlanRef | undefined {
   const lists = [
     (facts as { needsYou?: { plan_id?: string; title?: string }[] })?.needsYou,
     (facts as { upcoming?: { plan_id?: string; title?: string }[] })?.upcoming,
@@ -526,8 +534,7 @@ export async function synclyReply(
           }
         : undefined;
     const answer =
-      result.text?.trim() ||
-      (action ? `Want me to draft a plan in ${action.groupName}?` : "");
+      result.text?.trim() || (action ? `Want me to draft a plan in ${action.groupName}?` : "");
     if (!answer) return { answer: SYNCLY_FALLBACK };
     const planRef = action ? undefined : findMentionedPlan(answer, facts);
     return { answer, ...(planRef ? { planRef } : {}), ...(action ? { action } : {}) };

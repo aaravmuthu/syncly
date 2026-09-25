@@ -6,8 +6,6 @@ import { haptic } from "@/lib/quorum/haptics";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-
-
 export function Card({
   children,
   className,
@@ -145,7 +143,6 @@ export function Button({
   );
 }
 
-
 export function Spinner({ className }: { className?: string }) {
   return (
     <span
@@ -191,13 +188,27 @@ export function Meter({ value, label }: { value: number; label: string }) {
         <span className="font-semibold tabular-nums">{value}</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
-        <div className={cn("h-full rounded-full transition-[width,background-color] duration-300 ease-out", tone)} style={{ width: `${value}%` }} />
+        <div
+          className={cn(
+            "h-full rounded-full transition-[width,background-color] duration-300 ease-out",
+            tone,
+          )}
+          style={{ width: `${value}%` }}
+        />
       </div>
     </div>
   );
 }
 
-export function Empty({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
+export function Empty({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="surface rounded-3xl px-6 py-12 text-center">
       <h3 className="font-display text-lg font-semibold">{title}</h3>

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type RlsCheck = { name: string; passed: boolean; detail: string };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the probe accepts any project schema
 type AnyClient = SupabaseClient<any, any, any>;
 
 /**
@@ -174,4 +175,3 @@ export async function runRlsProbe(userClient: AnyClient, myProfileId: string): P
 
   return checks;
 }
-
