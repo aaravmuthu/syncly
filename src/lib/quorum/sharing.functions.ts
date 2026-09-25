@@ -3,7 +3,7 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveMyProfileId } from "./me";
-import type { FriendPin, GhostChoice, ShareMode, SharePeer, SharingState } from "./sharing";
+import type { FriendPin, SharePeer, SharingState } from "./sharing";
 
 export const getFriendPins = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

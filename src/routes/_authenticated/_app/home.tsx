@@ -108,62 +108,58 @@ export function HomePage() {
     [plans, selectedDay],
   );
 
-  const { conflicted, needsAction, answeredActive, otherActive, activeNow, upcoming, memories } =
-    useMemo(() => {
-      const conflicted = dayFiltered.filter(
-        (p) => (p.conflicts?.length ?? 0) > 0 && (p.alternatives?.length ?? 0) > 0,
+  const { conflicted, activeNow, upcoming, memories } = useMemo(() => {
+    const conflicted = dayFiltered.filter(
+      (p) => (p.conflicts?.length ?? 0) > 0 && (p.alternatives?.length ?? 0) > 0,
+    );
+    const needsAction = dayFiltered.filter(
+      (p) =>
+        !conflicted.includes(p) &&
+        p.i_attending == null &&
+        ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
+    );
+    const answeredActive = dayFiltered.filter(
+      (p) =>
+        (p.status === "collecting" || p.status === "voting") &&
+        p.i_attending != null &&
+        !conflicted.includes(p),
+    );
+    const otherActive = dayFiltered.filter(
+      (p) =>
+        (p.status === "collecting" || p.status === "voting") &&
+        !needsAction.includes(p) &&
+        !answeredActive.includes(p) &&
+        !conflicted.includes(p),
+    );
+    const confirmed = dayFiltered
+      .filter((p) => p.status === "finalized")
+      .sort(
+        (a, b) =>
+          new Date(a.window_start ?? a.created_at).getTime() -
+          new Date(b.window_start ?? b.created_at).getTime(),
       );
-      const needsAction = dayFiltered.filter(
-        (p) =>
-          !conflicted.includes(p) &&
-          p.i_attending == null &&
-          ((p.status === "collecting" && !p.i_responded) || (p.status === "voting" && !p.i_voted)),
-      );
-      const answeredActive = dayFiltered.filter(
-        (p) =>
-          (p.status === "collecting" || p.status === "voting") &&
-          p.i_attending != null &&
-          !conflicted.includes(p),
-      );
-      const otherActive = dayFiltered.filter(
-        (p) =>
-          (p.status === "collecting" || p.status === "voting") &&
-          !needsAction.includes(p) &&
-          !answeredActive.includes(p) &&
-          !conflicted.includes(p),
-      );
-      const confirmed = dayFiltered
-        .filter((p) => p.status === "finalized")
-        .sort(
-          (a, b) =>
-            new Date(a.window_start ?? a.created_at).getTime() -
-            new Date(b.window_start ?? b.created_at).getTime(),
-        );
 
-      const isPast = (p: DashPlan) =>
-        new Date(p.window_start ?? p.created_at).getTime() < Date.now() - 6 * 3600e3;
-      const todayKey = dayKey(new Date().toISOString());
+    const isPast = (p: DashPlan) =>
+      new Date(p.window_start ?? p.created_at).getTime() < Date.now() - 6 * 3600e3;
+    const todayKey = dayKey(new Date().toISOString());
 
-      // Live Activity carousel: anything needing you, answered-but-live, or happening today.
-      const activeNow = [
-        ...needsAction,
-        ...answeredActive,
-        ...otherActive,
-        ...confirmed.filter((p) => p.window_start && dayKey(p.window_start) === todayKey),
-      ];
-      const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
-      const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
+    // Live Activity carousel: anything needing you, answered-but-live, or happening today.
+    const activeNow = [
+      ...needsAction,
+      ...answeredActive,
+      ...otherActive,
+      ...confirmed.filter((p) => p.window_start && dayKey(p.window_start) === todayKey),
+    ];
+    const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
+    const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
 
-      return {
-        conflicted,
-        needsAction,
-        answeredActive,
-        otherActive,
-        activeNow,
-        upcoming,
-        memories,
-      };
-    }, [dayFiltered]);
+    return {
+      conflicted,
+      activeNow,
+      upcoming,
+      memories,
+    };
+  }, [dayFiltered]);
 
   const groupList = useMemo(
     () =>
@@ -383,45 +379,6 @@ export function HomePage() {
 }
 
 const cardSpring = { type: "spring", stiffness: 300, damping: 25 } as const;
-
-function MotionSection({
-  title,
-  accent,
-  children,
-}: {
-  title: string;
-  accent?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <motion.section
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={cardSpring}
-      className="space-y-3"
-    >
-      <h2 className={`text-sm font-semibold ${accent ?? "text-muted-foreground"}`}>{title}</h2>
-      {children}
-    </motion.section>
-  );
-}
-
-function MotionCard({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 12, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={cardSpring}
-      className="h-full"
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 function Section({
   title,

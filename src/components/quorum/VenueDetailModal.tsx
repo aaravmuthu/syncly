@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Modal } from "@/components/quorum/Modal";
-import { Button, Pill, Skeleton } from "@/components/quorum/ui";
+import { Pill, Skeleton } from "@/components/quorum/ui";
 import { getVenueInsight } from "@/lib/quorum/reviews.functions";
 import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { directionsUrl } from "@/lib/quorum/vibes";

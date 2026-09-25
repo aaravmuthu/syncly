@@ -2,9 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { optionsForCategory } from "./catalog";
-import { buildTransportPlan, rankOptions, type MemberInput } from "./engine";
-import type { ConstraintPayload, PlanCategory } from "./types";
+import type { ConstraintPayload } from "./types";
 
 /* ------------------------------------------------------------------ */
 /* Profile                                                             */
