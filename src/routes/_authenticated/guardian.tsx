@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { GuardianShell } from "@/components/quorum/GuardianShell";
@@ -98,7 +98,7 @@ function GuardianHub() {
   });
   const readAlerts = useMutation({ mutationFn: useServerFn(markAlertsRead) });
 
-  const teens = hub.data?.teens ?? [];
+  const teens = useMemo(() => hub.data?.teens ?? [], [hub.data?.teens]);
   useEffect(() => {
     if (!activeTeen && teens.length) setActiveTeen(teens[0]!.id);
   }, [teens, activeTeen]);

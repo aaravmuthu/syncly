@@ -76,7 +76,7 @@ export function GroupsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
 
-  const squads = (groups.data ?? []) as unknown as Squad[];
+  const squads = useMemo(() => (groups.data ?? []) as unknown as Squad[], [groups.data]);
   const shown = useMemo(
     () =>
       squads.filter((g) =>

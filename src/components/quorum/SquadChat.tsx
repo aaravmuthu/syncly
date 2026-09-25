@@ -76,8 +76,8 @@ export function SquadChat({
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTyped = useRef(0);
 
-  const messages = (q.data?.messages ?? []) as unknown as Msg[];
-  const reads = (q.data?.reads ?? []) as unknown as Read[];
+  const messages = useMemo(() => (q.data?.messages ?? []) as unknown as Msg[], [q.data?.messages]);
+  const reads = useMemo(() => (q.data?.reads ?? []) as unknown as Read[], [q.data?.reads]);
   const me = q.data?.me ?? null;
   const hostId = q.data?.hostId ?? null;
   const myName = messages.find((m) => m.sender_id === me)?.profiles?.display_name ?? "Someone";

@@ -28,7 +28,7 @@ export function FriendProvider({ children }: { children: ReactNode }) {
     staleTime: 5 * 60_000,
     retry: false,
   });
-  const nicknames = q.data ?? {};
+  const nicknames = useMemo(() => q.data ?? {}, [q.data]);
 
   const alias = useCallback(
     (profileId: string | null | undefined, fallback: string | null | undefined) =>

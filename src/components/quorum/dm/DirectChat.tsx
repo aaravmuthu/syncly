@@ -78,7 +78,10 @@ export function DirectChat({
   const me = q.data?.me ?? null;
   const peer = q.data?.peer ?? null;
   const messages = (q.data?.messages ?? []) as unknown as DM[];
-  const reactions = (q.data?.reactions ?? []) as unknown as Reaction[];
+  const reactions = useMemo(
+    () => (q.data?.reactions ?? []) as unknown as Reaction[],
+    [q.data?.reactions],
+  );
   const telemetry = q.data?.telemetry ?? null;
   const peerReadAt = q.data?.peerReadAt ?? null;
 

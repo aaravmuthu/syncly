@@ -63,11 +63,14 @@ export default function VenueMapInner({
     } catch {
       map.current = null;
     }
+    // The marker map is created once and never reassigned, so the cleanup
+    // can hold the same instance the effect saw.
+    const liveMarkers = markers.current;
     return () => {
       alive = false;
       setReady(false);
-      markers.current.forEach(({ marker }) => marker.remove());
-      markers.current.clear();
+      liveMarkers.forEach(({ marker }) => marker.remove());
+      liveMarkers.clear();
       idKey.current = null;
       map.current?.remove();
       map.current = null;
