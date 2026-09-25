@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getMe } from "@/lib/quorum/plan.functions";
-import { getLastContext } from "@/components/quorum/ContextSwitcher";
+import { getLastContext } from "@/components/quorum/last-context";
 
 // Which shell (My Squad vs. Family Hub) someone lands in is decided here,
 // once per browser session -- applied only the first time /home is visited

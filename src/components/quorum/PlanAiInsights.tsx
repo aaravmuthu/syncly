@@ -11,17 +11,6 @@ import {
 import { finalizePlan } from "@/lib/quorum/plan.functions";
 import { AiGlyph } from "./ai/AiGlyph";
 
-/** AI "why this works" lines, keyed by recommendation id. */
-export function useCompromiseSummaries(planId: string, enabled: boolean) {
-  const fetchSummaries = useServerFn(getCompromiseSummaries);
-  return useQuery({
-    queryKey: ["plan-compromise", planId],
-    queryFn: () => fetchSummaries({ data: { planId } }) as Promise<Record<string, string>>,
-    enabled,
-    staleTime: 10 * 60_000,
-  });
-}
-
 export function CompromiseNote({ text }: { text?: string }) {
   if (!text) return null;
   return (

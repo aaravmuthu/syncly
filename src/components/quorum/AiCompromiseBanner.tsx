@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "./ui";
-import { prettyTime } from "./TimePicker";
+import { prettyTime } from "./time-format";
 import { applyAiCompromise, getAiCompromise } from "@/lib/quorum/ai.functions";
 import { AiGlyph } from "./ai/AiGlyph";
 

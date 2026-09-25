@@ -25,12 +25,10 @@ import {
   StatusTag,
   WeatherChip,
   WeekStrip,
-  dayKey,
-  formatWhen,
-  startOfWeek,
   CostBadge,
   type DashPlan,
 } from "@/components/quorum/DashboardParts";
+import { dayKey, formatWhen, startOfWeek } from "@/components/quorum/dashboard-format";
 import { takePendingInvite } from "@/lib/quorum/invite";
 import { getMe, getDashboard, listGroups } from "@/lib/quorum/plan.functions";
 

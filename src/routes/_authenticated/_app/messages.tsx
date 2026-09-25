@@ -6,7 +6,7 @@ import { Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import { Button, Empty, GlassPill, Skeleton } from "@/components/quorum/ui";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { ChatSheet } from "@/components/quorum/dm/ChatSheet";

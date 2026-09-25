@@ -5,7 +5,7 @@ import { AlertTriangle, Bell, Lock, MessageCircle, X, Zap, type LucideIcon } fro
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { Avatar } from "@/components/quorum/Avatar";
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import { listActivity } from "@/lib/quorum/plan.functions";
 import { useNotifications, useMarkNotificationsRead } from "@/lib/quorum/useNotifications";
 import { pushPermission, requestPush } from "@/lib/quorum/push";

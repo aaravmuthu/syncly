@@ -3,8 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe } from "@/lib/quorum/plan.functions";
 import { cn } from "@/lib/utils";
-
-const LAST_CONTEXT_KEY = "syncly:lastContext";
+import { LAST_CONTEXT_KEY } from "./last-context";
 
 /**
  * Two-option segmented pill for hybrid people (a teen in their own squad who
@@ -66,11 +65,4 @@ export function ContextSwitcher({ className }: { className?: string }) {
       </button>
     </div>
   );
-}
-
-/** Exported for _authenticated/route.tsx's beforeLoad routing decision. */
-export function getLastContext(): "squad" | "family" | null {
-  if (typeof localStorage === "undefined") return null;
-  const v = localStorage.getItem(LAST_CONTEXT_KEY);
-  return v === "squad" || v === "family" ? v : null;
 }

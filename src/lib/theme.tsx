@@ -1,24 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { Moon, Sun } from "lucide-react";
-
-export type ThemeChoice = "light" | "dark" | "system";
+import { type ThemeChoice, type Ctx, ThemeContext, useTheme } from "./theme-context";
 
 const STORAGE_KEY = "syncly-theme";
-
-type Ctx = {
-  theme: ThemeChoice;
-  resolved: "light" | "dark";
-  setTheme: (t: ThemeChoice) => void;
-  toggle: () => void;
-};
-
-const ThemeContext = createContext<Ctx>({
-  theme: "system",
-  resolved: "light",
-  setTheme: () => {},
-  toggle: () => {},
-});
 
 function systemPrefersDark() {
   if (typeof window === "undefined") return false;
@@ -76,10 +61,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-}
-
-export function useTheme() {
-  return useContext(ThemeContext);
 }
 
 /** Compact icon toggle for the navigation bar. */

@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/quorum/Avatar";
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
 import {
   SquadMap,

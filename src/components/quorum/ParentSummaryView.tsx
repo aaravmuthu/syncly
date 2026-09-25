@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button, Card, Pill, Skeleton, inputClass } from "./ui";
 import { VenueMap } from "./VenueMap";
 import { Avatar } from "./Avatar";
-import { prettyTime } from "./TimePicker";
+import { prettyTime } from "./time-format";
 import { estCostLabel } from "@/lib/quorum/estcost";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { getParentSummary, parentRespondToPlan } from "@/lib/quorum/approval.functions";

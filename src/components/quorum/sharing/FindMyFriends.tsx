@@ -41,7 +41,7 @@ import {
   type ShareMode,
   type SharePeer,
 } from "@/lib/quorum/sharing";
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import { cn } from "@/lib/utils";
 
 const initials = (name: string) =>

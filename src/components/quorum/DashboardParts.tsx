@@ -5,12 +5,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft, ChevronRight, DollarSign, Info, MapPin, Scale } from "lucide-react";
 import { Avatar } from "./Avatar";
-import { Button, Pill, statusTone, statusToneClasses } from "./ui";
+import { Button, Pill } from "./ui";
+import { statusTone, statusToneClasses } from "./status-tone";
 import { cn } from "@/lib/utils";
 import { getMapToken } from "@/lib/quorum/location.functions";
 import { getPlanWeather } from "@/lib/quorum/insight.functions";
 import { describeWeather } from "@/lib/quorum/weather";
 import { budgetFitLabel, budgetFitTone, estCostLabel } from "@/lib/quorum/estcost";
+import { statusLabel, dayKey, formatWhen } from "./dashboard-format";
 
 export type DashParticipant = {
   profile_id: string;
@@ -150,13 +152,6 @@ export function StatusTag({ status, label }: { status: string; label?: string })
   );
 }
 
-export function statusLabel(status: string) {
-  if (status === "voting") return "Voting open";
-  if (status === "collecting") return "Collecting answers";
-  if (status === "finalized") return "Confirmed";
-  return "Draft";
-}
-
 export function AvatarStack({ people, max = 4 }: { people: DashParticipant[]; max?: number }) {
   const shown = people.slice(0, max);
   const rest = people.length - shown.length;
@@ -204,21 +199,6 @@ export function Progress({ done, total }: { done: number; total: number }) {
 /* ------------------------------------------------------------------ */
 /* Weekly timeline                                                     */
 /* ------------------------------------------------------------------ */
-
-export function startOfWeek(d: Date) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  const day = (x.getDay() + 6) % 7; // Monday = 0
-  x.setDate(x.getDate() - day);
-  return x;
-}
-
-export const dayKey = (d: Date | string) => {
-  const x = typeof d === "string" ? new Date(d) : d;
-  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(
-    x.getDate(),
-  ).padStart(2, "0")}`;
-};
 
 export function WeekStrip({
   weekStart,
@@ -446,17 +426,6 @@ export function WeatherChip({ planId }: { planId: string }) {
 /* ------------------------------------------------------------------ */
 /* Cards                                                               */
 /* ------------------------------------------------------------------ */
-
-export function formatWhen(iso?: string | null) {
-  if (!iso) return "Date TBD";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "Date TBD";
-  return d.toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export function ActionCard({ plan }: { plan: DashPlan }) {
   const needsMe = plan.status === "collecting" ? !plan.i_responded : !plan.i_voted;

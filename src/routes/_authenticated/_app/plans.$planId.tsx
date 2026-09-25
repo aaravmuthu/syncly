@@ -20,11 +20,8 @@ import { PageHeader } from "@/components/quorum/AppShell";
 import { CarpoolShield } from "@/components/quorum/guardian/CarpoolShield";
 import { PlanInsights } from "@/components/quorum/PlanInsights";
 import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
-import {
-  CompromiseNote,
-  PlanBGuardian,
-  useCompromiseSummaries,
-} from "@/components/quorum/PlanAiInsights";
+import { CompromiseNote, PlanBGuardian } from "@/components/quorum/PlanAiInsights";
+import { useCompromiseSummaries } from "@/components/quorum/useCompromiseSummaries";
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { QuickResponse } from "@/components/quorum/QuickResponse";
 import { BudgetFitPill, CostBadge } from "@/components/quorum/DashboardParts";
@@ -122,7 +119,7 @@ function PlanConflictBanner({
   );
 }
 
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import { ConflictCard } from "@/components/quorum/ConflictCard";
 import { getPlanConflicts } from "@/lib/quorum/conflict.functions";
 function PlanPage() {

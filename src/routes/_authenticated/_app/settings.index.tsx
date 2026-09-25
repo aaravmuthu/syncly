@@ -24,7 +24,7 @@ import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useTheme, type ThemeChoice } from "@/lib/theme";
+import { useTheme, type ThemeChoice } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({

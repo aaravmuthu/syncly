@@ -7,7 +7,7 @@ import { BatteryLow, BatteryFull, MapPin, Mic, Navigation, Square, X } from "luc
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/quorum/Avatar";
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import { Button, Spinner } from "@/components/quorum/ui";
 import { haptic } from "@/lib/quorum/haptics";
 import {

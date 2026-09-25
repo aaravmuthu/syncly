@@ -23,7 +23,7 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { haptic } from "@/lib/quorum/haptics";
-import { useFriends } from "@/lib/quorum/nicknames";
+import { useFriends } from "@/lib/quorum/friends-context";
 import {
   getFriendProfile,
   requestLocation,
