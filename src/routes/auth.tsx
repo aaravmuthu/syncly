@@ -134,9 +134,9 @@ function AuthPage() {
     <div className="paper-field min-h-dvh px-5 py-8">
       <Link
         to="/"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="-ml-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> Back
+        <ArrowLeft className="size-4" aria-hidden /> Back
       </Link>
 
       <div className="mx-auto mt-10 w-full max-w-sm">
@@ -212,19 +212,21 @@ function AuthPage() {
           </button>
         </form>
 
-        <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+        <div className="mt-4 text-sm text-muted-foreground">
           {mode !== "reset" && (
             <button
+              type="button"
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-              className="underline underline-offset-4 transition-colors hover:text-foreground"
+              className="inline-flex min-h-11 items-center text-left underline underline-offset-4 transition-colors hover:text-foreground"
             >
               {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Log in"}
             </button>
           )}
           <div>
             <button
+              type="button"
               onClick={() => setMode(mode === "reset" ? "signin" : "reset")}
-              className="underline underline-offset-4 transition-colors hover:text-foreground"
+              className="inline-flex min-h-11 items-center text-left underline underline-offset-4 transition-colors hover:text-foreground"
             >
               {mode === "reset" ? "Back to log in" : "Forgot your password?"}
             </button>
@@ -232,7 +234,7 @@ function AuthPage() {
           <div>
             <Link
               to="/demo"
-              className="underline underline-offset-4 transition-colors hover:text-foreground"
+              className="inline-flex min-h-11 items-center text-left underline underline-offset-4 transition-colors hover:text-foreground"
             >
               Just looking? Try the demo without an account
             </Link>

@@ -54,13 +54,13 @@ function Landing() {
     <div className="paper-field relative min-h-dvh">
       <MouseSpotlight />
       <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2.5 sm:px-5">
           <Wordmark />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               to="/auth"
               search={{ next: "/home", mode: "signin" }}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:px-3.5"
             >
               Log in
             </Link>
@@ -68,7 +68,7 @@ function Landing() {
             <Link
               to="/auth"
               search={{ next: "/home", mode: "signup" }}
-              className="pressable active:pressable-active rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+              className="pressable active:pressable-active inline-flex min-h-11 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
             >
               Start planning
             </Link>
@@ -86,12 +86,12 @@ function Landing() {
           <p className="mx-auto mt-6 max-w-[640px] text-[clamp(19px,1.9vw,24px)] leading-[1.33] text-pretty text-muted-foreground">
             {DESCRIPTION}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <div className="mx-auto mt-8 flex max-w-xs flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:justify-center sm:gap-4">
             <GlowButton
               to="/auth"
               search={{ next: "/home", mode: "signup" }}
               glow="primary"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-[22px] py-[11px] text-lg leading-6 text-primary-foreground"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-[22px] py-[11px] text-lg leading-6 text-primary-foreground"
             >
               <span className="inline-flex items-center gap-2">
                 Start planning <ArrowRight className="size-4" />
@@ -100,7 +100,7 @@ function Landing() {
             <GlowButton
               to="/demo"
               glow="neutral"
-              className="inline-flex min-h-11 items-center rounded-full border border-primary px-[22px] py-[11px] text-lg leading-6 text-primary transition-colors hover:bg-primary/[0.06]"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-primary px-[22px] py-[11px] text-lg leading-6 text-primary transition-colors hover:bg-primary/[0.06]"
             >
               Try the demo
             </GlowButton>
@@ -202,7 +202,7 @@ function Landing() {
         </section>
 
         {/* Feature trio */}
-        <section className="mx-auto max-w-6xl space-y-5 px-5 py-20">
+        <section className="mx-auto max-w-6xl space-y-5 px-4 py-16 sm:px-5 sm:py-20">
           <FeatureRow
             icon={<ShieldCheck className="size-5" />}
             kicker="Privacy"
@@ -293,7 +293,7 @@ function Landing() {
           <Link
             to="/auth"
             search={{ next: "/home", mode: "signup" }}
-            className="pressable active:pressable-active mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground"
+            className="pressable active:pressable-active mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-7 text-base font-semibold text-primary-foreground"
           >
             Start planning <ArrowRight className="size-4" />
           </Link>
@@ -304,10 +304,16 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 text-sm text-muted-foreground sm:flex-row sm:justify-between">
           <Wordmark size="sm" />
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <Link to="/privacy" className="transition-colors hover:text-foreground">
+            <Link
+              to="/privacy"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-foreground"
+            >
               Privacy
             </Link>
-            <Link to="/terms" className="transition-colors hover:text-foreground">
+            <Link
+              to="/terms"
+              className="inline-flex min-h-11 items-center transition-colors hover:text-foreground"
+            >
               Terms
             </Link>
             <p>
@@ -335,7 +341,7 @@ function FeatureRow({
 }) {
   return (
     <Reveal>
-      <SpotlightCard className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
+      <SpotlightCard className="card-surface grid gap-5 p-5 sm:gap-6 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
             {icon} {kicker}
@@ -398,7 +404,7 @@ function SyncPreview() {
           <span className="text-muted-foreground">Your budget</span>
           <span className="font-semibold text-foreground">$30</span>
         </div>
-        <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-success">
+        <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-success">
           <span className="size-1.5 rounded-full bg-success" /> Updated just now
         </span>
       </DeviceFrame>
@@ -422,7 +428,7 @@ function DeviceFrame({ variant, children }: { variant: "web" | "phone"; children
     );
   }
   return (
-    <div className="dark w-40 shrink-0 rounded-[1.8rem] bg-neutral-950 p-2 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)]">
+    <div className="dark w-44 shrink-0 rounded-[1.8rem] bg-neutral-950 p-2 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)]">
       <div className="rounded-[1.3rem] border border-white/10 bg-card/90 p-3.5 backdrop-blur-2xl">
         {children}
       </div>

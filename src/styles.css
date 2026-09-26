@@ -854,9 +854,24 @@
 .scroll-hero {
   /* sticky site header: 64px bar + 1px hairline, plus the notch in standalone */
   --hero-nav: calc(65px + env(safe-area-inset-top, 0px));
+  /* how far below centre the device starts its rise */
+  --hero-rise: 54svh;
 }
 .hero-device {
   width: min(1000px, 88vw, calc((100svh - var(--hero-nav) - 88px) * 1.4));
+}
+/* Phones: a landscape iPad at 88vw is ~330px wide and its screen unreadable,
+   so the device stands up in portrait and HeroScreen switches to its
+   single-column layout (it picks the layout from the glass's own shape). */
+@media (max-width: 639px) {
+  /* The headline stacks taller on a phone and the portrait device is taller
+     too, so it starts lower to clear the call-to-action buttons. */
+  .scroll-hero {
+    --hero-rise: 72svh;
+  }
+  .hero-device {
+    width: min(440px, 88vw, calc((100svh - var(--hero-nav) - 56px) * 0.695));
+  }
 }
 .hero-bezel {
   padding: clamp(10px, 1.5vw, 16px);
@@ -875,15 +890,21 @@
     3px 5px 30px 0 rgb(0 0 0 / 0.5);
 }
 .hero-screen {
+  aspect-ratio: 1180 / 820;
   border-radius: clamp(12px, 1.9vw, 20px);
   /* keep the rounded clip on the GPU while the casing rotates */
   transform: translateZ(0);
 }
-.hero-slice {
-  background: url("/hero/ipad-light.jpg") center / 100% 100% no-repeat;
-}
-.dark .hero-slice {
-  background-image: url("/hero/ipad-dark.jpg");
+@media (max-width: 639px) {
+  .hero-screen {
+    aspect-ratio: 820 / 1180;
+  }
+  /* the front camera sits on the short edge, now the top */
+  .hero-camera {
+    top: clamp(4px, 1.3vw, 7px) !important;
+    left: 50% !important;
+    margin: 0 0 0 -3px !important;
+  }
 }
 /* Light caught on the glass while it is tilted back; gone once it faces you. */
 .hero-glare {
@@ -908,13 +929,16 @@
     transform: none !important;
     visibility: visible !important;
   }
-  .hero-slice {
-    opacity: 1 !important;
-    transform: none !important;
-  }
   .hero-off,
-  .hero-orb,
   .hero-glare {
     display: none;
+  }
+}
+
+/* Phones: 11px captions are below comfortable reading size at arm's length.
+   The token is inlined by `@theme inline`, so it is raised here instead. */
+@media (max-width: 639px) {
+  .text-caption {
+    font-size: 0.75rem;
   }
 }
