@@ -155,7 +155,7 @@ Warm and restrained in light mode, cool and glass-forward in dark mode; in both,
 - **Headline** (600, 1.75rem, 1.2 line-height, -0.03em tracking): section headings (`h1`–`h3` all resolve to the display font family with this tight negative tracking).
 - **Title** (600, 1.125rem, 1.35 line-height): card titles, list item primary text — still the body font family, just heavier.
 - **Body** (400, 1rem, 1.5 line-height, -0.011em tracking): the default for everything readable. Inputs and textareas are pinned to 16px specifically to stop iOS Safari's zoom-on-focus — never let a form control render smaller than this.
-- **Label** (600, 0.6875rem, 1.4 line-height, 0.16em tracking, uppercase): eyebrow labels and stat captions ("SETUP", section kickers).
+- **Label** (600, 0.75rem, 1.4 line-height, 0.16em tracking, uppercase): eyebrow labels and stat captions ("SETUP", section kickers).
 
 ### Named Rules
 

@@ -118,7 +118,7 @@ export function PlanInsights({ planId }: { planId: string }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={expanded}
         aria-controls="plan-insights-panel"
-        className="flex w-full items-center justify-between gap-2 text-left"
+        className="hit-slop flex w-full items-center justify-between gap-2 text-left"
       >
         <span className="flex items-center gap-2">
           <span className="text-lg leading-none" aria-hidden>

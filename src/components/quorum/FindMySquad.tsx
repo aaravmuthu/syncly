@@ -111,7 +111,7 @@ export function FindMySquad() {
         <h2 className="text-xl font-bold tracking-tight">Find my squad</h2>
         <Link
           to="/radar"
-          className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          className="hit-slop inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
         >
           Full radar <ChevronRight className="h-3.5 w-3.5" aria-hidden />
         </Link>

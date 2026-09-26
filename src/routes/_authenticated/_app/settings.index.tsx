@@ -212,7 +212,7 @@ function SettingsHub() {
           onClick={() => setAppearanceOpen((v) => !v)}
           aria-expanded={appearanceOpen}
           aria-controls="settings-appearance-panel"
-          className="flex w-full items-center justify-between gap-2 text-left"
+          className="hit-slop flex w-full items-center justify-between gap-2 text-left"
         >
           <span className="flex items-start gap-2.5">
             <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -265,7 +265,7 @@ function SettingsHub() {
           onClick={() => setPrefsOpen((v) => !v)}
           aria-expanded={prefsOpen}
           aria-controls="settings-preferences-panel"
-          className="flex w-full items-center justify-between gap-2 text-left"
+          className="hit-slop flex w-full items-center justify-between gap-2 text-left"
         >
           <span className="flex items-start gap-2.5">
             <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">

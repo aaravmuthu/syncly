@@ -355,7 +355,7 @@ function PlanPage() {
             <QuickResponse planId={planId} className="mt-3" />
             <button
               type="button"
-              className="mt-3 text-xs font-medium text-primary underline-offset-4 hover:underline"
+              className="hit-slop mt-3 text-xs font-medium text-primary underline-offset-4 hover:underline"
               onClick={() => setEditing((v) => !v)}
             >
               {editing ? "Hide extra details" : "Add optional details (budget, curfew, ride)"}
@@ -418,7 +418,11 @@ function PlanPage() {
                     size={18}
                     className="bg-transparent"
                   />
-                  <button type="button" onClick={() => openFriend(p.profile_id)}>
+                  <button
+                    type="button"
+                    className="hit-slop"
+                    onClick={() => openFriend(p.profile_id)}
+                  >
                     {alias(p.profile_id, prof?.display_name)}
                   </button>
                   <span className="opacity-75">
@@ -625,7 +629,7 @@ function PlanPage() {
                         })}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
+                        className="hit-slop mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-4 hover:underline"
                       >
                         <Compass className="size-3.5" aria-hidden /> Directions in Maps
                       </a>

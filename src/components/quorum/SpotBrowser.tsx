@@ -147,7 +147,7 @@ export function SpotBrowser({
               type="button"
               onClick={() => setView("browse")}
               className={cn(
-                "rounded-full px-3 py-1.5 transition",
+                "hit-slop rounded-full px-3 py-1.5 transition",
                 view === "browse" ? "bg-background shadow-sm" : "text-muted-foreground",
               )}
             >
@@ -157,7 +157,7 @@ export function SpotBrowser({
               type="button"
               onClick={() => setView("saved")}
               className={cn(
-                "rounded-full px-3 py-1.5 transition",
+                "hit-slop rounded-full px-3 py-1.5 transition",
                 view === "saved" ? "bg-background shadow-sm" : "text-muted-foreground",
               )}
             >
@@ -168,7 +168,7 @@ export function SpotBrowser({
             <button
               type="button"
               onClick={() => setNearHome((v) => !v)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+              className={`hit-slop rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                 nearHome ? "border-primary/60 bg-primary/10 text-primary" : "border-border"
               }`}
             >
@@ -252,7 +252,7 @@ export function SpotBrowser({
                 step={5}
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
-                className="mt-1 w-full accent-primary"
+                className="mt-1 h-11 w-full accent-primary"
               />
             </div>
           </div>
@@ -345,7 +345,7 @@ export function SpotBrowser({
                     })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    className="hit-slop text-xs font-medium text-primary underline-offset-4 hover:underline"
                   >
                     Directions in Maps →
                   </a>
@@ -353,14 +353,14 @@ export function SpotBrowser({
                     href={googleReviewsUrl(s.title, s.address)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    className="hit-slop text-xs font-medium text-primary underline-offset-4 hover:underline"
                   >
                     Read reviews →
                   </a>
                   <button
                     type="button"
                     onClick={() => setDetail(s)}
-                    className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
+                    className="hit-slop text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
                   >
                     Photos & highlights
                   </button>
@@ -371,7 +371,7 @@ export function SpotBrowser({
                       savedKeys.has(s.key) ? "Remove from saved places" : "Save this spot"
                     }
                     className={cn(
-                      "ml-auto inline-flex items-center gap-1 text-xs font-medium",
+                      "hit-slop ml-auto inline-flex items-center gap-1 text-xs font-medium",
                       savedKeys.has(s.key)
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground",
@@ -514,7 +514,7 @@ function SavedSpotRow({
           })}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+          className="hit-slop text-xs font-medium text-primary underline-offset-4 hover:underline"
         >
           Directions in Maps →
         </a>
@@ -553,7 +553,7 @@ function TabRow({
             key={t.id}
             type="button"
             onClick={() => onPick(t)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+            className={`hit-slop rounded-full border px-3 py-1.5 text-xs font-medium transition ${
               active.id === t.id
                 ? "border-primary/60 bg-primary/10 text-primary"
                 : "border-border hover:bg-secondary"

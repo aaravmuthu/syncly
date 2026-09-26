@@ -55,7 +55,7 @@ export function MagicPlanBox({
         Describe it the way you'd text it. We'll fill in the details and look up real venues.
       </p>
       <textarea
-        className="mt-3 min-h-20 w-full resize-y rounded-2xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/50"
+        className="mt-3 min-h-20 w-full resize-y rounded-2xl border border-border bg-background px-3 py-2.5 outline-none focus:border-primary/50"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Dinner and bowling in Frisco this Friday around 7 PM under $30 each"

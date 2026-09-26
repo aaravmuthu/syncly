@@ -172,7 +172,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
             params={{ planId: item.plan_id }}
             onClick={item.onOpen}
             className={cn(
-              "shrink-0 self-center rounded-full px-3.5 py-2 text-xs font-semibold transition-[opacity,background-color,transform] ease-out active:scale-[0.97]",
+              "hit-slop shrink-0 self-center rounded-full px-3.5 py-2 text-xs font-semibold transition-[opacity,background-color,transform] ease-out active:scale-[0.97]",
               item.kind === "action"
                 ? "bg-primary text-primary-foreground hover:opacity-90"
                 : item.kind === "conflict"
@@ -290,7 +290,7 @@ function ActivityPage() {
             key={f.id}
             onClick={() => setFilter(f.id)}
             className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,transform] ease-out active:scale-[0.97]",
+              "hit-slop shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,transform] ease-out active:scale-[0.97]",
               filter === f.id
                 ? "border-primary/40 bg-primary/15 text-foreground"
                 : "border-border bg-secondary/70 text-muted-foreground hover:border-foreground/20",

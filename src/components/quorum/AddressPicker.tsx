@@ -187,7 +187,7 @@ export function AddressPicker({
         type="button"
         onClick={useMyLocation}
         disabled={locating}
-        className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
+        className="hit-slop mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
       >
         <span aria-hidden>📍</span>
         {locating ? "Finding you…" : "Use my current location"}

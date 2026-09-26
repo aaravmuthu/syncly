@@ -61,7 +61,7 @@ export function TimePicker({
               aria-pressed={on}
               onClick={() => pick(p)}
               className={cn(
-                "rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums backdrop-blur transition duration-150",
+                "hit-slop rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums backdrop-blur transition duration-150",
                 on
                   ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-6px_var(--success)]"
                   : "border-border/70 bg-secondary/60 text-secondary-foreground hover:border-primary/40",
@@ -78,7 +78,7 @@ export function TimePicker({
             aria-pressed={normalized === null}
             onClick={() => pick(null)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-semibold transition duration-150",
+              "hit-slop rounded-full border px-3 py-1.5 text-xs font-semibold transition duration-150",
               normalized === null
                 ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-6px_var(--success)]"
                 : "border-border/70 bg-secondary/60 text-secondary-foreground hover:border-primary/40",
@@ -119,7 +119,7 @@ export function TimePicker({
 
       <div className="flex items-center gap-2">
         <input
-          className="w-full rounded-2xl border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-primary/60"
+          className="h-11 w-full rounded-2xl border border-border bg-background px-3.5 py-2 outline-none focus:border-primary/60"
           placeholder='Type "1030", "10:30pm" or "midnight"'
           value={custom}
           onChange={(e) => {

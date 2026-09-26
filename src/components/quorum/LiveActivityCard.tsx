@@ -49,14 +49,14 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
         <TriangleAlert className="h-4 w-4 shrink-0 text-warning" aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{plan.title}</p>
-          <p className="truncate text-xs font-medium text-muted-foreground">
+          <p className="text-xs font-medium text-muted-foreground">
             Conflict reported • Host notified
           </p>
         </div>
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="shrink-0 text-xs font-semibold text-primary"
+          className="hit-slop shrink-0 text-xs font-semibold text-primary"
         >
           Change response
         </button>
@@ -147,7 +147,7 @@ export function LiveActivityCard({ plan, className }: { plan: DashPlan; classNam
               exit={{ opacity: 0 }}
               transition={spring}
               onClick={() => setEditing(true)}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              className="hit-slop text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               Change response
             </motion.button>
