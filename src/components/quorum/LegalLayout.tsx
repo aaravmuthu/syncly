@@ -25,13 +25,13 @@ export function LegalLayout({
   return (
     <div className="paper-field min-h-dvh">
       <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-3.5">
-          <Link to="/">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-2.5">
+          <Link to="/" className="tap-target inline-flex items-center">
             <Wordmark size="sm" />
           </Link>
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="tap-target inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-4" /> Back
           </Link>
@@ -51,12 +51,12 @@ export function LegalLayout({
             <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
               On this page
             </p>
-            <ol className="mt-3 grid gap-1.5 sm:grid-cols-2">
+            <ol className="mt-2 grid sm:grid-cols-2 sm:gap-x-4">
               {toc.map((t, i) => (
                 <li key={t.id}>
                   <a
                     href={`#${t.id}`}
-                    className="text-sm text-foreground/90 underline-offset-4 hover:text-primary hover:underline"
+                    className="flex min-h-11 items-center text-sm text-foreground/90 underline-offset-4 hover:text-primary hover:underline"
                   >
                     {i + 1}. {t.label}
                   </a>
@@ -73,10 +73,16 @@ export function LegalLayout({
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 px-5 text-sm text-muted-foreground sm:flex-row sm:justify-between">
           <Wordmark size="sm" />
           <div className="flex items-center gap-4">
-            <Link to="/privacy" className="transition-colors hover:text-foreground">
+            <Link
+              to="/privacy"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
               Privacy
             </Link>
-            <Link to="/terms" className="transition-colors hover:text-foreground">
+            <Link
+              to="/terms"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
               Terms
             </Link>
             <span>

@@ -18,6 +18,7 @@ import {
   uploadVoiceNote,
 } from "@/lib/quorum/dm.functions";
 import { cn } from "@/lib/utils";
+import { UNNAMED, firstName } from "@/lib/quorum/names";
 
 type DM = {
   id: string;
@@ -47,10 +48,13 @@ export function DirectChat({
   threadId,
   onClose,
   className,
+  circle,
 }: {
   threadId: string;
   onClose?: () => void;
   className?: string;
+  /** A circle you share with the peer, used to label them if they never set a name. */
+  circle?: string;
 }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -224,6 +228,7 @@ export function DirectChat({
   }
 
   const peerName = alias(peer?.id, peer?.display_name);
+  const unnamed = peerName === UNNAMED;
 
   const flyTo = (lat: number, lon: number, label?: string) =>
     navigate({ to: "/radar", search: { lat, lon, label: label ?? "Shared pin" } });
@@ -252,7 +257,16 @@ export function DirectChat({
             onClick={() => peer?.id && openFriend(peer.id)}
             className="block max-w-full truncate text-left text-sm font-semibold text-foreground"
           >
-            {peer ? peerName : "Direct message"}
+            {!peer ? (
+              "Direct message"
+            ) : unnamed ? (
+              <>
+                {circle ? `${circle} member` : "Squad member"}
+                <span className="font-normal italic text-muted-foreground"> · no name yet</span>
+              </>
+            ) : (
+              peerName
+            )}
           </button>
           <p className="flex items-center gap-1.5 truncate text-caption text-muted-foreground">
             {telemetry ? (
@@ -330,7 +344,7 @@ export function DirectChat({
 
         {peerTyping ? (
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-            <Dots /> {peer ? peerName : "They"} is typing…
+            <Dots /> {peer && !unnamed ? `${peerName} is` : "They're"} typing…
           </div>
         ) : null}
 
@@ -394,7 +408,7 @@ export function DirectChat({
           <textarea
             value={text}
             rows={1}
-            placeholder={`Message ${peerName.split(" ")[0]}…`}
+            placeholder={unnamed ? "Message…" : `Message ${firstName(peerName)}…`}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               broadcastTyping();

@@ -9,6 +9,7 @@
 import { haversineMiles, milesToDriveMinutes } from "./location";
 import { expiryFor, ghostUntilFor, motionEmoji, motionLabel } from "./sharing";
 import type { FriendPin, GhostChoice, ShareMode, SharePeer, SharingState } from "./sharing";
+import { realName } from "./names";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -88,7 +89,7 @@ export async function setShare(ownerProfileId: string, viewerProfileId: string, 
   await db.from("notifications").insert({
     profile_id: viewerProfileId,
     type: "location_share",
-    title: `${me?.display_name ?? "A friend"} is sharing their location with you`,
+    title: `${realName(me?.display_name) ?? "A friend"} is sharing their location with you`,
     body:
       mode === "indefinite"
         ? "Live on your map until they turn it off ♾️"
@@ -375,7 +376,7 @@ export async function nudgeFriend(fromProfileId: string, toProfileId: string) {
   await db.from("notifications").insert({
     profile_id: toProfileId,
     type: "nudge",
-    title: `${me?.display_name ?? "A friend"} nudged you 📍`,
+    title: `${realName(me?.display_name) ?? "A friend"} nudged you 📍`,
     body: "They're nearby — want to hang out?",
   });
   return { ok: true as const };

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -117,6 +117,13 @@ export function MessagesPage() {
     () => (inbox.data?.squads ?? []).filter((s) => !q || s.name.toLowerCase().includes(q)),
     [inbox.data, q],
   );
+  // Shared circles per person, so someone who never set a name can still be
+  // told apart by where you know them from.
+  const circlesOf = useMemo(
+    () => new Map((contacts.data ?? []).map((c) => [c.id, c.circles])),
+    [contacts.data],
+  );
+
   const newContacts = useMemo(() => {
     const existing = new Set((inbox.data?.threads ?? []).map((t) => t.peer?.id));
     return (contacts.data ?? []).filter(
@@ -182,6 +189,7 @@ export function MessagesPage() {
                         />
                       }
                       title={alias(t.peer?.id, t.peer?.display_name)}
+                      circle={t.peer ? circlesOf.get(t.peer.id)?.[0] : undefined}
                       preview={
                         t.last
                           ? `${t.last.mine ? "You: " : ""}${t.last.content}`
@@ -242,6 +250,7 @@ export function MessagesPage() {
                           />
                         }
                         title={c.name}
+                        circle={c.circles[0]}
                         preview={c.circles.join(" · ") || "In your circles"}
                         at=""
                         unread={0}
@@ -279,12 +288,46 @@ export function MessagesPage() {
           }
         }}
       >
-        {thread ? <DirectChat threadId={thread} className="min-h-0 flex-1" /> : null}
+        {thread ? (
+          <DirectChat
+            threadId={thread}
+            circle={(() => {
+              const peerId = inbox.data?.threads.find((t) => t.id === thread)?.peer?.id;
+              return peerId ? circlesOf.get(peerId)?.[0] : undefined;
+            })()}
+            className="min-h-0 flex-1"
+          />
+        ) : null}
       </ChatSheet>
 
       <ChatSheet open={Boolean(group)} onOpenChange={(v) => !v && setGroup(null)}>
         {group ? (
           <div className="flex min-h-0 flex-1 flex-col p-2">
+            {/* Name the squad, as DirectChat names the person -- otherwise the
+                sheet opens straight into proposals with no clue whose chat it is. */}
+            {(() => {
+              const sq = inbox.data?.squads.find((s) => s.id === group);
+              return sq ? (
+                <header className="flex items-center gap-3 px-2 pb-2">
+                  <span className="grid size-10 place-items-center overflow-hidden rounded-full bg-secondary text-lg">
+                    {sq.avatar_url ? (
+                      <img src={sq.avatar_url} alt="" className="size-10 object-cover" />
+                    ) : (
+                      sq.emoji
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{sq.name}</span>
+                  <Link
+                    to="/groups/$groupId"
+                    params={{ groupId: group }}
+                    onClick={() => setGroup(null)}
+                    className="tap-target inline-flex items-center rounded-full px-3 text-sm font-medium text-primary transition active:scale-[0.97]"
+                  >
+                    Open squad
+                  </Link>
+                </header>
+              ) : null;
+            })()}
             <SquadChat groupId={group} className="min-h-0 flex-1 rounded-2xl" />
           </div>
         ) : null}
@@ -296,6 +339,7 @@ export function MessagesPage() {
 function Row({
   avatar,
   title,
+  circle,
   preview,
   at,
   unread,
@@ -303,6 +347,7 @@ function Row({
 }: {
   avatar: React.ReactNode;
   title: string;
+  circle?: string;
   preview: string;
   at: string;
   unread: number;
@@ -318,12 +363,14 @@ function Row({
       <span className="min-w-0 flex-1">
         <span className="flex items-center justify-between gap-2">
           {/* "New member" is the literal default display_name for anyone who
-              hasn't set a real name yet -- not a unique identifier, so two
-              different unnamed people would otherwise render as identical,
-              indistinguishable rows. Style it as a visible placeholder
-              instead of a real name. */}
+              hasn't finished setup -- not an identifier, so two unnamed people
+              would render as identical rows. Name them by the circle you share
+              instead, and mark the missing name as a placeholder. */}
           {title === "New member" ? (
-            <span className="truncate text-sm italic text-muted-foreground">No name set</span>
+            <span className="min-w-0 truncate text-sm">
+              <span className="font-semibold">{circle ? `${circle} member` : "Squad member"}</span>
+              <span className="italic text-muted-foreground"> · no name yet</span>
+            </span>
           ) : (
             <span className="truncate text-sm font-semibold">{title}</span>
           )}

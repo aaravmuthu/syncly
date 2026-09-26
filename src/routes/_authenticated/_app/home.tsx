@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { openAskSyncly } from "@/components/quorum/ai/ask-event";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -9,6 +10,7 @@ import { TeenSafetyBar } from "@/components/quorum/guardian/TeenSafetyBar";
 import { Button, Empty, Skeleton } from "@/components/quorum/ui";
 import { ConflictCard } from "@/components/quorum/ConflictCard";
 import { LiveActivityCard } from "@/components/quorum/LiveActivityCard";
+import { realName } from "@/lib/quorum/names";
 import { SquadDigestCard } from "@/components/quorum/ai/SquadDigest";
 import { FindMySquad } from "@/components/quorum/FindMySquad";
 import { JoinGroupModal } from "@/components/quorum/JoinGroupModal";
@@ -176,11 +178,12 @@ export function HomePage() {
   );
 
   const empty = !dash.isLoading && !dash.isError && plans.length === 0;
+  const first = realName(me.data?.display_name)?.split(" ")[0];
 
   return (
     <>
       <PageHeader
-        title={me.data ? `Hey, ${String(me.data.display_name).split(" ")[0]}` : "Home"}
+        title={first ? `Hey, ${first}` : me.data ? "Hey there" : "Home"}
         subtitle="Everyone answers privately. Syncly only shows what works for the whole group."
       />
       <JoinGroupModal open={joinOpen} onClose={() => setJoinOpen(false)} />
@@ -205,11 +208,13 @@ export function HomePage() {
             comes from size within the shared glass language, not from
             being the one filled button next to translucent ones. */}
           <div className="flex items-stretch gap-2.5">
-            <Link to="/groups" className="flex-[2]">
-              <Button variant="glass" className="h-14 w-full text-base text-primary">
-                <Sparkles className="h-5 w-5" /> Magic AI plan
-              </Button>
-            </Link>
+            <Button
+              variant="glass"
+              className="h-14 flex-[2] text-base text-primary"
+              onClick={openAskSyncly}
+            >
+              <Sparkles className="h-5 w-5" /> Magic AI plan
+            </Button>
             <Button variant="glass" className="h-14 flex-1" onClick={() => setJoinOpen(true)}>
               <KeyRound className="h-4 w-4" /> Join code
             </Button>
@@ -217,8 +222,8 @@ export function HomePage() {
 
           {dash.isLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-44 rounded-3xl" />
-              <Skeleton className="h-28 rounded-3xl" />
+              <Skeleton className="h-44 rounded-surface" />
+              <Skeleton className="h-28 rounded-surface" />
             </div>
           ) : null}
 
@@ -309,7 +314,7 @@ export function HomePage() {
           </LayoutGroup>
 
           {me.data && (me.data.home_lat == null || me.data.home_lon == null) ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-warning/40 bg-warning/10 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-surface border border-warning/40 bg-warning/10 px-4 py-3">
               <p className="text-sm">
                 <span className="mr-1">📍</span>
                 Add your home address to get exact drive distances to every spot.

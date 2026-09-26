@@ -48,6 +48,7 @@ import { VenueDetailModal, type VenueDetail } from "@/components/quorum/VenueDet
 import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { haptic } from "@/lib/quorum/haptics";
 import { SwipeBack } from "@/components/quorum/interactions";
+import { firstName } from "@/lib/quorum/names";
 
 export const Route = createFileRoute("/_authenticated/_app/plans/$planId")({
   loader: ({ context, params }) => {
@@ -70,6 +71,21 @@ export const Route = createFileRoute("/_authenticated/_app/plans/$planId")({
   }),
   component: PlanPage,
 });
+
+/** "18:30:00" → "6:30 PM"; the planner stores 24h Postgres time strings. */
+function clock(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  if (Number.isNaN(h)) return t;
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""} ${h < 12 ? "AM" : "PM"}`;
+}
+
+function clockRange(start: string | null, end: string | null): string {
+  if (!start || !end) return start ? clock(start) : "";
+  const a = clock(start);
+  const b = clock(end);
+  // Drop the repeated meridiem: "6:30–9 PM" rather than "6:30 PM–9 PM".
+  return a.slice(-2) === b.slice(-2) ? `${a.slice(0, -3)}–${b}` : `${a}–${b}`;
+}
 
 /** Conflict banner + one-tap alternative ballot for this plan. */
 function PlanConflictBanner({
@@ -179,6 +195,10 @@ function PlanPage() {
     mutationFn: useServerFn(requestParentApproval),
     onSuccess: (row) =>
       setApprovalLink(`${window.location.origin}/approve/${(row as { token: string }).token}`),
+    onError: (e: unknown) =>
+      toast.error("Couldn't create the approval link", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      }),
   });
   const shareSummary = useMutation({
     mutationFn: useServerFn(getSummaryShareLink),
@@ -254,7 +274,7 @@ function PlanPage() {
     return (
       <>
         <PageHeader title="Plan" />
-        <Skeleton className="h-40 rounded-3xl" />
+        <Skeleton className="h-40 rounded-surface" />
       </>
     );
   }
@@ -285,6 +305,8 @@ function PlanPage() {
     data.recommendations.find((r) => r.id !== selected) ??
     null;
   const latestApproval = data.approvals[0]?.status ?? null;
+  // Set server-side by settlePastPlans() once the plan window has passed.
+  const ended = data.plan.status === "completed" || data.plan.status === "cancelled";
 
   return (
     <>
@@ -310,7 +332,18 @@ function PlanPage() {
           meProfileId={data.meProfileId}
         />
 
-        {data.plan.created_by === data.meProfileId ? (
+        {ended ? (
+          <Card>
+            <p className="font-semibold">
+              {data.plan.status === "completed" ? "This plan is done" : "This plan expired"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {data.plan.status === "completed"
+                ? "It's in the books. Start a new one from your squad when you're ready."
+                : "Its time passed before anyone locked it in, so it's closed to answers and votes."}
+            </p>
+          </Card>
+        ) : data.plan.created_by === data.meProfileId ? (
           <Card className="border-primary/25 bg-primary/[0.06]">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -327,7 +360,13 @@ function PlanPage() {
                 <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
                 <BudgetFitPill budgetFit={topBudgetFit} />
                 <Button variant="outline" onClick={() => setEditing((v) => !v)}>
-                  <Pencil className="size-4" aria-hidden /> {editing ? "Close" : "Edit Plan"}
+                  {/* Opens the organizer's own private answers, not the plan itself. */}
+                  <Pencil className="size-4" aria-hidden />{" "}
+                  {editing
+                    ? "Close"
+                    : myParticipant?.responded
+                      ? "Edit my answers"
+                      : "Add my answers"}
                 </Button>
               </div>
             </div>
@@ -363,7 +402,7 @@ function PlanPage() {
           </Card>
         )}
 
-        {editing ? (
+        {editing && !ended ? (
           <div className="mt-4">
             <ConstraintForm
               questionnaire={meta.questionnaire}
@@ -379,16 +418,18 @@ function PlanPage() {
             <div>
               <p className="font-semibold">Group progress</p>
               <p className="text-sm text-muted-foreground">
-                {responded === total
-                  ? "Everyone has answered — you can generate options."
-                  : `Waiting on ${total - responded} more ${total - responded === 1 ? "person" : "people"}.`}
+                {ended
+                  ? `${responded} of ${total} answered before it ended.`
+                  : responded === total
+                    ? "Everyone has answered — you can generate options."
+                    : `Waiting on ${total - responded} more ${total - responded === 1 ? "person" : "people"}.`}
               </p>
             </div>
             <Button
               variant={responded === total ? "primary" : "outline"}
               loading={generate.isPending}
               orb="searching"
-              className="shrink-0"
+              className={`shrink-0${ended ? " hidden" : ""}`}
               onClick={() => generate.mutate({ data: { planId, shuffle } })}
             >
               {generate.isPending ? "Finding fair spots…" : "Find options"}
@@ -435,14 +476,22 @@ function PlanPage() {
         </Card>
 
         <div className="mt-4 space-y-3">
-          <SpotBrowser
-            groupId={data.plan.group_id}
-            planId={planId}
-            canAdd={data.plan.created_by === data.meProfileId}
-            onAdded={() => void invalidate()}
-          />
-          <PlanConflictBanner planId={planId} title={data.plan.title} recs={data.recommendations} />
-          {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
+          {ended ? null : (
+            <>
+              <SpotBrowser
+                groupId={data.plan.group_id}
+                planId={planId}
+                canAdd={data.plan.created_by === data.meProfileId}
+                onAdded={() => void invalidate()}
+              />
+              <PlanConflictBanner
+                planId={planId}
+                title={data.plan.title}
+                recs={data.recommendations}
+              />
+              {data.recommendations.length > 0 ? <PlanBGuardian planId={planId} /> : null}
+            </>
+          )}
           <PlanInsights planId={planId} />
         </div>
 
@@ -583,8 +632,9 @@ function PlanPage() {
                         ) : null}
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">
-                        ${r.cost_min}–${r.cost_max} · {r.suggested_start}–{r.suggested_end} ·{" "}
-                        {r.travel_minutes} min drive
+                        ${r.cost_min}–${r.cost_max} ·{" "}
+                        {clockRange(r.suggested_start, r.suggested_end)} · {r.travel_minutes} min
+                        drive
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {b.venue?.address ?? r.location_name}
@@ -595,7 +645,7 @@ function PlanPage() {
                       {b.fair?.drives?.length ? (
                         <p className="mt-1.5 text-xs text-muted-foreground">
                           {b.fair.drives
-                            .map((d) => `${d.miles} mi for ${d.name.split(" ")[0]}`)
+                            .map((d) => `${d.miles} mi for ${firstName(d.name)}`)
                             .join(" • ")}
                         </p>
                       ) : null}
@@ -658,7 +708,7 @@ function PlanPage() {
                       <div className="font-display text-2xl font-semibold tabular-nums">
                         {r.score}%
                       </div>
-                      <div className="text-caption text-muted-foreground">Overall Match</div>
+                      <div className="text-caption text-muted-foreground">Overall match</div>
                       {b.venue?.distanceMiles != null ? (
                         <div className="mt-0.5 text-caption text-muted-foreground tabular-nums">
                           {b.venue.distanceMiles} mi
@@ -672,7 +722,7 @@ function PlanPage() {
                     <Meter label="Fairness" value={b.fairness ?? 0} />
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Overall Match is 62% preference fit, 28% fairness, 10% ride coverage. Budget,
+                    Overall match is 62% preference fit, 28% fairness, 10% ride coverage. Budget,
                     schedule, dietary and travel needs are pass/fail requirements, already reflected
                     in "{r.feasible ? "Works for everyone" : "Doesn't work for everyone"}" above.
                   </p>
@@ -727,7 +777,9 @@ function PlanPage() {
                     </ul>
                   ) : null}
 
-                  <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <div
+                    className={`mt-5 flex flex-wrap items-center gap-2${ended ? " hidden" : ""}`}
+                  >
                     <Button
                       variant={myVote === r.id ? "primary" : "outline"}
                       onClick={() => vote.mutate({ data: { planId, recommendationId: r.id } })}
@@ -741,6 +793,10 @@ function PlanPage() {
                     {!isSelected ? (
                       <Button
                         variant="ghost"
+                        loading={
+                          finalize.isPending && finalize.variables?.data.recommendationId === r.id
+                        }
+                        orb="solving"
                         onClick={() =>
                           finalize.mutate({ data: { planId, recommendationId: r.id } })
                         }
@@ -752,7 +808,7 @@ function PlanPage() {
                 </Card>
               );
             })}
-            {selectedRec && backupRec ? (
+            {selectedRec && backupRec && !ended ? (
               <Card className="border-dashed">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -770,6 +826,7 @@ function PlanPage() {
                   <Button
                     variant="outline"
                     loading={finalize.isPending}
+                    orb="solving"
                     onClick={() =>
                       finalize.mutate({ data: { planId, recommendationId: backupRec.id } })
                     }
@@ -780,7 +837,7 @@ function PlanPage() {
               </Card>
             ) : null}
 
-            <div className="flex justify-center">
+            <div className={`flex justify-center${ended ? " hidden" : ""}`}>
               <Button
                 variant="ghost"
                 loading={generate.isPending}
@@ -827,22 +884,28 @@ function PlanPage() {
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
-                disabled={askParent.isPending}
+                loading={askParent.isPending}
+                orb="connecting"
                 onClick={() => askParent.mutate({ data: { planId } })}
               >
-                {askParent.isPending ? "Creating…" : "Create approval link"}
+                {askParent.isPending ? "Creating link…" : "Create approval link"}
               </Button>
               <Button
-                disabled={shareSummary.isPending}
+                loading={shareSummary.isPending}
+                orb="connecting"
                 onClick={() => shareSummary.mutate({ data: { planId } })}
               >
-                {shareSummary.isPending ? "Creating…" : "Share parent summary link"}
+                {shareSummary.isPending ? "Creating link…" : "Share parent summary link"}
               </Button>
               {approvalLink ? (
                 <button
                   type="button"
-                  className="truncate rounded-xl bg-secondary px-3 py-2 text-xs"
-                  onClick={() => void navigator.clipboard.writeText(approvalLink)}
+                  className="pressable active:pressable-active tap-target min-w-0 max-w-full truncate rounded-2xl bg-secondary px-3 py-2 text-left text-xs transition-colors hover:bg-secondary/70"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(approvalLink);
+                    haptic("success");
+                    toast.success("Link copied");
+                  }}
                 >
                   Tap to copy: {approvalLink}
                 </button>

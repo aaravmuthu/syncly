@@ -73,7 +73,7 @@ function GroupPage() {
     return (
       <>
         <PageHeader title="Group" />
-        <Skeleton className="h-32 rounded-3xl" />
+        <Skeleton className="h-32 rounded-surface" />
       </>
     );
   }
@@ -111,6 +111,7 @@ function GroupPage() {
             <button
               key={t.id}
               type="button"
+              aria-pressed={tab === t.id}
               onClick={() => setTab(t.id)}
               className={`tap-target relative z-10 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-[0.97] ${
                 tab === t.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
@@ -134,14 +135,14 @@ function GroupPage() {
                       }
                     />
                     <Button onClick={() => setWizard(true)}>
-                      <Plus className="size-4" aria-hidden /> Launch New Plan
+                      <Plus className="size-4" aria-hidden /> Launch new plan
                     </Button>
                   </div>
 
                   {plans.length === 0 ? (
                     <Card>
                       <p className="text-sm text-muted-foreground">
-                        No plans yet — tap “Launch New Plan” to pick a vibe.
+                        No plans yet — tap “Launch new plan” to pick a vibe.
                       </p>
                     </Card>
                   ) : null}
@@ -210,9 +211,15 @@ function GroupPage() {
                             size={36}
                           />
                           <div className="flex-1">
-                            <span className="block text-sm font-medium">
-                              {p?.display_name ?? "Member"}
-                            </span>
+                            {/* "New member" is the default display_name before setup. */}
+                            {!p?.display_name || p.display_name === "New member" ? (
+                              <span className="block text-sm">
+                                <span className="font-medium">{group.name} member</span>
+                                <span className="italic text-muted-foreground"> · no name yet</span>
+                              </span>
+                            ) : (
+                              <span className="block text-sm font-medium">{p.display_name}</span>
+                            )}
                             {meta ? (
                               <span className="block text-xs text-muted-foreground">{meta}</span>
                             ) : null}
@@ -288,13 +295,13 @@ type GroupPlan = {
 // Tone/icon come from the canonical statusTone() (ui.tsx) and its lucide
 // equivalent -- only the label text is specific to this screen.
 const STATUS_LABEL: Record<string, string> = {
-  finalized: "Locked In",
+  finalized: "Locked in",
   completed: "Completed",
-  voting: "Voting Active",
-  recommending: "Voting Active",
-  collecting: "Voting Active",
+  voting: "Voting active",
+  recommending: "Voting active",
+  collecting: "Voting active",
   draft: "Draft",
-  cancelled: "Cancelled",
+  cancelled: "Expired",
 };
 
 const STATUS_ICON: Record<string, LucideIcon> = {

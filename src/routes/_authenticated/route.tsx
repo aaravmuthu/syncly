@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getMe } from "@/lib/quorum/plan.functions";
 import { getLastContext } from "@/components/quorum/last-context";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 // Which shell (My Squad vs. Family Hub) someone lands in is decided here,
 // once per browser session -- applied only the first time /home is visited
@@ -47,5 +48,13 @@ export const Route = createFileRoute("/_authenticated")({
 
     return { user };
   },
+  // ssr:false means the server has nothing to paint here, and the session
+  // check above can take a beat on a cold load -- without this the whole
+  // screen sat solid black until it resolved.
+  pendingComponent: () => (
+    <div className="paper-field grid min-h-dvh place-items-center">
+      <AiActivity state="connecting" label="Opening Syncly…" size={64} />
+    </div>
+  ),
   component: () => <Outlet />,
 });

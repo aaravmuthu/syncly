@@ -64,7 +64,7 @@ function TokenApproval({ token }: { token: string }) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-4 py-10">
       <Wordmark className="mx-auto mb-8 h-7" />
-      {q.isLoading ? <Skeleton className="h-56 rounded-3xl" /> : null}
+      {q.isLoading ? <Skeleton className="h-56 rounded-surface" /> : null}
       {!q.isLoading && !q.data ? (
         <Card>
           <h1 className="font-display text-xl font-semibold">This link isn't valid</h1>

@@ -21,6 +21,8 @@ import {
 import type { VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
 import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
 import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
+import { firstName } from "@/lib/quorum/names";
 
 /**
  * Live restaurant / activity picker. Searches Geoapify around the member's
@@ -230,7 +232,7 @@ export function SpotBrowser({
               }}
             >
               <input
-                className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
+                className="h-11 w-full rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
                 placeholder="Search a place (e.g. Chipotle)"
                 aria-label="Search local spots"
                 value={query}
@@ -257,7 +259,14 @@ export function SpotBrowser({
             </div>
           </div>
 
-          {spots.isLoading ? <Skeleton className="h-40 rounded-2xl" /> : null}
+          {spots.isLoading ? (
+            <AiActivity
+              state="searching"
+              label="Finding spots near you…"
+              size={64}
+              className="rounded-2xl border border-border"
+            />
+          ) : null}
 
           {mapVenues.length > 1 ? <VenueMap venues={mapVenues} onSelect={setSelected} /> : null}
 
@@ -265,7 +274,7 @@ export function SpotBrowser({
             {(data?.spots ?? []).map((s) => (
               <div
                 key={s.key}
-                className={`rounded-3xl border p-4 transition ${
+                className={`rounded-2xl border p-4 transition ${
                   selected === s.key ? "border-primary/60 bg-primary/5" : "border-border"
                 }`}
               >
@@ -293,9 +302,7 @@ export function SpotBrowser({
                   </p>
                   {s.members.length ? (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {s.members
-                        .map((m) => `${m.miles} mi for ${m.name.split(" ")[0]}`)
-                        .join(" • ")}
+                      {s.members.map((m) => `${m.miles} mi for ${firstName(m.name)}`).join(" • ")}
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-wrap gap-1.5 text-caption">
@@ -477,7 +484,7 @@ function SavedSpotRow({
   };
 
   return (
-    <div className="rounded-3xl border border-border p-4">
+    <div className="rounded-2xl border border-border p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-display text-sm font-semibold">

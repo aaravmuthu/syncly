@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import {
-  motion,
-  useMotionValue,
-  useMotionValueEvent,
-  useReducedMotion,
-  useTransform,
-  type MotionValue,
-} from "motion/react";
-import { ThinkingOrb } from "thinking-orbs";
+import { motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { LiveScreen } from "./LiveScreen";
 
 /*
  * A port of the Claude Design hero ("Syncly Hero.dc.html"). Every number below
@@ -28,34 +21,21 @@ const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 /** Eased 0→1 as `v` runs from `a` to `b`. */
 const seg = (v: number, a: number, b: number) => easeOutCubic(clamp((v - a) / (b - a)));
 
-/*
- * The real /demo ranking screen (scripts/capture-hero-screens.mjs), cut into
- * the pieces the reference stages one by one. Each is the same image clipped
- * to one region (percentages of the 1180x820 capture). `at` is when it lands
- * on the screen's own 0→1 timeline, and x/y is where it arrives from, in the
- * reference's 1024x712 app units. The left column takes the reference's
- * sidebar cascade, the ranking takes its card and list slots.
- */
-const SLICES: { clip: string; at: [number, number]; x?: number; y?: number }[] = [
-  { clip: "inset(0 0 91.15% 0)", at: [0.06, 0.22], y: -6 }, // app bar
-  { clip: "inset(8.85% 0 79.5% 0)", at: [0.12, 0.36], x: -12, y: 0 }, // plan types
-  { clip: "inset(20.5% 54% 65.5% 0)", at: [0.14, 0.38], x: -12, y: 0 }, // who's coming
-  { clip: "inset(34.5% 54% 49.6% 0)", at: [0.17, 0.41], x: -12, y: 0 }, // spend, travel
-  { clip: "inset(50.4% 54% 29.5% 0)", at: [0.2, 0.44], x: -12, y: 0 }, // home by, dietary
-  { clip: "inset(70.5% 54% 0 0)", at: [0.23, 0.47], x: -12, y: 0 }, // into, getting there
-  { clip: "inset(20.5% 0 75.6% 46%)", at: [0.18, 0.42], y: 14 }, // "Ranked for all 4"
-  { clip: "inset(24.4% 0 37.2% 46%)", at: [0.28, 0.54], y: 28 }, // best match
-  { clip: "inset(62.8% 0 20.2% 46%)", at: [0.42, 0.66], y: 16 },
-  { clip: "inset(79.8% 0 3.2% 46%)", at: [0.47, 0.71], y: 16 },
-  { clip: "inset(96.8% 0 0 46%)", at: [0.52, 0.76], y: 16 },
-];
-
 /**
  * Landing hero: the headline over a tilted iPad that rises, straightens and
  * wakes into the real app as the visitor scrolls. `children` is the headline.
  */
 export function ScrollHero({ children }: { children: ReactNode }) {
   const reduce = !!useReducedMotion();
+  // Phones get the iPad held upright; a landscape one is too small to read.
+  const [portrait, setPortrait] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639.98px)");
+    const update = () => setPortrait(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const heroRef = useRef<HTMLElement>(null);
   const p = useMotionValue(0);
   const still = useMotionValue(0);
@@ -142,14 +122,6 @@ export function ScrollHero({ children }: { children: ReactNode }) {
   const screen = useTransform(() => (still.get() ? 1 : clamp((p.get() - 0.35) / 0.55)));
   const offOpacity = useTransform(() => 1 - seg(screen.get(), 0, 0.14));
   const glareOpacity = useTransform(() => (still.get() ? 0 : 1 - settle.get()));
-  const orbOpacity = useTransform(
-    () => seg(screen.get(), 0.04, 0.12) * (1 - seg(screen.get(), 0.2, 0.28)),
-  );
-  const orbScale = useTransform(() => 0.96 + 0.04 * seg(screen.get(), 0.04, 0.12));
-
-  // Only spin the orb while it can be seen.
-  const [orbOn, setOrbOn] = useState(false);
-  useMotionValueEvent(orbOpacity, "change", (v) => setOrbOn(v > 0.01));
 
   return (
     <section
@@ -194,25 +166,10 @@ export function ScrollHero({ children }: { children: ReactNode }) {
             />
             <div
               role="img"
-              aria-label="Syncly ranking plans for a group of four. Each person's limits are set privately on the left. Foxglove Cafe is the best fit for everyone with a 70 overall match, followed by Milk & Honey Dessert Bar and Vera's Taqueria, and all three work for all four people."
-              className="hero-screen relative aspect-[1180/820] overflow-hidden bg-background"
+              aria-label="Syncly ranking plans for a group of four. Each friend answers privately; when one of them changes an answer, the plans re-rank and a new top pick that works for everyone moves up."
+              className="hero-screen relative aspect-[1180/820] overflow-hidden bg-background max-sm:aspect-[820/1180]"
             >
-              {SLICES.map((s) => (
-                <Slice key={s.clip} progress={screen} {...s} />
-              ))}
-
-              <motion.div
-                aria-hidden
-                style={{ opacity: orbOpacity, scale: orbScale }}
-                className="hero-orb absolute top-[24.4%] right-0 bottom-[37.2%] left-[46%] grid place-items-center"
-              >
-                <div className="flex flex-col items-center gap-[clamp(6px,1vw,12px)] text-[clamp(9px,1.1vw,13px)] text-muted-foreground">
-                  <div className="scale-[0.6] sm:scale-100">
-                    <ThinkingOrb state="solving" size={64} theme="auto" paused={!orbOn || reduce} />
-                  </div>
-                  <span>Ranking plans for 4 people…</span>
-                </div>
-              </motion.div>
+              <LiveScreen progress={screen} portrait={portrait} reduce={reduce} />
 
               <motion.div
                 aria-hidden
@@ -229,33 +186,5 @@ export function ScrollHero({ children }: { children: ReactNode }) {
         </motion.div>
       </div>
     </section>
-  );
-}
-
-function Slice({
-  progress,
-  clip,
-  at: [a, b],
-  x = 0,
-  y = 12,
-}: {
-  progress: MotionValue<number>;
-  clip: string;
-  at: [number, number];
-  x?: number;
-  y?: number;
-}) {
-  const t = useTransform(() => seg(progress.get(), a, b));
-  // Offsets are in the reference's 1024x712 app units; as percentages of the
-  // full-screen slice they keep the same proportion at any device size.
-  const transform = useTransform(() => {
-    const rest = 1 - t.get();
-    return `translate3d(${((x / 10.24) * rest).toFixed(3)}%,${((y / 7.12) * rest).toFixed(3)}%,0)`;
-  });
-  return (
-    <motion.div
-      className="hero-slice absolute inset-0"
-      style={{ clipPath: clip, opacity: t, transform }}
-    />
   );
 }

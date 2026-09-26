@@ -15,7 +15,7 @@ export function TrendingPills() {
           key={t}
           type="button"
           onClick={() => setActive((p) => (p === t ? null : t))}
-          className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+          className={`inline-flex min-h-11 items-center rounded-full border px-3.5 text-xs sm:min-h-8 font-semibold tracking-wide transition-colors ${
             active === t
               ? "border-primary/40 bg-primary/15 text-primary"
               : "border-foreground/10 bg-foreground/5 text-muted-foreground hover:border-foreground/25 hover:bg-foreground/10 hover:text-foreground"

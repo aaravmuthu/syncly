@@ -119,7 +119,7 @@ export function TimePicker({
 
       <div className="flex items-center gap-2">
         <input
-          className="h-11 w-full rounded-2xl border border-border bg-background px-3.5 py-2 outline-none focus:border-primary/60"
+          className="h-11 w-full rounded-2xl border border-border bg-background px-3.5 py-2 outline-none transition-colors focus:border-primary/60"
           placeholder='Type "1030", "10:30pm" or "midnight"'
           value={custom}
           onChange={(e) => {

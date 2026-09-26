@@ -49,7 +49,7 @@ export function VibeSearch({
   const result = search.data;
 
   return (
-    <div className="rounded-3xl border border-primary/25 bg-primary/5 p-4">
+    <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <AiGlyph className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">Vibe search</h3>
@@ -70,7 +70,7 @@ export function VibeSearch({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="quiet patio, cheap, walkable"
           aria-label="Describe the vibe you want"
-          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none focus:border-primary/60"
+          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
         />
         <Button
           type="submit"

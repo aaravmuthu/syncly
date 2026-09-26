@@ -307,6 +307,7 @@ function Onboarding() {
           </button>
           <Button
             loading={save.isPending || link.isPending}
+            orb={link.isPending ? "connecting" : undefined}
             onClick={() => {
               if (step === 0 && !String(form["display_name"] ?? "").trim()) {
                 return toast.error("Add a display name so your group knows who you are");
@@ -328,13 +329,15 @@ function Onboarding() {
               else setStep(step + 1);
             }}
           >
-            {save.isPending || link.isPending
-              ? "Saving…"
-              : last
-                ? isGuardian
-                  ? "Link & finish"
-                  : "Start planning"
-                : "Continue"}
+            {link.isPending
+              ? "Linking…"
+              : save.isPending
+                ? "Saving…"
+                : last
+                  ? isGuardian
+                    ? "Link & finish"
+                    : "Start planning"
+                  : "Continue"}
           </Button>
         </div>
       </Card>

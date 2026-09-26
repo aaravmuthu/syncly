@@ -163,6 +163,15 @@
   a,
   [role="button"] {
     -webkit-tap-highlight-color: transparent;
+    /* Long-press on a control opens iOS's link preview / callout sheet;
+       native controls don't. Content text elsewhere stays selectable. */
+    -webkit-touch-callout: none;
+  }
+  button,
+  [role="button"] {
+    /* A press-and-hold shouldn't highlight the button's label like page text. */
+    -webkit-user-select: none;
+    user-select: none;
   }
   button,
   [role="button"] {
@@ -421,8 +430,14 @@
   will-change: transform;
   transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.q-map-pin:hover {
-  transform: scale(1.12);
+/* Gated: on touch a tap would leave the pin stuck at hover scale. */
+@media (hover: hover) and (pointer: fine) {
+  .q-map-pin:hover {
+    transform: scale(1.12);
+  }
+}
+.q-map-pin:active {
+  transform: scale(0.94);
 }
 .q-map-pin-active {
   background: var(--accent);
@@ -546,8 +561,10 @@
     transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.18s ease;
 }
-.glass-card:hover {
-  border-color: color-mix(in oklab, var(--primary) 32%, transparent);
+@media (hover: hover) and (pointer: fine) {
+  .glass-card:hover {
+    border-color: color-mix(in oklab, var(--primary) 32%, transparent);
+  }
 }
 
 /* The app's one floating-glass treatment -- top bar, bottom tab bar, search
@@ -879,13 +896,20 @@
 
 /* Landing scroll hero (components/quorum/landing/ScrollHero.tsx). Geometry
    is the Claude Design reference's: a 16:11 iPad in a graphite casing, sized to
-   whichever runs out first of 1000px, 88vw, or the height left under the nav. */
+   whichever runs out first of 1000px, 88vw, or the height left under the nav.
+   Under 640px the iPad stands upright (the screen is ~1.44x taller than wide,
+   plus bezel), so the live screen inside stays readable at phone width. */
 .scroll-hero {
   /* sticky site header: 64px bar + 1px hairline, plus the notch in standalone */
   --hero-nav: calc(65px + env(safe-area-inset-top, 0px));
 }
 .hero-device {
   width: min(1000px, 88vw, calc((100svh - var(--hero-nav) - 88px) * 1.4));
+}
+@media (width < 40rem) {
+  .hero-device {
+    width: min(88vw, calc((100svh - var(--hero-nav) - 88px) * 0.68));
+  }
 }
 .hero-bezel {
   padding: clamp(10px, 1.5vw, 16px);
@@ -908,11 +932,10 @@
   /* keep the rounded clip on the GPU while the casing rotates */
   transform: translateZ(0);
 }
-.hero-slice {
-  background: url("/hero/ipad-light.jpg") center / 100% 100% no-repeat;
-}
-.dark .hero-slice {
-  background-image: url("/hero/ipad-dark.jpg");
+/* Someone answering privately on the hero's live screen. */
+.live-ring {
+  border: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
+  animation: q-radar-pulse 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
 }
 /* Light caught on the glass while it is tilted back; gone once it faces you. */
 .hero-glare {
@@ -937,13 +960,22 @@
     transform: none !important;
     visibility: visible !important;
   }
-  .hero-slice {
+  .hero-stage {
     opacity: 1 !important;
     transform: none !important;
   }
   .hero-off,
-  .hero-orb,
-  .hero-glare {
+  .hero-glare,
+  .live-ring {
     display: none;
   }
+}
+
+/* Tailwind's stock transition-colors drops transform, which made the global
+   button:active scale snap instead of ease on every button that also fades its
+   colours. Unlayered so it beats the utility; timing still comes from it. */
+.transition-colors {
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
+    --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, transform, scale;
 }

@@ -43,7 +43,11 @@ function RlsCheckPage() {
           user, your own session then tries to update and delete them, and every attempt must be
           refused. The probe rows are removed straight after.
         </p>
-        <Button loading={run.isPending} onClick={() => run.mutate({ data: undefined as never })}>
+        <Button
+          loading={run.isPending}
+          orb="working"
+          onClick={() => run.mutate({ data: undefined as never })}
+        >
           Run check
         </Button>
 

@@ -5,6 +5,7 @@ import { Pill, Skeleton } from "@/components/quorum/ui";
 import { getVenueInsight } from "@/lib/quorum/reviews.functions";
 import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { directionsUrl } from "@/lib/quorum/vibes";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 export type VenueDetail = {
   key: string;
@@ -72,7 +73,11 @@ export function VenueDetailModal({
         <p className="text-sm text-muted-foreground">{venue.address ?? venue.subtitle}</p>
 
         {insight.isLoading ? (
-          <Skeleton className="h-32 rounded-2xl" />
+          <AiActivity
+            state="composing"
+            label="Writing up what's good here…"
+            className="rounded-2xl border border-border px-4 py-3"
+          />
         ) : data ? (
           <div className="space-y-3">
             {data.popularDishes.length ? (

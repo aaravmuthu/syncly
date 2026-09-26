@@ -7,6 +7,7 @@ import { getAvailabilityHeatmap, getPlanWeather } from "@/lib/quorum/insight.fun
 import { bestWindow, densityTone, prettySlot } from "@/lib/quorum/availability";
 import { forecastSummary } from "@/lib/quorum/weather";
 import { cn } from "@/lib/utils";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 function WeatherBody({ planId }: { planId: string }) {
   const fetchWeather = useServerFn(getPlanWeather);
@@ -16,7 +17,7 @@ function WeatherBody({ planId }: { planId: string }) {
     staleTime: 30 * 60_000,
   });
 
-  if (q.isLoading) return <Skeleton className="h-14 rounded-2xl" />;
+  if (q.isLoading) return <AiActivity state="searching" label="Checking the forecast…" />;
   const f = q.data;
   if (!f) return null;
 
@@ -49,7 +50,14 @@ function AvailabilityBody({ planId }: { planId: string }) {
     queryFn: () => fetchGrid({ data: { planId } }),
   });
 
-  if (q.isLoading) return <Skeleton className="h-32 rounded-2xl" />;
+  if (q.isLoading)
+    return (
+      <AiActivity
+        state="weaving"
+        label="Lining up everyone's free time…"
+        className="border-t border-border pt-4"
+      />
+    );
   const grid = q.data;
   if (!grid || grid.answered === 0) return null;
   const win = bestWindow(grid.cells);

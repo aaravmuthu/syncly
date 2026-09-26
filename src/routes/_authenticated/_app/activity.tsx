@@ -121,7 +121,7 @@ function ActivityCard({ item }: { item: FeedItem }) {
     <SpotlightCard
       as="article"
       className={cn(
-        "group surface relative overflow-hidden rounded-3xl p-4 transition-[border-color,box-shadow] duration-200 ease-out",
+        "group surface relative overflow-hidden p-4 transition-[border-color,box-shadow] duration-200 ease-out",
         k.hover,
         item.unread ? "ring-1 ring-primary/25" : "",
       )}
@@ -190,8 +190,8 @@ function ActivityCard({ item }: { item: FeedItem }) {
 
 const FILTERS: { id: "all" | Kind; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "action", label: "Action Needed" },
-  { id: "locked", label: "Locked In" },
+  { id: "action", label: "Action needed" },
+  { id: "locked", label: "Locked in" },
   { id: "groups", label: "Groups" },
 ];
 
@@ -288,6 +288,8 @@ function ActivityPage() {
         {FILTERS.map((f) => (
           <button
             key={f.id}
+            type="button"
+            aria-pressed={filter === f.id}
             onClick={() => setFilter(f.id)}
             className={cn(
               "hit-slop shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-[color,background-color,border-color,transform] ease-out active:scale-[0.97]",
@@ -305,21 +307,40 @@ function ActivityPage() {
       {feed.isLoading ? (
         <div className="space-y-2.5">
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 rounded-3xl" />
+            <Skeleton key={i} className="h-20 rounded-surface" />
           ))}
         </div>
       ) : null}
 
       {!feed.isLoading && visible.length === 0 ? (
-        <Empty
-          title={filter === "all" ? "Nothing has happened yet" : "Nothing here yet"}
-          body="Once you join a group and start a plan, every answer, vote and decision shows up here — without revealing anyone's private details."
-          action={
-            <Link to="/groups">
-              <Button>Go to groups</Button>
-            </Link>
-          }
-        />
+        items.length > 0 ? (
+          // A filter came up empty, not the feed -- don't show the first-run copy.
+          <Empty
+            title={
+              filter === "locked"
+                ? "No plans locked in yet"
+                : filter === "action"
+                  ? "You're all caught up"
+                  : "No group updates yet"
+            }
+            body="Nothing in this filter right now."
+            action={
+              <Button variant="outline" onClick={() => setFilter("all")}>
+                Show all activity
+              </Button>
+            }
+          />
+        ) : (
+          <Empty
+            title="Nothing has happened yet"
+            body="Once you join a group and start a plan, every answer, vote and decision shows up here — without revealing anyone's private details."
+            action={
+              <Link to="/groups">
+                <Button>Go to groups</Button>
+              </Link>
+            }
+          />
+        )
       ) : null}
 
       <PullToRefresh onRefresh={() => feed.refetch()}>

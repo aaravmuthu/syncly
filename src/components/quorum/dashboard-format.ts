@@ -1,7 +1,11 @@
 export function statusLabel(status: string) {
   if (status === "voting") return "Voting open";
   if (status === "collecting") return "Collecting answers";
+  if (status === "recommending") return "Finding options";
   if (status === "finalized") return "Confirmed";
+  if (status === "completed") return "Completed";
+  // Only ever set by settlePastPlans() for plans whose time ran out unlocked.
+  if (status === "cancelled") return "Expired";
   return "Draft";
 }
 

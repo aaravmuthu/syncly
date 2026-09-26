@@ -34,6 +34,7 @@ import {
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { FindMyFriends } from "@/components/quorum/sharing/FindMyFriends";
 import { getFriendPins } from "@/lib/quorum/sharing.functions";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 export const Route = createFileRoute("/_authenticated/_app/radar")({
   loader: ({ context }) => {
@@ -307,7 +308,15 @@ export function RadarPage() {
     // against it or clash with it outright.
     <div className="dark fixed inset-0 overflow-hidden bg-background">
       {loading ? (
-        <Skeleton className="h-full w-full rounded-none" />
+        <div className="relative h-full w-full">
+          <Skeleton className="h-full w-full rounded-none" />
+          <AiActivity
+            state="searching"
+            label="Finding your squad…"
+            size={64}
+            className="absolute inset-0 justify-center"
+          />
+        </div>
       ) : hasPins ? (
         <SquadMap
           people={people}

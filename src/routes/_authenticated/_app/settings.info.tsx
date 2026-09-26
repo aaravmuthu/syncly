@@ -8,7 +8,7 @@ import { BRAND } from "@/lib/brand";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/info")({
   head: () => ({
-    meta: [{ title: "Info & About — Syncly" }],
+    meta: [{ title: "Info & about — Syncly" }],
   }),
   component: InfoPage,
 });
@@ -65,7 +65,7 @@ function LinkRow({
 function InfoPage() {
   return (
     <PushEnter>
-      <SubpageHeader title="Info & About" backTo="/settings" />
+      <SubpageHeader title="Info & about" backTo="/settings" />
 
       <Card className="space-y-1">
         <SectionHeader icon={Info} title={BRAND.name} subtitle={BRAND.tagline} />

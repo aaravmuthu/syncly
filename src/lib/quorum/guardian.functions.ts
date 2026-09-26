@@ -65,6 +65,8 @@ export const getGuardianHub = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const me = await resolveMyProfileId(context.supabase);
+    const { settlePastPlans } = await import("./plan-lifecycle.server");
+    await settlePastPlans();
     const { buildGuardianDashboard } = await import("./guardian.server");
     return buildGuardianDashboard(me);
   });

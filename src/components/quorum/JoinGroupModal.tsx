@@ -43,6 +43,7 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
         autoFocus
         inputMode="text"
         placeholder="SQUAD9"
+        aria-label="Group code"
         onChange={(e) => {
           const next = normalizeCode(e.target.value);
           setCode(next);
@@ -57,6 +58,7 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
       <Button
         className="mt-4 w-full"
         loading={join.isPending}
+        orb="connecting"
         disabled={!isValidCode(code)}
         onClick={() => join.mutate({ data: { code } })}
       >

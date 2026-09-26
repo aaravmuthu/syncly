@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Clapperboard, Trophy, Utensils } from "lucide-react";
+import { ArrowLeft, Trophy, Utensils } from "lucide-react";
 import { ThinkingOrb } from "thinking-orbs";
 import { toast } from "sonner";
 import { Button, Card, Skeleton } from "./ui";
@@ -23,7 +23,6 @@ type WizardVibe = {
   title: string;
   blurb: string;
   emoji: string;
-  Icon: typeof Trophy;
   category: PlanCategory;
   /** default vibe id from lib/quorum/vibes */
   vibe: string;
@@ -38,7 +37,6 @@ const WIZARD_VIBES: WizardVibe[] = [
     title: "Food & Drinks",
     blurb: "Pizza · Burgers · Boba · Tacos",
     emoji: "🍔",
-    Icon: Utensils,
     category: "dinner",
     vibe: "burgers-wings",
     subVibes: ["burgers-wings", "pizza", "casual-dining", "boba-cafes", "late-night"],
@@ -49,7 +47,6 @@ const WIZARD_VIBES: WizardVibe[] = [
     title: "Hangout",
     blurb: "Movies · Bowling · Arcades · Golf",
     emoji: "🎬",
-    Icon: Clapperboard,
     category: "hangout",
     vibe: "activities",
     subVibes: ["activities", "outdoors"],
@@ -60,7 +57,6 @@ const WIZARD_VIBES: WizardVibe[] = [
     title: "Sports & Activity",
     blurb: "Pickleball · Badminton · Turf · Gym",
     emoji: "⚽",
-    Icon: Trophy,
     category: "sports",
     vibe: "activities",
     glow: "from-emerald-400/25",
@@ -279,7 +275,7 @@ export function PlanWizard({
                         setPicked(null);
                         setTimeout(() => setStep(1), 180);
                       }}
-                      className={`group relative overflow-hidden rounded-3xl border p-4 text-left transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.97] hover:-translate-y-0.5 hover:shadow-lg ${
+                      className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.97] hover:-translate-y-0.5 hover:shadow-lg ${
                         active
                           ? "border-primary/60 bg-primary/10 shadow-[0_0_35px_-8px_var(--primary)]"
                           : "border-border bg-secondary/40 hover:border-primary/40"
@@ -290,9 +286,8 @@ export function PlanWizard({
                         aria-hidden
                       />
                       <span className="text-3xl">{v.emoji}</span>
-                      <span className="mt-2 flex items-center gap-2">
-                        <v.Icon className="h-4 w-4 text-primary" aria-hidden />
-                        <span className="font-display text-base font-semibold">{v.title}</span>
+                      <span className="mt-2 block font-display text-base font-semibold">
+                        {v.title}
                       </span>
                       <span className="mt-1 block text-xs text-muted-foreground">{v.blurb}</span>
                     </button>
@@ -343,7 +338,7 @@ export function PlanWizard({
                       key={b.id}
                       type="button"
                       onClick={() => setBudget(b)}
-                      className={`tap-target rounded-3xl border px-3 py-4 text-center transition active:scale-[0.97] ${
+                      className={`tap-target rounded-2xl border px-3 py-4 text-center transition active:scale-[0.97] ${
                         active
                           ? "border-primary/60 bg-primary/10 shadow-[0_0_28px_-10px_var(--primary)]"
                           : "border-border bg-secondary/40 hover:border-primary/40"
@@ -455,8 +450,8 @@ function RadarScan() {
       <p className="mt-5 font-display text-lg font-semibold">Calculating fair midpoint…</p>
       <p className="mt-1 text-sm text-muted-foreground">Balancing drive times across the squad</p>
       <div className="mt-6 w-full max-w-sm space-y-2">
-        <Skeleton className="h-16 rounded-3xl" />
-        <Skeleton className="h-16 rounded-3xl" />
+        <Skeleton className="h-16 rounded-2xl" />
+        <Skeleton className="h-16 rounded-2xl" />
       </div>
     </div>
   );

@@ -90,7 +90,7 @@ function ProfilePage() {
     return (
       <PushEnter>
         <SubpageHeader title="Profile" backTo="/settings" />
-        <Skeleton className="h-40 rounded-3xl" />
+        <Skeleton className="h-40 rounded-surface" />
       </PushEnter>
     );
   }

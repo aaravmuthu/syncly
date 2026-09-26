@@ -4,6 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 import { pinSpan } from "@/lib/safe-dom";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 export type MapVenue = {
   id: string;
@@ -169,6 +170,12 @@ export default function VenueMapInner({
       {!ready ? (
         <div className="absolute inset-0">
           <Skeleton className="h-full w-full rounded-none" />
+          <AiActivity
+            state="connecting"
+            label="Plotting the spots…"
+            size={64}
+            className="absolute inset-0 justify-center"
+          />
         </div>
       ) : null}
     </div>

@@ -66,9 +66,9 @@ type Squad = {
 };
 
 const FILTERS = [
-  { id: "all", label: "All Squads" },
-  { id: "active", label: "Active Plans" },
-  { id: "oneoff", label: "One-Off Events" },
+  { id: "all", label: "All squads" },
+  { id: "active", label: "Active plans" },
+  { id: "oneoff", label: "One-off events" },
 ] as const;
 
 export function GroupsPage() {
@@ -98,10 +98,10 @@ export function GroupsPage() {
         action={
           <div className="flex gap-2">
             <Button variant="glass" className="text-primary" onClick={() => setCreateOpen(true)}>
-              <Plus className="size-4" aria-hidden /> Create Group
+              <Plus className="size-4" aria-hidden /> Create group
             </Button>
             <Button variant="glass" onClick={() => setJoinOpen(true)}>
-              <Link2 className="size-4" aria-hidden /> Join with Code
+              <Link2 className="size-4" aria-hidden /> Join with code
             </Button>
           </div>
         }
@@ -166,7 +166,7 @@ export function GroupsPage() {
             }
             action={
               <Button onClick={() => setCreateOpen(true)}>
-                <Plus className="size-4" aria-hidden /> Create Group
+                <Plus className="size-4" aria-hidden /> Create group
               </Button>
             }
           />
@@ -273,7 +273,7 @@ function SquadCard({ squad }: { squad: Squad }) {
           className="w-full"
           onClick={() => void navigate({ to: "/groups/$groupId", params: { groupId: squad.id } })}
         >
-          <Rocket className="size-4" aria-hidden /> Launch Plan
+          <Rocket className="size-4" aria-hidden /> Launch plan
         </Button>
       </div>
     </article>

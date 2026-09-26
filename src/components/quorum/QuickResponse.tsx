@@ -32,7 +32,7 @@ const spring = { type: "spring", stiffness: 300, damping: 25 } as const;
 type DashCache = { plans?: { id: string; i_responded?: boolean; i_attending?: boolean | null }[] };
 
 /**
- * The whole member response in two taps: "I'm In" or "Doesn't Work For Me"
+ * The whole member response in two taps: "I'm in" or "Doesn't work for me"
  * followed by a single reason pill. Once answered the pair collapses into a
  * glowing status badge with an inline "Edit vote" trigger.
  */
@@ -166,7 +166,7 @@ export function QuickResponse({
                 variant === "pair" && (compact ? "px-3 py-2 text-sm" : "px-4 py-3.5 text-base"),
               )}
             >
-              <Check className="h-4 w-4" aria-hidden /> I&apos;m In
+              <Check className="h-4 w-4" aria-hidden /> I&apos;m in
             </motion.button>
             <motion.button
               type="button"
@@ -186,7 +186,7 @@ export function QuickResponse({
                 "Can't make it"
               ) : (
                 <>
-                  <X className="h-4 w-4" aria-hidden /> Doesn&apos;t Work For Me
+                  <X className="h-4 w-4" aria-hidden /> Doesn&apos;t work for me
                 </>
               )}
             </motion.button>
@@ -214,7 +214,7 @@ export function QuickResponse({
               ) : (
                 <XCircle className="h-4 w-4" aria-hidden />
               )}
-              {state ? "You're In" : "Conflict Shared"}
+              {state ? "You're in" : "Conflict shared"}
             </span>
             <motion.button
               type="button"
