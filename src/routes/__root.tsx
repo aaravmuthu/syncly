@@ -18,6 +18,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "@/lib/theme";
 import { registerServiceWorker } from "@/lib/quorum/pwa";
 
+// Runs before first paint so the stored/system theme is on <html> before any
+// CSS applies. ThemeProvider only resolves it after hydration, which flashed
+// the light theme on every load for dark-mode users. Mirrors theme.tsx.
+const THEME_BOOT = `(function(){try{var t=localStorage.getItem("syncly-theme");var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);var r=document.documentElement;r.classList.toggle("dark",d);r.style.colorScheme=d?"dark":"light"}catch(e){}})()`;
+
 function NotFoundComponent() {
   return (
     <div className="paper-field flex min-h-screen items-center justify-center px-6">
@@ -76,6 +81,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
+    scripts: [{ children: THEME_BOOT }],
     meta: [
       { charSet: "utf-8" },
       {
@@ -127,7 +133,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

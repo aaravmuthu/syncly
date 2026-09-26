@@ -541,7 +541,7 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
       ) : null}
       {isPlan && msg.plan_id ? (
         <Button className="mt-3 w-full text-xs" onClick={() => onVote(msg.plan_id!)}>
-          <Zap className="size-3.5" aria-hidden /> Vote Now
+          <Zap className="size-3.5" aria-hidden /> Vote now
         </Button>
       ) : null}
       <p className="mt-2 text-caption text-muted-foreground">{time(msg.created_at)}</p>

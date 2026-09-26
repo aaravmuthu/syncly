@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Send } from "lucide-react";
+import type { OrbState } from "thinking-orbs";
 import { Modal } from "@/components/quorum/Modal";
 import { Button } from "@/components/quorum/ui";
 import { AiActivity } from "./AiActivity";
@@ -23,6 +24,8 @@ export function ChatSheetShell<T extends BaseTurn>({
   starters,
   turns,
   pending,
+  pendingState = "solving",
+  pendingLabel = "Thinking…",
   onSend,
   renderTurnExtra,
 }: {
@@ -34,6 +37,9 @@ export function ChatSheetShell<T extends BaseTurn>({
   starters?: string[];
   turns: T[];
   pending: boolean;
+  /** What the assistant is actually doing while a reply is on its way. */
+  pendingState?: OrbState;
+  pendingLabel?: string;
   onSend: (text: string) => void;
   renderTurnExtra?: (turn: T, index: number) => ReactNode;
 }) {
@@ -69,7 +75,7 @@ export function ChatSheetShell<T extends BaseTurn>({
                     key={s}
                     type="button"
                     onClick={() => send(s)}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+                    className="pressable active:pressable-active rounded-full border border-border px-3 py-2 text-xs font-medium hover:bg-secondary disabled:opacity-55"
                   >
                     {s}
                   </button>
@@ -103,8 +109,8 @@ export function ChatSheetShell<T extends BaseTurn>({
 
         {pending ? (
           <AiActivity
-            state="solving"
-            label="Thinking…"
+            state={pendingState}
+            label={pendingLabel}
             className="mr-auto w-fit rounded-2xl border border-border px-3.5 py-2.5"
           />
         ) : null}
@@ -123,9 +129,14 @@ export function ChatSheetShell<T extends BaseTurn>({
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message…"
           aria-label={title}
-          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none focus:border-primary/60"
+          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
         />
-        <Button type="submit" disabled={!input.trim() || pending} className="h-11 px-4">
+        <Button
+          type="submit"
+          disabled={!input.trim() || pending}
+          aria-label="Send"
+          className="h-11 px-4"
+        >
           <Send className="h-4 w-4" aria-hidden />
         </Button>
       </form>

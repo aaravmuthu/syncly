@@ -30,9 +30,9 @@ export function GlowButton({ children, className, to, href, search, glow = "prim
     whileHover: {
       y: -3,
       boxShadow: GLOW_SHADOW[glow],
-      transition: { duration: 0.18, ease: "easeOut" as const },
+      transition: { duration: 0.18, ease: [0.23, 1, 0.32, 1] as const },
     },
-    whileTap: { scale: 0.97, transition: { duration: 0.1, ease: "easeOut" as const } },
+    whileTap: { scale: 0.97, transition: { duration: 0.1, ease: [0.23, 1, 0.32, 1] as const } },
   };
 
   if (to) {

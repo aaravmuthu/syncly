@@ -1,6 +1,7 @@
 import { Pill } from "./ui";
 import type { FairVenue } from "@/lib/quorum/planner.functions";
 import { directionsUrl } from "./directions";
+import { firstName } from "@/lib/quorum/names";
 
 /** Venue card with per-member drive times, cost badge and curfew guardian. */
 export function FairVenueCard({
@@ -18,7 +19,7 @@ export function FairVenueCard({
   const others = venue.drives.filter((d) => d.profileId !== meProfileId).slice(0, 3);
   const driveLine = [
     mine ? `${mine.minutes} min for you` : null,
-    ...others.map((d) => `${d.minutes} min for ${d.name.split(" ")[0]}`),
+    ...others.map((d) => `${d.minutes} min for ${firstName(d.name)}`),
   ]
     .filter(Boolean)
     .join(" • ");

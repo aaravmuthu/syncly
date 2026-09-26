@@ -9,6 +9,7 @@ import { getGuardianHub, getMyRadar } from "@/lib/quorum/guardian.functions";
 import { getMe } from "@/lib/quorum/plan.functions";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { cn } from "@/lib/utils";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 const initials = (name: string) =>
   name
@@ -58,7 +59,17 @@ export function FindMySquad() {
   });
 
   if (myProfile.isLoading || hub.isLoading || mine.isLoading) {
-    return <Skeleton className="h-56 rounded-[28px]" />;
+    return (
+      <div className="relative">
+        <Skeleton className="h-56 rounded-surface" />
+        <AiActivity
+          state="searching"
+          label="Finding your squad…"
+          size={64}
+          className="absolute inset-0 justify-center"
+        />
+      </div>
+    );
   }
 
   const teens = (hub.data?.teens ?? []) as TeenCard[];

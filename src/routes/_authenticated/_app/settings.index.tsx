@@ -136,7 +136,7 @@ function SettingsHub() {
     return (
       <>
         <PageHeader title="Settings" />
-        <Skeleton className="h-40 rounded-3xl" />
+        <Skeleton className="h-40 rounded-surface" />
       </>
     );
   }
@@ -185,7 +185,7 @@ function SettingsHub() {
         />
         <NavRow
           icon={ShieldCheck}
-          title="Account & Privacy"
+          title="Account & privacy"
           subtitle="Parent pairing, password, data & danger zone"
           to="/settings/account"
         />
@@ -197,7 +197,7 @@ function SettingsHub() {
         />
         <NavRow
           icon={Info}
-          title="Info & About"
+          title="Info & about"
           subtitle="Version, legal & how Syncly works"
           to="/settings/info"
         />

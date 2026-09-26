@@ -32,6 +32,7 @@ import {
 import { nudgeFriendPin, shareLocationWith, stopSharingWith } from "@/lib/quorum/sharing.functions";
 import { SHARE_OPTIONS, directionsUrl, shareCountdown, type ShareMode } from "@/lib/quorum/sharing";
 import { cn } from "@/lib/utils";
+import { UNNAMED } from "@/lib/quorum/names";
 
 const when = (iso: string | null) =>
   iso
@@ -136,13 +137,13 @@ export function FriendProfileSheet() {
 
   return (
     <Drawer open={Boolean(friendId)} onOpenChange={(o) => (o ? null : closeFriend())}>
-      <DrawerContent className="max-h-[92dvh] border-t border-white/10 bg-zinc-950/90 text-white backdrop-blur-2xl">
+      <DrawerContent className="mx-auto max-h-[92dvh] w-full max-w-2xl border-t border-border/60 bg-background/90 text-foreground backdrop-blur-2xl">
         <div className="overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-2">
           {q.isLoading || !friend ? (
             <div className="space-y-3 py-6">
-              <Skeleton className="h-20 rounded-3xl" />
-              <Skeleton className="h-28 rounded-3xl" />
-              <Skeleton className="h-28 rounded-3xl" />
+              <Skeleton className="h-20 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
             </div>
           ) : (
             <div className="space-y-4">
@@ -152,7 +153,7 @@ export function FriendProfileSheet() {
                   {tele ? (
                     <motion.span
                       aria-hidden
-                      className="absolute inset-0 rounded-full ring-2 ring-emerald-400/70"
+                      className="absolute inset-0 rounded-full ring-2 ring-primary/60"
                       animate={{ scale: [1, 1.35, 1], opacity: [0.8, 0, 0.8] }}
                       transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
                     />
@@ -162,30 +163,44 @@ export function FriendProfileSheet() {
                     emoji={friend.emoji}
                     name={shown}
                     size={68}
-                    className="ring-2 ring-white/15"
+                    className="ring-2 ring-border"
                   />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-display truncate text-xl font-semibold">{shown}</h2>
+                    <h2 className="font-display truncate text-xl font-semibold">
+                      {shown === UNNAMED ? (
+                        <>
+                          {friend.circles[0] ? `${friend.circles[0].name} member` : "Squad member"}
+                          <span className="font-sans text-sm font-normal italic text-muted-foreground">
+                            {" "}
+                            · no name yet
+                          </span>
+                        </>
+                      ) : (
+                        shown
+                      )}
+                    </h2>
                     {friend.nickname ? (
-                      <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 text-caption font-semibold text-emerald-300">
+                      <span className="rounded-full bg-primary/12 px-2 py-0.5 text-caption font-semibold text-primary">
                         {friend.name}
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-white/50">{friend.handle}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{friend.handle}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {friend.circles.slice(0, 4).map((c) => (
                       <span
                         key={c.id}
-                        className="rounded-full bg-white/8 px-2 py-0.5 text-caption text-white/70"
+                        className="rounded-full bg-secondary px-2 py-0.5 text-caption text-foreground/75"
                       >
                         {c.emoji} {c.name}
                       </span>
                     ))}
                     {friend.circles.length === 0 ? (
-                      <span className="text-caption text-white/40">No shared circles yet</span>
+                      <span className="text-caption text-muted-foreground">
+                        No shared circles yet
+                      </span>
                     ) : null}
                   </div>
                 </div>
@@ -193,7 +208,7 @@ export function FriendProfileSheet() {
                   type="button"
                   onClick={closeFriend}
                   aria-label="Close"
-                  className="tap-target grid shrink-0 place-items-center rounded-full bg-white/8 p-2 text-white/70 transition active:scale-[0.97]"
+                  className="tap-target grid shrink-0 place-items-center rounded-full bg-secondary p-2 text-foreground/75 transition hover:bg-secondary active:scale-[0.97]"
                 >
                   <X className="h-4 w-4" aria-hidden />
                 </button>
@@ -201,7 +216,7 @@ export function FriendProfileSheet() {
 
               {/* Nickname editor */}
               {editing ? (
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
+                <div className="rounded-2xl border border-border/60 bg-secondary/60 p-3">
                   <input
                     autoFocus
                     value={draft}
@@ -210,16 +225,16 @@ export function FriendProfileSheet() {
                     placeholder={`Nickname for ${friend.name}`}
                     className={cn(
                       inputClass,
-                      "border-white/15 bg-white/5 text-white placeholder:text-white/35",
+                      "border-border bg-secondary/60 text-foreground placeholder:text-muted-foreground",
                     )}
                   />
-                  <p className="mt-2 text-caption text-white/40">
+                  <p className="mt-2 text-caption text-muted-foreground">
                     Only you see this. It replaces their name on your map, chats, plans and feed.
                   </p>
                   <div className="mt-3 flex justify-end gap-2">
                     <Button
                       variant="ghost"
-                      className="text-white/70"
+                      className="text-foreground/75"
                       onClick={() => setEditing(false)}
                     >
                       Cancel
@@ -242,10 +257,10 @@ export function FriendProfileSheet() {
                     setDraft(friend.nickname ?? "");
                     setEditing(true);
                   }}
-                  className="flex w-full items-center justify-between rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-left transition active:scale-[0.99]"
+                  className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-secondary/60 px-4 py-3 text-left transition hover:bg-secondary active:scale-[0.97]"
                 >
-                  <span className="text-sm font-semibold">Edit Nickname ✏️</span>
-                  <span className="text-xs text-white/50">
+                  <span className="text-sm font-semibold">Edit nickname</span>
+                  <span className="text-xs text-muted-foreground">
                     {friend.nickname ? `Saved as "${friend.nickname}"` : "Add a custom alias"}
                   </span>
                 </button>
@@ -278,10 +293,10 @@ export function FriendProfileSheet() {
               </div>
 
               {/* Sharing status */}
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+              <div className="rounded-2xl border border-border/60 bg-secondary/60 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                       Location
                     </p>
                     <p className="mt-1 text-sm font-semibold">
@@ -289,7 +304,7 @@ export function FriendProfileSheet() {
                         ? `Sharing with you • ${shareCountdown(friend.sharingWithMe.expiresAt)}`
                         : "Location hidden"}
                     </p>
-                    <p className="mt-0.5 text-xs text-white/50">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {friend.sharingWithThem
                         ? friend.sharingWithThem.hidden
                           ? "You're ghosting them 👻 — everyone else still sees you"
@@ -305,7 +320,7 @@ export function FriendProfileSheet() {
                     <>
                       <Button
                         variant="outline"
-                        className="border-white/15 text-white"
+                        className="border-border text-foreground"
                         loading={ghost.isPending}
                         onClick={() =>
                           ghost.mutate({
@@ -317,13 +332,11 @@ export function FriendProfileSheet() {
                         }
                       >
                         <Ghost className="h-4 w-4" aria-hidden />
-                        {friend.sharingWithThem.hidden
-                          ? "Unghost contact"
-                          : "Ghost this contact 👻"}
+                        {friend.sharingWithThem.hidden ? "Unghost contact" : "Ghost this contact"}
                       </Button>
                       <Button
                         variant="ghost"
-                        className="text-white/70"
+                        className="text-foreground/75"
                         loading={stop.isPending}
                         onClick={() => stop.mutate({ data: { viewerProfileId: friend.profileId } })}
                       >
@@ -332,17 +345,17 @@ export function FriendProfileSheet() {
                     </>
                   ) : (
                     <Button onClick={() => setDurations(true)}>
-                      <MapPin className="h-4 w-4" aria-hidden /> Share My Location 📍
+                      <MapPin className="h-4 w-4" aria-hidden /> Share my location
                     </Button>
                   )}
                   {friend.sharingWithMe ? null : (
                     <Button
                       variant="outline"
-                      className="border-white/15 text-white"
+                      className="border-border text-foreground"
                       loading={ask.isPending}
                       onClick={() => ask.mutate({ data: { profileId: friend.profileId } })}
                     >
-                      <Radio className="h-4 w-4" aria-hidden /> Request Location 📡
+                      <Radio className="h-4 w-4" aria-hidden /> Request location
                     </Button>
                   )}
                 </div>
@@ -362,14 +375,14 @@ export function FriendProfileSheet() {
                             },
                           })
                         }
-                        className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-left transition active:scale-[0.98] disabled:opacity-60"
+                        className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-secondary/60 p-3 text-left transition hover:bg-secondary active:scale-[0.97] disabled:opacity-60"
                       >
                         <span className="text-lg" aria-hidden>
                           {opt.emoji}
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-semibold">{opt.label}</span>
-                          <span className="block text-xs text-white/45">{opt.detail}</span>
+                          <span className="block text-xs text-muted-foreground">{opt.detail}</span>
                         </span>
                         {opt.mode === "hour" ? (
                           <Clock className="h-4 w-4 opacity-60" aria-hidden />
@@ -388,15 +401,15 @@ export function FriendProfileSheet() {
 
               {/* Telemetry */}
               {tele ? (
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+                <div className="rounded-2xl border border-border/60 bg-secondary/60 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Live telemetry
                   </p>
                   <p className="mt-1 truncate text-sm font-semibold">
                     {tele.statusEmoji} {tele.address ?? tele.motion}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Pill tone="accent">{tele.atHome ? "At Home" : tele.motion}</Pill>
+                    <Pill tone="accent">{tele.atHome ? "At home" : tele.motion}</Pill>
                     {tele.batteryPct != null ? (
                       <Pill tone={tele.batteryPct <= 20 ? "bad" : "neutral"}>
                         {tele.batteryPct <= 20 ? (
@@ -411,7 +424,7 @@ export function FriendProfileSheet() {
                   </div>
                   <Button
                     variant="ghost"
-                    className="mt-3 text-emerald-300"
+                    className="mt-3 text-primary"
                     onClick={() => {
                       closeFriend();
                       void navigate({
@@ -420,14 +433,14 @@ export function FriendProfileSheet() {
                       });
                     }}
                   >
-                    <MapPin className="h-4 w-4" aria-hidden /> View on Map
+                    <MapPin className="h-4 w-4" aria-hidden /> View on map
                   </Button>
                 </div>
               ) : null}
 
               {/* Shared history */}
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+              <div className="rounded-2xl border border-border/60 bg-secondary/60 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   You two
                 </p>
                 {friend.upcoming.length ? (
@@ -440,12 +453,12 @@ export function FriendProfileSheet() {
                             closeFriend();
                             void navigate({ to: "/plans/$planId", params: { planId: p.id } });
                           }}
-                          className="flex w-full items-center gap-3 rounded-2xl bg-white/5 p-3 text-left transition active:scale-[0.99]"
+                          className="flex w-full items-center gap-3 rounded-2xl bg-secondary/60 p-3 text-left transition hover:bg-secondary active:scale-[0.97]"
                         >
-                          <Sparkle className="h-4 w-4 shrink-0 text-emerald-300" aria-hidden />
+                          <Sparkle className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold">{p.title}</span>
-                            <span className="block truncate text-xs text-white/45">
+                            <span className="block truncate text-xs text-muted-foreground">
                               {when(p.when)}
                               {p.where ? ` · ${p.where}` : ""}
                             </span>
@@ -455,19 +468,23 @@ export function FriendProfileSheet() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-white/45">No upcoming plans together yet.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No upcoming plans together yet.
+                  </p>
                 )}
 
                 {friend.memories.length ? (
                   <>
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/50">
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Past hangouts
                     </p>
                     <ul className="mt-2 space-y-1.5">
                       {friend.memories.map((m) => (
                         <li key={m.id} className="flex items-center justify-between gap-3 text-sm">
-                          <span className="truncate text-white/75">{m.title}</span>
-                          <span className="shrink-0 text-xs text-white/40">{when(m.when)}</span>
+                          <span className="truncate text-foreground/75">{m.title}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {when(m.when)}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -500,9 +517,9 @@ function ActionTile({
       whileTap={disabled ? undefined : { scale: 0.94 }}
       onPointerDown={() => !disabled && haptic("tap")}
       onClick={onClick}
-      className="flex flex-col items-center gap-1.5 rounded-3xl border border-white/10 bg-white/5 py-3.5 text-xs font-semibold text-white transition disabled:opacity-40"
+      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/60 bg-secondary/60 py-3.5 text-xs font-semibold text-foreground transition disabled:opacity-40"
     >
-      <span className="text-emerald-300">{icon}</span>
+      <span className="text-primary">{icon}</span>
       {label}
     </motion.button>
   );

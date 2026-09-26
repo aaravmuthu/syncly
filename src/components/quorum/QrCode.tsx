@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ThinkingOrb } from "thinking-orbs";
 
 /** Renders a QR code for a URL, generated entirely client-side. */
 export function QrCode({ value, size = 220 }: { value: string; size?: number }) {
@@ -28,7 +29,8 @@ export function QrCode({ value, size = 220 }: { value: string; size?: number }) 
       {src ? (
         <img src={src} alt={`QR code linking to ${value}`} width={size} height={size} />
       ) : (
-        <span className="text-xs text-stone-500">Generating…</span>
+        // Always a white tile, so pin dark dots regardless of the page theme.
+        <ThinkingOrb state="shaping" size={20} theme="light" aria-label="Generating QR code" />
       )}
     </div>
   );

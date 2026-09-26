@@ -21,6 +21,7 @@ import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./
 import { GlassIconButton, GlassPill, Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 import { pinSpan, safeImageUrl } from "@/lib/safe-dom";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 // The map renders full-viewport, behind AppShell's floating top bar and
 // bottom tab bar (both floating glass pills now, on every screen, not just
@@ -369,7 +370,7 @@ export default function SquadMapInner({
         el.append(pinSpan("q-avatar-meta", speed));
         el.addEventListener("click", () => {
           setSelected(p.id);
-          m.easeTo({ center: [p.lon, p.lat], zoom: 15, duration: 900, essential: true });
+          m.easeTo({ center: [p.lon, p.lat], zoom: 15, duration: 600, essential: true });
         });
         add(el, p.lat, p.lon);
       } else {
@@ -384,7 +385,7 @@ export default function SquadMapInner({
         el.addEventListener("click", () => {
           const b = new mapboxgl.LngLatBounds();
           cluster.members.forEach((p) => b.extend([p.lon, p.lat]));
-          m.fitBounds(b, { padding: 100, maxZoom: 17, duration: 700 });
+          m.fitBounds(b, { padding: 100, maxZoom: 17, duration: 500 });
         });
         add(el, cluster.lat, cluster.lon);
       }
@@ -397,7 +398,7 @@ export default function SquadMapInner({
       el.setAttribute("aria-label", pl.title);
       el.append(pinSpan("q-place-dot"), pinSpan("q-place-label", pl.title));
       el.addEventListener("click", () =>
-        m.easeTo({ center: [pl.lon, pl.lat], zoom: 15, duration: 900, essential: true }),
+        m.easeTo({ center: [pl.lon, pl.lat], zoom: 15, duration: 600, essential: true }),
       );
       add(el, pl.lat, pl.lon);
     }
@@ -425,7 +426,7 @@ export default function SquadMapInner({
     if (!m) return;
     const b = new mapboxgl.LngLatBounds();
     [...visiblePeople, ...visiblePlaces].forEach((p) => b.extend([p.lon, p.lat]));
-    if (!b.isEmpty()) m.fitBounds(b, { padding: 80, maxZoom: 14, duration: 800 });
+    if (!b.isEmpty()) m.fitBounds(b, { padding: 80, maxZoom: 14, duration: 550 });
   }, [visiblePeople, visiblePlaces]);
 
   const toggleTilt = useCallback(() => {
@@ -437,7 +438,7 @@ export default function SquadMapInner({
       pitch: next ? 55 : 0,
       bearing: next ? -20 : 0,
       zoom: next ? 15 : 13,
-      duration: 900,
+      duration: 600,
     });
   }, [tilted]);
 
@@ -454,6 +455,12 @@ export default function SquadMapInner({
       {!ready ? (
         <div className="absolute inset-0 z-0">
           <Skeleton className="h-full w-full rounded-none" />
+          <AiActivity
+            state="searching"
+            label="Finding your squad…"
+            size={64}
+            className="absolute inset-0 justify-center"
+          />
         </div>
       ) : null}
 
@@ -524,11 +531,12 @@ export default function SquadMapInner({
         />
       </div>
 
-      {/* List-view fallback: always-legible regardless of zoom or clustering. */}
+      {/* List-view fallback: always-legible regardless of zoom or clustering.
+          Docked left on desktop so it never sits under the control rail. */}
       {showList ? (
         <div
           className={cn(
-            "glass-pill absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl",
+            "glass-pill absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl md:right-auto md:w-80",
             MAP_LIST_POSITION,
           )}
         >
@@ -559,7 +567,7 @@ export default function SquadMapInner({
                     map.current?.easeTo({
                       center: [p.lon, p.lat],
                       zoom: 15,
-                      duration: 900,
+                      duration: 600,
                       essential: true,
                     });
                   }}

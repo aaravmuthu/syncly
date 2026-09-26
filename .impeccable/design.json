@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-13T00:00:00Z",
+  "title": "Design System: Syncly",
+  "extensions": {
+    "colorMeta": {
+      "evergreen-signal": {
+        "role": "primary",
+        "displayName": "Evergreen Signal",
+        "canonical": "oklch(0.44 0.09 168)",
+        "tonalRamp": [
+          "oklch(0.15 0.05 168)",
+          "oklch(0.25 0.07 168)",
+          "oklch(0.35 0.085 168)",
+          "oklch(0.44 0.09 168)",
+          "oklch(0.55 0.10 168)",
+          "oklch(0.65 0.10 168)",
+          "oklch(0.75 0.09 168)",
+          "oklch(0.90 0.05 168)"
+        ]
+      },
+      "warm-ember": {
+        "role": "secondary",
+        "displayName": "Warm Ember",
+        "canonical": "oklch(0.74 0.13 62)",
+        "tonalRamp": [
+          "oklch(0.20 0.06 62)",
+          "oklch(0.32 0.09 62)",
+          "oklch(0.45 0.11 62)",
+          "oklch(0.58 0.13 62)",
+          "oklch(0.68 0.13 62)",
+          "oklch(0.74 0.13 62)",
+          "oklch(0.84 0.10 62)",
+          "oklch(0.94 0.05 62)"
+        ]
+      },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "oklch(0.985 0.006 95)" },
+      "paper-surface": { "role": "neutral", "displayName": "Paper Surface", "canonical": "oklch(0.965 0.008 95)" },
+      "card": { "role": "neutral", "displayName": "Card", "canonical": "oklch(1 0 0)" },
+      "neutral-surface": { "role": "neutral", "displayName": "Neutral Surface", "canonical": "oklch(0.94 0.01 95)" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(0.22 0.012 70)" },
+      "ink-muted": { "role": "neutral", "displayName": "Ink Muted", "canonical": "oklch(0.52 0.012 75)" },
+      "ink-border": { "role": "neutral", "displayName": "Ink Border", "canonical": "oklch(0.25 0.01 70 / 0.12)" },
+      "success": { "role": "semantic", "displayName": "Success", "canonical": "oklch(0.55 0.13 155)" },
+      "warning": { "role": "semantic", "displayName": "Warning", "canonical": "oklch(0.72 0.14 75)" },
+      "destructive": { "role": "semantic", "displayName": "Destructive", "canonical": "oklch(0.55 0.18 27)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines only." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings; h1-h3 resolve here automatically." },
+      "title": { "displayName": "Title", "purpose": "Card titles, list item primary text." },
+      "body": { "displayName": "Body", "purpose": "Default readable text and form controls (pinned to 16px)." },
+      "label": { "displayName": "Label", "purpose": "Uppercase eyebrows and stat captions." },
+      "brand": { "displayName": "Brand", "purpose": "Wordmark only -- never used for UI copy." }
+    },
+    "shadows": [
+      { "name": "ambient-card", "value": "0 1px 2px oklch(0 0 0 / 0.04), 0 12px 28px -22px oklch(0 0 0 / 0.35)", "purpose": "Flat structural cards (card-surface)." },
+      { "name": "glass-card", "value": "0 24px 60px -32px color-mix(in oklab, var(--foreground) 55%, transparent), inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent)", "purpose": "Floating glass panels." },
+      { "name": "glass-pill-light", "value": "0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(0,0,0,0.03)", "purpose": "Floating nav/controls in light mode." },
+      { "name": "glass-pill-dark", "value": "0 8px 28px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.18)", "purpose": "Floating nav/controls in dark mode." }
+    ],
+    "motion": [
+      { "name": "spring-tap", "value": "spring(stiffness: 420, damping: 26)", "purpose": "Default press/hover spring for every tappable primitive." },
+      { "name": "ease-signature", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "CSS-side equivalent used across rise/sheet/pressable/pin transitions." },
+      { "name": "radar-pulse", "value": "2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite", "purpose": "Expanding ring for live-presence pins; same grammar as skeleton sheen." }
+    ],
+    "breakpoints": [
+      { "name": "app-frame-md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default call-to-action button: filled Evergreen Signal, springy press.",
+      "html": "<button class=\"ds-btn-primary\">Start planning</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: none; border-radius: 26px; background: oklch(0.44 0.09 168); color: oklch(0.985 0.006 95); font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), opacity 0.15s ease; } .ds-btn-primary:hover { opacity: 0.92; transform: translateY(-2px) scale(1.02); } .ds-btn-primary:active { transform: scale(0.95); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.44 0.09 168); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action: transparent fill, hairline-free neutral border.",
+      "html": "<button class=\"ds-btn-outline\">Try the demo</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border: 1px solid oklch(0.25 0.01 70 / 0.16); border-radius: 26px; background: oklch(1 0 0); color: oklch(0.22 0.012 70); font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform 0.16s cubic-bezier(0.22,1,0.36,1), background-color 0.15s ease; } .ds-btn-outline:hover { background: oklch(0.94 0.01 95); } .ds-btn-outline:active { transform: scale(0.95); }"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "pill-status",
+      "description": "Semantic status indicator; tinted background at low opacity over full-strength text.",
+      "html": "<span class=\"ds-pill ds-pill-good\">Finalized</span>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; } .ds-pill-good { background: color-mix(in oklab, oklch(0.55 0.13 155) 15%, transparent); color: oklch(0.55 0.13 155); } .ds-pill-accent { background: color-mix(in oklab, oklch(0.44 0.09 168) 12%, transparent); color: oklch(0.44 0.09 168); }"
+    },
+    {
+      "name": "Card (Frosted)",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default panel: blur + hairline border, no shadow.",
+      "html": "<div class=\"ds-card\">Card content</div>",
+      "css": ".ds-card { background: color-mix(in oklab, oklch(1 0 0) 74%, transparent); border: 1px solid color-mix(in oklab, oklch(0.22 0.012 70) 9%, transparent); border-radius: 28px; padding: 20px; backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field: rounded, hairline border, 16px text to avoid iOS zoom.",
+      "html": "<input class=\"ds-input\" placeholder=\"Enter a value\" />",
+      "css": ".ds-input { width: 100%; padding: 10px 14px; border-radius: 26px; border: 1px solid oklch(0.25 0.01 70 / 0.16); background: oklch(0.985 0.006 95); color: oklch(0.22 0.012 70); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; outline: none; transition: border-color 0.15s ease; } .ds-input:focus { border-color: color-mix(in oklab, oklch(0.44 0.09 168) 60%, transparent); }"
+    },
+    {
+      "name": "Glass Nav Pill",
+      "kind": "nav",
+      "refersTo": "glass-pill",
+      "description": "Floating capsule chrome used for the top bar, bottom tab bar, and status pills -- the app's one floating-glass language.",
+      "html": "<nav class=\"ds-glass-pill\">Nav content</nav>",
+      "css": ".ds-glass-pill { background: rgb(255 255 255 / 0.55); border: 1px solid rgba(0,0,0,0.08); border-radius: 9999px; box-shadow: 0 8px 24px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -1px 0 rgba(0,0,0,0.03); backdrop-filter: blur(28px) saturate(190%); -webkit-backdrop-filter: blur(28px) saturate(190%); padding: 8px 14px; }"
+    },
+    {
+      "name": "Radar Avatar Pin",
+      "kind": "custom",
+      "refersTo": "radar-avatar-pin",
+      "description": "Live-presence map marker: Evergreen-ringed avatar with an expanding pulse ring.",
+      "html": "<div class=\"ds-avatar-pin\"><span class=\"ds-avatar-pulse\"></span><span class=\"ds-avatar-face\">JD</span></div>",
+      "css": ".ds-avatar-pin { position: relative; display: grid; place-items: center; width: 46px; height: 46px; } .ds-avatar-pulse { position: absolute; inset: -6px; border-radius: 9999px; background: color-mix(in srgb, oklch(0.44 0.09 168) 28%, transparent); animation: ds-pulse 2.4s ease-out infinite; } .ds-avatar-face { position: relative; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 9999px; background: oklch(0.22 0.01 260); border: 2.5px solid oklch(0.44 0.09 168); color: #fafafa; font-size: 12px; font-weight: 700; box-shadow: 0 6px 18px rgb(0 0 0 / 0.55); } @keyframes ds-pulse { 0% { transform: scale(0.7); opacity: 0.7; } 100% { transform: scale(1.7); opacity: 0; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Night Radar",
+    "overview": "Syncly reads as a live-signal instrument wearing warm, ink-on-paper calm during the day and going full glass-and-glow after dark. The name isn't decorative: the radar pulse that animates a friend's live location on the map is the same visual grammar -- a soft ring expanding from a solid core -- that shows up as loading skeleton sheens, presence indicators, and the \"S\" glyph at the center of the app mark. Everything floats: navigation, search, and status live in frosted glass capsules that sit with margin above the content rather than fusing to the screen edge, because the product's real subject (the map, the plan, the group) should always show through.\n\nThe system is calm, trustworthy, and quietly premium rather than loud or gamified -- it has to read as safe to a parent glancing at the Family Hub and as genuinely nice to use for a teen coordinating a Friday night. Color discipline does the work here: one confident evergreen carries almost the entire system, one warm ember accent appears only as a rare spark. Depth is deliberate rather than decorative -- flat where structure needs to read clearly, frosted where content needs to breathe underneath, and only truly \"lifted\" where a control needs to visibly float over live map or page content.",
+    "keyCharacteristics": [
+      "Warm-paper light mode, near-black \"Apple-style\" dark mode -- both real, tuned themes, not a light mode with inverted values.",
+      "One confident accent (evergreen), one rare spark (amber) -- never treated as co-equal.",
+      "Floating glass chrome for navigation and controls; structural content stays flat or frosted.",
+      "Every border, divider, and skeleton is the ink color at low opacity, never a separate gray token.",
+      "Motion is spring-physical (bounce, lift, haptic tap) everywhere a control responds to touch."
+    ],
+    "rules": [
+      { "name": "The Warm Ember Rule", "body": "Amber is a rare spark, not a second primary. Reserve it for a glow, a celebration moment, or a single accent pill per screen -- if amber is competing with Evergreen Signal for attention anywhere, that's a bug, not a choice.", "section": "colors" },
+      { "name": "The Ink-Mix Rule", "body": "Every border, divider, skeleton background, and scrollbar thumb is color-mix(in oklab, var(--foreground) N%, transparent) at some low percentage -- never a standalone gray hex.", "section": "colors" },
+      { "name": "The Sixteen Rule", "body": "No form input renders below 16px, ever -- it's what stops iOS from zooming the whole page on focus.", "section": "typography" },
+      { "name": "The Inset Chrome Rule", "body": "Navigation and floating controls never sit edge-to-edge. They're capsules with margin so the content behind is always visible around them.", "section": "layout" },
+      { "name": "The No-Shadow-On-Frost Rule", "body": "The surface/Card tier never gets a box-shadow. If a panel needs to visually separate, make it a flat card-surface or a true floating glass-card instead.", "section": "elevation" },
+      { "name": "The Full-Or-Structural Rule", "body": "Radius is either rounded-full (anything that floats or is a pill/badge/circular control) or a structural step (xl through 3xl). Nothing in between.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do derive every border, divider, skeleton fill, and scrollbar color from color-mix(in oklab, var(--foreground) N%, transparent) rather than a standalone gray.",
+      "Do keep floating chrome (nav, search, status pills, map controls) inset from the screen edge with visible margin, in glass-pill/glass-card, never edge-to-edge or opaque.",
+      "Do pair every tappable control with a spring press/hover animation and a haptic tap -- a static button in this system reads as broken, not restrained.",
+      "Do reserve rounded-full for anything that floats, is a pill, or is circular; use the structural radius steps (xl-3xl) for containers.",
+      "Do respect prefers-reduced-motion and prefers-reduced-transparency for every new motion or glass surface.",
+      "Do keep Evergreen Signal as the only color doing real \"this is interactive/primary\" work across the app."
+    ],
+    "donts": [
+      "Don't use Warm Ember as a second primary -- it's a rare spark, not a co-equal action color.",
+      "Don't add a box-shadow to a frosted (surface/Card) panel -- make it a flat card-surface or a true floating glass-card instead.",
+      "Don't render form inputs below 16px -- it triggers iOS Safari's zoom-on-focus.",
+      "Don't invent a new gray/neutral hex for borders or dividers; derive it from --foreground via color-mix.",
+      "Don't treat the privacy-preserving copy voice as a components concern -- individual-constraint language is a content rule from PRODUCT.md, not a visual one, but it constrains any new component's default copy."
+    ]
+  }
+}

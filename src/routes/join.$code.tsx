@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Wordmark } from "@/components/quorum/Wordmark";
-import { Spinner } from "@/components/quorum/ui";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidCode, normalizeCode, setPendingInvite } from "@/lib/quorum/invite";
 
@@ -34,12 +34,14 @@ function JoinPage() {
   const { code: raw } = Route.useParams();
   const navigate = useNavigate();
   const [message, setMessage] = useState("Checking that invite…");
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const code = normalizeCode(raw);
     void (async () => {
       if (!isValidCode(code)) {
-        setMessage("That invite link doesn't look right.");
+        setMessage("That invite link doesn't look right. Ask your friend to send it again.");
+        setFailed(true);
         return;
       }
       const { data } = await supabase.auth.getSession();
@@ -59,7 +61,8 @@ function JoinPage() {
         const group = (await joinGroup({ data: { code } })) as { id: string };
         void navigate({ to: "/groups/$groupId", params: { groupId: group.id }, replace: true });
       } catch {
-        setMessage("That invite code doesn't match a group.");
+        setMessage("That invite code doesn't match a group. Taking you to your groups…");
+        setFailed(true);
         setTimeout(() => void navigate({ to: "/groups", replace: true }), 1600);
       }
     })();
@@ -70,8 +73,21 @@ function JoinPage() {
       <div className="flex flex-col items-center gap-4 text-center">
         <Wordmark className="h-7" />
         <h1 className="text-lg font-semibold tracking-tight">Join a Syncly group</h1>
-        <Spinner className="h-5 w-5" />
-        <p className="text-sm text-muted-foreground">{message}</p>
+        {failed ? (
+          <>
+            <p role="alert" className="max-w-xs text-sm text-muted-foreground">
+              {message}
+            </p>
+            <Link
+              to="/groups"
+              className="pressable active:pressable-active tap-target inline-flex items-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Go to your groups
+            </Link>
+          </>
+        ) : (
+          <AiActivity state="connecting" label={message} size={64} className="py-2" />
+        )}
       </div>
     </div>
   );

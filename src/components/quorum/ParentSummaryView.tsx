@@ -31,7 +31,7 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
     onError: (e: Error) => setError(e.message),
   });
 
-  if (q.isLoading) return <Skeleton className="h-96 rounded-3xl" />;
+  if (q.isLoading) return <Skeleton className="h-96 rounded-surface" />;
   const s = q.data;
   if (!s)
     return (

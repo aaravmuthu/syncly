@@ -28,7 +28,7 @@ export const Route = createFileRoute("/_authenticated/_app/settings/account")({
     void context.queryClient.ensureQueryData({ queryKey: ["me"], queryFn: () => getMe() });
   },
   head: () => ({
-    meta: [{ title: "Account & Privacy — Syncly" }],
+    meta: [{ title: "Account & privacy — Syncly" }],
   }),
   component: AccountPage,
 });
@@ -72,15 +72,15 @@ function AccountPage() {
   if (me.isLoading) {
     return (
       <PushEnter>
-        <SubpageHeader title="Account & Privacy" backTo="/settings" />
-        <Skeleton className="h-40 rounded-3xl" />
+        <SubpageHeader title="Account & privacy" backTo="/settings" />
+        <Skeleton className="h-40 rounded-surface" />
       </PushEnter>
     );
   }
 
   return (
     <PushEnter>
-      <SubpageHeader title="Account & Privacy" backTo="/settings" />
+      <SubpageHeader title="Account & privacy" backTo="/settings" />
 
       {/* Family & pairing — kept as its own clearly labeled group: sync
           code, linked parents/teens and live-location sharing all live

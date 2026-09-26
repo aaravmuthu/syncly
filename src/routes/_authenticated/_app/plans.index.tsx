@@ -63,6 +63,8 @@ function useNow(intervalMs = 30_000) {
   return now;
 }
 
+const isEnded = (status: string) => status === "completed" || status === "cancelled";
+
 function countdown(target: string | null | undefined, now: number) {
   if (!target) return null;
   const diff = new Date(target).getTime() - now;
@@ -99,7 +101,10 @@ export function PlansPage() {
   const dash = useQuery({ queryKey: ["dashboard"], queryFn: useServerFn(getDashboard) });
   const qc = useQueryClient();
   const now = useNow();
-  const plans = dash.data?.plans ?? [];
+  // Ended plans sink below live ones; sort is stable so recency order holds.
+  const plans = [...(dash.data?.plans ?? [])].sort(
+    (a, b) => Number(isEnded(a.status)) - Number(isEnded(b.status)),
+  );
   const [muted, setMuted] = useState<string[]>([]);
 
   const attend = useMutation({
@@ -113,8 +118,15 @@ export function PlansPage() {
 
   return (
     <>
-      <PageHeader title="Plans" subtitle="Everything your groups are working out right now." />
-      {dash.isLoading ? <Skeleton className="h-40 rounded-3xl" /> : null}
+      <PageHeader
+        title="Plans"
+        subtitle={
+          plans.length > 0 && plans.every((p) => isEnded(p.status))
+            ? "Nothing live right now. Past plans are below."
+            : "Everything your groups are working out right now."
+        }
+      />
+      {dash.isLoading ? <Skeleton className="h-40 rounded-surface" /> : null}
 
       {dash.isError ? (
         <Empty
@@ -143,7 +155,7 @@ export function PlansPage() {
           {plans.map((p, i) => (
             <SwipeRow
               key={p.id}
-              disabled={p.status === "finalized" || p.status === "completed"}
+              disabled={p.status === "finalized" || isEnded(p.status)}
               left={{
                 label: "I'm in",
                 icon: <ThumbsUp className="size-4" />,
@@ -164,7 +176,7 @@ export function PlansPage() {
                 plan={p}
                 now={now}
                 index={i}
-                muted={muted.includes(p.id)}
+                muted={muted.includes(p.id) || isEnded(p.status)}
                 myProfileId={dash.data?.myProfileId ?? null}
               />
             </SwipeRow>
@@ -188,11 +200,14 @@ export function PlansPage() {
  * tap-to-reveal pattern TeenSafetyBar's "Safety tools" already uses.
  */
 function primaryPill(args: {
+  status: string;
   finalized: boolean;
   conflictCount: number;
   curfew: "ok" | "warn" | null;
   left: string | null;
-}): { tone: "good" | "bad" | "warn" | "accent"; icon: typeof Lock; label: string } {
+}): { tone: "good" | "bad" | "warn" | "accent" | "neutral"; icon: typeof Lock; label: string } {
+  if (args.status === "completed") return { tone: "good", icon: CheckCircle2, label: "Completed" };
+  if (args.status === "cancelled") return { tone: "neutral", icon: Clock, label: "Expired" };
   if (args.finalized) return { tone: "good", icon: Lock, label: "Locked in" };
   if (args.conflictCount > 0) {
     return {
@@ -232,12 +247,12 @@ function PlanCard({
   const total = Math.max(plan.participant_count, 1);
   const votedPct = Math.round((plan.responded_count / total) * 100);
   const cost = estCostLabel(plan.est_cost_min, plan.est_cost_max);
-  const left = finalized ? null : countdown(plan.window_start, now);
+  const left = finalized || isEnded(plan.status) ? null : countdown(plan.window_start, now);
   const when = whenLabel(plan.window_start);
   const curfew = curfewState(plan.window_end);
   const isOrganizer = Boolean(myProfileId) && plan.created_by === myProfileId;
   const conflictCount = plan.conflicts.length;
-  const pill = primaryPill({ finalized, conflictCount, curfew, left });
+  const pill = primaryPill({ status: plan.status, finalized, conflictCount, curfew, left });
   // Anything not already surfaced as the one primary pill still belongs in
   // the details disclosure below, so a real curfew warning or countdown
   // never silently disappears just because a conflict took the primary slot.
@@ -287,8 +302,8 @@ function PlanCard({
               {group?.name ?? "Your squad"}
             </span>
             {isOrganizer ? (
-              <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-warning">
-                <Crown className="size-3.5" aria-hidden /> Organizer
+              <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground">
+                <Crown className="size-3.5 text-primary" aria-hidden /> Organizer
               </span>
             ) : null}
           </div>
@@ -385,7 +400,7 @@ function PlanCard({
                   className="h-full rounded-full bg-primary"
                   initial={{ width: 0 }}
                   animate={{ width: `${votedPct}%` }}
-                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 34 }}
                 />
               </div>
             </div>

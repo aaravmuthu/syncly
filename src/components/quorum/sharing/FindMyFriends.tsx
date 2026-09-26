@@ -43,6 +43,7 @@ import {
 } from "@/lib/quorum/sharing";
 import { useFriends } from "@/lib/quorum/friends-context";
 import { cn } from "@/lib/utils";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 const ago = (iso: string) => {
   const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
@@ -159,7 +160,15 @@ export function FindMyFriends() {
       </Card>
 
       {pins.isLoading ? (
-        <Skeleton className="h-64 rounded-3xl" />
+        <div className="relative">
+          <Skeleton className="h-64 rounded-surface" />
+          <AiActivity
+            state="searching"
+            label="Finding your friends…"
+            size={64}
+            className="absolute inset-0 justify-center"
+          />
+        </div>
       ) : list.length ? (
         <>
           <div className="space-y-2">

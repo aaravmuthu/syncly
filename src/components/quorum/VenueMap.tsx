@@ -40,7 +40,7 @@ export function VenueMap({
   }, []);
 
   if (venues.length === 0) return null;
-  if (token.isLoading) return <Skeleton className="h-64 rounded-3xl" />;
+  if (token.isLoading) return <Skeleton className="h-64 rounded-2xl" />;
   // Missing token, disabled maps, or a failed lookup: render nothing rather
   // than a broken map surface. The venue list above stays fully usable.
   if (token.isError || !token.data) return null;

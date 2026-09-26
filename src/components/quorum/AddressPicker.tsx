@@ -50,6 +50,10 @@ export function AddressPicker({
   const [locating, setLocating] = useState(false);
   const [locked, setLocked] = useState(false);
   const skipNextSearch = useRef(false);
+  // A saved address arrives as the initial text; searching it would pop the
+  // suggestion list open on page load over the fields below. Only look up
+  // suggestions once the person has actually typed.
+  const typed = useRef(false);
   const search = useServerFn(suggestPlaces);
   const toZip = useServerFn(reverseZip);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -73,7 +77,7 @@ export function AddressPicker({
       return;
     }
     const q = text.trim();
-    if (q.length < 3) {
+    if (!typed.current || q.length < 3) {
       setItems([]);
       return;
     }
@@ -170,6 +174,7 @@ export function AddressPicker({
             }
           }}
           onChange={(e) => {
+            typed.current = true;
             setLocked(false);
             lastLocal.current = e.target.value;
             setText(e.target.value);

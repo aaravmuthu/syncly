@@ -174,7 +174,7 @@ export function Empty({
   action?: ReactNode;
 }) {
   return (
-    <div className="surface rounded-3xl px-6 py-12 text-center">
+    <div className="surface px-6 py-12 text-center">
       <h3 className="font-display text-lg font-semibold">{title}</h3>
       <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">{body}</p>
       {action ? <div className="mt-5 flex justify-center">{action}</div> : null}

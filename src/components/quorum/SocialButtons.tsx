@@ -1,4 +1,5 @@
-import { Loader2 } from "lucide-react";
+import { ThinkingOrb } from "thinking-orbs";
+import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 /** Simple, non-branded marks so the buttons read clearly without copying vendor artwork. */
@@ -29,8 +30,9 @@ export function SocialButtons({
   pending?: "google" | "apple" | null;
   disabled?: boolean;
 }) {
+  const { resolved } = useTheme();
   const base =
-    "pressable active:pressable-active flex w-full items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm font-semibold transition disabled:opacity-60";
+    "pressable active:pressable-active tap-target flex w-full items-center justify-center gap-2.5 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-60";
   return (
     <div className="space-y-2.5">
       <button
@@ -39,7 +41,11 @@ export function SocialButtons({
         disabled={disabled || !!pending}
         className={cn(base, "border border-border bg-card text-foreground hover:bg-secondary")}
       >
-        {pending === "google" ? <Loader2 className="size-4 animate-spin" /> : <GoogleMark />}
+        {pending === "google" ? (
+          <ThinkingOrb state="connecting" size={20} aria-hidden="true" />
+        ) : (
+          <GoogleMark />
+        )}
         Continue with Google
       </button>
       <button
@@ -48,7 +54,17 @@ export function SocialButtons({
         disabled={disabled || !!pending}
         className={cn(base, "bg-foreground text-background hover:opacity-90")}
       >
-        {pending === "apple" ? <Loader2 className="size-4 animate-spin" /> : <AppleMark />}
+        {pending === "apple" ? (
+          // Inverted button: the orb needs the opposite ink of the page.
+          <ThinkingOrb
+            state="connecting"
+            size={20}
+            theme={resolved === "dark" ? "light" : "dark"}
+            aria-hidden="true"
+          />
+        ) : (
+          <AppleMark />
+        )}
         Continue with Apple
       </button>
     </div>

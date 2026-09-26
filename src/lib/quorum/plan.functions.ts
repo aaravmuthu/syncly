@@ -206,6 +206,8 @@ export const deleteAccount = createServerFn({ method: "POST" })
 export const listGroups = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { settlePastPlans } = await import("./plan-lifecycle.server");
+    await settlePastPlans();
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) return [];
@@ -347,6 +349,8 @@ export const getGroup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ groupId: v.id }))
   .handler(async ({ data, context }) => {
+    const { settlePastPlans } = await import("./plan-lifecycle.server");
+    await settlePastPlans();
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     const { data: group, error } = await supabase
@@ -390,6 +394,8 @@ export const getGroup = createServerFn({ method: "GET" })
 export const listPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { settlePastPlans } = await import("./plan-lifecycle.server");
+    await settlePastPlans();
     const { supabase } = context;
     const { data } = await supabase
       .from("plans")
@@ -407,6 +413,8 @@ export const listPlans = createServerFn({ method: "GET" })
 export const getDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { settlePastPlans } = await import("./plan-lifecycle.server");
+    await settlePastPlans();
     const { supabase } = context;
     const { data: myId } = await supabase.rpc("my_profile_id");
     const { data: plans } = await supabase
@@ -641,6 +649,8 @@ export const getPlan = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: v.id }))
   .handler(async ({ data, context }) => {
+    const { settlePastPlans } = await import("./plan-lifecycle.server");
+    await settlePastPlans();
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     const { data: plan, error } = await supabase
@@ -695,6 +705,8 @@ export const submitConstraints = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: v.id, payload: v.constraintPayload }))
   .handler(async ({ data, context }) => {
+    const { assertPlanOpen } = await import("./plan-lifecycle.server");
+    await assertPlanOpen(data.planId);
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) throw new Error("Profile missing");
@@ -743,6 +755,8 @@ export const generateRecommendations = createServerFn({ method: "POST" })
     // Authorize as the user first — only a plan participant may run this.
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
+    const { assertPlanOpen } = await import("./plan-lifecycle.server");
+    await assertPlanOpen(data.planId);
     // Private answers are read with elevated access ONLY inside the engine,
     // aggregated there, and never returned per person.
     const { regenerateRecommendations } = await import("./recommend.server");
@@ -757,6 +771,8 @@ export const castVote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: v.id, recommendationId: v.id }))
   .handler(async ({ data, context }) => {
+    const { assertPlanOpen } = await import("./plan-lifecycle.server");
+    await assertPlanOpen(data.planId);
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) throw new Error("Profile missing");
@@ -781,6 +797,8 @@ export const finalizePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ planId: v.id, recommendationId: v.id }))
   .handler(async ({ data, context }) => {
+    const { assertPlanOpen } = await import("./plan-lifecycle.server");
+    await assertPlanOpen(data.planId);
     const { supabase } = context;
     const { error } = await supabase
       .from("plans")

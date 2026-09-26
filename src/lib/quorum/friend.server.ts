@@ -10,6 +10,7 @@ import { haversineMiles, milesToDriveMinutes } from "./location";
 import { motionEmoji, motionLabel } from "./sharing";
 import type { ShareMode } from "./sharing";
 import type { FriendProfile, FriendTelemetry, MutualCircle, SharedPlan } from "./friend";
+import { realName } from "./names";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -103,7 +104,7 @@ export async function requestLocationFrom(fromProfileId: string, toProfileId: st
   await db.from("notifications").insert({
     profile_id: toProfileId,
     type: "location_request",
-    title: `${me?.display_name ?? "A friend"} is requesting your location 📡`,
+    title: `${realName(me?.display_name) ?? "A friend"} is requesting your location 📡`,
     body: "Tap to share your live radar — you choose for how long.",
   });
   return { ok: true as const };

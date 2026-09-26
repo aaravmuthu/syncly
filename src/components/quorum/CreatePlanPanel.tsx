@@ -9,6 +9,7 @@ import { Button, Card, Field, Skeleton, inputClass } from "./ui";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { VenueMap, type MapVenue } from "./VenueMap";
 import { FairVenueCard } from "./FairPointVenues";
+import { AiActivity } from "./ai/AiActivity";
 import { createPlan } from "@/lib/quorum/plan.functions";
 import {
   getPlanDefaults,
@@ -187,7 +188,11 @@ export function CreatePlanPanel({
 
       {/* 1. Saved defaults summary + single toggle */}
       {defaults.isLoading ? (
-        <Skeleton className="mt-3 h-14 rounded-2xl" />
+        <AiActivity
+          state="solving"
+          label="Finding a fair midpoint…"
+          className="mt-3 rounded-2xl bg-secondary/60 p-3"
+        />
       ) : d?.summary ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/60 p-3">
           <p className="text-xs">
@@ -222,7 +227,7 @@ export function CreatePlanPanel({
           <h3 className="text-sm font-semibold">Create with AI</h3>
         </div>
         <textarea
-          className="mt-2 min-h-20 w-full resize-y rounded-2xl border border-border bg-background px-3 py-2.5 outline-none focus:border-primary/50"
+          className="mt-2 min-h-20 w-full resize-y rounded-2xl border border-border bg-background px-3.5 py-2.5 outline-none transition-colors focus:border-primary/60"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Post-game dinner and bowling nearby before 10 PM curfew"
@@ -246,7 +251,7 @@ export function CreatePlanPanel({
             }
           >
             <Rocket className="h-4 w-4" aria-hidden />
-            {launch.isPending ? "Building your plan…" : "Launch Plan Now"}
+            {launch.isPending ? "Building your plan…" : "Launch plan now"}
           </Button>
           <Button
             variant="outline"
@@ -278,7 +283,7 @@ export function CreatePlanPanel({
 
         <div className="mt-3 space-y-2">
           {venues.isFetching ? (
-            <Skeleton className="h-24 rounded-3xl" />
+            <Skeleton className="h-24 rounded-2xl" />
           ) : venues.data?.venues.length ? (
             venues.data.venues.map((v) => (
               <FairVenueCard

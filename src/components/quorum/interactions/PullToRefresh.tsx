@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useMotionValue, useTransform, animate } from "motion/react";
 import { RefreshCw } from "lucide-react";
+import { ThinkingOrb } from "thinking-orbs";
 import { haptic } from "@/lib/quorum/haptics";
 
 const MAX = 110;
@@ -94,7 +95,11 @@ export function PullToRefresh({
           style={{ rotate: busy ? undefined : spinnerRotate }}
           className="grid size-9 place-items-center rounded-full border border-white/10 bg-card/70 backdrop-blur-xl"
         >
-          <RefreshCw className={`size-4 text-primary ${busy ? "animate-spin" : ""}`} />
+          {busy ? (
+            <ThinkingOrb state="working" size={20} aria-label="Refreshing" />
+          ) : (
+            <RefreshCw className="size-4 text-primary" />
+          )}
         </motion.span>
       </motion.div>
 

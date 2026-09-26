@@ -114,7 +114,7 @@ export function ConciergeSheet({
       onClick={() => setOpen(true)}
       whileTap={{ scale: 0.94 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
-      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] left-4 z-[60] grid size-12 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-lg md:bottom-24 md:inline-flex md:size-auto md:gap-2 md:px-4 md:py-3"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] left-4 z-40 grid size-12 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-lg md:bottom-24 md:inline-flex md:size-auto md:gap-2 md:px-4 md:py-3"
     >
       <AiGlyph className="size-5 md:size-4" />
       <span className="sr-only md:not-sr-only">Ask AI</span>
@@ -137,6 +137,8 @@ export function ConciergeSheet({
         starters={STARTERS}
         turns={turns}
         pending={ask.isPending}
+        pendingState="composing"
+        pendingLabel="Writing an answer…"
         onSend={send}
         renderTurnExtra={(t, i) =>
           t.action ? (
@@ -184,7 +186,9 @@ function ActionCard({
   return (
     <Card className="mr-auto mt-2 max-w-[90%] border-primary/40 bg-primary/5 p-3">
       <div className="flex items-center gap-2">
-        <Pill tone="accent">💡 Suggested action</Pill>
+        <Pill tone="accent" className="gap-1.5">
+          <AiGlyph className="size-3.5" /> Suggested action
+        </Pill>
         {blocked ? <Pill tone="neutral">Host only</Pill> : null}
       </div>
       {action.type === "send_nudge" ? (
@@ -198,7 +202,12 @@ function ActionCard({
       ) : blocked ? (
         <p className="mt-2 text-xs text-muted-foreground">Ask your host to do this.</p>
       ) : (
-        <Button className="mt-2 h-9 px-3 text-xs" loading={pending} onClick={onConfirm}>
+        <Button
+          className="mt-2 h-9 px-3 text-xs"
+          loading={pending}
+          orb="working"
+          onClick={onConfirm}
+        >
           {label}
         </Button>
       )}

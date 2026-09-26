@@ -53,7 +53,7 @@ function PlanningPage() {
     return (
       <PushEnter>
         <SubpageHeader title="Planning defaults" backTo="/settings" />
-        <Skeleton className="h-40 rounded-3xl" />
+        <Skeleton className="h-40 rounded-surface" />
       </PushEnter>
     );
   }

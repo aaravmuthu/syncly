@@ -50,9 +50,11 @@ export function SwipeBack({ children }: { children: ReactNode }) {
 
     if (committed) {
       haptic("select");
-      void animate(x, viewportWidth.current, { duration: 0.18, ease: "easeOut" }).then(() => {
-        router.history.back();
-      });
+      void animate(x, viewportWidth.current, { duration: 0.18, ease: [0.23, 1, 0.32, 1] }).then(
+        () => {
+          router.history.back();
+        },
+      );
     } else {
       void animate(x, 0, { type: "spring", stiffness: 420, damping: 34 });
     }

@@ -2,6 +2,7 @@
 // elevated access, but only ever writes group-safe copy (never names why a
 // specific member's private answer failed beyond their own explicit flag).
 import type { ConstraintPayload, PlanCategory } from "./types";
+import { realName } from "./names";
 
 export type ConflictRow = {
   kind: "curfew" | "budget" | "distance" | "manual";
@@ -61,7 +62,7 @@ export async function detectConflicts(planId: string): Promise<ConflictRow[]> {
     const prof = (profiles ?? []).find((p) => p.id === id);
     const payload = ((constraintRows ?? []).find((c) => c.profile_id === id)?.payload ??
       {}) as ConstraintPayload;
-    const name = prof?.display_name ?? "A member";
+    const name = realName(prof?.display_name) ?? "A member";
 
     const curfew =
       payload.latestEnd ?? (prof?.curfew_time ? String(prof.curfew_time).slice(0, 5) : null);

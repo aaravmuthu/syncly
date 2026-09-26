@@ -10,6 +10,7 @@
 
 import { haversineMiles, milesToDriveMinutes } from "./location";
 import type { TeenCard } from "./guardian.types";
+import { realName } from "./names";
 
 export type { TeenCard };
 
@@ -139,7 +140,7 @@ export async function linkTeenByCode(guardianProfileId: string, rawCode: string)
   await db.from("notifications").insert({
     profile_id: teen.id,
     type: "parent_response",
-    title: `${guardian?.display_name ?? "Someone"} wants to link as your parent`,
+    title: `${realName(guardian?.display_name) ?? "Someone"} wants to link as your parent`,
     body: "Approve or decline in Settings → Account. Nothing is shared until you approve.",
   });
   return { teenId: teen.id, teenName, status: "pending" as const };
@@ -210,7 +211,7 @@ export async function respondToLinkRequest(
     .select("display_name")
     .eq("id", teenProfileId)
     .maybeSingle();
-  const teenName = teen?.display_name ?? "Your teen";
+  const teenName = realName(teen?.display_name) ?? "Your teen";
 
   if (!approve) {
     await db.from("notifications").insert({
@@ -373,7 +374,7 @@ export async function recordPing(teenProfileId: string, input: PingInput) {
       .select("display_name")
       .eq("id", teenProfileId)
       .maybeSingle();
-    const name = teen?.display_name ?? "Your teen";
+    const name = realName(teen?.display_name) ?? "Your teen";
     for (const c of crossings) {
       await alertGuardians(teenProfileId, {
         type: c.kind === "arrive" ? "geofence_arrive" : "geofence_depart",
@@ -875,7 +876,7 @@ export async function sendDelayPing(
     .maybeSingle();
   await alertGuardians(teenProfileId, {
     type: "delay_ping",
-    title: `${teen?.display_name ?? "Your teen"} is running about ${input.minutes} min late`,
+    title: `${realName(teen?.display_name) ?? "Your teen"} is running about ${input.minutes} min late`,
     body: `${input.reason} • new ETA ${new Date(newEta).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
     planId: input.planId ?? null,
   });
@@ -908,7 +909,7 @@ export async function requestCheckin(
   await db.from("notifications").insert({
     profile_id: teenProfileId,
     type: "parent_response",
-    title: `${guardian?.display_name ?? "Your parent"} asked for a quick check-in`,
+    title: `${realName(guardian?.display_name) ?? "Your parent"} asked for a quick check-in`,
     body: note?.slice(0, 140) ?? "Tap once to share where you are — nothing else is shared.",
   });
   return { id: data.id as string };
@@ -946,14 +947,14 @@ export async function answerCheckin(
     guardian_profile_id: row.guardian_profile_id,
     teen_profile_id: teenProfileId,
     type: "checkin_answered",
-    title: `${teen?.display_name ?? "Your teen"} checked in`,
+    title: `${realName(teen?.display_name) ?? "Your teen"} checked in`,
     body: input.placeLabel ?? "Location shared",
     priority: "high",
   });
   await db.from("notifications").insert({
     profile_id: row.guardian_profile_id,
     type: "parent_response",
-    title: `${teen?.display_name ?? "Your teen"} checked in`,
+    title: `${realName(teen?.display_name) ?? "Your teen"} checked in`,
     body: input.placeLabel ?? "Location shared",
   });
   return { ok: true };

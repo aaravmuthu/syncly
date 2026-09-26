@@ -1,26 +1,27 @@
 import type { ElementType, ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { EASE_OUT, REVEAL_RISE, REVEAL_TRANSITION } from "@/lib/motion";
 
-const spring = { type: "spring", stiffness: 380, damping: 36, mass: 0.7 } as const;
+// Hover is felt many times a visit, so it answers faster than the entrance.
+const hoverLift = { y: -2, transition: { duration: 0.2, ease: EASE_OUT } } as const;
 
 /**
- * Scroll-triggered reveal: children rise, fade and settle with spring physics
- * the first time they enter the viewport. Honours reduced-motion.
+ * Scroll-triggered reveal: children rise and fade in on the shared ease-out
+ * the first time they enter the viewport. Transform and opacity only, so it
+ * stays on the compositor. Honours reduced-motion by rendering in place.
  */
 export function Reveal({
   children,
   className,
   delay = 0,
-  y = 14,
-  blur = true,
+  y = REVEAL_RISE,
   as = "div",
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
   y?: number;
-  blur?: boolean;
   as?: "div" | "section" | "li" | "h2" | "p" | "figure" | "ol";
 }) {
   const reduce = useReducedMotion();
@@ -30,10 +31,10 @@ export function Reveal({
 
   return (
     <Tag
-      initial={{ opacity: 0, y, filter: blur ? "blur(6px)" : "blur(0px)" }}
-      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-12% 0px -8% 0px" }}
-      transition={{ ...spring, delay }}
+      transition={{ ...REVEAL_TRANSITION, delay }}
       className={className}
     >
       {children}
@@ -86,11 +87,10 @@ export function RevealItem({
   return (
     <Tag
       variants={{
-        hidden: { opacity: 0, y: 12, scale: 0.98, filter: "blur(4px)" },
-        show: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: spring },
+        hidden: { opacity: 0, y: REVEAL_RISE, scale: 0.98 },
+        show: { opacity: 1, y: 0, scale: 1, transition: REVEAL_TRANSITION },
       }}
-      whileHover={lift ? { y: -2 } : undefined}
-      transition={spring}
+      whileHover={lift ? hoverLift : undefined}
       className={cn(className)}
     >
       {children}

@@ -9,6 +9,7 @@ import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { TeenRadarMap } from "@/components/quorum/guardian/TeenRadarMap";
 import { GuardianAiSummaryCard } from "@/components/quorum/ai/GuardianAiSummary";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 import {
   addSafeZone,
   askForCheckin,
@@ -22,6 +23,7 @@ import { AddressPicker } from "@/components/quorum/AddressPicker";
 import { PullToRefresh } from "@/components/quorum/interactions";
 import { haptic } from "@/lib/quorum/haptics";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
+import { statusLabel } from "@/components/quorum/dashboard-format";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/guardian")({
@@ -134,9 +136,15 @@ function GuardianHub() {
       </Link>
       {invite ? (
         <Card className="mb-4 border-primary/40">
-          <div className="text-sm font-semibold">
-            {link.isPending ? "Sending your link request…" : "Invite from your teen"}
-          </div>
+          {link.isPending ? (
+            <AiActivity
+              state="connecting"
+              label="Sending your link request…"
+              className="font-semibold text-foreground"
+            />
+          ) : (
+            <div className="text-sm font-semibold">Invite from your teen</div>
+          )}
           <p className="mt-1 text-xs text-muted-foreground">
             Code {invite} · once your teen approves, you'll see their live radar, plans and
             check-ins here.
@@ -159,26 +167,34 @@ function GuardianHub() {
       ) : null}
       {hub.isLoading ? (
         <div className="space-y-3">
-          <Skeleton className="h-24 rounded-3xl" />
-          <Skeleton className="h-64 rounded-3xl" />
+          <Skeleton className="h-24 rounded-surface" />
+          <Skeleton className="h-64 rounded-surface" />
         </div>
       ) : teens.length === 0 ? (
         <div className="space-y-4">
           <Card className="space-y-4">
-            <Empty
-              title="Link your first teen"
-              body="Open your teen's invite link, or type the 6-digit code from their Syncly profile."
-            />
+            <div className="px-2 pt-4 text-center">
+              <h3 className="font-display text-lg font-semibold">Link your first teen</h3>
+              <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+                Open your teen's invite link, or type the 6-digit code from their Syncly profile.
+              </p>
+            </div>
             <div className="flex gap-2">
               <input
                 className={cn(inputClass, "text-center text-lg tracking-[0.3em] tabular-nums")}
                 inputMode="numeric"
                 maxLength={6}
                 placeholder="000000"
+                aria-label="Your teen's 6-digit code"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               />
-              <Button loading={link.isPending} onClick={() => link.mutate({ data: { code } })}>
+              <Button
+                loading={link.isPending}
+                orb="connecting"
+                disabled={code.length !== 6}
+                onClick={() => link.mutate({ data: { code } })}
+              >
                 Link
               </Button>
             </div>
@@ -227,11 +243,14 @@ function GuardianHub() {
                       inputMode="numeric"
                       maxLength={6}
                       placeholder="000000"
+                      aria-label="Your teen's 6-digit code"
                       value={code}
                       onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     />
                     <Button
                       loading={link.isPending}
+                      orb="connecting"
+                      disabled={code.length !== 6}
                       onClick={() => link.mutate({ data: { code } })}
                     >
                       Link
@@ -337,8 +356,10 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
               ) : null}
               {teen.location.accuracy_m != null ? <span>±{teen.location.accuracy_m}m</span> : null}
             </>
+          ) : teen.sharing ? (
+            <AiActivity state="listening" label="Waiting for the first ping" className="text-xs" />
           ) : (
-            <span>{teen.sharing ? "Waiting for the first ping" : "Location sharing is off"}</span>
+            <span>Location sharing is off</span>
           )}
         </div>
 
@@ -543,7 +564,9 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                   {p.group_name} · {fmtTime(p.window_start)}
                 </div>
               </div>
-              <Pill tone={p.status === "finalized" ? "good" : "neutral"}>{p.status}</Pill>
+              <Pill tone={p.status === "finalized" ? "good" : "neutral"}>
+                {statusLabel(p.status)}
+              </Pill>
             </div>
 
             {p.venue ? (

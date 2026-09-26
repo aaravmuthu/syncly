@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Wordmark } from "@/components/quorum/Wordmark";
+import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 /**
  * Public landing spot for social sign-in. Waits for the session to hydrate,
@@ -64,10 +64,7 @@ function AuthCallback() {
       <div className="text-center">
         <Wordmark className="mx-auto h-7" />
         <h1 className="mt-6 text-lg font-semibold tracking-tight">Finishing your sign-in</h1>
-        <p className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
-          {message}
-        </p>
+        <AiActivity state="connecting" label={message} size={64} className="mt-2" />
       </div>
     </div>
   );

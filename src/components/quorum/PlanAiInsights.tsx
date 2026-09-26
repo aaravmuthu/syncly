@@ -59,6 +59,7 @@ export function PlanBGuardian({ planId }: { planId: string }) {
               className="mt-3"
               variant="outline"
               loading={swap.isPending}
+              orb="shaping"
               onClick={() =>
                 swap.mutate({ data: { planId, recommendationId: s.swapToId as string } })
               }

@@ -30,3 +30,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local tool state
+supabase/.temp/
+.claude/skills/*/scripts/bin/
+.agents/skills/*/scripts/bin/
+
+# Machine-local agent config
+.claude/settings.local.json
+CLAUDE.local.md

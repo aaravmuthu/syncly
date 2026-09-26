@@ -51,7 +51,7 @@ export function GuardianShell({
           <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
             <Link to="/guardian" className="flex items-center gap-2">
               <Wordmark className="h-6" />
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-foreground">
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-foreground">
                 Family
               </span>
             </Link>
@@ -84,7 +84,7 @@ export function GuardianShell({
                   emoji={me.data?.avatar_emoji}
                   name={me.data?.display_name}
                   size={32}
-                  className="ring-1 ring-amber-500/40"
+                  className="ring-1 ring-primary/40"
                 />
               </Link>
             </div>
@@ -117,14 +117,14 @@ export function GuardianShell({
                     transition={{ type: "spring", stiffness: 460, damping: 24 }}
                     className={cn(
                       "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium",
-                      active ? "text-foreground" : "text-muted-foreground",
+                      active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
                     {active ? (
                       <motion.span
                         layoutId="guardian-tab-indicator"
                         transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                        className="absolute -top-px h-0.5 w-8 rounded-full bg-amber-500"
+                        className="absolute -top-px h-0.5 w-8 rounded-full bg-primary"
                       />
                     ) : null}
                     <n.icon className="h-5 w-5" aria-hidden />

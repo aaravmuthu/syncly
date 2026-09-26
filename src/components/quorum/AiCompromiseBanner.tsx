@@ -61,6 +61,7 @@ export function AiCompromiseBanner({
         <Button
           className="mt-3"
           loading={apply.isPending}
+          orb="weaving"
           onClick={() =>
             apply.mutate({
               data: {

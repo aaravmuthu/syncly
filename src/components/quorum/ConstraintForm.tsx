@@ -194,7 +194,7 @@ function FieldRenderer({
                   onChange(field.key, on ? selected.filter((s) => s !== o) : [...selected, o])
                 }
                 className={cn(
-                  "rounded-full px-3 py-1.5 text-sm capitalize transition",
+                  "rounded-full px-3 py-1.5 text-sm transition first-letter:uppercase",
                   on
                     ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-secondary-foreground",

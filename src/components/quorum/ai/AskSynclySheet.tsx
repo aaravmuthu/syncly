@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ASK_EVENT } from "./ask-event";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/quorum/aiplus.functions";
 import { launchAiPlan } from "@/lib/quorum/planner.functions";
 import { ChatSheetShell } from "./ChatSheetShell";
+import { AiGlyph } from "./AiGlyph";
 
 const STARTERS = [
   "What's happening across my groups this week?",
@@ -38,6 +40,14 @@ type Turn = ConciergeTurn & {
  */
 export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu" }) {
   const [open, setOpen] = useState(false);
+  // Only the always-mounted header instance listens, so one event opens
+  // exactly one sheet (the overflow-menu copy only exists while it's open).
+  useEffect(() => {
+    if (trigger !== "icon") return;
+    const onAsk = () => setOpen(true);
+    window.addEventListener(ASK_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_EVENT, onAsk);
+  }, [trigger]);
   const [turns, setTurns] = useState<Turn[]>([]);
   const qc = useQueryClient();
 
@@ -104,7 +114,7 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
         aria-label="Ask Syncly"
         className={
           trigger === "menu"
-            ? "relative flex min-h-11 w-full cursor-default select-none items-center gap-2 rounded-xl px-2 py-2.5 outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+            ? "relative flex min-h-11 w-full cursor-default select-none items-center gap-2 rounded-xl px-2 py-2.5 text-sm outline-none transition-colors hover:bg-secondary focus:bg-secondary"
             : "tap-target pressable active:pressable-active inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
         }
       >
@@ -121,6 +131,8 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
         starters={STARTERS}
         turns={turns}
         pending={ask.isPending}
+        pendingState="searching"
+        pendingLabel="Looking through your squads…"
         onSend={send}
         renderTurnExtra={(t, i) => {
           if (t.launched) {
@@ -138,11 +150,14 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
           if (t.action?.type === "create_plan") {
             return (
               <Card className="mr-auto mt-2 max-w-[90%] border-primary/40 bg-primary/5 p-3">
-                <Pill tone="accent">💡 Suggested plan</Pill>
+                <Pill tone="accent" className="gap-1.5">
+                  <AiGlyph className="size-3.5" /> Suggested plan
+                </Pill>
                 <p className="mt-2 text-sm font-medium">{actionLabel(t.action)}</p>
                 <Button
                   className="mt-2 h-9 px-3 text-xs"
                   loading={launchingAt === i}
+                  orb="shaping"
                   onClick={() => confirmCreatePlan(i, t.action!)}
                 >
                   Launch it in {t.action.groupName}
