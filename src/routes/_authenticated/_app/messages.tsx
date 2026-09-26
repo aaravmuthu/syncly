@@ -148,7 +148,7 @@ export function MessagesPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search people, handles or circles"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              className="w-full bg-transparent outline-none placeholder:text-muted-foreground"
             />
           </GlassPill>
 

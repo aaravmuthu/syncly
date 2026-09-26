@@ -253,7 +253,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             instead of only where a map happened to make it free. */}
         <header className="glass-pill fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 mx-auto max-w-3xl rounded-full">
           <div className="flex items-center justify-between px-4 py-2.5">
-            <Link to="/home" className="flex items-center gap-2">
+            <Link to="/home" className="hit-slop flex items-center gap-2">
               <Wordmark className="h-6" />
             </Link>
             <div className="flex items-center gap-2">

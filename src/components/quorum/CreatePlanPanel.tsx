@@ -222,7 +222,7 @@ export function CreatePlanPanel({
           <h3 className="text-sm font-semibold">Create with AI</h3>
         </div>
         <textarea
-          className="mt-2 min-h-20 w-full resize-y rounded-2xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary/50"
+          className="mt-2 min-h-20 w-full resize-y rounded-2xl border border-border bg-background px-3 py-2.5 outline-none focus:border-primary/50"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Post-game dinner and bowling nearby before 10 PM curfew"

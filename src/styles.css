@@ -64,7 +64,7 @@
   --text-display--line-height: 1.2;
   --text-title: 1.125rem;
   --text-title--line-height: 1.35;
-  --text-caption: 0.6875rem;
+  --text-caption: 0.75rem;
   --text-caption--line-height: 1.4;
 }
 
@@ -148,6 +148,16 @@
   }
   html {
     overscroll-behavior-y: none;
+  }
+  /* iOS zooms the page when a field under 16px takes focus. Fields inherit
+     text-sm from their containers, so floor them here; a field with its own
+     size utility still wins over this base rule. */
+  @media (max-width: 47.99rem), (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em);
+    }
   }
   button,
   a,
@@ -582,8 +592,10 @@
 }
 @utility glass-pill {
   background: rgb(var(--glass-tint) / var(--glass-bg-alpha));
+  /* No hand-written -webkit- copy: lightningcss adds it, and a manual one
+     after this line makes the minifier drop the unprefixed declaration,
+     which leaves Chrome with no blur at all. */
   backdrop-filter: blur(28px) saturate(190%) var(--glass-brightness, brightness(1));
-  -webkit-backdrop-filter: blur(28px) saturate(190%) var(--glass-brightness, brightness(1));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
 }
@@ -591,7 +603,6 @@
   .glass-pill {
     background: var(--card);
     backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
 
@@ -629,6 +640,24 @@
      before the tap. This removes that delay at the source for every tap
      target in the app, not just the nav. */
   touch-action: manipulation;
+}
+
+/* For controls that should keep their small look (text links, chips,
+   switches): an invisible box centred on the control, at least 44px each
+   way, takes the tap instead. Uses ::after, so the control must not already
+   use it, and a clipping ancestor needs room around the control. */
+@utility hit-slop {
+  position: relative;
+  touch-action: manipulation;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* Desktop: render the app inside a centered mobile frame */

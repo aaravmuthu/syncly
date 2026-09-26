@@ -181,7 +181,7 @@ function AuthPage() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 text-sm outline-none focus:border-primary"
+              className="mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 outline-none focus:border-primary"
             />
           </label>
           {mode !== "reset" && (
@@ -194,7 +194,7 @@ function AuthPage() {
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 text-sm outline-none focus:border-primary"
+                className="mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 outline-none focus:border-primary"
               />
             </label>
           )}

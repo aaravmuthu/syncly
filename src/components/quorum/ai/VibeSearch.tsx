@@ -70,7 +70,7 @@ export function VibeSearch({
           onChange={(e) => setQuery(e.target.value)}
           placeholder="quiet patio, cheap, walkable"
           aria-label="Describe the vibe you want"
-          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 text-sm outline-none focus:border-primary/60"
+          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none focus:border-primary/60"
         />
         <Button
           type="submit"
@@ -90,7 +90,7 @@ export function VibeSearch({
               key={e}
               type="button"
               onClick={() => run(e)}
-              className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+              className="hit-slop rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-secondary"
             >
               {e}
             </button>

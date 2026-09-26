@@ -474,7 +474,7 @@ export default function SquadMapInner({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search squad or venues"
             aria-label="Search squad or venues"
-            className="w-full bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent font-medium outline-none placeholder:text-muted-foreground"
           />
           {query ? (
             <button

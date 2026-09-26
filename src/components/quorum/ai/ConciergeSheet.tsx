@@ -114,10 +114,10 @@ export function ConciergeSheet({
       onClick={() => setOpen(true)}
       whileTap={{ scale: 0.94 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
-      className="fixed bottom-24 left-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] left-4 z-[60] grid size-12 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-lg md:bottom-24 md:inline-flex md:size-auto md:gap-2 md:px-4 md:py-3"
     >
-      <AiGlyph className="h-4 w-4" />
-      Ask AI
+      <AiGlyph className="size-5 md:size-4" />
+      <span className="sr-only md:not-sr-only">Ask AI</span>
     </motion.button>
   );
 

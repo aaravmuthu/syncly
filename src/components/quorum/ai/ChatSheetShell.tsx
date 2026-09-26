@@ -123,7 +123,7 @@ export function ChatSheetShell<T extends BaseTurn>({
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message…"
           aria-label={title}
-          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 text-sm outline-none focus:border-primary/60"
+          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none focus:border-primary/60"
         />
         <Button type="submit" disabled={!input.trim() || pending} className="h-11 px-4">
           <Send className="h-4 w-4" aria-hidden />
