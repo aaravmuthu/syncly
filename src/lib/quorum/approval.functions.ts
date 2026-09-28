@@ -74,11 +74,16 @@ export const respondToApproval = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
       .from("parent_approvals")
-      .select("id, expires_at, status, plan_id, profile_id")
+      .select("id, expires_at, status, plan_id, profile_id, decided_via")
       .eq("token", data.token)
       .maybeSingle();
     if (!row) throw new Error("This link is not valid");
     if (new Date(row.expires_at) < new Date()) throw new Error("This link has expired");
+    // The linked guardian's answer in the Family hub is final; whoever holds
+    // the link (possibly the teen) can't overwrite it.
+    if (row.decided_via === "guardian") {
+      throw new Error("A parent already answered this in Syncly");
+    }
 
     const condition =
       data.decision === "approved_with_condition" ? data.condition?.trim() || null : null;
@@ -89,6 +94,7 @@ export const respondToApproval = createServerFn({ method: "POST" })
         status: data.decision,
         condition_text: condition,
         responded_at: new Date().toISOString(),
+        decided_via: "link",
       })
       .eq("id", row.id);
     if (error) throw new Error(error.message);
@@ -416,6 +422,7 @@ export const parentRespondToPlan = createServerFn({ method: "POST" })
       condition_text: note,
       responded_at: new Date().toISOString(),
       expires_at: expires,
+      decided_via: "link",
     });
     if (error) throw new Error(error.message);
 

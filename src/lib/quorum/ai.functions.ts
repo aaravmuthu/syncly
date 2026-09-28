@@ -179,12 +179,22 @@ export const applyAiCompromise = createServerFn({ method: "POST" })
         patch.window_end = new Date(end.getTime() + (start.getTime() - original)).toISOString();
       }
     }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.recommendationId) {
+      const { data: option } = await supabaseAdmin
+        .from("recommendations")
+        .select("id")
+        .eq("id", data.recommendationId)
+        .eq("plan_id", data.planId)
+        .maybeSingle();
+      if (!option) throw new Error("That option isn't on this plan");
       patch.selected_recommendation_id = data.recommendationId;
       patch.status = "finalized";
     }
     if (Object.keys(patch).length) {
-      const { error } = await context.supabase.from("plans").update(patch).eq("id", data.planId);
+      // Status and the selected option are server-managed; the host check
+      // above is what authorizes this write.
+      const { error } = await supabaseAdmin.from("plans").update(patch).eq("id", data.planId);
       if (error) throw new Error(error.message);
     }
 

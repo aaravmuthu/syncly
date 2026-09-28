@@ -60,7 +60,13 @@ export type TeenCard = {
       teen_name: string;
       phone: string | null;
     }[];
-    approval: { id: string; status: string; condition_text: string | null } | null;
+    approval: {
+      id: string;
+      status: string;
+      condition_text: string | null;
+      /** Who answered: the guardian in this hub, or whoever opened a shared link. */
+      decided_via: "guardian" | "link" | null;
+    } | null;
   }[];
   delays: {
     id: string;

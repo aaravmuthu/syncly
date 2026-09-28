@@ -205,7 +205,10 @@ export const addSpotToPlan = createServerFn({ method: "POST" })
     } as never);
     if (error) throw new Error(error.message);
 
-    await supabase
+    // The insert above only passes RLS for the plan's host; plan status is
+    // server-managed, so open voting through the service role.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
       .from("plans")
       .update({ status: "voting" })
       .eq("id", planId)

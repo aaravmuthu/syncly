@@ -324,7 +324,11 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
   const [zonePoint, setZonePoint] = useState<{ lat: number; lon: number } | null>(null);
   const [zoneRadius, setZoneRadius] = useState(200);
 
-  const pendingApprovals = teen.plans.filter((p) => p.approval && p.approval.status === "pending");
+  // A link answer may have come from the teen (they hold the link), so it
+  // stays here until the guardian confirms or overrides it.
+  const pendingApprovals = teen.plans.filter(
+    (p) => p.approval && (p.approval.status === "pending" || p.approval.decided_via === "link"),
+  );
 
   return (
     <div className="space-y-4">
@@ -482,6 +486,12 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                 {p.group_name} · {fmtTime(p.window_start)}
                 {p.venue ? ` · ${p.venue}` : ""}
               </div>
+              {p.approval?.decided_via === "link" ? (
+                <div className="mt-1.5 text-xs text-muted-foreground">
+                  Answered “{p.approval.status.replace(/_/g, " ")}” from a shared link, not by you.
+                  Confirm or change it below.
+                </div>
+              ) : null}
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {p.est_cost_max != null ? (
                   <Pill tone="neutral">
@@ -598,6 +608,7 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                   }
                 >
                   {p.approval.status.replace(/_/g, " ")}
+                  {p.approval.decided_via === "link" ? " · via link" : ""}
                 </Pill>
               ) : null}
             </div>

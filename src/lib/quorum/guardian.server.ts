@@ -461,7 +461,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
     db.from("plan_participants").select("plan_id, profile_id, attending").in("profile_id", teenIds),
     db
       .from("parent_approvals")
-      .select("id, plan_id, profile_id, status, condition_text, created_at")
+      .select("id, plan_id, profile_id, status, condition_text, created_at, decided_via")
       .in("profile_id", teenIds)
       .order("created_at", { ascending: false }),
     db
@@ -675,6 +675,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
                 id: approval.id as string,
                 status: approval.status as string,
                 condition_text: (approval.condition_text as string | null) ?? null,
+                decided_via: (approval.decided_via as "guardian" | "link" | null) ?? null,
               }
             : null,
         };
@@ -773,6 +774,7 @@ export async function decideApproval(
       status: decision,
       condition_text: decision === "approved_with_condition" ? (condition ?? null) : null,
       responded_at: new Date().toISOString(),
+      decided_via: "guardian",
     })
     .eq("id", approvalId);
   if (error) throw new Error(error.message);
