@@ -1,14 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { ZipLocation } from "./location";
 import type { PlaceSuggestion } from "./places.server";
 
 /**
  * Keyless ZIP → coordinates via OpenStreetMap Nominatim.
- * Public by design: a ZIP code is not private data.
+ * Signed-in only, so the server isn't an open geocoding proxy.
  */
 export const geocodeZip = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ zip: v.reqText(10) }))
   .handler(async ({ data }): Promise<ZipLocation | null> => {
     const { geocodeZipServer } = await import("./location.server");
@@ -17,6 +19,7 @@ export const geocodeZip = createServerFn({ method: "POST" })
 
 /** Address / ZIP autocomplete (Mapbox, falls back to OpenStreetMap). */
 export const suggestPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     z.object({
       query: v.text(300),
@@ -40,6 +43,7 @@ export const getMapToken = createServerFn({ method: "GET" }).handler(async (): P
 
 /** Coordinates → ZIP, used when a picked suggestion has no postcode. */
 export const reverseZip = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ lat: v.lat, lon: v.lon }))
   .handler(async ({ data }): Promise<string | null> => {
     const { reverseZipServer } = await import("./places.server");

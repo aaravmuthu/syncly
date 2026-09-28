@@ -16,7 +16,9 @@ export const getVenueInsight = createServerFn({ method: "POST" })
       priceLevel: v.optText(20),
     }),
   )
-  .handler(async ({ data }): Promise<VenueInsight> => {
+  .handler(async ({ data, context }): Promise<VenueInsight> => {
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "venue_insight");
     const { generateVenueInsight } = await import("./reviews.server");
     return generateVenueInsight({
       name: data.name,

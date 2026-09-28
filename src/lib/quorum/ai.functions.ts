@@ -27,10 +27,12 @@ export type MagicPlanResult = MagicDraft & {
 export const magicPlanDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ prompt: v.reqText(2000), fallbackZip: v.optText(10) }))
-  .handler(async ({ data }): Promise<MagicPlanResult> => {
+  .handler(async ({ data, context }): Promise<MagicPlanResult> => {
     const prompt = data.prompt.trim();
     if (!prompt) throw new Error("Describe the plan first");
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "magic_plan_draft");
     const { parseMagicPrompt } = await import("./ai.server");
     const today = new Date().toISOString().slice(0, 10);
     const draft = await parseMagicPrompt(prompt, today);
@@ -86,6 +88,8 @@ export const getCompromiseSummaries = createServerFn({ method: "POST" })
     const { buildCompromiseFacts } = await import("./compromise.server");
     const facts = await buildCompromiseFacts(data.planId);
     if (!facts.length) return {};
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "compromise_summaries");
     const { summarizeCompromises } = await import("./ai.server");
     return summarizeCompromises(facts);
   });
@@ -105,7 +109,7 @@ export const getPlanBSuggestion = createServerFn({ method: "POST" })
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
     const { buildPlanBSuggestion } = await import("./compromise.server");
-    return buildPlanBSuggestion(data.planId);
+    return buildPlanBSuggestion(data.planId, context.userId);
   });
 
 /* ------------------------------------------------------------------ */
@@ -140,6 +144,8 @@ export const getAiCompromise = createServerFn({ method: "POST" })
         suggestedRecommendationTitle: null,
       };
     }
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "ai_compromise");
     const { writeCompromise } = await import("./ai.server");
     return writeCompromise(facts);
   });
