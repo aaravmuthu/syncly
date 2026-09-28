@@ -166,7 +166,17 @@ export const castResolutionVote = createServerFn({ method: "POST" })
     const majority = Math.max(1, Math.ceil(attending / 2));
 
     if (forThis >= majority) {
-      await supabase
+      // Plan status is server-managed; the vote above already passed the
+      // votes RLS (can_see_plan), so lock in through the service role.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: option } = await supabaseAdmin
+        .from("recommendations")
+        .select("id")
+        .eq("id", data.recommendationId)
+        .eq("plan_id", data.planId)
+        .maybeSingle();
+      if (!option) throw new Error("That option isn't on this plan");
+      await supabaseAdmin
         .from("plans")
         .update({ status: "finalized", selected_recommendation_id: data.recommendationId })
         .eq("id", data.planId);

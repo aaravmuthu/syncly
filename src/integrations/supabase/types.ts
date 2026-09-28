@@ -1011,6 +1011,7 @@ export type Database = {
         Row: {
           condition_text: string | null;
           created_at: string;
+          decided_via: string | null;
           expires_at: string;
           id: string;
           parent_email: string | null;
@@ -1024,6 +1025,7 @@ export type Database = {
         Insert: {
           condition_text?: string | null;
           created_at?: string;
+          decided_via?: string | null;
           expires_at: string;
           id?: string;
           parent_email?: string | null;
@@ -1037,6 +1039,7 @@ export type Database = {
         Update: {
           condition_text?: string | null;
           created_at?: string;
+          decided_via?: string | null;
           expires_at?: string;
           id?: string;
           parent_email?: string | null;

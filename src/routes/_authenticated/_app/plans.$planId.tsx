@@ -193,10 +193,21 @@ function PlanPage() {
   });
   const askParent = useMutation({
     mutationFn: useServerFn(requestParentApproval),
-    onSuccess: (row) =>
-      setApprovalLink(`${window.location.origin}/approve/${(row as { token: string }).token}`),
+    onSuccess: (res) => {
+      const row = res as { token: string | null; sentToGuardian: boolean };
+      // With a linked guardian the request goes to their Family hub; a link is
+      // only handed out when there's no one to route it to.
+      if (row.sentToGuardian) {
+        setApprovalLink(null);
+        haptic("success");
+        toast.success("Sent to your parent in Syncly");
+        void invalidate();
+        return;
+      }
+      setApprovalLink(`${window.location.origin}/approve/${row.token}`);
+    },
     onError: (e: unknown) =>
-      toast.error("Couldn't create the approval link", {
+      toast.error("Couldn't ask a parent", {
         description: e instanceof Error ? e.message : "Please try again.",
       }),
   });
@@ -877,9 +888,9 @@ function PlanPage() {
           <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Parent permission</h2>
           <Card>
             <p className="text-sm text-muted-foreground">
-              Send a parent a link with only the details they need: what, where, when, and how
-              you're getting home. They can approve, approve with a condition, or decline — no
-              account required.
+              Ask a parent with only the details they need: what, where, when, and how you're
+              getting home. A linked parent gets it in their Syncly Family hub; otherwise you get a
+              link to send them — no account required.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <Button
@@ -888,7 +899,7 @@ function PlanPage() {
                 orb="connecting"
                 onClick={() => askParent.mutate({ data: { planId } })}
               >
-                {askParent.isPending ? "Creating link…" : "Create approval link"}
+                {askParent.isPending ? "Asking…" : "Ask a parent"}
               </Button>
               <Button
                 loading={shareSummary.isPending}
@@ -929,6 +940,7 @@ function PlanPage() {
                     >
                       {a.status.replace(/_/g, " ")}
                       {a.condition_text ? ` — ${a.condition_text}` : ""}
+                      {a.decided_via === "link" ? " · via link" : ""}
                     </Pill>
                   </div>
                 ))}

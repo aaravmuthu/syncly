@@ -678,7 +678,7 @@ export const getPlan = createServerFn({ method: "GET" })
       .from("parent_approvals")
       // Never ship the parent token to plan viewers — it is a bearer credential
       // that lets the holder answer the approval. Only status is needed here.
-      .select("id, profile_id, status, condition_text, expires_at")
+      .select("id, profile_id, status, condition_text, expires_at, decided_via")
       .eq("plan_id", data.planId);
 
     // Only the caller's own private answers are ever returned.
@@ -800,7 +800,19 @@ export const finalizePlan = createServerFn({ method: "POST" })
     const { assertPlanOpen } = await import("./plan-lifecycle.server");
     await assertPlanOpen(data.planId);
     const { supabase } = context;
-    const { error } = await supabase
+    const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
+    if (!allowed) throw new Error("Forbidden");
+    // Plan status is server-managed (the user role can't write it), so the
+    // lock-in goes through the service role once membership is confirmed.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: option } = await supabaseAdmin
+      .from("recommendations")
+      .select("id")
+      .eq("id", data.recommendationId)
+      .eq("plan_id", data.planId)
+      .maybeSingle();
+    if (!option) throw new Error("That option isn't on this plan");
+    const { error } = await supabaseAdmin
       .from("plans")
       .update({ status: "finalized", selected_recommendation_id: data.recommendationId })
       .eq("id", data.planId);
@@ -857,10 +869,19 @@ export const requestParentApproval = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) throw new Error("Profile missing");
+    const { data: allowed } = await supabase.rpc("can_see_plan", { _plan_id: data.planId });
+    if (!allowed) throw new Error("Forbidden");
+    // The user role can't write parent_approvals (a teen could otherwise file
+    // an already-"approved" row), so the pending request is created here.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { alertGuardians, guardianIdsFor } = await import("./guardian.server");
+    // A linked guardian answers in the Family hub. Handing the teen a link as
+    // well would let them open it and approve their own plan.
+    const hasGuardian = (await guardianIdsFor(me)).length > 0;
     // The token is a bearer credential: it is generated here and handed back
     // exactly once. Clients can no longer read the token column at all.
     const token = crypto.randomUUID().replace(/-/g, "");
-    const { data: inserted, error } = await supabase
+    const { data: inserted, error } = await supabaseAdmin
       .from("parent_approvals")
       .insert({
         plan_id: data.planId,
@@ -874,8 +895,9 @@ export const requestParentApproval = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    const row = { id: inserted.id, token };
-    const { alertGuardians } = await import("./guardian.server");
+    const row = hasGuardian
+      ? { id: inserted.id, token: null, sentToGuardian: true }
+      : { id: inserted.id, token, sentToGuardian: false };
     const { data: plan } = await supabase
       .from("plans")
       .select("title")

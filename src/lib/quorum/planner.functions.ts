@@ -353,7 +353,8 @@ export const launchAiPlan = createServerFn({ method: "POST" })
           }),
         );
         seeded = seeds.length;
-        await supabase.from("plans").update({ status: "voting" }).eq("id", plan.id);
+        // Plan status is server-managed; this caller just created the plan.
+        await supabaseAdmin.from("plans").update({ status: "voting" }).eq("id", plan.id);
       }
     }
 
