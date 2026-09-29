@@ -20,6 +20,7 @@ import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
 import { inviteLink, shareOrCopy } from "@/lib/quorum/invite";
 import { isValidZip } from "@/lib/quorum/location";
+import { localToInstant } from "@/lib/quorum/plan-time";
 import { EST_COST_PRESETS, estCostLabel } from "@/lib/quorum/estcost";
 
 /**
@@ -244,6 +245,7 @@ export function CreatePlanPanel({
                   groupId,
                   prompt,
                   useDefaults: useSaved,
+                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                   estCostMin: estCost?.min ?? null,
                   estCostMax: estCost?.max ?? null,
                 },
@@ -487,8 +489,8 @@ export function CreatePlanPanel({
                     groupId,
                     title,
                     category,
-                    windowStart: date ? `${date}T${startTime}:00` : null,
-                    windowEnd: date ? `${date}T${endTime}:00` : null,
+                    windowStart: date ? localToInstant(date, startTime) : null,
+                    windowEnd: date ? localToInstant(date, endTime) : null,
                     zipCode: zip || null,
                     foodVibe: vibe,
                     radiusMiles: radius,

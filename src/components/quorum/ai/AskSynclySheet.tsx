@@ -74,7 +74,11 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
     setLaunchingAt(index);
     try {
       const result = (await runLaunch({
-        data: { groupId: action.groupId, prompt: action.prompt },
+        data: {
+          groupId: action.groupId,
+          prompt: action.prompt,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
       })) as {
         planId: string;
         title: string;

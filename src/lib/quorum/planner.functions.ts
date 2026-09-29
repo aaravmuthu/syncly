@@ -3,6 +3,7 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dbError } from "@/lib/db-error";
+import { isValidTimeZone, zonedToInstant } from "./plan-time";
 
 export type MemberPin = {
   profileId: string;
@@ -226,6 +227,8 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       groupId: v.id,
       prompt: v.reqText(2000),
       useDefaults: z.boolean().optional(),
+      /** The user's IANA zone; the AI draft's date + time are wall-clock there. */
+      timeZone: z.string().max(64).optional(),
       estCostMin: v.optAmount(100_000),
       estCostMax: v.optAmount(100_000),
     }),
@@ -263,10 +266,11 @@ export const launchAiPlan = createServerFn({ method: "POST" })
     );
 
     const startTime = draft.time ?? "18:30";
-    const windowStart = draft.date ? `${draft.date}T${startTime}:00` : null;
+    const tz = data.timeZone && isValidTimeZone(data.timeZone) ? data.timeZone : "UTC";
+    const windowStart = draft.date ? zonedToInstant(draft.date, startTime, tz) : null;
     const endMins = hhmmToMin(startTime) + 150;
     const endTime = minToHHMM(endMins);
-    const windowEnd = draft.date ? `${draft.date}T${endTime}:00` : null;
+    const windowEnd = draft.date ? zonedToInstant(draft.date, endTime, tz) : null;
 
     const { data: plan, error } = await supabase
       .from("plans")

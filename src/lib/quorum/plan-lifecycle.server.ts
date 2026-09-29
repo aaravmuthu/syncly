@@ -3,15 +3,15 @@
  * else ever writes `completed`, so without this a locked-in plan read
  * "Happening now" and an unlocked one "Voting active" forever.
  *
- * A plan is over at `window_end`, or `window_start` + END_GRACE_MS when no end
- * was set. Locked-in plans become `completed`; plans that never locked in
+ * A plan is over PLAN_END_GRACE_MS after `window_end`, or after `window_start`
+ * when no end was set. Locked-in plans become `completed`; plans that never locked in
  * become `cancelled` (the only terminal state for "didn't happen"). Drafts are
  * left alone -- they were never scheduled.
  */
 
 import { dbError } from "@/lib/db-error";
+import { planOverCutoff } from "./plan-time";
 
-const END_GRACE_MS = 4 * 60 * 60 * 1000;
 const THROTTLE_MS = 60 * 1000;
 const LIVE = ["collecting", "recommending", "voting"] as const;
 
@@ -33,7 +33,8 @@ export async function settlePastPlans() {
 
 async function sweep(now: number) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const ended = `window_end.lt.${new Date(now).toISOString()},and(window_end.is.null,window_start.lt.${new Date(now - END_GRACE_MS).toISOString()})`;
+  const cutoff = planOverCutoff(now);
+  const ended = `window_end.lt.${cutoff},and(window_end.is.null,window_start.lt.${cutoff})`;
 
   const results = await Promise.all([
     supabaseAdmin.from("plans").update({ status: "completed" }).eq("status", "finalized").or(ended),
