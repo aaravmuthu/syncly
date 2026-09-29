@@ -10,6 +10,7 @@ import { haversineMiles, milesToDriveMinutes } from "./location";
 import { expiryFor, ghostUntilFor, motionEmoji, motionLabel } from "./sharing";
 import type { FriendPin, GhostChoice, ShareMode, SharePeer, SharingState } from "./sharing";
 import { realName } from "./names";
+import { dbError } from "@/lib/db-error";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -79,7 +80,7 @@ export async function setShare(ownerProfileId: string, viewerProfileId: string, 
     },
     { onConflict: "owner_profile_id,viewer_profile_id" },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "setShare");
 
   const { data: me } = await db
     .from("profiles")
@@ -107,7 +108,7 @@ export async function stopShare(ownerProfileId: string, viewerProfileId: string)
     .delete()
     .eq("owner_profile_id", ownerProfileId)
     .eq("viewer_profile_id", viewerProfileId);
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "stopShare");
   return { ok: true as const };
 }
 
@@ -119,7 +120,7 @@ export async function stopWatching(viewerProfileId: string, ownerProfileId: stri
     .delete()
     .eq("owner_profile_id", ownerProfileId)
     .eq("viewer_profile_id", viewerProfileId);
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "stopWatching");
   return { ok: true as const };
 }
 
@@ -132,7 +133,7 @@ export async function setGhostMode(profileId: string, choice: GhostChoice) {
       location_pause_indefinite: choice === "until_reenabled",
     })
     .eq("id", profileId);
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "setGhostMode");
   return { ok: true as const };
 }
 

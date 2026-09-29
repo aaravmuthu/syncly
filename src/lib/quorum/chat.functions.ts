@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dbError, UPLOAD_FAILED } from "@/lib/db-error";
 
 export const listMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -20,7 +21,7 @@ export const listMessages = createServerFn({ method: "GET" })
       .limit(200);
     if (data.planId) q = q.eq("plan_id", data.planId);
     const { data: messages, error } = await q;
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "listMessages");
 
     const ids = (messages ?? []).map((m) => m.id);
     const reads = ids.length
@@ -77,7 +78,7 @@ export const sendMessage = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "sendMessage");
     return row;
   });
 
@@ -116,11 +117,12 @@ export const uploadChatImage = createServerFn({ method: "POST" })
     const { error: upErr } = await supabaseAdmin.storage
       .from("avatars")
       .upload(path, bytes, { contentType, upsert: true });
-    if (upErr) throw new Error(upErr.message);
+    if (upErr) throw dbError(upErr, "uploadChatImage", UPLOAD_FAILED);
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("avatars")
       .createSignedUrl(path, 60 * 60 * 24 * 3650);
-    if (signErr || !signed) throw new Error(signErr?.message ?? "Could not read image back");
+    if (signErr || !signed)
+      throw signErr ? dbError(signErr, "uploadChatImage") : new Error("Could not read image back");
     return { url: signed.signedUrl };
   });
 

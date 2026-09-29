@@ -3,6 +3,7 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { ConstraintPayload } from "./types";
+import { dbError, UPLOAD_FAILED } from "@/lib/db-error";
 
 /* ------------------------------------------------------------------ */
 /* Profile                                                             */
@@ -44,7 +45,7 @@ export const getMe = createServerFn({ method: "GET" })
         .upsert({ user_id: userId, display_name: "New member" }, { onConflict: "user_id" })
         .select("*")
         .single();
-      if (error) throw new Error(error.message);
+      if (error) throw dbError(error, "getMe");
       profile = created;
     }
 
@@ -148,7 +149,7 @@ export const saveProfile = createServerFn({ method: "POST" })
       .select("*")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "saveProfile");
     return row;
   });
 
@@ -172,17 +173,18 @@ export const uploadAvatar = createServerFn({ method: "POST" })
     const { error: upErr } = await supabaseAdmin.storage
       .from("avatars")
       .upload(path, bytes, { contentType, upsert: true });
-    if (upErr) throw new Error(upErr.message);
+    if (upErr) throw dbError(upErr, "uploadAvatar", UPLOAD_FAILED);
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("avatars")
       .createSignedUrl(path, 60 * 60 * 24 * 3650);
-    if (signErr || !signed) throw new Error(signErr?.message ?? "Could not read image back");
+    if (signErr || !signed)
+      throw signErr ? dbError(signErr, "uploadAvatar") : new Error("Could not read image back");
 
     const { error } = await supabase
       .from("profiles")
       .update({ avatar_url: signed.signedUrl })
       .eq("user_id", userId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "uploadAvatar");
     return { avatar_url: signed.signedUrl };
   });
 
@@ -195,7 +197,7 @@ export const deleteAccount = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "deleteAccount");
     return { ok: true as const };
   });
 
@@ -294,11 +296,11 @@ export const createGroup = createServerFn({ method: "POST" })
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "createGroup");
     const { error: memberError } = await supabase
       .from("group_members")
       .insert({ group_id: group.id, profile_id: me, role: "owner" });
-    if (memberError) throw new Error(memberError.message);
+    if (memberError) throw dbError(memberError, "createGroup");
     await supabase.from("activity_events").insert({
       group_id: group.id,
       actor_profile_id: me,
@@ -329,7 +331,7 @@ export const joinGroup = createServerFn({ method: "POST" })
         { group_id: group.id, profile_id: me, role: "member" },
         { onConflict: "group_id,profile_id" },
       );
-    if (memberError) throw new Error(memberError.message);
+    if (memberError) throw dbError(memberError, "joinGroup");
     await supabaseAdmin.from("activity_events").insert({
       group_id: group.id,
       actor_profile_id: me,
@@ -358,7 +360,7 @@ export const getGroup = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.groupId)
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "getGroup");
     const { data: members } = await supabase
       .from("group_members")
       .select(
@@ -604,7 +606,7 @@ export const createPlan = createServerFn({ method: "POST" })
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "createPlan");
 
     const ids = new Set([me, ...(data.participantIds ?? [])]);
     await supabase.from("plan_participants").insert(
@@ -658,7 +660,7 @@ export const getPlan = createServerFn({ method: "GET" })
       .select("*, groups(id, name, emoji)")
       .eq("id", data.planId)
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "getPlan");
 
     const { data: participants } = await supabase
       .from("plan_participants")
@@ -716,7 +718,7 @@ export const submitConstraints = createServerFn({ method: "POST" })
         { plan_id: data.planId, profile_id: me, payload: data.payload as never },
         { onConflict: "plan_id,profile_id" },
       );
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "submitConstraints");
     await supabase
       .from("plan_participants")
       .update({ responded: true, attending: true })
@@ -782,7 +784,7 @@ export const castVote = createServerFn({ method: "POST" })
         { plan_id: data.planId, profile_id: me, recommendation_id: data.recommendationId },
         { onConflict: "plan_id,profile_id" },
       );
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "castVote");
     const { notifyPlanParticipants } = await import("./notify.server");
     await notifyPlanParticipants(data.planId, {
       type: "vote_cast",
@@ -816,7 +818,7 @@ export const finalizePlan = createServerFn({ method: "POST" })
       .from("plans")
       .update({ status: "finalized", selected_recommendation_id: data.recommendationId })
       .eq("id", data.planId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "finalizePlan");
     await supabase.from("activity_events").insert({
       plan_id: data.planId,
       type: "plan_finalized",
@@ -894,7 +896,7 @@ export const requestParentApproval = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "requestParentApproval");
     const row = hasGuardian
       ? { id: inserted.id, token: null, sentToGuardian: true }
       : { id: inserted.id, token, sentToGuardian: false };

@@ -11,6 +11,7 @@
 import { haversineMiles, milesToDriveMinutes } from "./location";
 import type { TeenCard } from "./guardian.types";
 import { realName } from "./names";
+import { dbError } from "@/lib/db-error";
 
 export type { TeenCard };
 
@@ -130,7 +131,7 @@ export async function linkTeenByCode(guardianProfileId: string, rawCode: string)
     },
     { onConflict: "guardian_profile_id,teen_profile_id" },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "linkTeenByCode");
 
   const { data: guardian } = await db
     .from("profiles")
@@ -157,7 +158,7 @@ export async function pendingLinkRequestsForTeen(teenProfileId: string) {
     .eq("teen_profile_id", teenProfileId)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "pendingLinkRequestsForTeen");
   return (data ?? []).map((r) => ({
     id: r.id as string,
     createdAt: r.created_at as string,
@@ -228,7 +229,7 @@ export async function respondToLinkRequest(
       { guardian_profile_id: guardianId, teen_profile_id: teenProfileId },
       { onConflict: "guardian_profile_id,teen_profile_id" },
     );
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "respondToLinkRequest");
 
   // Guardian links imply indefinite visibility so the safety radar never gaps.
   const { ensureGuardianShare } = await import("./sharing.server");
@@ -335,7 +336,7 @@ export async function recordPing(teenProfileId: string, input: PingInput) {
     status_label: input.statusLabel ?? null,
     plan_id: input.planId ?? null,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "recordPing");
 
   const { data: zones } = await db
     .from("safe_zones")
@@ -777,7 +778,7 @@ export async function decideApproval(
       decided_via: "guardian",
     })
     .eq("id", approvalId);
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "decideApproval");
 
   const label =
     decision === "approved"
@@ -869,7 +870,7 @@ export async function sendDelayPing(
     minutes: input.minutes,
     new_eta: newEta,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "sendDelayPing");
 
   const { data: teen } = await db
     .from("profiles")
@@ -901,7 +902,7 @@ export async function requestCheckin(
     })
     .select("id")
     .single();
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "requestCheckin");
 
   const { data: guardian } = await db
     .from("profiles")

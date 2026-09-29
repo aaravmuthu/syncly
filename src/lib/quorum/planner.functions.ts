@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dbError } from "@/lib/db-error";
 
 export type MemberPin = {
   profileId: string;
@@ -284,7 +285,7 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "launchAiPlan");
 
     await supabase
       .from("plan_participants")

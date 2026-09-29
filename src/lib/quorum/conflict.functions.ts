@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dbError } from "@/lib/db-error";
 
 export type PlanConflict = {
   id: string;
@@ -73,7 +74,7 @@ export const flagConflict = createServerFn({ method: "POST" })
         preset?.detail ??
         "A member flagged that this doesn't work for them",
     });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "flagConflict");
 
     // The flag also means "I'm not locked in" until the group re-votes.
     if (me) {
@@ -147,7 +148,7 @@ export const castResolutionVote = createServerFn({ method: "POST" })
         { plan_id: data.planId, profile_id: me, recommendation_id: data.recommendationId },
         { onConflict: "plan_id,profile_id" },
       );
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "castResolutionVote");
 
     const { data: parts } = await supabase
       .from("plan_participants")
@@ -214,6 +215,6 @@ export const confirmAttendance = createServerFn({ method: "POST" })
       .update({ attending: data.attending, responded: true })
       .eq("plan_id", data.planId)
       .eq("profile_id", me);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "confirmAttendance");
     return { ok: true };
   });

@@ -9,6 +9,8 @@
  * left alone -- they were never scheduled.
  */
 
+import { dbError } from "@/lib/db-error";
+
 const END_GRACE_MS = 4 * 60 * 60 * 1000;
 const THROTTLE_MS = 60 * 1000;
 const LIVE = ["collecting", "recommending", "voting"] as const;
@@ -42,7 +44,7 @@ async function sweep(now: number) {
       .or(ended),
   ]);
   const failed = results.find((r) => r.error);
-  if (failed?.error) throw new Error(failed.error.message);
+  if (failed?.error) throw dbError(failed.error, "sweep");
 }
 
 /** Rejects writes to a plan that has ended, so a stale tab can't reopen it. */

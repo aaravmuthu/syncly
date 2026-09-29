@@ -7,12 +7,13 @@ export const CSP_NONCE_HEADER = "x-syncly-csp-nonce";
 /**
  * Hosts allowed to embed the app in an iframe: Lovable's editor preview
  * renders the app in a frame, everything else (clickjacking) is refused.
+ * *.lovable.app is left out on purpose: that's where anyone's published
+ * Lovable app lives, and the editor frames the preview from lovable.dev.
  */
 const FRAME_ANCESTORS = [
   "'self'",
   "https://lovable.dev",
   "https://*.lovable.dev",
-  "https://*.lovable.app",
   "https://*.lovableproject.com",
 ];
 

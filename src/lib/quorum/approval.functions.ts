@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
+import { dbError } from "@/lib/db-error";
 
 /**
  * Public, token-scoped. A parent sees exactly one plan's logistics — never the
@@ -97,7 +98,7 @@ export const respondToApproval = createServerFn({ method: "POST" })
         decided_via: "link",
       })
       .eq("id", row.id);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "respondToApproval");
 
     // A condition becomes a private constraint for that member, then the whole
     // group's options are recalculated against it.
@@ -424,7 +425,7 @@ export const parentRespondToPlan = createServerFn({ method: "POST" })
       expires_at: expires,
       decided_via: "link",
     });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "parentRespondToPlan");
 
     const { notifyPlanParticipants } = await import("./notify.server");
     await notifyPlanParticipants(plan.id, {

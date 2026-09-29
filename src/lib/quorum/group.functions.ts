@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dbError, UPLOAD_FAILED } from "@/lib/db-error";
 
 export const leaveGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -49,7 +50,7 @@ export const leaveGroup = createServerFn({ method: "POST" })
       .delete()
       .eq("group_id", data.groupId)
       .eq("profile_id", me as string);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "leaveGroup");
 
     await supabaseAdmin.from("activity_events").insert({
       group_id: data.groupId,
@@ -128,7 +129,7 @@ export const deleteGroup = createServerFn({ method: "POST" })
     // Plans, votes, members, activity and preferences cascade from these deletes.
     await supabaseAdmin.from("plans").delete().eq("group_id", data.groupId);
     const { error } = await supabaseAdmin.from("groups").delete().eq("id", data.groupId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "deleteGroup");
     return { ok: true };
   });
 
@@ -163,7 +164,7 @@ export const updateGroupLook = createServerFn({ method: "POST" })
     if (data.kind != null) patch.kind = data.kind;
     if (!Object.keys(patch).length) return { ok: true };
     const { error } = await supabase.from("groups").update(patch).eq("id", data.groupId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "updateGroupLook");
     return { ok: true };
   });
 
@@ -187,10 +188,11 @@ export const uploadGroupImage = createServerFn({ method: "POST" })
     const { error: upErr } = await supabaseAdmin.storage
       .from("avatars")
       .upload(path, bytes, { contentType, upsert: true });
-    if (upErr) throw new Error(upErr.message);
+    if (upErr) throw dbError(upErr, "uploadGroupImage", UPLOAD_FAILED);
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("avatars")
       .createSignedUrl(path, 60 * 60 * 24 * 3650);
-    if (signErr || !signed) throw new Error(signErr?.message ?? "Could not read image back");
+    if (signErr || !signed)
+      throw signErr ? dbError(signErr, "uploadGroupImage") : new Error("Could not read image back");
     return { url: signed.signedUrl };
   });

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dbError, UPLOAD_FAILED } from "@/lib/db-error";
 
 /** Finds (or creates) the 1-on-1 thread between me and another profile. */
 export const openThread = createServerFn({ method: "POST" })
@@ -28,7 +29,7 @@ export const openThread = createServerFn({ method: "POST" })
       .insert({ a_profile_id: a!, b_profile_id: b! })
       .select("id")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "openThread");
     return { threadId: row.id as string };
   });
 
@@ -170,7 +171,7 @@ export const getThread = createServerFn({ method: "GET" })
       )
       .eq("id", data.threadId)
       .maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "getThread");
     if (!thread) throw new Error("Thread not found");
 
     const peerRaw = (thread.a_profile_id as string) === mine ? thread.b : thread.a;
@@ -271,7 +272,7 @@ export const sendDirect = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "sendDirect");
     await supabase
       .from("direct_threads")
       .update({ last_message_at: new Date().toISOString() })
@@ -323,7 +324,7 @@ export const toggleReaction = createServerFn({ method: "POST" })
     const { error } = await supabase
       .from("direct_reactions")
       .insert({ message_id: data.messageId, profile_id: mine, emoji });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "toggleReaction");
     return { on: true };
   });
 
@@ -397,11 +398,13 @@ export const uploadVoiceNote = createServerFn({ method: "POST" })
     const { error: upErr } = await supabaseAdmin.storage
       .from("avatars")
       .upload(path, bytes, { contentType, upsert: true });
-    if (upErr) throw new Error(upErr.message);
+    if (upErr) throw dbError(upErr, "uploadVoiceNote", UPLOAD_FAILED);
     const { data: signed, error: signErr } = await supabaseAdmin.storage
       .from("avatars")
       .createSignedUrl(path, 60 * 60 * 24 * 3650);
     if (signErr || !signed)
-      throw new Error(signErr?.message ?? "Could not read the recording back");
+      throw signErr
+        ? dbError(signErr, "uploadVoiceNote")
+        : new Error("Could not read the recording back");
     return { url: signed.signedUrl };
   });

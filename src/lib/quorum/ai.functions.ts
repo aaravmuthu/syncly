@@ -4,6 +4,7 @@ import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MagicDraft } from "./ai.server";
 import type { PlanCategory } from "./types";
+import { dbError } from "@/lib/db-error";
 
 export type MagicPlanResult = MagicDraft & {
   /** Resolved 5-digit ZIP for the plan, when the prompt gave a usable place. */
@@ -165,7 +166,7 @@ export const applyAiCompromise = createServerFn({ method: "POST" })
       .select("window_start, window_end")
       .eq("id", data.planId)
       .maybeSingle();
-    if (readError) throw new Error(readError.message);
+    if (readError) throw dbError(readError, "applyAiCompromise");
     if (!plan) throw new Error("Plan not found");
 
     const patch: {
@@ -201,7 +202,7 @@ export const applyAiCompromise = createServerFn({ method: "POST" })
       // Status and the selected option are server-managed; the host check
       // above is what authorizes this write.
       const { error } = await supabaseAdmin.from("plans").update(patch).eq("id", data.planId);
-      if (error) throw new Error(error.message);
+      if (error) throw dbError(error, "applyAiCompromise");
     }
 
     const { notifyPlanParticipants } = await import("./notify.server");

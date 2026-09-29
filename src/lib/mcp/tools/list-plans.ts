@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { errorResult, myProfileId, supabaseForUser, textResult } from "../supabase";
+import { dbError } from "@/lib/db-error";
 
 export default defineTool({
   name: "list_plans",
@@ -37,7 +38,7 @@ export default defineTool({
     if (circleId) query = query.eq("group_id", circleId);
     if (status) query = query.eq("status", status);
     const { data, error } = await query;
-    if (error) return errorResult(error.message);
+    if (error) return errorResult(dbError(error, "mcp:list-plans").message);
     const plans = (data ?? []).map((p) => {
       const g = p.groups as unknown as { name: string; emoji: string } | null;
       return {

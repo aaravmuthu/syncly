@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { errorResult, myProfileId, supabaseForUser, textResult } from "../supabase";
+import { dbError } from "@/lib/db-error";
 
 export default defineTool({
   name: "send_circle_message",
@@ -21,7 +22,7 @@ export default defineTool({
       .insert({ group_id: circleId, sender_id: me, content, plan_id: planId ?? null })
       .select("id, created_at")
       .single();
-    if (error) return errorResult(error.message);
+    if (error) return errorResult(dbError(error, "mcp:send-circle-message").message);
     return textResult("Message sent to the circle.", { message: data });
   },
 });

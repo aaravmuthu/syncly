@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dbError } from "@/lib/db-error";
 
 /** How many spots survive the group-midpoint shortlist (see browseSpots below). */
 const GROUP_SHORTLIST_SIZE = 24;
@@ -203,7 +204,7 @@ export const addSpotToPlan = createServerFn({ method: "POST" })
         source: "picked-by-host",
       },
     } as never);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "addSpotToPlan");
 
     // The insert above only passes RLS for the plan's host; plan status is
     // server-managed, so open voting through the service role.
@@ -264,7 +265,7 @@ export const saveSpot = createServerFn({ method: "POST" })
       lat: spot.lat,
       lon: spot.lon,
     } as never);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "saveSpot");
     return { ok: true };
   });
 
@@ -281,7 +282,7 @@ export const unsaveSpot = createServerFn({ method: "POST" })
       .delete()
       .eq("profile_id", me as string)
       .eq("key", data.key);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "unsaveSpot");
     return { ok: true };
   });
 
@@ -294,7 +295,7 @@ export const listSavedSpots = createServerFn({ method: "GET" })
       .from("saved_places")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "listSavedSpots");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: profile } = await supabaseAdmin

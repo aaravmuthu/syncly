@@ -7,6 +7,7 @@ import { buildTransportPlan, rankOptions, type MemberInput } from "./engine";
 import { isOutdoorOption, weatherPenalty, type Forecast } from "./weather";
 import { notifyPlanParticipants } from "./notify.server";
 import type { ConstraintPayload, PlanCategory, ScoreBreakdown } from "./types";
+import { dbError } from "@/lib/db-error";
 
 export async function regenerateRecommendations(planId: string, shuffle = 0) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -234,7 +235,7 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
       })),
     )
     .select("id, feasible");
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "regenerateRecommendations");
 
   const best = ranked[0];
   const stillFinalizable = plan.status === "finalized" && ranked.some((r) => r.feasible);
