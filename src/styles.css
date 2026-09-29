@@ -947,21 +947,38 @@
   );
 }
 @media (prefers-reduced-motion: reduce) {
-  /* The reference's still frame, from first paint: these beat the
-     server-rendered start values before hydration has read the preference. */
+  /* The finished hero as a plain column, from first paint: headline, then the
+     upright tablet, both fully in view. These beat the server-rendered start
+     values before hydration has read the preference. The scroll-scrubbed
+     stage can't hold both in one screen, so it stops being sticky. */
   .scroll-hero {
-    height: 100svh !important;
+    height: auto !important;
   }
-  .hero-device {
-    transform: translate3d(-50%, -50%, 0) translateY(50svh) scale(0.8) !important;
+  .hero-stage {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .hero-frame {
+    position: relative !important;
+    height: auto !important;
+    overflow: visible !important;
+    perspective: none !important;
+    padding: calc(var(--hero-nav) + 7svh) 0 3rem;
+  }
+  .hero-rings {
+    display: none;
   }
   .hero-headline {
+    position: static !important;
     opacity: 1 !important;
     transform: none !important;
     visibility: visible !important;
   }
-  .hero-stage {
-    opacity: 1 !important;
+  .hero-device {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    margin: 2.5rem auto 0;
     transform: none !important;
   }
   .hero-off,

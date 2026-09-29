@@ -96,7 +96,9 @@ export function ScrollHero({ children }: { children: ReactNode }) {
   // 34° back and 3° off level, all on one ease-out over the first 62%.
   const settle = useTransform(() => (still.get() ? 0 : seg(p.get(), 0, 0.62)));
   const deviceTransform = useTransform(() => {
-    if (still.get()) return "translate3d(-50%,-50%,0) translateY(50svh) scale(0.8)";
+    // Reduced motion: the finished pose, upright and in place (styles.css
+    // lays it out in the page flow).
+    if (still.get()) return "none";
     const e = settle.get();
     const inv = 1 - e;
     return `translate3d(-50%,-50%,0) translateY(${(inv * 54).toFixed(3)}svh) scale(${(0.8 + 0.2 * e).toFixed(4)}) rotateX(${(TILT * inv).toFixed(3)}deg) rotateZ(${(-3 * inv).toFixed(3)}deg)`;
@@ -131,13 +133,13 @@ export function ScrollHero({ children }: { children: ReactNode }) {
       style={{ marginTop: "calc(-1 * var(--hero-nav))" }}
     >
       <div
-        className="sticky top-0 h-svh overflow-hidden"
+        className="hero-frame sticky top-0 h-svh overflow-hidden"
         style={{ perspective: "1800px", perspectiveOrigin: "50% 30%" }}
       >
         <motion.div
           aria-hidden
           style={{ transform: ringsTransform }}
-          className="absolute top-[calc(50%+var(--hero-nav)/2)] left-1/2 size-0 will-change-transform"
+          className="hero-rings absolute top-[calc(50%+var(--hero-nav)/2)] left-1/2 size-0 will-change-transform"
         >
           <span className="absolute -top-[36vmax] -left-[36vmax] size-[72vmax] rounded-full border border-foreground/[0.07]" />
           <span className="absolute -top-[54vmax] -left-[54vmax] size-[108vmax] rounded-full border border-foreground/[0.05]" />
