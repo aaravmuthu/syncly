@@ -351,7 +351,7 @@ function PlanPage() {
             <p className="text-sm text-muted-foreground">
               {data.plan.status === "completed"
                 ? "It's in the books. Start a new one from your squad when you're ready."
-                : "Its time passed before anyone locked it in, so it's closed to answers and votes."}
+                : "Nobody locked it in before its time came and went, so it's closed to answers and votes."}
             </p>
           </Card>
         ) : data.plan.created_by === data.meProfileId ? (

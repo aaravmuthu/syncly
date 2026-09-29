@@ -13,6 +13,7 @@ import { createPlan } from "@/lib/quorum/plan.functions";
 import { getPlanDefaults, previewFairPointVenues } from "@/lib/quorum/planner.functions";
 import type { PlanCategory } from "@/lib/quorum/types";
 import { VIBES, vibeById } from "@/lib/quorum/vibes";
+import { localDateKey, localToInstant } from "@/lib/quorum/plan-time";
 
 /* ---------------------------------------------------------------- */
 /* Step 1 vibes                                                      */
@@ -207,14 +208,14 @@ export function PlanWizard({
     if (!vibe) return;
     const spot = top3.find((v) => v.key === picked);
     const today = new Date();
-    const date = today.toISOString().slice(0, 10);
+    const date = localDateKey(today);
     create.mutate({
       data: {
         groupId,
         title: spot ? `${vibe.emoji} ${spot.title}` : `${vibe.emoji} ${vibe.title}`,
         category: vibe.category,
-        windowStart: `${date}T${startTime}:00`,
-        windowEnd: `${date}T${endTime}:00`,
+        windowStart: localToInstant(date, startTime),
+        windowEnd: localToInstant(date, endTime),
         zipCode: defaults.data?.fairPoint?.zip ?? null,
         foodVibe: activeVibeId ?? vibe.vibe,
         radiusMiles: 15,
