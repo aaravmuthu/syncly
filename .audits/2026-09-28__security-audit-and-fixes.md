@@ -20,7 +20,10 @@ No secret values appear in this file.
 | 11 | User approved **"do 3 and 4"** (dependencies, rate limits). Branch `security/deps-and-ai-limits`, **PR #7** | commit `8c07baa` |
 | 12 | Quota SQL dry-run against prod inside a rolled-back transaction, then migration `20260928000300` applied and recorded | applied |
 | 13 | User merged PR #7 | merged `db3f157` |
-| 14 | User approved **"do the low cleanup and update the log"**. Branch `security/low-cleanup`, **PR #8** | open |
+| 14 | User approved **"do the low cleanup and update the log"**. Branch `security/low-cleanup`, **PR #8** | commit `da5735e` |
+| 15 | User merged PR #8 and published in Lovable | merged `8fc5617` |
+| 16 | User confirmed the Lovable editor preview still loads. New headers and the OPTIONS 405 confirmed live on syncly.website with `curl` | pass |
+| 17 | This final log update, **PR #9** | — |
 
 The unrelated WIP in `src/routes/demo.tsx` was left uncommitted and untouched throughout.
 
@@ -130,6 +133,11 @@ The unrelated WIP in `src/routes/demo.tsx` was left uncommitted and untouched th
   - Permissions-Policy adds `geolocation=(self), microphone=(self)`.
 - **Preflights.** `OPTIONS /_serverFn/*` now returns `405` with `Allow: GET, POST`. TanStack's handler used to throw a 500 on it.
 - **Checks.** `tsc` and eslint are clean. The prod build ran under wrangler: the pages returned 200, the new headers were present, and OPTIONS returned 405.
+- **Live check after publish** (`curl https://syncly.website/`):
+  - `frame-ancestors 'self' https://lovable.dev https://*.lovable.dev https://*.lovableproject.com`;
+  - `x-frame-options: SAMEORIGIN`;
+  - `permissions-policy: camera=(), payment=(), usb=(), geolocation=(self), microphone=(self)`;
+  - `OPTIONS /_serverFn/x` returns `405`.
 
 ## Migrations (all applied to prod and recorded)
 
@@ -155,7 +163,22 @@ Each file was applied with `supabase db query --linked -f` (all except `000200` 
 - The approval flow was not exercised end to end with a real teen and guardian account. The DB rules were checked by querying as the `authenticated` role.
 - The AI limit was not hit through the real UI, and the address pickers weren't clicked while signed in.
 - The friendlier error messages weren't triggered through the UI.
-- The Lovable editor preview hasn't been checked since `*.lovable.app` was dropped from `frame-ancestors`. **Check it after publishing PR #8.** If the preview refuses to load, add that host back in `src/lib/csp.ts`.
+- ~~The Lovable editor preview hasn't been checked since `*.lovable.app` was dropped.~~ **Resolved:** after the PR #8 publish, the user confirmed the preview still loads, so the editor frames the app from `lovable.dev`.
+
+## Final state (end of 2026-09-28)
+
+- **Shipped and live:** PRs #4, #5, #6, #7 and #8, all merged to main and published in Lovable.
+- **Prod database:** all four migrations applied and recorded (`20260928000000` through `20260928000300`).
+- **Every code-side audit finding is fixed.** The exception is one low esbuild advisory that's upstream in `@lovable.dev/mcp-js`.
+- **Only the unrelated `src/routes/demo.tsx` WIP** remains uncommitted locally.
+
+## Deploy lessons
+
+- Run `gh pr merge` with `--repo mks909/remix-of-syncly`. Without it, running from outside the repo fails.
+- A migration that breaks old code, like revoking the writes it makes, goes on only **after** the Lovable publish. Additive migrations can go first.
+- Publishing before the merge ships the old code. Re-publish after the merge lands.
+- A column added to a table with column-level grants needs its own explicit grant.
+- Dry-run risky SQL inside a transaction that raises or rolls back, then confirm nothing was left behind.
 
 ## Still open
 
