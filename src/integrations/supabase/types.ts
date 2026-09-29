@@ -1765,6 +1765,10 @@ export type Database = {
         Args: { _other_profile_id: string };
         Returns: boolean;
       };
+      take_ai_call: {
+        Args: { _feature: string; _limit: number; _user_id: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       approval_status: "pending" | "approved" | "approved_with_condition" | "declined" | "expired";

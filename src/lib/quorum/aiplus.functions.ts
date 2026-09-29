@@ -129,6 +129,8 @@ export const askPlanConcierge = createServerFn({ method: "POST" })
       })),
     };
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "plan_concierge");
     const { conciergeReply } = await import("./aiplus.server");
     const { answer, action } = await conciergeReply(facts, data.history ?? [], question);
     return {
@@ -225,6 +227,8 @@ export const getSquadDigest = createServerFn({ method: "GET" })
         }),
     };
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "squad_digest");
     const { writeSquadDigest } = await import("./aiplus.server");
     return writeSquadDigest(facts);
   });
@@ -330,6 +334,8 @@ export const vibeSearchSpots = createServerFn({ method: "POST" })
       };
     });
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "vibe_search");
     const { rankByVibe } = await import("./aiplus.server");
     const { ranks, aiGenerated } = await rankByVibe(
       query,
@@ -428,6 +434,8 @@ export const getGuardianAiSummary = createServerFn({ method: "POST" })
       })),
     };
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "guardian_summary");
     const { writeGuardianSummary } = await import("./aiplus.server");
     return writeGuardianSummary(facts);
   });
@@ -565,6 +573,8 @@ export const askSyncly = createServerFn({ method: "POST" })
       })),
     };
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "ask_syncly");
     const { synclyReply } = await import("./aiplus.server");
     const reply = await synclyReply(facts, data.history ?? [], question);
 

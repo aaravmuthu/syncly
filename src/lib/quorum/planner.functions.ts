@@ -241,6 +241,8 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       .eq("group_id", data.groupId);
     if (!members?.length) throw new Error("Forbidden");
 
+    const { assertAiQuota } = await import("@/lib/ai-quota.server");
+    await assertAiQuota(context.userId, "launch_ai_plan");
     const { parseMagicPrompt } = await import("./ai.server");
     const draft = await parseMagicPrompt(prompt, new Date().toISOString().slice(0, 10));
 

@@ -75,7 +75,11 @@ export async function buildCompromiseFacts(planId: string): Promise<CompromiseFa
   });
 }
 
-export async function buildPlanBSuggestion(planId: string): Promise<PlanBSuggestion> {
+/** `userId` is charged one AI call, only when a pitch is actually written. */
+export async function buildPlanBSuggestion(
+  planId: string,
+  userId: string,
+): Promise<PlanBSuggestion> {
   const none: PlanBSuggestion = { needed: false, pitch: null, swapToId: null, swapToTitle: null };
   const ctx = await loadPlanContext(planId);
   if (!ctx.plan || ctx.recs.length === 0) return none;
@@ -111,6 +115,8 @@ export async function buildPlanBSuggestion(planId: string): Promise<PlanBSuggest
     ) ??
     null;
 
+  const { assertAiQuota } = await import("@/lib/ai-quota.server");
+  await assertAiQuota(userId, "plan_b_pitch");
   const { writePlanBPitch } = await import("./ai.server");
   const pitch = await writePlanBPitch({
     forecast,
