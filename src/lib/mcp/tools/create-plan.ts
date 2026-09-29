@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { errorResult, myProfileId, supabaseForUser, textResult } from "../supabase";
+import { dbError } from "@/lib/db-error";
 
 export default defineTool({
   name: "create_plan",
@@ -39,7 +40,7 @@ export default defineTool({
       })
       .select("id, title, status")
       .single();
-    if (error) return errorResult(error.message);
+    if (error) return errorResult(dbError(error, "mcp:create-plan").message);
 
     await supabase
       .from("plan_participants")

@@ -1,5 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { errorResult, myProfileId, supabaseForUser, textResult } from "../supabase";
+import { dbError } from "@/lib/db-error";
 
 export default defineTool({
   name: "list_circles",
@@ -16,7 +17,7 @@ export default defineTool({
       .from("group_members")
       .select("role, groups(id, name, emoji, kind, purpose)")
       .eq("profile_id", me);
-    if (error) return errorResult(error.message);
+    if (error) return errorResult(dbError(error, "mcp:list-circles").message);
     const circles = (data ?? []).map((row) => {
       const g = row.groups as unknown as {
         id: string;

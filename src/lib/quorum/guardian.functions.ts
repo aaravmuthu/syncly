@@ -3,6 +3,7 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveMyProfileId } from "./me";
+import { dbError } from "@/lib/db-error";
 
 export const getMySyncCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -43,7 +44,7 @@ export const unlinkGuardian = createServerFn({ method: "POST" })
   .inputValidator(z.object({ linkId: v.id }))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("guardian_links").delete().eq("id", data.linkId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "unlinkGuardian");
     return { ok: true };
   });
 
@@ -57,7 +58,7 @@ export const getMyGuardians = createServerFn({ method: "GET" })
         "id, relation, created_at, guardian:profiles!guardian_links_guardian_profile_id_fkey(display_name, avatar_emoji, avatar_url)",
       )
       .eq("teen_profile_id", me);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "getMyGuardians");
     return data ?? [];
   });
 
@@ -80,7 +81,7 @@ export const setLocationSharing = createServerFn({ method: "POST" })
       .from("profiles")
       .update({ location_sharing_enabled: data.enabled })
       .eq("id", me);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "setLocationSharing");
     return { ok: true };
   });
 
@@ -162,7 +163,7 @@ export const addSafeZone = createServerFn({ method: "POST" })
       lon: data.lon,
       radius_m: data.radiusM,
     });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "addSafeZone");
     return { ok: true };
   });
 
@@ -171,7 +172,7 @@ export const removeSafeZone = createServerFn({ method: "POST" })
   .inputValidator(z.object({ zoneId: v.id }))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("safe_zones").delete().eq("id", data.zoneId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "removeSafeZone");
     return { ok: true };
   });
 
@@ -220,7 +221,7 @@ export const getMyCheckins = createServerFn({ method: "GET" })
       .eq("teen_profile_id", me)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "getMyCheckins");
     return data ?? [];
   });
 
@@ -286,7 +287,7 @@ export const saveVehicleDetails = createServerFn({ method: "POST" })
         eta_minutes: data.etaMinutes ?? null,
       })
       .eq("id", data.assignmentId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "saveVehicleDetails");
     return { ok: true };
   });
 
@@ -299,7 +300,7 @@ export const markAlertsRead = createServerFn({ method: "POST" })
       .update({ read: true })
       .eq("guardian_profile_id", me)
       .eq("read", false);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "markAlertsRead");
     return { ok: true };
   });
 

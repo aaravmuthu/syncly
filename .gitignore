@@ -16,6 +16,10 @@ dist-ssr
 .nitro
 *.local
 
+# Env files: only the publishable .env and the template are committed
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

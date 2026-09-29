@@ -11,6 +11,7 @@ import { motionEmoji, motionLabel } from "./sharing";
 import type { ShareMode } from "./sharing";
 import type { FriendProfile, FriendTelemetry, MutualCircle, SharedPlan } from "./friend";
 import { realName } from "./names";
+import { dbError } from "@/lib/db-error";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -60,7 +61,7 @@ export async function saveNickname(
       .delete()
       .eq("owner_profile_id", ownerProfileId)
       .eq("target_profile_id", targetProfileId);
-    if (error) throw new Error(error.message);
+    if (error) throw dbError(error, "saveNickname");
     return { nickname: null as string | null };
   }
   const { error } = await db
@@ -69,7 +70,7 @@ export async function saveNickname(
       { owner_profile_id: ownerProfileId, target_profile_id: targetProfileId, nickname: clean },
       { onConflict: "owner_profile_id,target_profile_id" },
     );
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "saveNickname");
   return { nickname: clean };
 }
 
@@ -86,7 +87,7 @@ export async function setContactHidden(
     .eq("owner_profile_id", ownerProfileId)
     .eq("viewer_profile_id", viewerProfileId)
     .select("owner_profile_id");
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "setContactHidden");
   if (!data?.length) throw new Error("You aren't sharing your location with them yet");
   return { hidden };
 }

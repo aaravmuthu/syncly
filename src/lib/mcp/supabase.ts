@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { ToolContext } from "@lovable.dev/mcp-js";
+import { dbError } from "@/lib/db-error";
 
 type RuntimeGlobals = typeof globalThis & {
   Deno?: { env?: { get?: (name: string) => string | undefined } };
@@ -63,7 +64,7 @@ export function supabaseForUser(ctx: ToolContext) {
 /** Resolves the caller's Syncly profile row id from their token. */
 export async function myProfileId(supabase: ReturnType<typeof supabaseForUser>): Promise<string> {
   const { data, error } = await supabase.rpc("my_profile_id");
-  if (error) throw new Error(error.message);
+  if (error) throw dbError(error, "myProfileId");
   if (!data)
     throw new Error(
       "No Syncly profile exists for this account yet. Finish onboarding in the app first.",

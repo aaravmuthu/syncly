@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { errorResult, myProfileId, supabaseForUser, textResult } from "../supabase";
+import { dbError } from "@/lib/db-error";
 
 export default defineTool({
   name: "get_plan",
@@ -21,7 +22,7 @@ export default defineTool({
       )
       .eq("id", planId)
       .maybeSingle();
-    if (error) return errorResult(error.message);
+    if (error) return errorResult(dbError(error, "mcp:get-plan").message);
     if (!plan) return errorResult("That plan does not exist or you cannot see it.");
 
     const [{ data: parts }, { data: recs }, { data: votes }, { data: cars }] = await Promise.all([

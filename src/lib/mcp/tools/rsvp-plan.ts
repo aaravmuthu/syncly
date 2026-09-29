@@ -1,6 +1,7 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { errorResult, myProfileId, supabaseForUser, textResult } from "../supabase";
+import { dbError } from "@/lib/db-error";
 
 export default defineTool({
   name: "rsvp_plan",
@@ -36,7 +37,7 @@ export default defineTool({
       : await supabase
           .from("plan_participants")
           .insert({ plan_id: planId, profile_id: me, attending, responded: true });
-    if (error) return errorResult(error.message);
+    if (error) return errorResult(dbError(error, "mcp:rsvp-plan").message);
 
     return textResult(attending ? "Marked you as going." : "Marked you as not going.", {
       planId,

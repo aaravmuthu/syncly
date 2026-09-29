@@ -1,6 +1,6 @@
 # Syncly security audit + fixes: 2026-09-28
 
-This log covers one session: a read-only 20-item security audit, followed by fixes 1 and 2, which the user approved.
+This log covers one session: a read-only 20-item security audit, then the fixes the user approved in three batches: 1+2 (approvals and plan state), 3+4 (dependencies and AI limits), and the low-severity cleanup.
 No secret values appear in this file.
 
 ## Timeline
@@ -16,33 +16,38 @@ No secret values appear in this file.
 | 7 | User published in Lovable, then applied migration `20260928000100` (part 2) to prod and recorded it | applied |
 | 8 | Post-apply check found a regression (see below). Fix migration `20260928000200` applied and recorded. | applied |
 | 9 | Fix committed on branch `fix/approval-decided-via-grant`, **PR #5**, merged | merged `e0478e0` |
+| 10 | This log committed, **PR #6** | merged `aab6188` |
+| 11 | User approved **"do 3 and 4"** (dependencies, rate limits). Branch `security/deps-and-ai-limits`, **PR #7** | commit `8c07baa` |
+| 12 | Quota SQL dry-run against prod inside a rolled-back transaction, then migration `20260928000300` applied and recorded | applied |
+| 13 | User merged PR #7 | merged `db3f157` |
+| 14 | User approved **"do the low cleanup and update the log"**. Branch `security/low-cleanup`, **PR #8** | open |
 
-Local `main` is synced to `e0478e0`. The unrelated WIP in `src/routes/demo.tsx` was left uncommitted and untouched.
+The unrelated WIP in `src/routes/demo.tsx` was left uncommitted and untouched throughout.
 
 ## Audit results
 
 | # | Item | Status | Severity | Now |
 |---|---|---|---|---|
 | 1 | Hide API keys | PASS | — | |
-| 2 | Env variables | FAIL | Low | open |
+| 2 | Env variables | FAIL | Low | **fixed** (PR #8) |
 | 3 | Keys in git | PASS | — | nothing needs rotating |
 | 4 | Admin routes | PASS | — | |
-| 5 | Auth on endpoints | FAIL | Low | open |
+| 5 | Auth on endpoints | FAIL | Low | **fixed** (PR #7, #8) |
 | 6 | User permissions (IDOR) | FAIL | High | **fixed** |
 | 7 | Input validation | PASS | — | |
 | 8 | XSS | PASS | — | |
 | 9 | SQL injection | PASS | — | |
 | 10 | DB rules (RLS) | FAIL | High | **fixed** |
-| 11 | Rate limiting | FAIL | Medium | open |
-| 12 | Spend cap | FAIL | Medium | open |
+| 11 | Rate limiting | FAIL | Medium | AI capped (PR #7); Auth CAPTCHA is a dashboard step |
+| 12 | Spend cap | FAIL | Medium | per-user AI cap (PR #7); provider caps are dashboard steps |
 | 13 | File uploads | PASS | — | |
 | 14 | CSRF | PASS | — | |
 | 15 | CORS | PASS | — | |
 | 16 | HTTPS | PASS | — | |
-| 17 | Security headers | FAIL | Low | open |
+| 17 | Security headers | FAIL | Low | **fixed** (PR #8) |
 | 18 | Cookies | N/A | — | session is in localStorage |
-| 19 | Debug mode | FAIL | Low | open |
-| 20 | Prod settings | FAIL | Medium | open |
+| 19 | Debug mode | FAIL | Low | **fixed** (PR #8) |
+| 20 | Prod settings | FAIL | Medium | deps fixed (PR #7); dev/prod split open |
 
 ### Findings
 
@@ -95,6 +100,37 @@ Local `main` is synced to `e0478e0`. The unrelated WIP in `src/routes/demo.tsx` 
 - **Still allowed.** Any member can still finalize through the app, because every member sees "Lock this in". Only direct REST tampering is blocked.
 - **Why triggers.** Triggers were chosen over column grants on `plans` and `profiles` so that new columns don't need grant updates.
 
+## Fix 3: dependencies (PR #7)
+
+- `overrides` in `package.json`: `fast-uri ^3.1.6`, `hono ^4.12.34`, `js-yaml ^4.3.2`, `nanoid ^3.3.18`, `qs ^6.16.0`. All stay on their current major versions. `vitest` went to `^4.1.11`.
+- `bun audit`: **18 → 1**. The one left is low: esbuild's Windows-only dev-server file read. That esbuild is pinned inside `@lovable.dev/mcp-js`, so forcing a newer one could break it.
+
+## Fix 4: AI limits (PR #7)
+
+- **Counter.** An `ai_usage` table (RLS on, no user grants) holds one row per user per UTC day with a per-feature breakdown. The `take_ai_call(user, feature, limit)` security-definer RPC increments it with one atomic upsert and can be run by service_role only.
+- **Check.** `assertAiQuota(userId, feature)` in `src/lib/ai-quota.server.ts` runs right before each of the 11 model calls. The Plan B pitch is charged only when one is actually written.
+- **Limit.** 100 calls per day. Past that, the user sees "You've hit today's AI limit. It resets at midnight UTC." in the existing toasts.
+- **Fails open.** If the counter errors, the call is logged and allowed. It's abuse protection, not access control.
+- **Location lookups.** `geocodeZip`, `suggestPlaces` and `reverseZip` now require sign-in. Every caller is under `_authenticated/`.
+- **Dry run.** The SQL was run against prod inside a transaction that was rolled back. With a limit of 2 it returned `true, true, false` and `calls=3`, and nothing was left behind.
+
+## Low cleanup (PR #8)
+
+- **Raw DB errors.** A new `src/lib/db-error.ts` has `dbError(error, where, message?)`. It logs `[db:<function>] <code> <message>` on the server and returns a plain error:
+  - `23505` becomes "That already exists.";
+  - `42501` becomes "You don't have permission to do that.";
+  - everything else becomes "Something went wrong. Please try again.";
+  - storage upload failures say "Couldn't upload that file. Use an image or recording under 8 MB."
+  The audit counted 56 sites; the full sweep found **74** across `src/lib`, including 6 MCP tools and the plan-lifecycle sweep. Before rewriting, I checked that no UI code matches on DB error text and that the only messages the database raises on purpose come from the guard triggers. The two client-side route files that show Supabase Auth errors were left alone: those messages come from the Auth API, not the database.
+- **Template function.** `src/lib/api/example.functions.ts` (`getGreeting`, which exposed `NODE_ENV`) was deleted. Nothing imported it.
+- **Env files.** Added `.env.example`, listing variable names only. `.gitignore` now ignores `.env.*` except `.env.example`. The committed `.env`, which holds publishable values only, is unaffected.
+- **Framing.** `https://*.lovable.app` was removed from `frame-ancestors` (`src/lib/csp.ts`), since anyone's published Lovable app lives there. `lovable.dev`, `*.lovable.dev` and `*.lovableproject.com` stay, so the editor preview keeps working.
+- **Headers** (`src/server.ts`):
+  - `X-Frame-Options: SAMEORIGIN`, a legacy fallback that CSP-aware browsers ignore;
+  - Permissions-Policy adds `geolocation=(self), microphone=(self)`.
+- **Preflights.** `OPTIONS /_serverFn/*` now returns `405` with `Allow: GET, POST`. TanStack's handler used to throw a 500 on it.
+- **Checks.** `tsc` and eslint are clean. The prod build ran under wrangler: the pages returned 200, the new headers were present, and OPTIONS returned 405.
+
 ## Migrations (all applied to prod and recorded)
 
 | File | Contents | When applied |
@@ -102,9 +138,10 @@ Local `main` is synced to `e0478e0`. The unrelated WIP in `src/routes/demo.tsx` 
 | `20260928000000_approval_source_and_profile_guards.sql` | `decided_via`, the expiry constraint, the profiles trigger, the participants policy | before publish: additive and safe with the old code |
 | `20260928000100_server_only_approvals_and_plan_state.sql` | revoke approval writes, host-only plan update, the plans trigger | after publish, since it breaks the old code |
 | `20260928000200_grant_decided_via_select.sql` | `grant select (decided_via) on parent_approvals to authenticated` | regression fix |
+| `20260928000300_ai_usage_quota.sql` | the `ai_usage` table and the `take_ai_call` RPC | before the PR #7 publish; it's additive |
 
-Each file was applied with `supabase db query --linked -f` (the first two were wrapped in `begin`/`commit`) and then recorded with `supabase migration repair --status applied <version> --linked`.
-`types.ts` got `decided_via` by hand; a freshly generated copy matched.
+Each file was applied with `supabase db query --linked -f` (all except `000200` were wrapped in `begin`/`commit`) and then recorded with `supabase migration repair --status applied <version> --linked`.
+`types.ts` got `decided_via` and `take_ai_call` by hand; freshly generated copies matched both.
 
 ## Regression found and fixed
 
@@ -116,17 +153,16 @@ Each file was applied with `supabase db query --linked -f` (the first two were w
 ## Verification not done
 
 - The approval flow was not exercised end to end with a real teen and guardian account. The DB rules were checked by querying as the `authenticated` role.
+- The AI limit was not hit through the real UI, and the address pickers weren't clicked while signed in.
+- The friendlier error messages weren't triggered through the UI.
+- The Lovable editor preview hasn't been checked since `*.lovable.app` was dropped from `frame-ancestors`. **Check it after publishing PR #8.** If the preview refuses to load, add that host back in `src/lib/csp.ts`.
 
-## Remaining fix plan (needs user approval)
+## Still open
 
-1. **Dependencies.** `bun update` the MCP SDK, `@lovable.dev/mcp-js`, `ajv`, `js-yaml` and `nanoid`; add overrides for `fast-uri` ≥3.1.6, `hono` ≥4.12.34 and `qs`; then re-run `bun audit`, `tsc` and the wrangler build.
-2. **Rate limits and spend.**
-   - Code: an `ai_usage` table plus an `assertAiQuota(userId, feature)` helper allowing about 30 calls per user per day. Add auth to the three location functions.
-   - Dashboards (user): Supabase Auth CAPTCHA and rate limits, a Google Cloud budget cap, a URL restriction on the Mapbox token, a Geoapify cap.
-3. **Dev/prod split.** A second Supabase project for local dev (dashboard step for the user), then point `.env.local` at it.
-4. **Low cleanup:**
-   - delete `api/example.functions.ts`;
-   - add `.env.example` and `.gitignore` rules;
-   - add a generic error helper to replace the 56 raw error throws;
-   - narrow `frame-ancestors` (test the Lovable preview first);
-   - add `X-Frame-Options` and a Permissions-Policy for geolocation and the microphone.
+1. **Dev/prod split** (Medium). This needs a second Supabase project for local dev, which is a dashboard step for the user. Then point `.env.local` at it.
+2. **Dashboard settings** (user):
+   - Supabase Auth CAPTCHA (Turnstile) and a review of the Auth rate limits;
+   - a Google Cloud budget alert or cap;
+   - URL-restrict the Mapbox token to syncly.website;
+   - a Geoapify usage cap.
+3. **esbuild low advisory.** It clears when `@lovable.dev/mcp-js` updates its esbuild.
