@@ -50,7 +50,10 @@ function TokenApproval({ token }: { token: string }) {
   const fetchApproval = useServerFn(getApproval);
   const q = useQuery({
     queryKey: ["approval", token],
-    queryFn: () => fetchApproval({ data: { token } }),
+    queryFn: () =>
+      fetchApproval({
+        data: { token, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      }),
   });
   const [condition, setCondition] = useState("");
   const [error, setError] = useState<string | null>(null);

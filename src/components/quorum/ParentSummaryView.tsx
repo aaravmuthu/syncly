@@ -14,7 +14,14 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
   const fetchSummary = useServerFn(getParentSummary);
   const q = useQuery({
     queryKey: ["parent-summary", planId, sig],
-    queryFn: () => fetchSummary({ data: { planId, sig } }),
+    queryFn: () =>
+      fetchSummary({
+        data: {
+          planId,
+          sig,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      }),
     retry: false,
   });
   const [note, setNote] = useState("");

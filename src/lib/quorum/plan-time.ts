@@ -46,6 +46,39 @@ export function zonedToInstant(date: string, time: string, timeZone: string): st
   return new Date(ms).toISOString();
 }
 
+/**
+ * Wall-clock pieces of an ISO instant in a zone. The parent-approval pages are
+ * public (no signed-in profile whose zone we could trust), so their servers
+ * format the plan's `timestamptz` values with the timezone the viewer's
+ * browser reports instead of slicing the UTC string.
+ */
+const zonedParts = (iso: string, timeZone: string) =>
+  Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+      .formatToParts(new Date(iso))
+      .map((p) => [p.type, p.value]),
+  ) as { year: string; month: string; day: string; hour: string; minute: string };
+
+/** HH:MM wall clock of an ISO instant in a zone. */
+export function zonedClockTime(iso: string, timeZone: string): string {
+  const p = zonedParts(iso, timeZone);
+  return `${p.hour}:${p.minute}`;
+}
+
+/** YYYY-MM-DD calendar day of an ISO instant in a zone. */
+export function zonedDateKey(iso: string, timeZone: string): string {
+  const p = zonedParts(iso, timeZone);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
 /** True for a value Intl accepts as a zone name. */
 export function isValidTimeZone(tz: string): boolean {
   try {

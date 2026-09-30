@@ -2,13 +2,26 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { dbError } from "@/lib/db-error";
+import { isValidTimeZone, zonedClockTime, zonedDateKey } from "./plan-time";
+
+/**
+ * These handlers are public (token-signed, no signed-in profile), so the only
+ * trustworthy local clock is the one the viewer's browser reports. Plan times
+ * are stored as UTC instants; slicing their UTC string shows the wrong clock
+ * for anyone west of UTC, so each read formats with the viewer's zone and
+ * falls back to UTC when the browser didn't send a valid one.
+ */
+const viewerTz = (tz: string | undefined) =>
+  tz && isValidTimeZone(tz) ? tz : "UTC";
 
 /**
  * Public, token-scoped. A parent sees exactly one plan's logistics — never the
  * group's members, private answers, or anything else about their child's account.
  */
 export const getApproval = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ token: v.token }))
+  .inputValidator(
+    z.object({ token: v.token, timeZone: z.string().max(64).optional() }),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
@@ -50,6 +63,7 @@ export const getApproval = createServerFn({ method: "GET" })
       .select("car_label, driver_label")
       .eq("plan_id", row.plan_id);
 
+    const tz = viewerTz(data.timeZone);
     return {
       status: row.status,
       conditionText: row.condition_text,
@@ -57,7 +71,7 @@ export const getApproval = createServerFn({ method: "GET" })
       childName: profile?.display_name ?? "Your child",
       planTitle: plan?.title ?? "A plan",
       category: plan?.category ?? "",
-      date: plan?.window_start ?? null,
+      date: plan?.window_start ? zonedDateKey(plan.window_start, tz) : null,
       details,
       cars: cars ?? [],
     };
@@ -200,7 +214,9 @@ export type ParentSummary = {
  * curfew and home-distance.
  */
 export const getParentSummary = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ planId: v.id, sig: v.token }))
+  .inputValidator(
+    z.object({ planId: v.id, sig: v.token, timeZone: z.string().max(64).optional() }),
+  )
   .handler(async ({ data }): Promise<ParentSummary | null> => {
     const { verifyPlanSummarySig } = await import("./summary-link.server");
     if (!verifyPlanSummarySig(data.planId, data.sig)) return null;
@@ -213,6 +229,7 @@ export const getParentSummary = createServerFn({ method: "GET" })
       .eq("id", data.planId)
       .maybeSingle();
     if (!plan) return null;
+    const tz = viewerTz(data.timeZone);
 
     const { data: parts } = await supabaseAdmin
       .from("plan_participants")
@@ -268,9 +285,9 @@ export const getParentSummary = createServerFn({ method: "GET" })
       }
     }
     if (!startTime && plan.window_start)
-      startTime = new Date(plan.window_start).toISOString().slice(11, 16);
+      startTime = zonedClockTime(plan.window_start, tz);
     if (!endTime && plan.window_end)
-      endTime = new Date(plan.window_end).toISOString().slice(11, 16);
+      endTime = zonedClockTime(plan.window_end, tz);
 
     // Per-member curfew + distance-from-home, computed once the venue and end
     // time are known.
@@ -365,7 +382,7 @@ export const getParentSummary = createServerFn({ method: "GET" })
       title: plan.title,
       category: plan.category,
       status: plan.status,
-      date: plan.window_start ? plan.window_start.slice(0, 10) : null,
+      date: plan.window_start ? zonedDateKey(plan.window_start, tz) : null,
       startTime,
       endTime,
       curfewLimit,
