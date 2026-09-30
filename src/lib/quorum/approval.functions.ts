@@ -229,6 +229,7 @@ export const getParentSummary = createServerFn({ method: "GET" })
       .eq("id", data.planId)
       .maybeSingle();
     if (!plan) return null;
+    const tz = viewerTz(data.timeZone);
 
     const { data: parts } = await supabaseAdmin
       .from("plan_participants")
