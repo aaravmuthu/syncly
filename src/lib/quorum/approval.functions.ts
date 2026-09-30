@@ -19,7 +19,9 @@ const viewerTz = (tz: string | undefined) =>
  * group's members, private answers, or anything else about their child's account.
  */
 export const getApproval = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ token: v.token }))
+  .inputValidator(
+    z.object({ token: v.token, timeZone: z.string().max(64).optional() }),
+  )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
