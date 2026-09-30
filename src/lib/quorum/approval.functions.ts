@@ -382,7 +382,7 @@ export const getParentSummary = createServerFn({ method: "GET" })
       title: plan.title,
       category: plan.category,
       status: plan.status,
-      date: plan.window_start ? plan.window_start.slice(0, 10) : null,
+      date: plan.window_start ? zonedDateKey(plan.window_start, tz) : null,
       startTime,
       endTime,
       curfewLimit,
