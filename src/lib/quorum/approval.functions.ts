@@ -214,7 +214,9 @@ export type ParentSummary = {
  * curfew and home-distance.
  */
 export const getParentSummary = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ planId: v.id, sig: v.token }))
+  .inputValidator(
+    z.object({ planId: v.id, sig: v.token, timeZone: z.string().max(64).optional() }),
+  )
   .handler(async ({ data }): Promise<ParentSummary | null> => {
     const { verifyPlanSummarySig } = await import("./summary-link.server");
     if (!verifyPlanSummarySig(data.planId, data.sig)) return null;
