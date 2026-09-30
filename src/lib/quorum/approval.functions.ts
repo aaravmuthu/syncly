@@ -285,9 +285,9 @@ export const getParentSummary = createServerFn({ method: "GET" })
       }
     }
     if (!startTime && plan.window_start)
-      startTime = new Date(plan.window_start).toISOString().slice(11, 16);
+      startTime = zonedClockTime(plan.window_start, tz);
     if (!endTime && plan.window_end)
-      endTime = new Date(plan.window_end).toISOString().slice(11, 16);
+      endTime = zonedClockTime(plan.window_end, tz);
 
     // Per-member curfew + distance-from-home, computed once the venue and end
     // time are known.
