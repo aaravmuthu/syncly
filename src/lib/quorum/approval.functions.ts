@@ -63,6 +63,7 @@ export const getApproval = createServerFn({ method: "GET" })
       .select("car_label, driver_label")
       .eq("plan_id", row.plan_id);
 
+    const tz = viewerTz(data.timeZone);
     return {
       status: row.status,
       conditionText: row.condition_text,
@@ -70,7 +71,7 @@ export const getApproval = createServerFn({ method: "GET" })
       childName: profile?.display_name ?? "Your child",
       planTitle: plan?.title ?? "A plan",
       category: plan?.category ?? "",
-      date: plan?.window_start ?? null,
+      date: plan?.window_start ? zonedDateKey(plan.window_start, tz) : null,
       details,
       cars: cars ?? [],
     };
