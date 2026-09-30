@@ -2,6 +2,17 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { dbError } from "@/lib/db-error";
+import { isValidTimeZone, zonedClockTime, zonedDateKey } from "./plan-time";
+
+/**
+ * These handlers are public (token-signed, no signed-in profile), so the only
+ * trustworthy local clock is the one the viewer's browser reports. Plan times
+ * are stored as UTC instants; slicing their UTC string shows the wrong clock
+ * for anyone west of UTC, so each read formats with the viewer's zone and
+ * falls back to UTC when the browser didn't send a valid one.
+ */
+const viewerTz = (tz: string | undefined) =>
+  tz && isValidTimeZone(tz) ? tz : "UTC";
 
 /**
  * Public, token-scoped. A parent sees exactly one plan's logistics — never the
