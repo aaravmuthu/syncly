@@ -937,6 +937,46 @@
   border: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
   animation: q-radar-pulse 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
 }
+/* The seal being written while a friend answers: a bright spark runs the row's edge. */
+.live-scan {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklab, var(--primary) 85%, white) 50%,
+    transparent
+  );
+  animation: live-scan 1.1s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+@keyframes live-scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+/* Presence dots that read as "live" without moving anything. */
+.live-breathe {
+  animation: live-breathe 2.8s ease-in-out infinite;
+}
+@keyframes live-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+/* A soft highlight that slides over the settled glass as the pointer moves. */
+.hero-glint > div {
+  background: radial-gradient(
+    closest-side at 50% 50%,
+    rgb(255 255 255 / 0.1),
+    rgb(255 255 255 / 0.03) 55%,
+    transparent 75%
+  );
+}
 /* Light caught on the glass while it is tilted back; gone once it faces you. */
 .hero-glare {
   background: linear-gradient(
@@ -983,8 +1023,13 @@
   }
   .hero-off,
   .hero-glare,
-  .live-ring {
+  .hero-glint,
+  .live-ring,
+  .live-scan {
     display: none;
+  }
+  .live-breathe {
+    animation: none;
   }
 }
 
