@@ -34,12 +34,12 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
   return (
     <Modal open={open} onClose={onClose} title="Join a group">
       <p className="text-sm text-muted-foreground">
-        Enter the six-character code from whoever made the group.
+        Enter the invite code from whoever made the group.
       </p>
       <input
         className={`${inputClass} mt-4 text-center text-lg font-semibold uppercase tracking-[0.35em]`}
         value={code}
-        maxLength={8}
+        maxLength={12}
         autoFocus
         inputMode="text"
         placeholder="SQUAD9"

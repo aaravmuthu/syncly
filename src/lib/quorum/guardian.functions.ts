@@ -43,8 +43,30 @@ export const unlinkGuardian = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ linkId: v.id }))
   .handler(async ({ data, context }) => {
+    const { data: link } = await context.supabase
+      .from("guardian_links")
+      .select("teen_profile_id, guardian_profile_id")
+      .eq("id", data.linkId)
+      .maybeSingle();
     const { error } = await context.supabase.from("guardian_links").delete().eq("id", data.linkId);
     if (error) throw dbError(error, "unlinkGuardian");
+    if (link) {
+      // Confirm the link is really gone (RLS may have refused the delete), then
+      // revoke the location share that guardian approval created.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: still } = await supabaseAdmin
+        .from("guardian_links")
+        .select("id")
+        .eq("id", data.linkId)
+        .maybeSingle();
+      if (!still) {
+        await supabaseAdmin
+          .from("location_shares")
+          .delete()
+          .eq("owner_profile_id", link.teen_profile_id)
+          .eq("viewer_profile_id", link.guardian_profile_id);
+      }
+    }
     return { ok: true };
   });
 
