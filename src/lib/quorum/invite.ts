@@ -1,13 +1,13 @@
 /** Invite-code helpers shared by the join flow. */
 
 const KEY = "syncly:pending-invite";
-export const CODE_ALPHABET = /^[A-Z0-9]{4,8}$/;
+export const CODE_ALPHABET = /^[A-Z0-9]{4,12}$/;
 
 export function normalizeCode(raw: string) {
   return (raw ?? "")
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 8);
+    .slice(0, 12);
 }
 
 export function isValidCode(raw: string) {
@@ -55,4 +55,11 @@ export async function shareOrCopy(payload: { title: string; text: string; url?: 
   } catch {
     return "failed" as const;
   }
+}
+
+/** Unguessable 12-character invite code (~60 bits) from a CSPRNG. */
+export function generateInviteCode(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }

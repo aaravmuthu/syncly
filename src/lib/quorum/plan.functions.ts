@@ -293,6 +293,7 @@ export const createGroup = createServerFn({ method: "POST" })
         avatar_url: data.avatarUrl ?? null,
         cover_theme: data.coverTheme ?? "obsidian_emerald",
         created_by: me,
+        invite_code: (await import("./invite")).generateInviteCode(),
       })
       .select("*")
       .single();

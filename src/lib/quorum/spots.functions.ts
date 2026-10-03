@@ -94,6 +94,14 @@ export const browseSpots = createServerFn({ method: "POST" })
 
     let members: { profileId: string; name: string; lat: number | null; lon: number | null }[] = [];
     if (data.groupId) {
+      // Only members of the group may see its members' home-based distances.
+      const { data: membership } = await supabaseAdmin
+        .from("group_members")
+        .select("group_id")
+        .eq("group_id", data.groupId)
+        .eq("profile_id", profile?.id ?? "")
+        .maybeSingle();
+      if (!profile?.id || !membership) throw new Error("You're not a member of that group");
       const { loadMemberBases } = await import("./fairpoint.server");
       members = (await loadMemberBases(data.groupId)).map((m) => ({
         profileId: m.profileId,
