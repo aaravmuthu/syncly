@@ -67,8 +67,8 @@ export function SwipeRow({
         dragListener={false}
         dragControls={controls}
         dragDirectionLock
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0, right: 0.35 }}
+        dragConstraints={{ left: 0, right: REPLY_AT * 1.5 }}
+        dragElastic={{ left: 0, right: 0.25 }}
         dragSnapToOrigin
         dragTransition={SETTLE}
         style={{ x, touchAction: "pan-y" }}
@@ -81,7 +81,10 @@ export function SwipeRow({
           dragged.current = true;
         }}
         onDragEnd={(_, info) => {
-          if (info.offset.x >= REPLY_AT || (info.offset.x > 24 && info.velocity.x > 500)) {
+          // Judge by where the row actually is (what the icon and haptic show),
+          // not by raw finger travel.
+          const shown = x.get();
+          if (shown >= REPLY_AT || (shown > 24 && info.velocity.x > 500)) {
             haptic("select");
             onReply();
           }
@@ -197,7 +200,7 @@ export function BubbleSurface({
       {/* Its own portal: PopoverPortal is asChild and takes exactly one child. */}
       {open
         ? createPortal(
-            <div aria-hidden className="fixed inset-0 z-[60] bg-black/20" />,
+            <div aria-hidden className="fade-in fixed inset-0 z-[60] bg-black/20" />,
             document.body,
           )
         : null}
@@ -299,7 +302,7 @@ export function ReactionChips({
             onClick={() => onToggle(emoji)}
             aria-pressed={myReactions.has(emoji)}
             className={cn(
-              "rounded-full border px-2 py-0.5 text-caption leading-tight",
+              "transition-none rounded-full border px-2 py-0.5 text-caption leading-tight",
               myReactions.has(emoji)
                 ? "border-primary/50 bg-primary/15 text-primary"
                 : "border-border bg-secondary/60 text-muted-foreground",

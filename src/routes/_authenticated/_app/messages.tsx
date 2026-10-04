@@ -444,9 +444,8 @@ function Row({
           </span>
           {unread > 0 ? (
             <span
-              key={unread}
               aria-label={`${unread} unread`}
-              className="animate-rise grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-caption font-bold text-primary-foreground"
+              className="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-caption font-bold text-primary-foreground"
             >
               {unread > 9 ? "9+" : unread}
             </span>

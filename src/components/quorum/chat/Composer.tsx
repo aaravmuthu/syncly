@@ -53,7 +53,7 @@ export function ChatComposer({
   const [coarse, setCoarse] = useState(false);
   const canSend = value.trim().length > 0;
   const reduce = useReducedMotion();
-  const pop = reduce ? "scale(1)" : "scale(0.6)";
+  const pop = reduce ? "scale(1)" : "scale(0.85)";
 
   useEffect(() => {
     setCoarse(window.matchMedia("(pointer: coarse)").matches);
@@ -112,9 +112,9 @@ export function ChatComposer({
                   onClick={onSend}
                   initial={{ opacity: 0, transform: pop }}
                   animate={{ opacity: 1, transform: "scale(1)" }}
-                  exit={{ opacity: 0, transform: pop }}
-                  transition={{ duration: 0.16, ease: EASE_OUT }}
-                  className="hit-slop grid size-8 place-items-center rounded-full bg-primary text-primary-foreground"
+                  exit={{ opacity: 0, transform: pop, transition: { duration: 0.1 } }}
+                  transition={{ duration: 0.14, ease: EASE_OUT }}
+                  className="hit-slop transition-none grid size-8 place-items-center rounded-full bg-primary text-primary-foreground"
                 >
                   <ArrowUp className="size-4" strokeWidth={2.5} aria-hidden />
                 </motion.button>

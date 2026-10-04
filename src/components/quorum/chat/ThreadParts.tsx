@@ -66,7 +66,7 @@ export function JumpToLatest({
           type="button"
           onClick={onClick}
           aria-label={unseen > 0 ? `Jump to latest, ${unseen} new` : "Jump to latest"}
-          className="tap-target absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-popover/90 px-3 text-caption font-semibold text-foreground shadow-lg backdrop-blur-xl"
+          className="tap-target transition-none absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-popover/90 px-3 text-caption font-semibold text-foreground shadow-lg backdrop-blur-xl"
         >
           <ArrowDown className="size-3.5" aria-hidden />
           {unseen > 0 ? `${unseen} new` : "Latest"}
