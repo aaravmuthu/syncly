@@ -6,8 +6,10 @@ import {
   BatteryLow,
   Building2,
   Car,
+  Coffee,
   Crosshair,
   List,
+  Loader2,
   MapPin,
   MessageCircle,
   Navigation,
@@ -15,11 +17,18 @@ import {
   Route as RouteIcon,
   Search,
   Shield,
+  ShoppingBag,
+  Sparkles,
+  Trees,
+  UtensilsCrossed,
   X,
 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
 import { GlassIconButton, GlassPill, Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
+import { searchMapPlaces } from "@/lib/quorum/location.functions";
+import type { MapSearchResult } from "@/lib/quorum/places.server";
 import { pinSpan, safeImageUrl } from "@/lib/safe-dom";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
@@ -48,10 +57,21 @@ const MAP_LIST_POSITION =
 type Props = SquadMapData & {
   token: string;
   className?: string;
+  /** Embedded in a page (home feed) rather than filling the screen: controls sit inside the card. */
+  compact?: boolean;
   onMessage?: (person: MapPerson) => void;
   onProfile?: (person: MapPerson) => void;
   onPing?: (person: MapPerson) => void;
 };
+
+/** One-tap "what's around here" searches; each drops up to ten pins at the map's centre. */
+const NEARBY = [
+  { label: "Food", category: "restaurant", icon: UtensilsCrossed },
+  { label: "Coffee", category: "coffee", icon: Coffee },
+  { label: "Parks", category: "park", icon: Trees },
+  { label: "Fun", category: "entertainment", icon: Sparkles },
+  { label: "Shops", category: "shopping", icon: ShoppingBag },
+] as const;
 
 const RING_MILES = [3.5, 7, 10.5]; // 5 / 10 / 15 minute drive at ~42 mph
 const M_PER_MILE = 1609.34;
@@ -123,6 +143,7 @@ export default function SquadMapInner({
   places = [],
   showMidpoint = true,
   className,
+  compact = false,
   onMessage,
   onProfile,
   onPing,
@@ -136,23 +157,24 @@ export default function SquadMapInner({
   const [showRoutes, setShowRoutes] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showList, setShowList] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState<MapSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [found, setFound] = useState<MapSearchResult[]>([]);
+  const [nearby, setNearby] = useState<string | null>(null);
+  const search = useServerFn(searchMapPlaces);
+
+  const squadMatches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return people.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 3);
+  }, [people, query]);
 
   const venue = useMemo(() => places.find((p) => p.active) ?? places[0] ?? null, [places]);
   const mid = useMemo(
     () => (showMidpoint && people.length > 1 ? midpointOf(people) : null),
     [people, showMidpoint],
   );
-
-  const visiblePeople = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return people;
-    return people.filter((p) => p.name.toLowerCase().includes(q));
-  }, [people, query]);
-  const visiblePlaces = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return places;
-    return places.filter((p) => p.title.toLowerCase().includes(q));
-  }, [places, query]);
 
   const seed = people[0] ?? places[0] ?? zones[0] ?? null;
 
@@ -169,13 +191,12 @@ export default function SquadMapInner({
         zoom: 12,
         pitch: 0,
         attributionControl: false,
-        // cooperativeGestures (requires two fingers to pan) exists to stop a
-        // map from hijacking scroll on a page that scrolls around it -- this
-        // map IS the page (radar.tsx, position: fixed, no page scroll at
-        // all), so there's nothing left for a one-finger pan to conflict
-        // with. Leaving it on just added a "use two fingers" hint and forced
-        // friction onto what's supposed to be a one-handed map screen.
-        cooperativeGestures: false,
+        // cooperativeGestures (two fingers to pan) stops a map from hijacking
+        // scroll on a page that scrolls around it, so it is on for the card
+        // embedded in the home feed. Radar's map IS the page (position:
+        // fixed, no page scroll), so there it stays off: nothing to conflict
+        // with, and it would only add friction to a one-handed map screen.
+        cooperativeGestures: compact,
       });
       map.current = m;
       m.on("load", () => {
@@ -300,7 +321,7 @@ export default function SquadMapInner({
     src("q-routes")?.setData(
       fc(
         showRoutes && venue
-          ? visiblePeople.map((p) => ({
+          ? people.map((p) => ({
               type: "Feature" as const,
               properties: { id: p.id },
               geometry: {
@@ -314,7 +335,7 @@ export default function SquadMapInner({
           : [],
       ),
     );
-  }, [ready, zones, venue, visiblePeople, showRoutes, showZones]);
+  }, [ready, zones, venue, people, showRoutes, showZones]);
 
   // ---- markers -------------------------------------------------------------
   useEffect(() => {
@@ -329,7 +350,7 @@ export default function SquadMapInner({
       bounds.extend([lon, lat]);
     };
 
-    for (const cluster of clusterByScreenProximity(m, visiblePeople)) {
+    for (const cluster of clusterByScreenProximity(m, people)) {
       if (cluster.members.length === 1) {
         const p = cluster.members[0]!;
         const halo = haloFor(p.state);
@@ -391,7 +412,7 @@ export default function SquadMapInner({
       }
     }
 
-    for (const pl of visiblePlaces) {
+    for (const pl of places) {
       const el = document.createElement("button");
       el.type = "button";
       el.className = cn("q-place-pin", pl.active && "q-place-pin-active");
@@ -419,15 +440,120 @@ export default function SquadMapInner({
       m.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 600 });
     }
     return () => markers.forEach((mk) => mk.remove());
-  }, [ready, visiblePeople, visiblePlaces, mid]);
+  }, [ready, people, places, mid]);
 
   const recenter = useCallback(() => {
     const m = map.current;
     if (!m) return;
     const b = new mapboxgl.LngLatBounds();
-    [...visiblePeople, ...visiblePlaces].forEach((p) => b.extend([p.lon, p.lat]));
+    [...people, ...places].forEach((p) => b.extend([p.lon, p.lat]));
     if (!b.isEmpty()) m.fitBounds(b, { padding: 80, maxZoom: 14, duration: 550 });
-  }, [visiblePeople, visiblePlaces]);
+  }, [people, places]);
+
+  // ---- search ----------------------------------------------------------------
+  const centre = useCallback(() => {
+    const c = map.current?.getCenter();
+    return c ? { lat: c.lat, lon: c.lng } : null;
+  }, []);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+    let live = true;
+    setSearching(true);
+    const t = window.setTimeout(() => {
+      void search({ data: { query: q, proximity: centre(), limit: 8 } })
+        .then((r) => live && setResults(r))
+        .catch(() => live && setResults([]))
+        .finally(() => live && setSearching(false));
+    }, 250);
+    return () => {
+      live = false;
+      window.clearTimeout(t);
+    };
+  }, [query, search, centre]);
+
+  const showFound = useCallback((list: MapSearchResult[]) => {
+    const m = map.current;
+    setFound(list);
+    if (!m || list.length === 0) return;
+    if (list.length === 1) {
+      m.easeTo({
+        center: [list[0]!.lon, list[0]!.lat],
+        zoom: 15.5,
+        duration: 700,
+        essential: true,
+      });
+      return;
+    }
+    const b = new mapboxgl.LngLatBounds();
+    list.forEach((r) => b.extend([r.lon, r.lat]));
+    m.fitBounds(b, { padding: 70, maxZoom: 15.5, duration: 700 });
+  }, []);
+
+  const pickResult = useCallback(
+    (r: MapSearchResult) => {
+      setNearby(null);
+      setQuery(r.name);
+      setOpen(false);
+      showFound([r]);
+    },
+    [showFound],
+  );
+
+  const pickPerson = useCallback((p: MapPerson) => {
+    setOpen(false);
+    setQuery("");
+    setSelected(p.id);
+    map.current?.easeTo({ center: [p.lon, p.lat], zoom: 15, duration: 600, essential: true });
+  }, []);
+
+  const browseNearby = useCallback(
+    (kind: (typeof NEARBY)[number]) => {
+      if (nearby === kind.label) {
+        setNearby(null);
+        setFound([]);
+        return;
+      }
+      setNearby(kind.label);
+      setQuery("");
+      setOpen(false);
+      void search({ data: { category: kind.category, proximity: centre(), limit: 10 } })
+        .then((r) => showFound(r))
+        .catch(() => setNearby(null));
+    },
+    [nearby, search, centre, showFound],
+  );
+
+  const clearSearch = useCallback(() => {
+    setQuery("");
+    setResults([]);
+    setFound([]);
+    setNearby(null);
+    setOpen(false);
+  }, []);
+
+  // Pins for search results and "nearby" browsing, separate from the squad's own pins.
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const markers = found.map((r) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "q-place-pin";
+      el.setAttribute("aria-label", r.name);
+      el.append(pinSpan("q-place-dot"), pinSpan("q-place-label", r.name));
+      el.addEventListener("click", () =>
+        m.easeTo({ center: [r.lon, r.lat], zoom: 16, duration: 500, essential: true }),
+      );
+      return new mapboxgl.Marker({ element: el }).setLngLat([r.lon, r.lat]).addTo(m);
+    });
+    return () => markers.forEach((mk) => mk.remove());
+  }, [ready, found]);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;
@@ -464,29 +590,51 @@ export default function SquadMapInner({
         </div>
       ) : null}
 
-      {/* Floating search pill: bottom-half on mobile (thumb reach), top on desktop */}
+      {/* Search + nearby chips. Mobile (full screen): bottom half, thumb reach, results open
+          upward. Desktop and the embedded card: top, results open downward. */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-3 z-10 flex justify-center",
-          MAP_SEARCH_POSITION,
+          "pointer-events-none absolute inset-x-3 z-10 flex items-center gap-2",
+          compact ? "top-3 flex-col" : cn("flex-col-reverse md:flex-col", MAP_SEARCH_POSITION),
         )}
       >
         <GlassPill
           as="label"
-          className="pointer-events-auto flex w-full max-w-sm items-center gap-2 rounded-full px-4 py-2"
+          className="pointer-events-auto flex w-full max-w-md items-center gap-2 rounded-full px-4 py-2"
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search squad or venues"
-            aria-label="Search squad or venues"
-            className="w-full bg-transparent font-medium outline-none placeholder:text-muted-foreground"
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setOpen(false);
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (squadMatches[0]) pickPerson(squadMatches[0]);
+                else if (results[0]) pickResult(results[0]);
+              }
+            }}
+            type="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            placeholder="Search places, food, or your squad"
+            aria-label="Search places, food, or your squad"
+            // 16px keeps iOS Safari from zooming the page when the field is focused.
+            className="w-full min-w-0 bg-transparent text-base font-medium outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
           />
-          {query ? (
+          {searching ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" aria-hidden />
+          ) : null}
+          {query || found.length ? (
             <button
               type="button"
-              onClick={() => setQuery("")}
+              onClick={clearSearch}
               aria-label="Clear search"
               className="-m-3.5 grid shrink-0 place-items-center p-3.5"
             >
@@ -494,13 +642,78 @@ export default function SquadMapInner({
             </button>
           ) : null}
         </GlassPill>
+
+        {open && query.trim().length >= 2 ? (
+          <div
+            className={cn(
+              "glass-pill pointer-events-auto w-full max-w-md overflow-y-auto overscroll-contain rounded-3xl p-1.5",
+              compact ? "max-h-44" : "max-h-[40dvh]",
+            )}
+          >
+            {squadMatches.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => pickPerson(p)}
+                className="tap-target flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition hover:bg-white/5"
+              >
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ background: haloFor(p.state) }}
+                />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{p.name}</span>
+                <span className="text-caption text-muted-foreground">Squad</span>
+              </button>
+            ))}
+            {results.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => pickResult(r)}
+                className="tap-target flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition hover:bg-white/5"
+              >
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{r.name}</span>
+                  {r.detail ? (
+                    <span className="block truncate text-xs text-muted-foreground">{r.detail}</span>
+                  ) : null}
+                </span>
+              </button>
+            ))}
+            {!searching && results.length === 0 && squadMatches.length === 0 ? (
+              <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+                No places found. Try a name, a type of food, or an address.
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="chip-row pointer-events-auto max-w-full gap-1.5 px-0.5 py-0.5">
+            {NEARBY.map((k) => (
+              <button
+                key={k.label}
+                type="button"
+                onClick={() => browseNearby(k)}
+                aria-pressed={nearby === k.label}
+                className={cn(
+                  "glass-pill tap-target inline-flex items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold",
+                  nearby === k.label && "ring-2 ring-primary/70",
+                )}
+              >
+                <k.icon className="h-3.5 w-3.5" aria-hidden />
+                {k.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* One-thumb control dock on mobile (horizontal row), vertical rail on desktop */}
+      {/* Control dock: horizontal row on mobile, vertical rail on desktop. In the embedded
+          card it sits in the bottom-right corner, clear of the search. */}
       <div
         className={cn(
-          "absolute right-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-row gap-2 md:flex-col",
-          MAP_CONTROLS_POSITION,
+          "absolute right-3 z-10 flex max-w-[calc(100%-1.5rem)] gap-2",
+          compact ? "bottom-3 flex-col" : cn("flex-row md:flex-col", MAP_CONTROLS_POSITION),
         )}
       >
         <GlassIconButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
@@ -510,30 +723,34 @@ export default function SquadMapInner({
           icon={Building2}
           active={tilted}
         />
-        <GlassIconButton
-          label="Toggle routes"
-          onClick={() => setShowRoutes((v) => !v)}
-          icon={RouteIcon}
-          active={showRoutes}
-        />
-        <GlassIconButton
-          label="Toggle safe zones"
-          onClick={() => setShowZones((v) => !v)}
-          icon={Shield}
-          active={showZones}
-        />
-        <GlassIconButton
-          label={showList ? "Hide list view" : "Show list view"}
-          onClick={() => setShowList((v) => !v)}
-          icon={List}
-          active={showList}
-          expanded={showList}
-        />
+        {compact ? null : (
+          <>
+            <GlassIconButton
+              label="Toggle routes"
+              onClick={() => setShowRoutes((v) => !v)}
+              icon={RouteIcon}
+              active={showRoutes}
+            />
+            <GlassIconButton
+              label="Toggle safe zones"
+              onClick={() => setShowZones((v) => !v)}
+              icon={Shield}
+              active={showZones}
+            />
+            <GlassIconButton
+              label={showList ? "Hide list view" : "Show list view"}
+              onClick={() => setShowList((v) => !v)}
+              icon={List}
+              active={showList}
+              expanded={showList}
+            />
+          </>
+        )}
       </div>
 
       {/* List-view fallback: always-legible regardless of zoom or clustering.
           Docked left on desktop so it never sits under the control rail. */}
-      {showList ? (
+      {showList && !compact ? (
         <div
           className={cn(
             "glass-pill absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl md:right-auto md:w-80",
@@ -552,12 +769,12 @@ export default function SquadMapInner({
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
-            {visiblePeople.length === 0 ? (
+            {people.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">
                 Nobody to show yet.
               </p>
             ) : (
-              visiblePeople.map((p) => (
+              people.map((p) => (
                 <button
                   key={p.id}
                   type="button"

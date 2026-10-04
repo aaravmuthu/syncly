@@ -159,6 +159,126 @@ export async function suggestPlacesServer(
   }
 }
 
+// ------------------------------------------------------------------ map search
+
+export type MapSearchResult = {
+  id: string;
+  name: string;
+  /** Street address or locality line shown under the name. */
+  detail: string;
+  category: string | null;
+  lat: number;
+  lon: number;
+};
+
+type SearchBoxFeature = {
+  geometry: { coordinates: [number, number] };
+  properties: {
+    mapbox_id?: string;
+    name?: string;
+    full_address?: string;
+    address?: string;
+    place_formatted?: string;
+    poi_category?: string[];
+  };
+};
+
+/** "7135 Preston Road, Frisco, Texas 75034, United States" -> "7135 Preston Road, Frisco, TX". */
+function shortAddress(f: SearchBoxFeature["properties"]): string {
+  const line = f.address ?? "";
+  const place = (f.place_formatted ?? "").replace(/, United States$/, "");
+  // Keep "City, State"; drop the ZIP and country.
+  const cityState = place
+    .split(", ")
+    .slice(0, 2)
+    .map((part) => part.replace(/\s+\d{5}(-\d{4})?$/, ""))
+    .join(", ");
+  return [line, cityState].filter(Boolean).join(", ");
+}
+
+const fromSearchBox = (f: SearchBoxFeature, i: number): MapSearchResult => ({
+  id: f.properties.mapbox_id ?? `sb-${i}`,
+  name: f.properties.name ?? "Place",
+  detail: shortAddress(f.properties) || f.properties.full_address || "",
+  category: f.properties.poi_category?.[0] ?? null,
+  lat: f.geometry.coordinates[1],
+  lon: f.geometry.coordinates[0],
+});
+
+export const MAP_NEARBY_CATEGORIES = ["restaurant", "coffee", "park", "entertainment", "shopping"];
+
+/**
+ * Venue-first search for the map: businesses and landmarks first (Mapbox Search
+ * Box, which ranks by distance to `proximity`), then neighbourhoods and
+ * addresses from the geocoder for things like "Legacy West". With `category`
+ * set it lists what's around `proximity` instead of matching a name.
+ */
+export async function searchMapPlacesServer(
+  opts: {
+    query?: string;
+    category?: string;
+    proximity?: { lat: number; lon: number } | null;
+    limit?: number;
+  } = {},
+): Promise<MapSearchResult[]> {
+  const token = mapboxToken();
+  const query = (opts.query ?? "").trim();
+  const category =
+    opts.category && MAP_NEARBY_CATEGORIES.includes(opts.category) ? opts.category : "";
+  if (!token || (!category && query.length < 2)) return [];
+  const prox = opts.proximity ?? DEFAULT_PROXIMITY;
+  const limit = Math.min(10, Math.max(1, opts.limit ?? 8));
+  const common =
+    `access_token=${encodeURIComponent(token)}&country=us&language=en&limit=${limit}` +
+    `&proximity=${prox.lon},${prox.lat}`;
+
+  const searchBox = async (): Promise<MapSearchResult[]> => {
+    const url = category
+      ? `https://api.mapbox.com/search/searchbox/v1/category/${category}?${common}`
+      : `https://api.mapbox.com/search/searchbox/v1/forward?q=${encodeURIComponent(query)}&${common}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const json = (await res.json()) as { features?: SearchBoxFeature[] };
+    return (json.features ?? []).map(fromSearchBox);
+  };
+
+  const places = async (): Promise<MapSearchResult[]> => {
+    if (category) return [];
+    const url =
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json` +
+      `?${common}&autocomplete=true&types=${encodeURIComponent("neighborhood,locality,place,address")}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      features?: { id: string; text: string; place_name: string; center: [number, number] }[];
+    };
+    return (json.features ?? []).map((f) => ({
+      id: f.id,
+      name: f.text,
+      detail: f.place_name
+        .replace(/, United States$/, "")
+        .split(", ")
+        .slice(1)
+        .join(", "),
+      category: null,
+      lat: f.center[1],
+      lon: f.center[0],
+    }));
+  };
+
+  const [a, b] = await Promise.all([searchBox().catch(() => []), places().catch(() => [])]);
+  const seen = new Set<string>();
+  const out: MapSearchResult[] = [];
+  for (const r of [...a, ...b]) {
+    if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) continue;
+    const key = `${r.name}|${r.lat.toFixed(4)}|${r.lon.toFixed(4)}`.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  return out.slice(0, limit);
+}
+
 // -------------------------------------------------------------- venue search
 
 const GEOAPIFY_CATEGORIES: Record<PlanCategory, string> = {

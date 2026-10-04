@@ -3,7 +3,7 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { ZipLocation } from "./location";
-import type { PlaceSuggestion } from "./places.server";
+import type { MapSearchResult, PlaceSuggestion } from "./places.server";
 
 /**
  * Keyless ZIP → coordinates via OpenStreetMap Nominatim.
@@ -32,6 +32,28 @@ export const suggestPlaces = createServerFn({ method: "POST" })
     return suggestPlacesServer(data.query, {
       ...(data.addressOnly != null ? { addressOnly: data.addressOnly } : {}),
       ...(data.proximity != null ? { proximity: data.proximity } : {}),
+    });
+  });
+
+/** Venue / address search for the squad map, biased to where the map is looking. */
+export const searchMapPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      query: v.text(120).optional(),
+      /** Lists what's around the map instead of matching a name. */
+      category: z.enum(["restaurant", "coffee", "park", "entertainment", "shopping"]).optional(),
+      proximity: z.object({ lat: v.lat, lon: v.lon }).nullish(),
+      limit: z.number().int().min(1).max(10).optional(),
+    }),
+  )
+  .handler(async ({ data }): Promise<MapSearchResult[]> => {
+    const { searchMapPlacesServer } = await import("./places.server");
+    return searchMapPlacesServer({
+      ...(data.query != null ? { query: data.query } : {}),
+      ...(data.category != null ? { category: data.category } : {}),
+      proximity: data.proximity ?? null,
+      ...(data.limit != null ? { limit: data.limit } : {}),
     });
   });
 

@@ -15,12 +15,15 @@ const Inner = lazy(() => import("./SquadMapInner"));
  */
 export function SquadMap({
   className,
+  compact,
   onMessage,
   onPing,
   onProfile,
   ...data
 }: SquadMapData & {
   className?: string;
+  /** Embedded in a scrolling page: controls stay inside the card, two-finger pan. */
+  compact?: boolean;
   onMessage?: (p: MapPerson) => void;
   onPing?: (p: MapPerson) => void;
   onProfile?: (p: MapPerson) => void;
@@ -56,6 +59,7 @@ export function SquadMap({
             token={token.data}
             className={className ?? "h-80 w-full"}
             {...data}
+            {...(compact ? { compact } : {})}
             {...(onMessage ? { onMessage } : {})}
             {...(onPing ? { onPing } : {})}
             {...(onProfile ? { onProfile } : {})}
