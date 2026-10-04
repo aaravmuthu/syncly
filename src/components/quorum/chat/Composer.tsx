@@ -6,7 +6,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EASE_OUT } from "./motion";
@@ -52,6 +52,8 @@ export function ChatComposer({
   const ref = textareaRef ?? innerRef;
   const [coarse, setCoarse] = useState(false);
   const canSend = value.trim().length > 0;
+  const reduce = useReducedMotion();
+  const pop = reduce ? "scale(1)" : "scale(0.6)";
 
   useEffect(() => {
     setCoarse(window.matchMedia("(pointer: coarse)").matches);
@@ -108,9 +110,9 @@ export function ChatComposer({
                   // Keep the keyboard up: a tap on Send must not blur the field.
                   onPointerDown={(e) => e.preventDefault()}
                   onClick={onSend}
-                  initial={{ opacity: 0, transform: "scale(0.6)" }}
+                  initial={{ opacity: 0, transform: pop }}
                   animate={{ opacity: 1, transform: "scale(1)" }}
-                  exit={{ opacity: 0, transform: "scale(0.6)" }}
+                  exit={{ opacity: 0, transform: pop }}
                   transition={{ duration: 0.16, ease: EASE_OUT }}
                   className="hit-slop grid size-8 place-items-center rounded-full bg-primary text-primary-foreground"
                 >

@@ -3,6 +3,7 @@ import {
   AnimatePresence,
   motion,
   useDragControls,
+  useReducedMotion,
   useMotionValue,
   useMotionValueEvent,
   useTransform,
@@ -280,6 +281,8 @@ export function ReactionChips({
   myReactions: Set<string>;
   onToggle: (emoji: string) => void;
 }) {
+  const reduce = useReducedMotion();
+  const from = reduce ? "scale(1)" : "scale(0.8)";
   if (counts.length === 0) return null;
   return (
     <div className={cn("mt-1 flex flex-wrap gap-1 px-1", mine && "justify-end")}>
@@ -288,10 +291,10 @@ export function ReactionChips({
           <motion.button
             key={emoji}
             type="button"
-            layout="position"
-            initial={{ opacity: 0, transform: "scale(0.8)" }}
+            layout={reduce ? false : "position"}
+            initial={{ opacity: 0, transform: from }}
             animate={{ opacity: 1, transform: "scale(1)" }}
-            exit={{ opacity: 0, transform: "scale(0.8)" }}
+            exit={{ opacity: 0, transform: from }}
             transition={{ duration: 0.16, ease: EASE_OUT }}
             onClick={() => onToggle(emoji)}
             aria-pressed={myReactions.has(emoji)}
