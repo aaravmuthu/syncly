@@ -2,13 +2,36 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
-import { Camera, Car, Check, CheckCheck, Lock, Sparkles, X, Zap } from "lucide-react";
+import { Camera, Car, Copy, Lock, RotateCcw, Reply, Sparkles, Trash2, X, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/quorum/Avatar";
-import { Button, Skeleton } from "@/components/quorum/ui";
+import { Button, Spinner } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/quorum/haptics";
 import { listMessages, markRead, sendMessage, uploadChatImage } from "@/lib/quorum/chat.functions";
+import { prepareImageUpload } from "@/lib/quorum/safe-upload";
+import { ChatComposer } from "@/components/quorum/chat/Composer";
+import { clock, layoutRows, type ClusterPos } from "@/components/quorum/chat/layout";
+import {
+  BubbleSurface,
+  RevealRow,
+  SwipeRow,
+  type MenuAction,
+} from "@/components/quorum/chat/MessageBubble";
+import { useRise } from "@/components/quorum/chat/motion";
+import {
+  JumpToLatest,
+  SystemNote,
+  ThreadEmpty,
+  ThreadError,
+  ThreadSkeleton,
+  TimeHeader,
+  TypingBubble,
+} from "@/components/quorum/chat/ThreadParts";
+import { useChatScroll } from "@/components/quorum/chat/useChatScroll";
+import { usePendingMessages, type Pending } from "@/components/quorum/chat/usePendingMessages";
 
 type Msg = {
   id: string;
@@ -40,10 +63,17 @@ type Read = {
   } | null;
 };
 
-const QUICK = ["🔥", "😂", "👍", "🙏", "😭", "🎉"];
+type SendPayload = {
+  groupId: string;
+  planId: string | null;
+  content: string;
+  mediaUrl: string | null;
+  replyToId: string | null;
+};
 
-const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+type Item = { kind: "msg"; m: Msg } | { kind: "pending"; p: Pending<SendPayload> };
+
+const KNOWN_SYSTEM = new Set(["plan_created", "ride_update", "plan_locked"]);
 
 export function SquadChat({
   groupId,
@@ -61,7 +91,7 @@ export function SquadChat({
   const mark = useServerFn(markRead);
   const upload = useServerFn(uploadChatImage);
 
-  const key = ["squad-chat", groupId, planId ?? "all"];
+  const key = useMemo(() => ["squad-chat", groupId, planId ?? "all"], [groupId, planId]);
   const q = useQuery({
     queryKey: key,
     queryFn: () => fetchMessages({ data: { groupId, planId } }),
@@ -69,18 +99,73 @@ export function SquadChat({
 
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<Msg | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [typers, setTypers] = useState<Record<string, { name: string; at: number }>>({});
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastTyped = useRef(0);
+  const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messageIds = useRef<Set<string>>(new Set());
+  /** Ids present on first load: only messages that arrive later animate in. */
+  const initialIds = useRef<Set<string> | null>(null);
 
   const messages = useMemo(() => (q.data?.messages ?? []) as unknown as Msg[], [q.data?.messages]);
   const reads = useMemo(() => (q.data?.reads ?? []) as unknown as Read[], [q.data?.reads]);
   const me = q.data?.me ?? null;
   const hostId = q.data?.hostId ?? null;
   const myName = messages.find((m) => m.sender_id === me)?.profiles?.display_name ?? "Someone";
+  messageIds.current = new Set(messages.map((m) => m.id));
+  if (q.data && !initialIds.current) initialIds.current = new Set(messages.map((m) => m.id));
+
+  const refetchSoon = useCallback(() => {
+    if (refetchTimer.current) return;
+    refetchTimer.current = setTimeout(() => {
+      refetchTimer.current = null;
+      void qc.invalidateQueries({ queryKey: key });
+    }, 150);
+  }, [qc, key]);
+
+  const pend = usePendingMessages<SendPayload>(
+    useCallback(
+      async (payload) => {
+        const r = await send({ data: payload });
+        haptic("tap");
+        refetchSoon();
+        void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
+        return r;
+      },
+      [send, qc, refetchSoon],
+    ),
+  );
+  const pendingRows = pend.visible(
+    messages.map((m) => ({ id: m.id, sender: m.sender_id, content: m.content })),
+    me,
+  );
+
+  const items = useMemo<Item[]>(
+    () => [
+      ...messages.map((m): Item => ({ kind: "msg", m })),
+      ...pendingRows.map((p): Item => ({ kind: "pending", p })),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [messages, pend.pending],
+  );
+  const rows = useMemo(
+    () =>
+      layoutRows(items, (it) =>
+        it.kind === "msg"
+          ? {
+              id: it.m.id,
+              sender: it.m.sender_id,
+              at: it.m.created_at,
+              system: Boolean(it.m.system_type),
+            }
+          : { id: it.p.cid, sender: me, at: it.p.at, system: false },
+      ),
+    [items, me],
+  );
+  const scroll = useChatScroll(rows.length);
 
   const readsByMessage = useMemo(() => {
     const map = new Map<string, Read[]>();
@@ -91,21 +176,15 @@ export function SquadChat({
     return map;
   }, [reads, me]);
 
-  /* only the newest of my messages that has been read shows a receipt */
-  const lastSeenMineId = useMemo(() => {
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      const m = messages[i];
-      if (
-        m &&
-        m.sender_id === me &&
-        !m.system_type &&
-        (readsByMessage.get(m.id)?.length ?? 0) > 0
-      ) {
-        return m.id;
-      }
+  /* the newest of my messages: it alone carries the receipt line */
+  const lastMineKey = useMemo(() => {
+    for (let i = rows.length - 1; i >= 0; i -= 1) {
+      const it = rows[i]!.item;
+      if (it.kind === "pending") return it.p.cid;
+      if (!it.m.system_type && it.m.sender_id === me) return it.m.id;
     }
     return null;
-  }, [messages, me, readsByMessage]);
+  }, [rows, me]);
 
   /* live message + receipt stream ---------------------------------- */
   useEffect(() => {
@@ -121,12 +200,20 @@ export function SquadChat({
           table: "group_messages",
           filter: `group_id=eq.${groupId}`,
         },
-        () => void qc.invalidateQueries({ queryKey: key }),
+        () => {
+          refetchSoon();
+          void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
+        },
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "message_reads" },
-        () => void qc.invalidateQueries({ queryKey: key }),
+        ({ new: row }) => {
+          // Reads for other chats arrive here too; only ours are worth a refetch.
+          if (messageIds.current.has((row as { message_id?: string }).message_id ?? "")) {
+            refetchSoon();
+          }
+        },
       )
       .on("broadcast", { event: "typing" }, ({ payload }) => {
         const p = payload as { id: string; name: string };
@@ -158,22 +245,22 @@ export function SquadChat({
     return () => clearInterval(t);
   }, []);
 
-  /* mark unread messages as read ------------------------------------ */
+  /* mark unread messages as read, only while the chat is on screen ----- */
   useEffect(() => {
     if (!me || messages.length === 0) return;
-    const mine = new Set(reads.filter((r) => r.profile_id === me).map((r) => r.message_id));
-    const todo = messages
-      .filter((m) => m.sender_id && m.sender_id !== me && !mine.has(m.id))
-      .map((m) => m.id);
-    if (todo.length === 0) return;
-    void mark({ data: { messageIds: todo } });
+    const run = () => {
+      if (document.visibilityState !== "visible") return;
+      const mine = new Set(reads.filter((r) => r.profile_id === me).map((r) => r.message_id));
+      const todo = messages
+        .filter((m) => m.sender_id && m.sender_id !== me && !mine.has(m.id))
+        .map((m) => m.id);
+      if (todo.length > 0) void mark({ data: { messageIds: todo } });
+    };
+    run();
+    document.addEventListener("visibilitychange", run);
+    return () => document.removeEventListener("visibilitychange", run);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length, me, reads.length]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages.length]);
 
   const broadcastTyping = useCallback(() => {
     const now = Date.now();
@@ -186,51 +273,33 @@ export function SquadChat({
     });
   }, [me, myName]);
 
-  async function submit(content: string, mediaUrl?: string | null, replyToId?: string | null) {
-    const body = content.trim();
-    if (!body && !mediaUrl) return;
-    setBusy(true);
-    try {
-      await send({
-        data: {
-          groupId,
-          planId,
-          content: body,
-          mediaUrl: mediaUrl ?? null,
-          replyToId: replyToId ?? replyTo?.id ?? null,
-        },
-      });
-      setText("");
-      setReplyTo(null);
-      await qc.invalidateQueries({ queryKey: key });
-    } catch (e) {
-      toast.error("Message not sent", {
-        description: e instanceof Error ? e.message : "Please try again.",
-      });
-    } finally {
-      setBusy(false);
-    }
+  function submit(body: string, mediaUrl?: string | null) {
+    const content = body.trim();
+    if (!content && !mediaUrl) return;
+    scroll.stick();
+    haptic("tap");
+    pend.enqueue(
+      { groupId, planId, content, mediaUrl: mediaUrl ?? null, replyToId: replyTo?.id ?? null },
+      content,
+      messages.map((m) => m.id),
+    );
+    setText("");
+    setReplyTo(null);
   }
 
   async function pickPhoto(file: File) {
-    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5 MB");
-    setBusy(true);
+    setUploading(true);
     try {
-      const dataUrl = await new Promise<string>((res, rej) => {
-        const fr = new FileReader();
-        fr.onload = () => res(String(fr.result));
-        fr.onerror = () => rej(new Error("Could not read that file"));
-        fr.readAsDataURL(file);
-      });
-      const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
+      // Validated by its bytes and stripped of EXIF/GPS before it leaves the phone.
+      const { dataUrl, ext } = await prepareImageUpload(file);
       const { url } = await upload({ data: { dataUrl, ext } });
-      await submit(text, url);
+      submit(text, url);
     } catch (e) {
-      toast.error("Upload failed", {
+      toast.error("Couldn't send that photo", {
         description: e instanceof Error ? e.message : "Please try again.",
       });
     } finally {
-      setBusy(false);
+      setUploading(false);
     }
   }
 
@@ -239,65 +308,134 @@ export function SquadChat({
   return (
     <div
       className={cn(
-        "relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card/85 shadow-2xl backdrop-blur-xl",
+        "relative flex min-h-0 flex-col overflow-hidden rounded-3xl border border-border bg-card/85 shadow-2xl backdrop-blur-xl",
         className,
       )}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_50%_-10%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent_65%)]"
-      />
-      <div
-        ref={scrollRef}
-        className="relative flex flex-1 flex-col justify-end overflow-y-auto p-4"
-      >
-        <div className="mt-auto space-y-3">
-          {q.isLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="ml-auto h-9 w-2/3 rounded-2xl" />
-              <Skeleton className="h-9 w-1/2 rounded-2xl" />
-              <Skeleton className="ml-auto h-9 w-3/5 rounded-2xl" />
-            </div>
-          ) : messages.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              No messages yet — say something to the squad 💬
-            </p>
-          ) : null}
-
-          {messages.map((m) =>
-            m.system_type ? (
-              <SystemCard
-                key={m.id}
-                msg={m}
-                onVote={(id) => navigate({ to: "/plans/$planId", params: { planId: id } })}
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scroll.ref}
+          onScroll={scroll.onScroll}
+          className="absolute inset-0 overflow-y-auto overscroll-contain px-3 py-3"
+        >
+          <div className="flex min-h-full flex-col justify-end" aria-live="polite">
+            {q.isLoading ? (
+              <ThreadSkeleton />
+            ) : q.isError ? (
+              <ThreadError onRetry={() => void q.refetch()} />
+            ) : rows.length === 0 ? (
+              <ThreadEmpty
+                title="No messages yet"
+                body="Say something to the squad — plans, rides and photos all land here."
               />
-            ) : (
-              <Bubble
-                key={m.id}
-                msg={m}
-                mine={m.sender_id === me}
-                isHost={Boolean(hostId && m.sender_id === hostId)}
-                readers={m.id === lastSeenMineId ? (readsByMessage.get(m.id) ?? []) : []}
-                onReply={() => setReplyTo(m)}
-                onReact={(emoji) => void submit(emoji, null, m.id)}
-              />
-            ),
-          )}
+            ) : null}
 
-          {typingNames.length > 0 ? (
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground backdrop-blur">
-              <Dots />
-              {typingNames.length === 1
-                ? `${typingNames[0]} is typing...`
-                : `${typingNames.length} people are typing...`}
-            </div>
-          ) : null}
+            {rows.map(({ item, pos, header }) => {
+              const rowKey = item.kind === "msg" ? item.m.id : item.p.cid;
+              return (
+                <div key={rowKey}>
+                  {header ? <TimeHeader label={header} /> : null}
+                  {item.kind === "msg" && item.m.system_type ? (
+                    KNOWN_SYSTEM.has(item.m.system_type) ? (
+                      <SystemCard
+                        msg={item.m}
+                        onVote={(id) => navigate({ to: "/plans/$planId", params: { planId: id } })}
+                      />
+                    ) : (
+                      <SystemNote>{item.m.content}</SystemNote>
+                    )
+                  ) : (
+                    <SquadRow
+                      item={item}
+                      pos={pos}
+                      me={me}
+                      messages={messages}
+                      isHost={Boolean(item.kind === "msg" && hostId && item.m.sender_id === hostId)}
+                      animateIn={
+                        item.kind === "pending" ||
+                        (!initialIds.current?.has(item.m.id) && item.m.sender_id !== me)
+                      }
+                      readers={rowKey === lastMineKey ? (readsByMessage.get(rowKey) ?? []) : []}
+                      isLastMine={rowKey === lastMineKey}
+                      onReply={(m) => {
+                        setReplyTo(m);
+                        inputRef.current?.focus();
+                      }}
+                      onRetry={pend.retry}
+                      onDiscard={pend.discard}
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+            <AnimatePresence>
+              {typingNames.length > 0 ? (
+                <TypingBubble
+                  label={
+                    typingNames.length === 1
+                      ? `${typingNames[0]} is typing`
+                      : `${typingNames.length} people are typing`
+                  }
+                />
+              ) : null}
+            </AnimatePresence>
+          </div>
         </div>
+        <JumpToLatest
+          show={scroll.away}
+          unseen={scroll.unseen}
+          onClick={() => scroll.scrollToBottom(true)}
+        />
       </div>
 
+      <ChatComposer
+        value={text}
+        onChange={setText}
+        onSend={() => submit(text)}
+        onTyping={broadcastTyping}
+        textareaRef={inputRef}
+        placeholder="Message the squad…"
+        leading={
+          <>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) void pickPhoto(f);
+              }}
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              aria-label="Add photo"
+              className="tap-target grid size-11 shrink-0 place-items-center rounded-full bg-secondary/60 text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+            >
+              {uploading ? <Spinner /> : <Camera className="size-[1.125rem]" aria-hidden />}
+            </button>
+          </>
+        }
+        top={<ReplyBar replyTo={replyTo} onCancel={() => setReplyTo(null)} />}
+      />
+    </div>
+  );
+}
+
+function ReplyBar({ replyTo, onCancel }: { replyTo: Msg | null; onCancel: () => void }) {
+  const rise = useRise(6, 0.16);
+  return (
+    <AnimatePresence>
       {replyTo ? (
-        <div className="mx-4 mb-2 flex items-start gap-2 rounded-2xl border border-border bg-secondary/50 px-3 py-2 backdrop-blur">
-          <span className="mt-0.5 h-full w-0.5 rounded bg-primary/70" />
+        <motion.div
+          {...rise}
+          className="mb-2 flex items-start gap-2 rounded-2xl border border-border bg-secondary/50 px-3 py-2"
+        >
+          <span className="mt-0.5 h-full min-h-8 w-0.5 rounded bg-primary/70" />
           <div className="min-w-0 flex-1">
             <p className="text-caption font-semibold text-primary">
               {replyTo.profiles?.display_name ?? "Member"}
@@ -306,205 +444,224 @@ export function SquadChat({
           </div>
           <button
             type="button"
-            onClick={() => setReplyTo(null)}
+            onClick={onCancel}
             aria-label="Cancel reply"
             className="tap-target grid place-items-center rounded-lg text-muted-foreground hover:bg-secondary"
           >
             <X className="size-3.5" aria-hidden />
           </button>
-        </div>
+        </motion.div>
       ) : null}
-
-      <div className="relative border-t border-border bg-foreground/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submit(text);
-          }}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/png,image/jpeg,image/gif,image/webp"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              e.target.value = "";
-              if (f) void pickPhoto(f);
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            aria-label="Add photo"
-            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 hover:bg-secondary"
-          >
-            <Camera className="size-4" aria-hidden />
-          </button>
-          <textarea
-            value={text}
-            rows={1}
-            placeholder="Message the squad…"
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              broadcastTyping();
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void submit(text);
-              }
-            }}
-            // No text-sm: same iOS zoom-on-focus issue as inputClass -- the
-            // global 16px base rule needs to win here too.
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-border bg-background px-3.5 py-2.5 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
-          />
-          <Button type="submit" loading={busy} className="h-11 shrink-0 px-4">
-            Send
-          </Button>
-        </form>
-      </div>
-    </div>
+    </AnimatePresence>
   );
 }
 
-function Dots() {
-  return (
-    <span className="flex items-end gap-0.5">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="h-1.5 w-1.5 animate-typing-dot rounded-full bg-primary"
-          style={{ animationDelay: `${i * 120}ms` }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function Bubble({
-  msg,
-  mine,
+function SquadRow({
+  item,
+  pos,
+  me,
+  messages,
   isHost,
+  animateIn,
   readers,
+  isLastMine,
   onReply,
-  onReact,
+  onRetry,
+  onDiscard,
 }: {
-  msg: Msg;
-  mine: boolean;
+  item: Item;
+  pos: ClusterPos;
+  me: string | null;
+  messages: Msg[];
   isHost: boolean;
+  animateIn: boolean;
   readers: Read[];
-  onReply: () => void;
-  onReact: (emoji: string) => void;
+  isLastMine: boolean;
+  onReply: (m: Msg) => void;
+  onRetry: (cid: string) => void;
+  onDiscard: (cid: string) => void;
 }) {
-  return (
-    <div className={cn("group/msg flex items-end gap-2", mine && "flex-row-reverse")}>
-      {!mine ? (
-        <Avatar
-          url={msg.profiles?.avatar_url}
-          emoji={msg.profiles?.avatar_emoji}
-          name={msg.profiles?.display_name}
-          size={28}
-        />
-      ) : null}
-      <div className={cn("max-w-[78%] space-y-1", mine && "items-end text-right")}>
+  const [showTime, setShowTime] = useState(false);
+  const rise = useRise(8, 0.18);
+
+  const msg = item.kind === "msg" ? item.m : null;
+  const pending = item.kind === "pending" ? item.p : null;
+  const mine = Boolean(pending) || msg?.sender_id === me;
+  const failed = pending?.status === "failed";
+  const body = msg?.content ?? pending?.text ?? "";
+  const mediaUrl = msg?.media_url ?? pending?.payload.mediaUrl ?? null;
+  const at = msg?.created_at ?? pending?.at ?? "";
+  const quoted =
+    msg?.reply_to ??
+    (pending?.payload.replyToId
+      ? (() => {
+          const o = messages.find((m) => m.id === pending.payload.replyToId);
+          return o ? { id: o.id, content: o.content, profiles: o.profiles } : null;
+        })()
+      : null);
+
+  const showName = !mine && (pos === "single" || pos === "first");
+  const showAvatar = !mine && (pos === "single" || pos === "last");
+
+  const actions: MenuAction[] = [];
+  if (failed && pending) {
+    actions.push(
+      {
+        key: "retry",
+        label: "Retry",
+        icon: <RotateCcw className="size-4" />,
+        onSelect: () => onRetry(pending.cid),
+      },
+      {
+        key: "discard",
+        label: "Delete",
+        icon: <Trash2 className="size-4" />,
+        destructive: true,
+        onSelect: () => onDiscard(pending.cid),
+      },
+    );
+  } else {
+    if (msg) {
+      actions.push({
+        key: "reply",
+        label: "Reply",
+        icon: <Reply className="size-4" />,
+        onSelect: () => onReply(msg),
+      });
+    }
+    if (body) {
+      actions.push({
+        key: "copy",
+        label: "Copy",
+        icon: <Copy className="size-4" />,
+        onSelect: () => {
+          navigator.clipboard
+            .writeText(body)
+            .then(() => toast("Copied"))
+            .catch(() => toast.error("Couldn't copy that"));
+        },
+      });
+    }
+  }
+
+  const receipt = !mine || !isLastMine || failed ? null : !msg ? "Sending…" : null;
+
+  const row = (
+    <SwipeRow
+      onReply={msg && !failed ? () => onReply(msg) : undefined}
+      className={pos === "single" || pos === "first" ? "mt-2" : "mt-0.5"}
+    >
+      <div className={cn("flex items-end gap-2", mine && "flex-row-reverse")}>
         {!mine ? (
-          <p className="px-1 text-caption text-muted-foreground">
-            {msg.profiles?.display_name ?? "Member"}
-            {isHost ? (
-              <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-caption font-semibold text-primary">
-                Host
-              </span>
-            ) : null}
-          </p>
-        ) : null}
-        <div className="relative">
-          <div
-            className={cn(
-              "pointer-events-none absolute -top-8 z-10 flex gap-0.5 rounded-full border border-border bg-popover p-1 opacity-0 shadow-2xl backdrop-blur-xl transition duration-150 group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 group-focus-within/msg:pointer-events-auto group-focus-within/msg:opacity-100",
-              mine ? "right-0" : "left-0",
-            )}
-          >
-            {QUICK.map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => onReact(e)}
-                className="rounded-full px-1.5 py-0.5 text-base transition hover:scale-110 hover:bg-primary/10"
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onDoubleClick={onReply}
-            onClick={onReply}
-            className={cn(
-              "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
-              mine
-                ? "rounded-tr-none bg-primary text-primary-foreground"
-                : "rounded-tl-none border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80",
-            )}
-          >
-            {/* Fixed dark scrim regardless of theme: this sits on the bubble's
-                own solid color (primary or secondary), not the page surface,
-                same reasoning as the venue-photo badges elsewhere. */}
-            {msg.reply_to ? (
-              <span className="mb-1.5 block rounded-xl border border-white/10 bg-black/25 px-2 py-1 text-caption text-white/55">
-                <span className="font-semibold text-white/75">
-                  {msg.reply_to.profiles?.display_name ?? "Member"}
-                </span>
-                : {msg.reply_to.content || "Photo"}
-              </span>
-            ) : null}
-            {msg.media_url ? (
-              <img
-                src={msg.media_url}
-                alt="Shared in chat"
-                loading="lazy"
-                className="mb-1.5 max-h-60 w-full rounded-xl object-cover"
+          <div className="size-7 shrink-0">
+            {showAvatar ? (
+              <Avatar
+                url={msg?.profiles?.avatar_url}
+                emoji={msg?.profiles?.avatar_emoji}
+                name={msg?.profiles?.display_name}
+                size={28}
               />
             ) : null}
-            {msg.content ? (
-              <span className="whitespace-pre-wrap break-words">{msg.content}</span>
-            ) : null}
-          </button>
-        </div>
-        <p className="px-1 text-caption text-muted-foreground">
-          {time(msg.created_at)}
-          {mine ? (
-            <span className="ml-1 inline-flex align-middle">
-              {readers.length > 0 ? (
-                <CheckCheck className="size-3" aria-hidden />
-              ) : (
-                <Check className="size-3" aria-hidden />
-              )}
-            </span>
-          ) : null}
-        </p>
-        {mine && readers.length > 0 ? (
-          <div className="flex items-center justify-end gap-1 px-1">
-            <div className="flex -space-x-1.5">
-              {readers.slice(0, 4).map((r) => (
-                <Avatar
-                  key={r.profile_id}
-                  url={r.profiles?.avatar_url}
-                  emoji={r.profiles?.avatar_emoji}
-                  name={r.profiles?.display_name}
-                  size={16}
-                  className="ring-1 ring-card"
-                />
-              ))}
-            </div>
-            <span className="text-caption text-muted-foreground">
-              Seen by {readers[0]?.profiles?.display_name ?? "someone"}
-              {readers.length > 1 ? ` +${readers.length - 1}` : ""}
-            </span>
           </div>
         ) : null}
+        <div className={cn("flex max-w-[78%] flex-col", mine ? "items-end" : "items-start")}>
+          {showName ? (
+            <p className="px-3 pb-0.5 text-caption text-muted-foreground">
+              {msg?.profiles?.display_name ?? "Member"}
+              {isHost ? (
+                <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-caption font-semibold text-primary">
+                  Host
+                </span>
+              ) : null}
+            </p>
+          ) : null}
+          <BubbleSurface
+            mine={mine}
+            pos={pos}
+            status={pending?.status}
+            actions={actions}
+            onTap={failed && pending ? () => onRetry(pending.cid) : () => setShowTime((v) => !v)}
+          >
+            {/* Fixed dark scrim regardless of theme: this sits on the bubble's
+                own solid color (primary or secondary), not the page surface. */}
+            {quoted ? (
+              <span className="mb-1.5 block rounded-xl border border-white/10 bg-black/25 px-2 py-1 text-caption text-white/55">
+                <span className="font-semibold text-white/75">
+                  {quoted.profiles?.display_name ?? "Member"}
+                </span>
+                : {quoted.content || "Photo"}
+              </span>
+            ) : null}
+            {mediaUrl ? (
+              <img
+                src={mediaUrl}
+                alt="Shared in chat"
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                draggable={false}
+                className={cn("max-h-60 w-full rounded-xl object-cover", body && "mb-1.5")}
+              />
+            ) : null}
+            {body}
+          </BubbleSurface>
+        </div>
       </div>
-    </div>
+
+      {failed ? (
+        <button
+          type="button"
+          onClick={() => pending && onRetry(pending.cid)}
+          className={cn(
+            "mt-1 block px-1 text-caption font-medium text-destructive",
+            mine ? "ml-auto" : "ml-9",
+          )}
+        >
+          Not delivered · Tap to retry
+        </button>
+      ) : null}
+
+      <RevealRow open={showTime}>
+        <p
+          className={cn(
+            "px-1 pt-1 text-caption text-muted-foreground",
+            mine ? "text-right" : "pl-10",
+          )}
+        >
+          {clock(at)}
+        </p>
+      </RevealRow>
+
+      {isLastMine && mine && !failed ? (
+        <div className="mt-1 flex items-center justify-end gap-1 px-1">
+          {readers.length > 0 ? (
+            <>
+              <div className="flex -space-x-1.5">
+                {readers.slice(0, 4).map((r) => (
+                  <Avatar
+                    key={r.profile_id}
+                    url={r.profiles?.avatar_url}
+                    emoji={r.profiles?.avatar_emoji}
+                    name={r.profiles?.display_name}
+                    size={16}
+                    className="ring-1 ring-card"
+                  />
+                ))}
+              </div>
+              <span className="text-caption text-muted-foreground">
+                Seen by {readers[0]?.profiles?.display_name ?? "someone"}
+                {readers.length > 1 ? ` +${readers.length - 1}` : ""}
+              </span>
+            </>
+          ) : (
+            <span className="text-caption text-muted-foreground">{receipt ?? "Sent"}</span>
+          )}
+        </div>
+      ) : null}
+    </SwipeRow>
   );
+
+  return animateIn ? <motion.div {...rise}>{row}</motion.div> : row;
 }
 
 function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => void }) {
@@ -519,7 +676,7 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
     // Narrower than a message bubble and always centered (never left/right
     // aligned like a person's message) so a system event reads unmistakably
     // as chrome, not a message from someone in the chat.
-    <div className="mx-auto w-full max-w-[75%] overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-xl backdrop-blur">
+    <div className="mx-auto mt-3 w-full max-w-[75%] overflow-hidden rounded-2xl border border-primary/25 bg-primary/10 p-4 text-center shadow-xl backdrop-blur">
       <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-caption font-semibold text-primary">
         <TagIcon className="size-3" aria-hidden /> {tagText}
       </span>
@@ -544,7 +701,7 @@ function SystemCard({ msg, onVote }: { msg: Msg; onVote: (planId: string) => voi
           <Zap className="size-3.5" aria-hidden /> Vote now
         </Button>
       ) : null}
-      <p className="mt-2 text-caption text-muted-foreground">{time(msg.created_at)}</p>
+      <p className="mt-2 text-caption text-muted-foreground">{clock(msg.created_at)}</p>
     </div>
   );
 }
