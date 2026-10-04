@@ -159,17 +159,11 @@ export const uploadAvatar = createServerFn({ method: "POST" })
   .inputValidator(z.object({ dataUrl: v.dataUrl, ext: v.text(10) }))
   .handler(async ({ data, context }) => {
     const { userId, supabase } = context;
-    const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);
-    if (!match) throw new Error("Unsupported image");
-    const contentType = match[1];
-    if (!/^image\/(png|jpeg|jpg|gif|webp)$/.test(contentType)) {
-      throw new Error("Use a PNG, JPG, GIF, or WebP image");
-    }
-    const bytes = Buffer.from(match[2], "base64");
-    if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Image must be under 5 MB");
+    const { parseImageUpload } = await import("./upload-safety.server");
+    const { bytes, contentType, ext } = parseImageUpload(data.dataUrl);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const path = `${userId}/${Date.now()}.${data.ext.replace(/[^a-z0-9]/gi, "").slice(0, 5) || "png"}`;
+    const path = `${userId}/${Date.now()}.${ext}`;
     const { error: upErr } = await supabaseAdmin.storage
       .from("avatars")
       .upload(path, bytes, { contentType, upsert: true });

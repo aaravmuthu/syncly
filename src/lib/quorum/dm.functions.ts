@@ -252,13 +252,19 @@ export const sendDirect = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     const mine = me as string | null;
     if (!mine) throw new Error("Profile missing");
     const body = (data.content ?? "").trim().slice(0, 2000);
     const kind = data.kind ?? "text";
-    if (!body && !data.mediaUrl && kind === "text") throw new Error("Message is empty");
+    // The only attachment a DM carries is a voice note this sender uploaded
+    // through uploadVoiceNote; any other URL (or a URL on another kind) is refused.
+    if (data.mediaUrl && kind !== "voice") throw new Error("That attachment isn't allowed");
+    const { ownedMediaUrl } = await import("./upload-safety.server");
+    const mediaUrl = ownedMediaUrl(data.mediaUrl, userId, "voice");
+    if (kind === "voice" && !mediaUrl) throw new Error("Voice note is missing");
+    if (!body && !mediaUrl && kind === "text") throw new Error("Message is empty");
 
     const { data: row, error } = await supabase
       .from("direct_messages")
@@ -267,7 +273,7 @@ export const sendDirect = createServerFn({ method: "POST" })
         sender_id: mine,
         kind,
         content: body,
-        media_url: data.mediaUrl ?? null,
+        media_url: mediaUrl,
         meta: (data.meta ?? {}) as never,
       })
       .select("id")
@@ -386,14 +392,9 @@ export const uploadVoiceNote = createServerFn({ method: "POST" })
   .inputValidator(z.object({ dataUrl: v.dataUrl }))
   .handler(async ({ data, context }) => {
     const { userId } = context;
-    const match = /^data:([^;]+);base64,(.+)$/.exec(data.dataUrl);
-    if (!match) throw new Error("Unsupported recording");
-    const contentType = match[1]!;
-    if (!/^audio\//.test(contentType)) throw new Error("Voice notes must be audio");
-    const bytes = Buffer.from(match[2]!, "base64");
-    if (bytes.byteLength > 8 * 1024 * 1024) throw new Error("Voice note must be under 8 MB");
+    const { parseVoiceUpload } = await import("./upload-safety.server");
+    const { bytes, contentType, ext } = parseVoiceUpload(data.dataUrl);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const ext = contentType.includes("mp4") ? "m4a" : "webm";
     const path = `${userId}/voice/${Date.now()}.${ext}`;
     const { error: upErr } = await supabaseAdmin.storage
       .from("avatars")
