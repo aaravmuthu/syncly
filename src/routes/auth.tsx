@@ -83,9 +83,9 @@ function AuthPage() {
   const mood: SyncMood = busy
     ? "thinking"
     : outcome === "error"
-      ? "alert"
+      ? "oops"
       : outcome === "success"
-        ? "happy"
+        ? "celebrate"
         : focus === "password"
           ? "private"
           : focus === "email"
