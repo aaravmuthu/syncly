@@ -61,7 +61,7 @@ export function FindMySquad() {
   if (myProfile.isLoading || hub.isLoading || mine.isLoading) {
     return (
       <div className="relative">
-        <Skeleton className="h-56 rounded-surface" />
+        <Skeleton className="h-[26rem] rounded-surface md:h-[32rem]" />
         <AiActivity
           state="searching"
           label="Finding your squad…"
@@ -128,7 +128,7 @@ export function FindMySquad() {
         </Link>
       </div>
 
-      <SquadMap people={people} zones={zones} className="h-60 w-full" />
+      <SquadMap compact people={people} zones={zones} className="h-[26rem] w-full md:h-[32rem]" />
 
       <div className="chip-row">
         {teens.map((t) => (
