@@ -1,5 +1,4 @@
 import { ThinkingOrb } from "thinking-orbs";
-import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 /** Simple, non-branded marks so the buttons read clearly without copying vendor artwork. */
@@ -11,26 +10,15 @@ function GoogleMark() {
   );
 }
 
-function AppleMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-5" fill="currentColor">
-      <path d="M16.2 12.6c0-2 1.6-3 1.7-3.1-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.5 2.1 2.5 2 1-.1 1.4-.6 2.6-.6s1.5.6 2.6.6c1.1 0 1.8-1 2.4-2 .8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.1-3zM14.4 6.3c.5-.7.9-1.6.8-2.5-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.8 2.5.9.1 1.8-.4 2.4-1.2z" />
-    </svg>
-  );
-}
-
 export function SocialButtons({
   onGoogle,
-  onApple,
   pending,
   disabled,
 }: {
   onGoogle: () => void;
-  onApple: () => void;
-  pending?: "google" | "apple" | null;
+  pending?: "google" | null;
   disabled?: boolean;
 }) {
-  const { resolved } = useTheme();
   const base =
     "pressable active:pressable-active tap-target flex w-full items-center justify-center gap-2.5 rounded-2xl px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-60";
   return (
@@ -47,25 +35,6 @@ export function SocialButtons({
           <GoogleMark />
         )}
         Continue with Google
-      </button>
-      <button
-        type="button"
-        onClick={onApple}
-        disabled={disabled || !!pending}
-        className={cn(base, "bg-foreground text-background hover:opacity-90")}
-      >
-        {pending === "apple" ? (
-          // Inverted button: the orb needs the opposite ink of the page.
-          <ThinkingOrb
-            state="connecting"
-            size={20}
-            theme={resolved === "dark" ? "light" : "dark"}
-            aria-hidden="true"
-          />
-        ) : (
-          <AppleMark />
-        )}
-        Continue with Apple
       </button>
     </div>
   );
