@@ -7,6 +7,7 @@ import {
   useMotionValueEvent,
   useTransform,
 } from "motion/react";
+import { createPortal } from "react-dom";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Reply } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -192,8 +193,14 @@ export function BubbleSurface({
         </div>
       </PopoverPrimitive.Anchor>
 
+      {/* Its own portal: PopoverPortal is asChild and takes exactly one child. */}
+      {open
+        ? createPortal(
+            <div aria-hidden className="fixed inset-0 z-[60] bg-black/20" />,
+            document.body,
+          )
+        : null}
       <PopoverPrimitive.Portal>
-        {open ? <div aria-hidden className="fixed inset-0 z-[60] bg-black/20" /> : null}
         <PopoverPrimitive.Content
           side="top"
           align={mine ? "end" : "start"}
@@ -209,7 +216,7 @@ export function BubbleSurface({
             <div
               role="group"
               aria-label="React"
-              className="flex items-center gap-0.5 rounded-full border border-border bg-popover/95 p-1 shadow-xl backdrop-blur-xl"
+              className="flex items-center gap-0.5 rounded-full border border-border bg-popover p-1 shadow-xl"
             >
               {reactionEmojis.map((emoji) => (
                 <button
@@ -232,7 +239,7 @@ export function BubbleSurface({
           ) : null}
           <div
             role="menu"
-            className="min-w-48 overflow-hidden rounded-2xl border border-border bg-popover/95 shadow-xl backdrop-blur-xl"
+            className="min-w-48 overflow-hidden rounded-2xl border border-border bg-popover shadow-xl"
           >
             {actions.map((a) => (
               <button
