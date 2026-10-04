@@ -10,6 +10,7 @@ import { Button } from "@/components/quorum/ui";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 import { SyncAvatar, type SyncMood } from "@/components/quorum/auth/SyncAvatar";
 import { caretLook } from "@/components/quorum/auth/caret-look";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { safeRedirectPath } from "@/lib/safe-dom";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +62,7 @@ function AuthPage() {
   const [pulse, setPulse] = useState(0);
   const [outcome, setOutcome] = useState<"success" | "error" | null>(null);
 
+  const isMobile = useIsMobile();
   const target = safeNext(next);
 
   useEffect(() => {
@@ -178,8 +180,10 @@ function AuthPage() {
       <div className="mx-auto mt-10 w-full max-w-sm">
         <Wordmark />
         {mode !== "reset" && (
-          <div className="mt-7 flex justify-center">
-            <SyncAvatar mood={mood} look={look} pulse={pulse} />
+          // Pinned under the status bar on phones so the keyboard and the
+          // browser's scroll-into-view never carry the avatar off screen.
+          <div className="z-20 mt-4 flex justify-center pt-3 pb-2 max-md:sticky max-md:top-[env(safe-area-inset-top)] max-md:-mx-5 max-md:bg-background/85 max-md:backdrop-blur-md md:mt-7">
+            <SyncAvatar mood={mood} look={look} pulse={pulse} size={isMobile ? 84 : 120} />
           </div>
         )}
         <h1 className={cn("text-3xl font-semibold", mode === "reset" ? "mt-6" : "mt-5")}>
