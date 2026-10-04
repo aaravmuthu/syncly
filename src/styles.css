@@ -997,7 +997,7 @@
     --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, transform, scale;
 }
 
-/* Sync avatar: the app mark's dark glass tile with glowing, reactive eyes.
+/* Sync avatar: the app mark's dark glass tile with a small glowing face.
    --s is the tile size; every measurement scales from it. */
 .sync-avatar {
   --sync-eye: oklch(0.87 0.13 168);
@@ -1011,13 +1011,13 @@
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.sync-avatar[data-mood="happy"] {
+.sync-avatar[data-tint="glad"] {
   --sync-eye: oklch(0.91 0.14 160);
 }
-.sync-avatar[data-mood="private"] {
+.sync-avatar[data-tint="shy"] {
   --sync-eye: oklch(0.76 0.1 168);
 }
-.sync-avatar[data-mood="alert"] {
+.sync-avatar[data-tint="warn"] {
   --sync-eye: oklch(0.82 0.14 55);
 }
 .sync-avatar__body,
@@ -1032,6 +1032,9 @@
 }
 .sync-avatar__breathe {
   animation: sync-breathe 4.2s ease-in-out infinite;
+}
+.sync-avatar[data-mood="sleepy"] .sync-avatar__breathe {
+  animation-duration: 6.4s;
 }
 .sync-avatar__tile {
   position: relative;
@@ -1076,11 +1079,12 @@
   pointer-events: none;
 }
 .sync-avatar[data-hover="true"] .sync-avatar__aura,
-.sync-avatar[data-mood="happy"] .sync-avatar__aura,
-.sync-avatar[data-mood="alert"] .sync-avatar__aura {
+.sync-avatar[data-tint="glad"] .sync-avatar__aura,
+.sync-avatar[data-tint="warn"] .sync-avatar__aura {
   opacity: 0.7;
 }
-.sync-avatar[data-mood="private"] .sync-avatar__aura {
+.sync-avatar[data-tint="shy"] .sync-avatar__aura,
+.sync-avatar[data-mood="sleepy"] .sync-avatar__aura {
   opacity: 0.18;
 }
 .sync-avatar__shadow {
@@ -1094,6 +1098,8 @@
   filter: blur(calc(var(--s) * 0.045));
   pointer-events: none;
 }
+
+/* Face: eyes sit a little above centre to leave room for the mouth. */
 .sync-avatar__eyes {
   position: absolute;
   inset: 0;
@@ -1101,6 +1107,22 @@
   align-items: center;
   justify-content: center;
   gap: calc(var(--s) * 0.17);
+  padding-bottom: calc(var(--s) * 0.18);
+}
+.sync-avatar__glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  aspect-ratio: 2 / 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--sync-eye) 38%, transparent),
+    transparent
+  );
+  pointer-events: none;
 }
 .sync-avatar__eye {
   position: relative;
@@ -1108,10 +1130,11 @@
   height: calc(var(--s) * 0.25);
 }
 .sync-avatar__open,
-.sync-avatar__arc {
+.sync-avatar__arc,
+.sync-avatar__heart {
   transition:
     opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
-    transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+    transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .sync-avatar__open {
   position: absolute;
@@ -1141,27 +1164,91 @@
   border-radius: 50%;
   background: oklch(1 0 0 / 0.85);
 }
-.sync-avatar__arc {
+.sync-avatar__arc,
+.sync-avatar__heart {
   position: absolute;
   left: 50%;
   top: 50%;
+  opacity: 0;
+  transform: scale(0.7);
+}
+.sync-avatar__arc {
   width: calc(var(--s) * 0.2);
   height: calc(var(--s) * 0.11);
   margin: calc(var(--s) * -0.05) 0 0 calc(var(--s) * -0.1);
   border-top: calc(var(--s) * 0.05) solid var(--sync-eye);
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
   filter: drop-shadow(0 0 calc(var(--s) * 0.06) var(--sync-glow));
+}
+.sync-avatar__heart {
+  width: calc(var(--s) * 0.24);
+  height: calc(var(--s) * 0.22);
+  margin: calc(var(--s) * -0.11) 0 0 calc(var(--s) * -0.12);
+  fill: var(--sync-eye);
+  filter: drop-shadow(0 0 calc(var(--s) * 0.07) var(--sync-glow));
+  overflow: visible;
+}
+.sync-avatar__eye[data-eye="arc"] .sync-avatar__open,
+.sync-avatar__eye[data-eye="heart"] .sync-avatar__open {
   opacity: 0;
   transform: scale(0.7);
 }
-.sync-avatar[data-mood="happy"] .sync-avatar__open {
-  opacity: 0;
-  transform: scale(0.7);
-}
-.sync-avatar[data-mood="happy"] .sync-avatar__arc {
+.sync-avatar__eye[data-eye="arc"] .sync-avatar__arc,
+.sync-avatar__eye[data-eye="heart"] .sync-avatar__heart {
   opacity: 1;
   transform: scale(1);
 }
+.sync-avatar[data-mood="love"] .sync-avatar__heart {
+  animation: sync-beat 0.9s ease-in-out infinite;
+}
+
+/* Brows appear only when an expression asks for them. */
+.sync-avatar__brow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--s) * 0.05);
+  width: calc(var(--s) * 0.15);
+  height: calc(var(--s) * 0.03);
+  margin-left: calc(var(--s) * -0.075);
+  border-radius: 9999px;
+  background: var(--sync-eye);
+  box-shadow: 0 0 calc(var(--s) * 0.05) var(--sync-glow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sync-avatar__mouth {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.sync-avatar__mouth svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--sync-eye);
+  stroke: var(--sync-eye);
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 calc(var(--s) * 0.045) var(--sync-glow));
+}
+.sync-avatar__cheek {
+  position: absolute;
+  top: 55%;
+  width: calc(var(--s) * 0.19);
+  height: calc(var(--s) * 0.1);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, oklch(0.78 0.13 40 / 0.62), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.sync-avatar__cheek[data-side="l"] {
+  left: 13%;
+}
+.sync-avatar__cheek[data-side="r"] {
+  right: 13%;
+}
+
 .sync-avatar__ring {
   position: absolute;
   inset: 0;
@@ -1173,9 +1260,77 @@
 .sync-avatar[data-mood="thinking"] .sync-avatar__ring {
   animation: sync-ring 1.5s cubic-bezier(0.23, 1, 0.32, 1) infinite;
 }
-.sync-avatar[data-mood="happy"] .sync-avatar__ring {
+.sync-avatar[data-mood="happy"] .sync-avatar__ring,
+.sync-avatar[data-mood="celebrate"] .sync-avatar__ring {
   animation: sync-ring 0.9s cubic-bezier(0.23, 1, 0.32, 1) 1;
 }
+
+/* Sparkles and hearts fly out from the tile, once. */
+.sync-avatar__burst {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.sync-avatar__bit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--s) * 0.1);
+  height: calc(var(--s) * 0.1);
+  margin: calc(var(--s) * -0.05) 0 0 calc(var(--s) * -0.05);
+  opacity: 0;
+  animation: sync-bit 0.95s cubic-bezier(0.23, 1, 0.32, 1) var(--d) both;
+}
+.sync-avatar__bit svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sync-avatar__bit[data-hue="0"] svg {
+  fill: oklch(0.91 0.14 160);
+}
+.sync-avatar__bit[data-hue="1"] svg {
+  fill: oklch(0.84 0.13 62);
+}
+.sync-avatar__bit[data-hue="2"] svg {
+  fill: oklch(0.98 0.02 95);
+}
+.sync-avatar__bit[data-kind="hearts"] {
+  width: calc(var(--s) * 0.12);
+  height: calc(var(--s) * 0.12);
+  animation-duration: 1.5s;
+}
+.sync-avatar__bit[data-hue="3"] svg {
+  fill: oklch(0.8 0.13 12);
+}
+
+.sync-avatar__zzz {
+  position: absolute;
+  right: -6%;
+  top: -4%;
+  z-index: 2;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--sync-eye);
+}
+.sync-avatar__zzz i {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-style: normal;
+  font-size: calc(var(--s) * 0.16);
+  opacity: 0;
+  animation: sync-zzz 3.2s ease-out infinite;
+}
+.sync-avatar__zzz i:nth-child(2) {
+  animation-delay: 1.05s;
+}
+.sync-avatar__zzz i:nth-child(3) {
+  animation-delay: 2.1s;
+}
+
 @keyframes sync-breathe {
   50% {
     transform: translateY(-2%);
@@ -1196,10 +1351,59 @@
     transform: scale(1.5);
   }
 }
+@keyframes sync-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  18% {
+    transform: scale(1.14);
+  }
+  34% {
+    transform: scale(0.98);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+@keyframes sync-bit {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3) rotate(0);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--s) * var(--dx)), calc(var(--s) * var(--dy))) scale(1)
+      rotate(var(--r));
+  }
+}
+@keyframes sync-zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--s) * 0.18), calc(var(--s) * -0.3)) scale(1.1);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .sync-avatar__breathe,
   .sync-avatar__aura,
-  .sync-avatar__ring {
+  .sync-avatar__ring,
+  .sync-avatar__heart,
+  .sync-avatar__burst,
+  .sync-avatar__zzz {
     animation: none !important;
+  }
+  .sync-avatar__burst,
+  .sync-avatar__zzz {
+    display: none;
   }
 }
