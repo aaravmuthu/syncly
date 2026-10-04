@@ -8,9 +8,15 @@ import { Wordmark } from "@/components/quorum/Wordmark";
 import { SocialButtons } from "@/components/quorum/SocialButtons";
 import { Button } from "@/components/quorum/ui";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
+import { SyncAvatar, type SyncMood } from "@/components/quorum/auth/SyncAvatar";
+import { caretLook } from "@/components/quorum/auth/caret-look";
 import { safeRedirectPath } from "@/lib/safe-dom";
+import { cn } from "@/lib/utils";
 
 type Mode = "signin" | "signup" | "reset";
+type Field = "email" | "password";
+
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function safeNext(next: string | undefined) {
   return safeRedirectPath(next, "/home");
@@ -48,8 +54,12 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [social, setSocial] = useState<"google" | "apple" | null>(null);
+  const [social, setSocial] = useState<"google" | null>(null);
   const [checking, setChecking] = useState(true);
+  const [focus, setFocus] = useState<Field | null>(null);
+  const [look, setLook] = useState(0);
+  const [pulse, setPulse] = useState(0);
+  const [outcome, setOutcome] = useState<"success" | "error" | null>(null);
 
   const target = safeNext(next);
 
@@ -63,7 +73,28 @@ function AuthPage() {
     });
   }, [target]);
 
-  async function signInWith(provider: "google" | "apple") {
+  // The avatar's reaction to the outcome is momentary; it relaxes back to the form.
+  useEffect(() => {
+    if (!outcome) return;
+    const t = window.setTimeout(() => setOutcome(null), 1800);
+    return () => window.clearTimeout(t);
+  }, [outcome]);
+
+  const mood: SyncMood = busy
+    ? "thinking"
+    : outcome === "error"
+      ? "alert"
+      : outcome === "success"
+        ? "happy"
+        : focus === "password"
+          ? "private"
+          : focus === "email"
+            ? EMAIL_SHAPE.test(email)
+              ? "happy"
+              : "watching"
+            : "idle";
+
+  async function signInWith(provider: "google") {
     setSocial(provider);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -90,6 +121,7 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Check your email for a reset link.");
+        setOutcome("success");
         setMode("signin");
         return;
       }
@@ -102,6 +134,7 @@ function AuthPage() {
         if (error) throw error;
         if (!data.session) {
           toast.success("Account created. Confirm your email, then log in.");
+          setOutcome("success");
           setMode("signin");
           return;
         }
@@ -119,6 +152,7 @@ function AuthPage() {
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "We couldn't sign you in. Try again.");
+      setOutcome("error");
     } finally {
       setBusy(false);
     }
@@ -143,7 +177,12 @@ function AuthPage() {
 
       <div className="mx-auto mt-10 w-full max-w-sm">
         <Wordmark />
-        <h1 className="mt-6 text-3xl font-semibold">
+        {mode !== "reset" && (
+          <div className="mt-7 flex justify-center">
+            <SyncAvatar mood={mood} look={look} pulse={pulse} />
+          </div>
+        )}
+        <h1 className={cn("text-3xl font-semibold", mode === "reset" ? "mt-6" : "mt-5")}>
           {mode === "signin"
             ? "Welcome back"
             : mode === "signup"
@@ -161,7 +200,6 @@ function AuthPage() {
             <div className="mt-7">
               <SocialButtons
                 onGoogle={() => void signInWith("google")}
-                onApple={() => void signInWith("apple")}
                 pending={social}
                 disabled={busy}
               />
@@ -182,7 +220,18 @@ function AuthPage() {
               required
               autoComplete="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setPulse((n) => n + 1);
+                setLook(caretLook(e.target));
+                setOutcome(null);
+              }}
+              onSelect={(e) => setLook(caretLook(e.currentTarget))}
+              onFocus={(e) => {
+                setFocus("email");
+                setLook(caretLook(e.currentTarget));
+              }}
+              onBlur={() => setFocus(null)}
               className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none transition-colors focus:border-primary/60"
             />
           </label>
@@ -195,7 +244,13 @@ function AuthPage() {
                 minLength={6}
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPulse((n) => n + 1);
+                  setOutcome(null);
+                }}
+                onFocus={() => setFocus("password")}
+                onBlur={() => setFocus(null)}
                 className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none transition-colors focus:border-primary/60"
               />
             </label>

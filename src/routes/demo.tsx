@@ -21,6 +21,8 @@ import { estimateCost } from "@/lib/quorum/cost";
 import type { ConstraintPayload } from "@/lib/quorum/types";
 import { cn } from "@/lib/utils";
 import { DEMO_GROUP, DEMO_POOL, type DemoMember } from "@/lib/quorum/demo-group";
+import { analyze, type CoachMove } from "@/lib/quorum/demo-coach";
+import { DemoCoach } from "@/components/quorum/demo/DemoCoach";
 
 const TITLE = `Try ${BRAND.name} — interactive demo, no account needed`;
 const DESCRIPTION =
@@ -93,6 +95,12 @@ function DemoPage() {
   const reduce = useReducedMotion();
   const [members, setMembers] = useState<DemoMember[]>(DEMO_GROUP);
   const [activeId, setActiveId] = useState("m1");
+  // Who the visitor is playing, and the name they gave. The name is display
+  // only: it stays in this browser and is never sent to the AI.
+  const [youId, setYouId] = useState<string | null>(null);
+  const [youName, setYouName] = useState("");
+  const nameOf = (m: { id: string; name: string }) =>
+    m.id === youId && youName.trim() ? youName.trim() : m.name;
   const [tried, setTried] = useState<string[]>([]);
 
   const active = members.find((m) => m.id === activeId)!;
@@ -124,6 +132,8 @@ function DemoPage() {
     }));
     return rankOptions(DEMO_POOL, inputs).slice(0, 4);
   }, [members]);
+
+  const coach = useMemo(() => analyze(members, DEMO_POOL, youId), [members, youId]);
 
   const top = ranked[0];
   const anyFeasible = top.feasible;
@@ -173,7 +183,7 @@ function DemoPage() {
   const transport = top.option.requiresDriving
     ? buildTransportPlan(
         top.option,
-        members.map((m) => ({ profileId: m.id, name: m.name, constraints: m.constraints })),
+        members.map((m) => ({ profileId: m.id, name: nameOf(m), constraints: m.constraints })),
       )
     : null;
 
@@ -205,6 +215,14 @@ function DemoPage() {
     setActiveId(t.memberId);
     patchMember(t.memberId, t.patch(m.constraints));
     setTried((prev) => [...prev, t.id]);
+    if (!topVisible) window.setTimeout(scrollToTop, 120);
+  };
+
+  const applyMove = (move: CoachMove) => {
+    // A friend's answer changes without opening their controls: you can ask a
+    // friend, but you don't get to read their answers.
+    if (move.who !== "friend") setActiveId(move.memberId);
+    patchMember(move.memberId, move.patch);
     if (!topVisible) window.setTimeout(scrollToTop, 120);
   };
 
@@ -377,6 +395,25 @@ function DemoPage() {
               </Card>
             </div>
 
+            <DemoCoach
+              coach={coach}
+              members={members}
+              youId={youId}
+              youName={youName}
+              edited={edited}
+              busy={reranking}
+              onApply={applyMove}
+              onPick={(id) => {
+                setYouId(id);
+                setActiveId(id);
+              }}
+              onClear={() => {
+                setYouId(null);
+                setYouName("");
+              }}
+              onName={setYouName}
+            />
+
             <Disclosure
               label={`${others.length} other options`}
               meta={`${othersWorking} work for everyone`}
@@ -446,7 +483,9 @@ function DemoPage() {
                       >
                         <span className="text-[0.9375rem]">
                           “{t.quote}”
-                          <span className="ml-1.5 text-sm text-muted-foreground">— {who.name}</span>
+                          <span className="ml-1.5 text-sm text-muted-foreground">
+                            — {nameOf(who)}
+                          </span>
                         </span>
                         {done ? (
                           <Check className="size-4 shrink-0 text-primary" aria-label="Applied" />
@@ -507,7 +546,7 @@ function DemoPage() {
                       <span aria-hidden className="relative">
                         {m.emoji}
                       </span>
-                      <span className="relative">{m.name}</span>
+                      <span className="relative">{nameOf(m)}</span>
                     </button>
                   ))}
                 </div>

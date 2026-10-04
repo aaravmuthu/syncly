@@ -996,3 +996,210 @@
     color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
     --tw-gradient-from, --tw-gradient-via, --tw-gradient-to, transform, scale;
 }
+
+/* Sync avatar: the app mark's dark glass tile with glowing, reactive eyes.
+   --s is the tile size; every measurement scales from it. */
+.sync-avatar {
+  --sync-eye: oklch(0.87 0.13 168);
+  --sync-glow: color-mix(in oklab, var(--sync-eye) 55%, transparent);
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  perspective: 640px;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.sync-avatar[data-mood="happy"] {
+  --sync-eye: oklch(0.91 0.14 160);
+}
+.sync-avatar[data-mood="private"] {
+  --sync-eye: oklch(0.76 0.1 168);
+}
+.sync-avatar[data-mood="alert"] {
+  --sync-eye: oklch(0.82 0.14 55);
+}
+.sync-avatar__body,
+.sync-avatar__breathe,
+.sync-avatar__tile {
+  width: 100%;
+  height: 100%;
+}
+.sync-avatar__body {
+  position: relative;
+  will-change: transform;
+}
+.sync-avatar__breathe {
+  animation: sync-breathe 4.2s ease-in-out infinite;
+}
+.sync-avatar__tile {
+  position: relative;
+  overflow: hidden;
+  border-radius: 30%;
+  background: linear-gradient(
+    150deg,
+    oklch(0.36 0.02 180),
+    oklch(0.25 0.015 180) 45%,
+    oklch(0.16 0.01 180)
+  );
+  box-shadow:
+    inset 0 1px 0 oklch(0.9 0.1 175 / 0.4),
+    inset 0 -1px 0 oklch(0 0 0 / 0.35),
+    inset 0 0 calc(var(--s) * 0.22) color-mix(in oklab, var(--sync-eye) 9%, transparent),
+    0 0 0 1px oklch(0.2 0.01 180 / 0.6);
+}
+.sync-avatar__sheen {
+  position: absolute;
+  inset: -25%;
+  background: radial-gradient(
+    42% 42% at 38% 24%,
+    oklch(1 0 0 / 0.2),
+    oklch(1 0 0 / 0.04) 60%,
+    transparent
+  );
+  pointer-events: none;
+}
+.sync-avatar__aura {
+  position: absolute;
+  inset: -26%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--sync-eye) 42%, transparent),
+    transparent
+  );
+  filter: blur(calc(var(--s) * 0.1));
+  opacity: 0.4;
+  transition: opacity 320ms cubic-bezier(0.23, 1, 0.32, 1);
+  animation: sync-aura 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.sync-avatar[data-hover="true"] .sync-avatar__aura,
+.sync-avatar[data-mood="happy"] .sync-avatar__aura,
+.sync-avatar[data-mood="alert"] .sync-avatar__aura {
+  opacity: 0.7;
+}
+.sync-avatar[data-mood="private"] .sync-avatar__aura {
+  opacity: 0.18;
+}
+.sync-avatar__shadow {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: -13%;
+  height: 8%;
+  border-radius: 50%;
+  background: oklch(0.2 0.02 180 / 0.4);
+  filter: blur(calc(var(--s) * 0.045));
+  pointer-events: none;
+}
+.sync-avatar__eyes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--s) * 0.17);
+}
+.sync-avatar__eye {
+  position: relative;
+  width: calc(var(--s) * 0.14);
+  height: calc(var(--s) * 0.25);
+}
+.sync-avatar__open,
+.sync-avatar__arc {
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.sync-avatar__open {
+  position: absolute;
+  inset: 0;
+}
+.sync-avatar__pupil {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--sync-eye) 70%, white),
+    var(--sync-eye) 55%
+  );
+  box-shadow: 0 0 calc(var(--s) * 0.16) var(--sync-glow);
+  transition:
+    background 300ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.sync-avatar__spark {
+  position: absolute;
+  top: 12%;
+  right: 16%;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: oklch(1 0 0 / 0.85);
+}
+.sync-avatar__arc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--s) * 0.2);
+  height: calc(var(--s) * 0.11);
+  margin: calc(var(--s) * -0.05) 0 0 calc(var(--s) * -0.1);
+  border-top: calc(var(--s) * 0.05) solid var(--sync-eye);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  filter: drop-shadow(0 0 calc(var(--s) * 0.06) var(--sync-glow));
+  opacity: 0;
+  transform: scale(0.7);
+}
+.sync-avatar[data-mood="happy"] .sync-avatar__open {
+  opacity: 0;
+  transform: scale(0.7);
+}
+.sync-avatar[data-mood="happy"] .sync-avatar__arc {
+  opacity: 1;
+  transform: scale(1);
+}
+.sync-avatar__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 30%;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 75%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.sync-avatar[data-mood="thinking"] .sync-avatar__ring {
+  animation: sync-ring 1.5s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+.sync-avatar[data-mood="happy"] .sync-avatar__ring {
+  animation: sync-ring 0.9s cubic-bezier(0.23, 1, 0.32, 1) 1;
+}
+@keyframes sync-breathe {
+  50% {
+    transform: translateY(-2%);
+  }
+}
+@keyframes sync-aura {
+  50% {
+    transform: scale(1.08);
+  }
+}
+@keyframes sync-ring {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-avatar__breathe,
+  .sync-avatar__aura,
+  .sync-avatar__ring {
+    animation: none !important;
+  }
+}
