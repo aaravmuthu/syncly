@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/re
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, UserPlus } from "lucide-react";
+import { ChevronRight, MessageCircle, Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/quorum/AppShell";
+import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/friends-context";
 import { Button, Empty, GlassPill, Skeleton } from "@/components/quorum/ui";
@@ -12,6 +13,8 @@ import { PullToRefresh } from "@/components/quorum/interactions";
 import { ChatSheet } from "@/components/quorum/dm/ChatSheet";
 import { DirectChat } from "@/components/quorum/dm/DirectChat";
 import { SquadChat } from "@/components/quorum/SquadChat";
+import { GroupInfoSheet } from "@/components/quorum/chat/GroupInfoSheet";
+import { useChatInbox } from "@/lib/quorum/useChatUnread";
 import { listContacts, listInbox, openThread } from "@/lib/quorum/dm.functions";
 
 type Search = { peer?: string; thread?: string; group?: string };
@@ -69,21 +72,18 @@ export function MessagesPage() {
   const search = searchRef.current;
   const { alias } = useFriends();
   const navigate = useNavigate();
-  const fetchInbox = useServerFn(listInbox);
   const fetchContacts = useServerFn(listContacts);
   const open = useServerFn(openThread);
 
-  const inbox = useQuery({
-    queryKey: ["dm-inbox"],
-    queryFn: () => fetchInbox(),
-    refetchInterval: 30_000,
-  });
+  // Shared with the nav badge; a realtime nudge keeps it fresh without polling.
+  const inbox = useChatInbox();
   const contacts = useQuery({ queryKey: ["dm-contacts"], queryFn: () => fetchContacts() });
 
   const [query, setQuery] = useState("");
   const [browseNew, setBrowseNew] = useState(false);
   const [thread, setThread] = useState<string | null>(search.thread ?? null);
   const [group, setGroup] = useState<string | null>(search.group ?? null);
+  const [groupInfo, setGroupInfo] = useState(false);
 
   /* opening from a map card: ?peer=<profileId> resolves to a thread */
   useEffect(() => {
@@ -161,8 +161,18 @@ export function MessagesPage() {
 
           {inbox.isLoading ? (
             <div className="space-y-3">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="h-16 rounded-2xl" />
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-3.5 py-3"
+                  aria-hidden
+                >
+                  <Skeleton className="size-11 shrink-0 rounded-full" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Skeleton className="h-3.5 w-2/5" />
+                    <Skeleton className="h-3 w-4/5" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : inbox.isError ? (
@@ -272,6 +282,13 @@ export function MessagesPage() {
                 <Empty
                   title="No chats yet"
                   body="Join or create a circle to start messaging your squad — or tap Message on someone's map pin."
+                  action={
+                    <Link to="/groups" className="inline-flex">
+                      <Button>
+                        <MessageCircle className="size-4" aria-hidden /> Find your squad
+                      </Button>
+                    </Link>
+                  }
                 />
               ) : null}
             </>
@@ -290,6 +307,7 @@ export function MessagesPage() {
       >
         {thread ? (
           <DirectChat
+            key={thread}
             threadId={thread}
             circle={(() => {
               const peerId = inbox.data?.threads.find((t) => t.id === thread)?.peer?.id;
@@ -300,35 +318,65 @@ export function MessagesPage() {
         ) : null}
       </ChatSheet>
 
-      <ChatSheet open={Boolean(group)} onOpenChange={(v) => !v && setGroup(null)}>
+      <ChatSheet
+        open={Boolean(group)}
+        onOpenChange={(v) => {
+          if (!v) {
+            setGroup(null);
+            setGroupInfo(false);
+          }
+        }}
+      >
         {group ? (
-          <div className="flex min-h-0 flex-1 flex-col p-2">
-            {/* Name the squad, as DirectChat names the person -- otherwise the
-                sheet opens straight into proposals with no clue whose chat it is. */}
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Name the squad, as DirectChat names the person; tapping it opens
+                the member list. */}
             {(() => {
               const sq = inbox.data?.squads.find((s) => s.id === group);
               return sq ? (
-                <header className="flex items-center gap-3 px-2 pb-2">
-                  <span className="grid size-10 place-items-center overflow-hidden rounded-full bg-secondary text-lg">
-                    {sq.avatar_url ? (
-                      <img src={sq.avatar_url} alt="" className="size-10 object-cover" />
-                    ) : (
-                      sq.emoji
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">{sq.name}</span>
-                  <Link
-                    to="/groups/$groupId"
-                    params={{ groupId: group }}
-                    onClick={() => setGroup(null)}
-                    className="tap-target inline-flex items-center rounded-full px-3 text-sm font-medium text-primary transition active:scale-[0.97]"
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setGroupInfo(true)}
+                    aria-label={`${sq.name} info and members`}
+                    className="tap-target flex items-center gap-3 border-b border-border/60 px-4 py-3 text-left"
                   >
-                    Open squad
-                  </Link>
-                </header>
+                    <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary text-lg">
+                      {sq.avatar_url ? (
+                        <img src={sq.avatar_url} alt="" className="size-10 object-cover" />
+                      ) : (
+                        sq.emoji
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold">{sq.name}</span>
+                      <span className="block text-caption text-muted-foreground">
+                        Tap for members
+                      </span>
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                  </button>
+                  <GroupInfoSheet
+                    groupId={group}
+                    name={sq.name}
+                    emoji={sq.emoji}
+                    avatarUrl={sq.avatar_url}
+                    open={groupInfo}
+                    onOpenChange={setGroupInfo}
+                    onOpenSquad={() => {
+                      setGroupInfo(false);
+                      setGroup(null);
+                    }}
+                  />
+                </>
               ) : null;
             })()}
-            <SquadChat groupId={group} className="min-h-0 flex-1 rounded-2xl" />
+            {/* The sheet is the surface; drop the card's own glass. */}
+            <SquadChat
+              key={group}
+              groupId={group}
+              className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none backdrop-blur-none"
+            />
           </div>
         ) : null}
       </ChatSheet>
@@ -357,7 +405,7 @@ function Row({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-3.5 py-3 text-left transition active:scale-[0.99] hover:border-primary/40"
+      className="tap-target flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-3.5 py-3 text-left transition active:scale-[0.99] hover:border-primary/40"
     >
       {avatar}
       <span className="min-w-0 flex-1">
@@ -372,14 +420,34 @@ function Row({
               <span className="italic text-muted-foreground"> · no name yet</span>
             </span>
           ) : (
-            <span className="truncate text-sm font-semibold">{title}</span>
+            <span className={cn("truncate text-sm", unread > 0 ? "font-bold" : "font-semibold")}>
+              {title}
+            </span>
           )}
-          <span className="shrink-0 text-caption text-muted-foreground">{at}</span>
+          <span
+            className={cn(
+              "shrink-0 text-caption",
+              unread > 0 ? "font-semibold text-primary" : "text-muted-foreground",
+            )}
+          >
+            {at}
+          </span>
         </span>
         <span className="mt-0.5 flex items-center justify-between gap-2">
-          <span className="truncate text-xs text-muted-foreground">{preview}</span>
+          <span
+            className={cn(
+              "truncate text-xs",
+              unread > 0 ? "font-medium text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {preview}
+          </span>
           {unread > 0 ? (
-            <span className="grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-caption font-bold text-primary-foreground">
+            <span
+              key={unread}
+              aria-label={`${unread} unread`}
+              className="animate-rise grid min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1.5 text-caption font-bold text-primary-foreground"
+            >
               {unread > 9 ? "9+" : unread}
             </span>
           ) : null}

@@ -34,6 +34,7 @@ import { InstallPrompt } from "./InstallPrompt";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
 import { useNotifications } from "@/lib/quorum/useNotifications";
+import { useChatUnread } from "@/lib/quorum/useChatUnread";
 import { getMe } from "@/lib/quorum/plan.functions";
 import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
@@ -186,6 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const suppressClickUntil = useRef(0);
 
   const { unread } = useNotifications();
+  const chatUnread = useChatUnread();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
   // AppShell is the "My Squad" experience for everyone -- Family Hub now has
   // its own shell (GuardianShell) and is reached via the ContextSwitcher, not
@@ -257,7 +259,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Wordmark className="h-6" />
             </Link>
             <div className="flex items-center gap-2">
-              <DesktopTabs nav={NAV} selectedTab={selectedTab} />
+              <DesktopTabs nav={NAV} selectedTab={selectedTab} chatUnread={chatUnread} />
               {/* Desktop has room for the full icon row; mobile collapses it
                   into one overflow trigger instead (see OverflowMenu). */}
               <div className="hidden items-center gap-2 md:flex">
@@ -362,6 +364,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   >
                     <span className="relative leading-none">
                       <n.icon className={cn("h-5 w-5")} aria-hidden />
+                      {n.to === "/messages" && chatUnread > 0 ? (
+                        <span
+                          className="absolute -right-2 -top-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[0.625rem] font-bold leading-4 text-primary-foreground ring-2 ring-card"
+                          aria-label={`${chatUnread} unread`}
+                        >
+                          {chatUnread > 9 ? "9+" : chatUnread}
+                        </span>
+                      ) : null}
                     </span>
                     {n.label}
                   </span>
@@ -452,7 +462,15 @@ function OverflowMenu({
   );
 }
 
-function DesktopTabs({ nav, selectedTab }: { nav: NavItem[]; selectedTab: TabPath | null }) {
+function DesktopTabs({
+  nav,
+  selectedTab,
+  chatUnread,
+}: {
+  nav: NavItem[];
+  selectedTab: TabPath | null;
+  chatUnread: number;
+}) {
   const root = useRef<HTMLElement>(null);
   const items = useRef(new Map<TabPath, HTMLAnchorElement>());
   const [indicatorX, setIndicatorX] = useState<number | null>(null);
@@ -500,6 +518,14 @@ function DesktopTabs({ nav, selectedTab }: { nav: NavItem[]; selectedTab: TabPat
             )}
           >
             {item.label}
+            {item.to === "/messages" && chatUnread > 0 ? (
+              <span
+                className="ml-1.5 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-caption font-bold leading-4 text-primary-foreground"
+                aria-label={`${chatUnread} unread`}
+              >
+                {chatUnread > 9 ? "9+" : chatUnread}
+              </span>
+            ) : null}
           </Link>
         );
       })}

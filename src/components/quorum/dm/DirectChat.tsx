@@ -2,13 +2,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence } from "motion/react";
-import { BatteryLow, BatteryFull, MapPin, Mic, Navigation, Square, X } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import {
+  BatteryFull,
+  BatteryLow,
+  Copy,
+  MapPin,
+  Mic,
+  Navigation,
+  RotateCcw,
+  Square,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/quorum/Avatar";
 import { useFriends } from "@/lib/quorum/friends-context";
-import { Button, Spinner } from "@/components/quorum/ui";
 import { haptic } from "@/lib/quorum/haptics";
 import {
   getThread,
@@ -17,8 +27,30 @@ import {
   toggleReaction,
   uploadVoiceNote,
 } from "@/lib/quorum/dm.functions";
+import { prepareVoiceUpload } from "@/lib/quorum/safe-upload";
 import { cn } from "@/lib/utils";
 import { UNNAMED, firstName } from "@/lib/quorum/names";
+import { ChatComposer } from "@/components/quorum/chat/Composer";
+import { clock, layoutRows, type ClusterPos } from "@/components/quorum/chat/layout";
+import {
+  BubbleSurface,
+  ReactionChips,
+  RevealRow,
+  SwipeRow,
+  type MenuAction,
+} from "@/components/quorum/chat/MessageBubble";
+import { useRise } from "@/components/quorum/chat/motion";
+import {
+  JumpToLatest,
+  SystemNote,
+  ThreadEmpty,
+  ThreadError,
+  ThreadSkeleton,
+  TimeHeader,
+  TypingBubble,
+} from "@/components/quorum/chat/ThreadParts";
+import { useChatScroll } from "@/components/quorum/chat/useChatScroll";
+import { usePendingMessages, type Pending } from "@/components/quorum/chat/usePendingMessages";
 
 type DM = {
   id: string;
@@ -32,8 +64,17 @@ type DM = {
 };
 
 type Reaction = { message_id: string; profile_id: string; emoji: string };
+type SendPayload = {
+  threadId: string;
+  content?: string;
+  kind?: "text" | "location" | "venue" | "voice";
+  mediaUrl?: string | null;
+  meta?: { lat?: number; lon?: number; label?: string };
+};
+/** Just the slice of the getThread result this component patches in place. */
+type ThreadCache = { messages: DM[]; reactions: Reaction[] };
 
-const REACTIONS = ["❤️", "🔥", "👍", "📍"];
+const REACTIONS = ["❤️", "👍", "😂", "🔥", "😮", "📍"];
 
 const CONTEXT_PILLS = [
   "Glad you made it safely! 👍",
@@ -41,8 +82,7 @@ const CONTEXT_PILLS = [
   "Share my live location 📍",
 ];
 
-const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+type Item = { kind: "msg"; m: DM } | { kind: "pending"; p: Pending<SendPayload> };
 
 export function DirectChat({
   threadId,
@@ -69,30 +109,97 @@ export function DirectChat({
   const q = useQuery({ queryKey: key, queryFn: () => fetchThread({ data: { threadId } }) });
 
   const [text, setText] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [peerTyping, setPeerTyping] = useState(false);
   const [peerOnline, setPeerOnline] = useState(false);
   const [recording, setRecording] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [uploadingVoice, setUploadingVoice] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const lastTyped = useRef(0);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  /** Ids present on first load: only messages that arrive later animate in. */
+  const initialIds = useRef<Set<string> | null>(null);
 
   const me = q.data?.me ?? null;
   const peer = q.data?.peer ?? null;
-  const messages = (q.data?.messages ?? []) as unknown as DM[];
+  const messages = useMemo(() => (q.data?.messages ?? []) as unknown as DM[], [q.data?.messages]);
   const reactions = useMemo(
     () => (q.data?.reactions ?? []) as unknown as Reaction[],
     [q.data?.reactions],
   );
   const telemetry = q.data?.telemetry ?? null;
   const peerReadAt = q.data?.peerReadAt ?? null;
+  if (q.data && !initialIds.current) initialIds.current = new Set(messages.map((m) => m.id));
 
-  const reactionsFor = useCallback(
-    (id: string) => reactions.filter((r) => r.message_id === id),
-    [reactions],
+  /* a coalesced refetch, for events we can't patch from the payload -------- */
+  const refetchSoon = useCallback(() => {
+    if (refetchTimer.current) return;
+    refetchTimer.current = setTimeout(() => {
+      refetchTimer.current = null;
+      void qc.invalidateQueries({ queryKey: key });
+    }, 150);
+  }, [qc, key]);
+
+  /* optimistic sends ---------------------------------------------------- */
+  const pend = usePendingMessages<SendPayload>(
+    useCallback(
+      async (payload) => {
+        const r = await send({ data: payload });
+        haptic("tap");
+        refetchSoon();
+        void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
+        return r;
+      },
+      [send, qc, refetchSoon],
+    ),
   );
+  const pendingRows = pend.visible(
+    messages.map((m) => ({ id: m.id, sender: m.sender_id, content: m.content })),
+    me,
+  );
+
+  const items = useMemo<Item[]>(
+    () => [
+      ...messages.map((m): Item => ({ kind: "msg", m })),
+      ...pendingRows.map((p): Item => ({ kind: "pending", p })),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [messages, pend.pending],
+  );
+  const rows = useMemo(
+    () =>
+      layoutRows(items, (it) =>
+        it.kind === "msg"
+          ? {
+              id: it.m.id,
+              sender: it.m.sender_id,
+              at: it.m.created_at,
+              system: it.m.kind === "system",
+            }
+          : { id: it.p.cid, sender: me, at: it.p.at, system: false },
+      ),
+    [items, me],
+  );
+
+  const scroll = useChatScroll(rows.length);
+
+  const byMessage = useMemo(() => {
+    const map = new Map<string, Reaction[]>();
+    for (const r of reactions) map.set(r.message_id, [...(map.get(r.message_id) ?? []), r]);
+    return map;
+  }, [reactions]);
+
+  const lastMineKey = useMemo(() => {
+    for (let i = rows.length - 1; i >= 0; i -= 1) {
+      const it = rows[i]!.item;
+      if (it.kind === "pending") return it.p.cid;
+      if (it.m.kind !== "system" && it.m.sender_id === me) return it.m.id;
+    }
+    return null;
+  }, [rows, me]);
 
   /* realtime: messages, reactions, typing + presence ------------------ */
   useEffect(() => {
@@ -107,10 +214,48 @@ export function DirectChat({
           table: "direct_messages",
           filter: `thread_id=eq.${threadId}`,
         },
-        () => void qc.invalidateQueries({ queryKey: key }),
+        ({ new: row }) => {
+          const msg = row as unknown as DM;
+          // Patch the cache from the payload instead of refetching the thread.
+          qc.setQueryData<ThreadCache>(key, (old) =>
+            old && !old.messages.some((m) => m.id === msg.id)
+              ? { ...old, messages: [...old.messages, msg] }
+              : old,
+          );
+          if (msg.sender_id !== me) setPeerTyping(false);
+          void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
+        },
       )
-      .on("postgres_changes", { event: "*", schema: "public", table: "direct_reactions" }, () =>
-        qc.invalidateQueries({ queryKey: key }),
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "direct_reactions" },
+        ({ new: row }) => {
+          const r = row as unknown as Reaction;
+          qc.setQueryData<ThreadCache>(key, (old) =>
+            old &&
+            old.messages.some((m) => m.id === r.message_id) &&
+            !old.reactions.some(
+              (x) =>
+                x.message_id === r.message_id &&
+                x.profile_id === r.profile_id &&
+                x.emoji === r.emoji,
+            )
+              ? {
+                  ...old,
+                  reactions: [
+                    ...old.reactions,
+                    { message_id: r.message_id, profile_id: r.profile_id, emoji: r.emoji },
+                  ],
+                }
+              : old,
+          );
+        },
+      )
+      // A removed reaction's payload carries only its id, so refetch to learn which.
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "direct_reactions" },
+        refetchSoon,
       )
       .on("broadcast", { event: "typing" }, ({ payload }) => {
         if ((payload as { id?: string })?.id === me) return;
@@ -133,11 +278,18 @@ export function DirectChat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [threadId, me]);
 
-  /* keep the thread marked read + pinned to the newest message --------- */
+  /* keep the thread marked read while it's on screen ------------------- */
   useEffect(() => {
     if (!q.data) return;
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-    void mark({ data: { threadId } }).then(() => qc.invalidateQueries({ queryKey: ["dm-inbox"] }));
+    const run = () => {
+      if (document.visibilityState !== "visible") return;
+      void mark({ data: { threadId } }).then(() =>
+        qc.invalidateQueries({ queryKey: ["dm-inbox"] }),
+      );
+    };
+    run();
+    document.addEventListener("visibilitychange", run);
+    return () => document.removeEventListener("visibilitychange", run);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q.data?.messages.length, threadId]);
 
@@ -148,20 +300,45 @@ export function DirectChat({
     void channelRef.current?.send({ type: "broadcast", event: "typing", payload: { id: me } });
   };
 
-  async function submit(payload: Parameters<typeof send>[0]["data"]) {
-    setBusy(true);
+  function submit(payload: SendPayload, preview?: string) {
+    scroll.stick();
+    pend.enqueue(
+      payload,
+      preview ?? (payload.content ?? "").trim(),
+      messages.map((m) => m.id),
+    );
+  }
+
+  function sendText() {
+    const body = text.trim();
+    if (!body) return;
+    setText("");
+    haptic("tap");
+    submit({ threadId, content: body });
+  }
+
+  async function toggleReact(messageId: string, emoji: string) {
+    if (!me) return;
+    haptic("tap");
+    qc.setQueryData<ThreadCache>(key, (old) => {
+      if (!old) return old;
+      const has = old.reactions.some(
+        (r) => r.message_id === messageId && r.profile_id === me && r.emoji === emoji,
+      );
+      return {
+        ...old,
+        reactions: has
+          ? old.reactions.filter(
+              (r) => !(r.message_id === messageId && r.profile_id === me && r.emoji === emoji),
+            )
+          : [...old.reactions, { message_id: messageId, profile_id: me, emoji }],
+      };
+    });
     try {
-      await send({ data: payload });
-      setText("");
-      await qc.invalidateQueries({ queryKey: key });
-      void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
-      haptic("tap");
-    } catch (e) {
-      toast.error("Message not sent", {
-        description: e instanceof Error ? e.message : "Please try again.",
-      });
-    } finally {
-      setBusy(false);
+      await react({ data: { messageId, emoji } });
+    } catch {
+      toast.error("Couldn't update that reaction");
+      void qc.invalidateQueries({ queryKey: key });
     }
   }
 
@@ -177,7 +354,7 @@ export function DirectChat({
       ),
     );
     if (!pos) return toast.error("Couldn't read your location");
-    await submit({
+    submit({
       threadId,
       kind: "location",
       content: "Shared a live location 📍",
@@ -200,22 +377,18 @@ export function DirectChat({
         setRecording(false);
         const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
         if (blob.size < 800) return;
-        setBusy(true);
+        setUploadingVoice(true);
         try {
-          const dataUrl = await new Promise<string>((res, rej) => {
-            const fr = new FileReader();
-            fr.onload = () => res(String(fr.result));
-            fr.onerror = () => rej(new Error("Could not read the recording"));
-            fr.readAsDataURL(blob);
-          });
+          // Checked by its bytes before it leaves the phone; the server checks again.
+          const dataUrl = await prepareVoiceUpload(blob);
           const { url } = await upVoice({ data: { dataUrl } });
-          await submit({ threadId, kind: "voice", content: "Voice note 🎙️", mediaUrl: url });
+          submit({ threadId, kind: "voice", content: "Voice note 🎙️", mediaUrl: url });
         } catch (e) {
           toast.error("Voice note failed", {
             description: e instanceof Error ? e.message : "Please try again.",
           });
         } finally {
-          setBusy(false);
+          setUploadingVoice(false);
         }
       };
       rec.start();
@@ -234,9 +407,9 @@ export function DirectChat({
     navigate({ to: "/radar", search: { lat, lon, label: label ?? "Shared pin" } });
 
   return (
-    <div className={cn("flex min-h-0 flex-col bg-card/90 backdrop-blur-2xl", className)}>
+    <div className={cn("flex min-h-0 flex-col", className)}>
       {/* context banner ------------------------------------------------ */}
-      <header className="flex items-center gap-3 border-b border-border px-4 py-3">
+      <header className="flex items-center gap-3 border-b border-border/60 px-4 py-3">
         <button
           type="button"
           className="relative"
@@ -282,7 +455,7 @@ export function DirectChat({
                     {telemetry.battery}%
                   </span>
                 ) : null}
-                <span>· {time(telemetry.at)}</span>
+                <span>· {clock(telemetry.at)}</span>
               </>
             ) : (
               <span>{peerOnline ? "Online now" : "No live location shared"}</span>
@@ -311,257 +484,299 @@ export function DirectChat({
       </header>
 
       {/* transcript ---------------------------------------------------- */}
-      <div ref={scrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        {q.isLoading ? (
-          <div className="flex justify-center py-10">
-            <Spinner />
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scroll.ref}
+          onScroll={scroll.onScroll}
+          className="absolute inset-0 overflow-y-auto overscroll-contain px-3 py-3"
+        >
+          <div className="flex min-h-full flex-col justify-end" aria-live="polite">
+            {q.isLoading ? (
+              <ThreadSkeleton />
+            ) : q.isError ? (
+              <ThreadError onRetry={() => void q.refetch()} />
+            ) : rows.length === 0 ? (
+              <ThreadEmpty
+                title="No messages yet"
+                body="Say hi — this chat is just between you two."
+              />
+            ) : null}
+
+            {rows.map(({ item, pos, header }) => {
+              const rowKey = item.kind === "msg" ? item.m.id : item.p.cid;
+              return (
+                <div key={rowKey}>
+                  {header ? <TimeHeader label={header} /> : null}
+                  {item.kind === "msg" && item.m.kind === "system" ? (
+                    <SystemChip msg={item.m} onFly={flyTo} />
+                  ) : (
+                    <DmRow
+                      item={item}
+                      pos={pos}
+                      me={me}
+                      animateIn={
+                        item.kind === "pending" ||
+                        (!initialIds.current?.has(item.m.id) && item.m.sender_id !== me)
+                      }
+                      reactions={item.kind === "msg" ? (byMessage.get(item.m.id) ?? []) : []}
+                      isLastMine={rowKey === lastMineKey}
+                      peerReadAt={peerReadAt}
+                      onReact={toggleReact}
+                      onFly={flyTo}
+                      onRetry={pend.retry}
+                      onDiscard={pend.discard}
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+            <AnimatePresence>{peerTyping ? <TypingBubble label="Typing" /> : null}</AnimatePresence>
           </div>
-        ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">
-            Say hi — this chat is just between you two.
-          </p>
-        ) : null}
-
-        {messages.map((m) =>
-          m.kind === "system" ? (
-            <SystemChip key={m.id} msg={m} onFly={flyTo} />
-          ) : (
-            <DmBubble
-              key={m.id}
-              msg={m}
-              mine={m.sender_id === me}
-              reactions={reactionsFor(m.id)}
-              myId={me}
-              onReact={async (emoji) => {
-                haptic("tap");
-                await react({ data: { messageId: m.id, emoji } });
-                void qc.invalidateQueries({ queryKey: key });
-              }}
-              onFly={flyTo}
-            />
-          ),
-        )}
-
-        {peerTyping ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/60 px-3 py-2 text-xs text-muted-foreground">
-            <Dots /> {peer && !unnamed ? `${peerName} is` : "They're"} typing…
-          </div>
-        ) : null}
-
-        {peerReadAt && messages.some((m) => m.sender_id === me) ? (
-          <p className="pr-1 text-right text-caption text-muted-foreground">
-            Read {time(peerReadAt)}
-          </p>
-        ) : null}
+        </div>
+        <JumpToLatest
+          show={scroll.away}
+          unseen={scroll.unseen}
+          onClick={() => scroll.scrollToBottom(true)}
+        />
       </div>
 
-      {/* quick pills + composer ---------------------------------------- */}
-      <div className="border-t border-border bg-foreground/[0.03] p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
-        <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
-          {CONTEXT_PILLS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                haptic("tap");
-                if (p.includes("live location")) void shareMyLocation();
-                else void submit({ threadId, content: p });
-              }}
-              className="tap-target shrink-0 rounded-full border border-border bg-secondary/50 px-3 text-caption font-medium text-secondary-foreground transition active:scale-[0.97] hover:border-primary/40 hover:bg-primary/10"
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-        <form
-          className="flex items-end gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (text.trim()) void submit({ threadId, content: text });
-          }}
-        >
+      {/* composer ------------------------------------------------------ */}
+      <ChatComposer
+        value={text}
+        onChange={setText}
+        onSend={sendText}
+        onTyping={broadcastTyping}
+        onFocusChange={setFocused}
+        textareaRef={inputRef}
+        placeholder={unnamed ? "Message…" : `Message ${firstName(peerName)}…`}
+        leading={
           <button
             type="button"
             onClick={() => void shareMyLocation()}
             aria-label="Send my location"
-            className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-border bg-secondary/50 text-muted-foreground transition active:scale-[0.97] hover:bg-secondary"
+            className="tap-target grid size-11 shrink-0 place-items-center rounded-full bg-secondary/60 text-muted-foreground transition-colors hover:bg-secondary"
           >
-            <MapPin className="h-4 w-4" aria-hidden />
+            <MapPin className="size-[1.125rem]" aria-hidden />
           </button>
+        }
+        idleAction={
           <button
             type="button"
+            disabled={uploadingVoice}
             onClick={() => void toggleRecording()}
-            aria-label={recording ? "Stop recording" : "Record a voice note"}
-            className={cn(
-              "tap-target grid h-11 w-11 shrink-0 place-items-center rounded-2xl border transition active:scale-[0.97]",
-              recording
-                ? "animate-pulse border-destructive/50 bg-destructive/20 text-destructive"
-                : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary",
-            )}
+            aria-label="Record a voice note"
+            className="hit-slop grid size-8 place-items-center rounded-full text-muted-foreground disabled:opacity-50"
           >
-            {recording ? (
-              <Square className="h-4 w-4" aria-hidden />
-            ) : (
-              <Mic className="h-4 w-4" aria-hidden />
-            )}
+            <Mic className="size-[1.125rem]" aria-hidden />
           </button>
-          <textarea
-            value={text}
-            rows={1}
-            placeholder={unnamed ? "Message…" : `Message ${firstName(peerName)}…`}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              broadcastTyping();
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                if (text.trim()) void submit({ threadId, content: text });
-              }
-            }}
-            // No text-sm: same iOS zoom-on-focus issue as inputClass.
-            className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-border bg-background px-3.5 py-2.5 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
-          />
-          <Button type="submit" loading={busy} className="h-11 shrink-0 px-4">
-            Send
-          </Button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function Dots() {
-  return (
-    <span className="flex items-end gap-0.5">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="h-1.5 w-1.5 animate-typing-dot rounded-full bg-primary"
-          style={{ animationDelay: `${i * 120}ms` }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function DmBubble({
-  msg,
-  mine,
-  reactions,
-  myId,
-  onReact,
-  onFly,
-}: {
-  msg: DM;
-  mine: boolean;
-  reactions: Reaction[];
-  myId: string | null;
-  onReact: (emoji: string) => void | Promise<void>;
-  onFly: (lat: number, lon: number, label?: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const meta = (msg.meta ?? {}) as { lat?: number; lon?: number; label?: string };
-  const grouped = reactions.reduce<Record<string, number>>((acc, r) => {
-    acc[r.emoji] = (acc[r.emoji] ?? 0) + 1;
-    return acc;
-  }, {});
-  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  return (
-    <div className={cn("group/dm flex items-end gap-2", mine && "flex-row-reverse")}>
-      <div className={cn("relative max-w-[80%]", mine && "text-right")}>
-        <AnimatePresence>
-          {open ? (
-            <motion.div
-              initial={{ opacity: 0, y: 6, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 480, damping: 26 }}
-              className={cn(
-                "absolute -top-11 z-20 flex gap-0.5 rounded-full border border-border bg-popover p-1 shadow-2xl backdrop-blur-2xl",
-                mine ? "right-0" : "left-0",
-              )}
-            >
-              {REACTIONS.map((e) => (
+        }
+        top={
+          recording ? (
+            <div className="mb-2 flex items-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 px-3 py-1.5 text-sm text-destructive">
+              <span className="chat-rec size-2 rounded-full bg-destructive" aria-hidden />
+              <span className="flex-1">Recording…</span>
+              <button
+                type="button"
+                onClick={() => void toggleRecording()}
+                aria-label="Stop recording"
+                className="tap-target grid place-items-center rounded-full"
+              >
+                <Square className="size-4 fill-current" aria-hidden />
+              </button>
+            </div>
+          ) : !focused && !text ? (
+            <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+              {CONTEXT_PILLS.map((p) => (
                 <button
-                  key={e}
+                  key={p}
                   type="button"
                   onClick={() => {
-                    void onReact(e);
-                    setOpen(false);
+                    haptic("tap");
+                    if (p.includes("live location")) void shareMyLocation();
+                    else submit({ threadId, content: p });
                   }}
-                  className="rounded-full px-2 py-0.5 text-base transition hover:scale-110 hover:bg-primary/10"
+                  className="tap-target shrink-0 rounded-full border border-border bg-secondary/50 px-3 text-caption font-medium text-secondary-foreground transition active:scale-[0.97] hover:border-primary/40 hover:bg-primary/10"
                 >
-                  {e}
+                  {p}
                 </button>
               ))}
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.97 }}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            haptic("select");
-            setOpen((v) => !v);
-          }}
-          onPointerDown={() => {
-            pressTimer.current = setTimeout(() => {
-              haptic("select");
-              setOpen(true);
-            }, 380);
-          }}
-          onPointerUp={() => pressTimer.current && clearTimeout(pressTimer.current)}
-          onPointerLeave={() => pressTimer.current && clearTimeout(pressTimer.current)}
-          onClick={() => {
-            if (msg.kind === "location" && meta.lat != null && meta.lon != null) {
-              onFly(meta.lat, meta.lon, meta.label);
-            }
-          }}
-          className={cn(
-            "block w-full rounded-2xl px-4 py-2.5 text-left text-sm shadow-lg transition",
-            mine
-              ? "rounded-br-md bg-primary text-primary-foreground"
-              : "rounded-bl-md border border-border bg-secondary text-secondary-foreground",
-          )}
-        >
-          {msg.kind === "location" ? (
-            <span className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 shrink-0" aria-hidden />
-              <span>
-                {meta.label ?? "Live location"}
-                <span className="block text-caption opacity-70">Tap to open on the map</span>
-              </span>
-            </span>
-          ) : msg.kind === "voice" && msg.media_url ? (
-            <audio controls src={msg.media_url} className="h-9 w-52 max-w-full" />
-          ) : (
-            <span className="whitespace-pre-wrap break-words">{msg.content}</span>
-          )}
-        </motion.button>
-
-        <div className={cn("mt-1 flex items-center gap-1.5 px-1", mine && "justify-end")}>
-          {Object.entries(grouped).map(([emoji, count]) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => void onReact(emoji)}
-              className={cn(
-                "rounded-full border px-1.5 py-0.5 text-caption transition active:scale-[0.97]",
-                reactions.some((r) => r.emoji === emoji && r.profile_id === myId)
-                  ? "border-primary/50 bg-primary/15 text-primary"
-                  : "border-border bg-secondary/50 text-muted-foreground",
-              )}
-            >
-              {emoji} {count}
-            </button>
-          ))}
-          <span className="text-caption text-muted-foreground">{time(msg.created_at)}</span>
-        </div>
-      </div>
+            </div>
+          ) : null
+        }
+      />
     </div>
   );
+}
+
+function DmRow({
+  item,
+  pos,
+  me,
+  animateIn,
+  reactions,
+  isLastMine,
+  peerReadAt,
+  onReact,
+  onFly,
+  onRetry,
+  onDiscard,
+}: {
+  item: Item;
+  pos: ClusterPos;
+  me: string | null;
+  animateIn: boolean;
+  reactions: Reaction[];
+  isLastMine: boolean;
+  peerReadAt: string | null;
+  onReact: (messageId: string, emoji: string) => void | Promise<void>;
+  onFly: (lat: number, lon: number, label?: string) => void;
+  onRetry: (cid: string) => void;
+  onDiscard: (cid: string) => void;
+}) {
+  const [showTime, setShowTime] = useState(false);
+  const rise = useRise(8, 0.18);
+
+  const isPending = item.kind === "pending";
+  const msg = item.kind === "msg" ? item.m : null;
+  const pending = item.kind === "pending" ? item.p : null;
+  const mine = isPending || msg?.sender_id === me;
+  const failed = pending?.status === "failed";
+  const kind = msg?.kind ?? "text";
+  const body = msg?.content ?? pending?.text ?? "";
+  const at = msg?.created_at ?? pending?.at ?? "";
+  const meta = (msg?.meta ?? {}) as { lat?: number; lon?: number; label?: string };
+  const isLocation = kind === "location" && meta.lat != null && meta.lon != null;
+  const isVoice = kind === "voice" && Boolean(msg?.media_url);
+
+  const counts = useMemo(() => {
+    const tally = new Map<string, number>();
+    for (const r of reactions) tally.set(r.emoji, (tally.get(r.emoji) ?? 0) + 1);
+    return [...tally.entries()];
+  }, [reactions]);
+  const myReactions = useMemo(
+    () => new Set(reactions.filter((r) => r.profile_id === me).map((r) => r.emoji)),
+    [reactions, me],
+  );
+
+  const actions: MenuAction[] = [];
+  if (failed && pending) {
+    actions.push({
+      key: "retry",
+      label: "Retry",
+      icon: <RotateCcw className="size-4" />,
+      onSelect: () => onRetry(pending.cid),
+    });
+    actions.push({
+      key: "discard",
+      label: "Delete",
+      icon: <Trash2 className="size-4" />,
+      destructive: true,
+      onSelect: () => onDiscard(pending.cid),
+    });
+  } else if (body && !isVoice) {
+    actions.push({
+      key: "copy",
+      label: "Copy",
+      icon: <Copy className="size-4" />,
+      onSelect: () => {
+        navigator.clipboard
+          .writeText(body)
+          .then(() => toast("Copied"))
+          .catch(() => toast.error("Couldn't copy that"));
+      },
+    });
+  }
+
+  const receipt = (() => {
+    if (!mine || !isLastMine || failed) return null;
+    if (isPending || !msg) return "Sending…";
+    return peerReadAt && new Date(peerReadAt) >= new Date(msg.created_at)
+      ? `Read ${clock(peerReadAt)}`
+      : "Sent";
+  })();
+
+  const row = (
+    <div
+      className={cn(
+        "flex flex-col",
+        mine ? "items-end" : "items-start",
+        pos === "single" || pos === "first" ? "mt-2" : "mt-0.5",
+      )}
+    >
+      <SwipeRow className="w-full">
+        <div className={cn("flex", mine ? "justify-end" : "justify-start")}>
+          <div className={cn("max-w-[78%]", mine && "flex flex-col items-end")}>
+            <BubbleSurface
+              mine={mine}
+              pos={pos}
+              status={pending?.status}
+              actions={actions}
+              reactionEmojis={msg ? REACTIONS : undefined}
+              myReactions={myReactions}
+              onReact={msg ? (emoji) => void onReact(msg.id, emoji) : undefined}
+              onTap={
+                failed && pending
+                  ? () => onRetry(pending.cid)
+                  : isLocation
+                    ? () => onFly(meta.lat!, meta.lon!, meta.label)
+                    : () => setShowTime((v) => !v)
+              }
+            >
+              {isLocation ? (
+                <span className="flex items-center gap-2">
+                  <MapPin className="size-4 shrink-0" aria-hidden />
+                  <span>
+                    {meta.label ?? "Live location"}
+                    <span className="block text-caption opacity-70">
+                      Tap to open on the map · {clock(at)}
+                    </span>
+                  </span>
+                </span>
+              ) : isVoice ? (
+                <audio
+                  controls
+                  preload="metadata"
+                  src={msg!.media_url!}
+                  data-no-swipe
+                  className="h-9 w-52 max-w-full"
+                />
+              ) : (
+                body
+              )}
+            </BubbleSurface>
+          </div>
+        </div>
+      </SwipeRow>
+
+      <ReactionChips
+        counts={counts}
+        mine={mine}
+        myReactions={myReactions}
+        onToggle={(emoji) => msg && void onReact(msg.id, emoji)}
+      />
+
+      {failed ? (
+        <button
+          type="button"
+          onClick={() => pending && onRetry(pending.cid)}
+          className="mt-1 px-1 text-caption font-medium text-destructive"
+        >
+          Not delivered · Tap to retry
+        </button>
+      ) : null}
+
+      {!isLocation ? (
+        <RevealRow open={showTime}>
+          <p className="px-1 pt-1 text-caption text-muted-foreground">{clock(at)}</p>
+        </RevealRow>
+      ) : null}
+
+      {receipt ? <p className="mt-1 px-1 text-caption text-muted-foreground">{receipt}</p> : null}
+    </div>
+  );
+
+  return animateIn ? <motion.div {...rise}>{row}</motion.div> : row;
 }
 
 function SystemChip({
@@ -573,19 +788,21 @@ function SystemChip({
 }) {
   const meta = (msg.meta ?? {}) as { lat?: number; lon?: number; label?: string };
   const tappable = meta.lat != null && meta.lon != null;
+  if (!tappable) {
+    return (
+      <SystemNote>
+        {msg.content} · {clock(msg.created_at)}
+      </SystemNote>
+    );
+  }
   return (
-    <div className="flex justify-center">
+    <div className="mt-3 flex justify-center">
       <button
         type="button"
-        disabled={!tappable}
-        onClick={() => tappable && onFly(meta.lat!, meta.lon!, meta.label)}
-        className={cn(
-          "tap-target rounded-full border border-border bg-secondary/40 px-3.5 text-caption text-muted-foreground backdrop-blur",
-          tappable &&
-            "transition active:scale-[0.97] hover:border-primary/40 hover:text-foreground",
-        )}
+        onClick={() => onFly(meta.lat!, meta.lon!, meta.label)}
+        className="tap-target rounded-full border border-border bg-secondary/40 px-3.5 text-caption text-muted-foreground transition active:scale-[0.97] hover:border-primary/40 hover:text-foreground"
       >
-        {msg.content} · {time(msg.created_at)}
+        {msg.content} · {clock(msg.created_at)}
       </button>
     </div>
   );

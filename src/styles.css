@@ -1407,3 +1407,101 @@
     display: none;
   }
 }
+
+/* ---- chat: bubbles, message menu, recording pulse -------------------------
+   In the components layer so utilities (rounded-*, opacity-*) still win. */
+@layer components {
+  .chat-bubble {
+    --bubble: var(--secondary);
+    --bubble-fg: var(--secondary-foreground);
+    position: relative;
+    background-color: var(--bubble);
+    color: var(--bubble-fg);
+    outline-offset: 2px;
+  }
+  .chat-bubble[data-mine="true"] {
+    --bubble: var(--primary);
+    --bubble-fg: var(--primary-foreground);
+  }
+  /* Tail: a 12x16 box beside the bubble's bottom corner with a circle cut out
+     of its top inner corner, leaving the curved hook. Needs no page-colour
+     mask, so it works over the translucent sheet. The bubble must not
+     overflow-hidden or the tail is clipped. */
+  .chat-bubble[data-tail="true"]::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 0.75rem;
+    height: 1rem;
+    background-color: var(--bubble);
+    pointer-events: none;
+  }
+  .chat-bubble[data-tail="true"][data-mine="true"]::after {
+    right: -0.55rem;
+    -webkit-mask: radial-gradient(circle 1rem at 100% 0, transparent calc(1rem - 0.5px), #000 1rem);
+    mask: radial-gradient(circle 1rem at 100% 0, transparent calc(1rem - 0.5px), #000 1rem);
+  }
+  .chat-bubble[data-tail="true"][data-mine="false"]::after {
+    left: -0.55rem;
+    -webkit-mask: radial-gradient(circle 1rem at 0 0, transparent calc(1rem - 0.5px), #000 1rem);
+    mask: radial-gradient(circle 1rem at 0 0, transparent calc(1rem - 0.5px), #000 1rem);
+  }
+  /* On touch the menu's Copy action replaces text selection, and a long press
+     must not start the iOS selection loupe. Mouse users can still select. */
+  @media (pointer: coarse) {
+    .chat-bubble {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+  }
+
+  .chat-menu {
+    transform-origin: var(--radix-popover-content-transform-origin);
+  }
+  .chat-menu[data-state="open"] {
+    animation: q-menu-in 0.16s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .chat-menu[data-state="closed"] {
+    animation: q-menu-out 0.12s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  .chat-rec {
+    animation: q-rec-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes q-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes q-menu-out {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes q-rec-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Menu keeps a short fade (it aids comprehension); the loop stops. */
+  .chat-menu[data-state="open"] {
+    animation: q-fade 0.12s ease-out both;
+  }
+  .chat-menu[data-state="closed"] {
+    animation: none;
+  }
+  .chat-rec {
+    animation: none;
+  }
+}

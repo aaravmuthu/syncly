@@ -48,7 +48,7 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
           <SquadChat
             groupId={groupId}
             planId={planId}
-            className="h-[60vh] max-h-[520px] rounded-t-none"
+            className="h-[60dvh] max-h-[520px] rounded-t-none"
           />
         </div>
       ) : null}
