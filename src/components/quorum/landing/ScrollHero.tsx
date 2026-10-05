@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { LiveScreen } from "./LiveScreen";
 
 /*
@@ -39,6 +39,30 @@ export function ScrollHero({ children }: { children: ReactNode }) {
   const heroRef = useRef<HTMLElement>(null);
   const p = useMotionValue(0);
   const still = useMotionValue(0);
+
+  // Once the iPad has settled it leans toward the pointer on a spring, and a
+  // highlight slides across the glass. Mouse only: touch has no hover, and
+  // reduced motion keeps it flat.
+  const pointerX = useSpring(0, { stiffness: 110, damping: 16, mass: 0.7 });
+  const pointerY = useSpring(0, { stiffness: 110, damping: 16, mass: 0.7 });
+  useEffect(() => {
+    if (reduce) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const move = (e: PointerEvent) => {
+      pointerX.set((e.clientX / window.innerWidth - 0.5) * 2);
+      pointerY.set((e.clientY / window.innerHeight - 0.5) * 2);
+    };
+    const leave = () => {
+      pointerX.set(0);
+      pointerY.set(0);
+    };
+    window.addEventListener("pointermove", move, { passive: true });
+    document.documentElement.addEventListener("pointerleave", leave);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      document.documentElement.removeEventListener("pointerleave", leave);
+    };
+  }, [reduce, pointerX, pointerY]);
 
   useEffect(() => {
     still.set(reduce ? 1 : 0);
@@ -101,8 +125,17 @@ export function ScrollHero({ children }: { children: ReactNode }) {
     if (still.get()) return "none";
     const e = settle.get();
     const inv = 1 - e;
-    return `translate3d(-50%,-50%,0) translateY(${(inv * 54).toFixed(3)}svh) scale(${(0.8 + 0.2 * e).toFixed(4)}) rotateX(${(TILT * inv).toFixed(3)}deg) rotateZ(${(-3 * inv).toFixed(3)}deg)`;
+    // Pointer lean only counts once the device is standing up.
+    const lean = clamp((e - 0.9) / 0.1);
+    const ry = (pointerX.get() * 5 * lean).toFixed(3);
+    const rx = (-pointerY.get() * 4 * lean).toFixed(3);
+    return `translate3d(-50%,-50%,0) translateY(${(inv * 54).toFixed(3)}svh) scale(${(0.8 + 0.2 * e).toFixed(4)}) rotateX(${(TILT * inv + Number(rx)).toFixed(3)}deg) rotateY(${ry}deg) rotateZ(${(-3 * inv).toFixed(3)}deg)`;
   });
+  const glintOpacity = useTransform(() => (still.get() ? 0 : clamp((settle.get() - 0.9) / 0.1)));
+  const glintTransform = useTransform(
+    () =>
+      `translate3d(${(pointerX.get() * 45).toFixed(2)}%,${(pointerY.get() * 45).toFixed(2)}%,0)`,
+  );
 
   // Headline: gone by 20%, drifting up at a third of the scroll speed.
   const headlineOpacity = useTransform(() => (still.get() ? 1 : 1 - seg(p.get(), 0.02, 0.2)));
@@ -178,6 +211,16 @@ export function ScrollHero({ children }: { children: ReactNode }) {
                 style={{ opacity: offOpacity }}
                 className="hero-off absolute inset-0 bg-black"
               />
+              <motion.div
+                aria-hidden
+                style={{ opacity: glintOpacity }}
+                className="hero-glint pointer-events-none absolute inset-0 overflow-hidden"
+              >
+                <motion.div
+                  style={{ transform: glintTransform }}
+                  className="absolute -inset-1/4 will-change-transform"
+                />
+              </motion.div>
               <motion.div
                 aria-hidden
                 style={{ opacity: glareOpacity }}
