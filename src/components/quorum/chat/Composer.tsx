@@ -84,6 +84,7 @@ export function ChatComposer({
             value={value}
             rows={1}
             placeholder={placeholder}
+            aria-label={placeholder}
             enterKeyHint={coarse ? "enter" : "send"}
             onFocus={() => onFocusChange?.(true)}
             onBlur={() => onFocusChange?.(false)}

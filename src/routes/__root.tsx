@@ -90,7 +90,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         name: "viewport",
-        content: "viewport-fit=cover, width=device-width, initial-scale=1.0",
+        content:
+          "viewport-fit=cover, width=device-width, initial-scale=1.0, interactive-widget=resizes-content",
       },
       { name: "theme-color", content: "#000000" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
@@ -152,8 +153,12 @@ function RootComponent() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") {
+        void queryClient.cancelQueries().then(() => queryClient.clear());
+      } else {
+        void queryClient.invalidateQueries();
+      }
+      void router.invalidate();
     });
     return () => data.subscription.unsubscribe();
   }, [router, queryClient]);

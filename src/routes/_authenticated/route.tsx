@@ -10,7 +10,7 @@ import { AiActivity } from "@/components/quorum/ai/AiActivity";
 // it doesn't fight ContextSwitcher's explicit "My Squad" choice or hijack a
 // direct deep link. Resets on a full page reload, which is fine: that's
 // effectively a new session anyway.
-let appliedInitialRoute = false;
+let initialRouteUserId: string | null = null;
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -22,11 +22,11 @@ export const Route = createFileRoute("/_authenticated")({
     const { data, error } = await supabase.auth.getSession();
     const user = data.session?.user ?? null;
     if (error || !user) {
-      throw redirect({ to: "/auth", search: { next: "/home", mode: "signin" as const } });
+      initialRouteUserId = null;
+      throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
     }
 
-    if (!appliedInitialRoute && location.pathname === "/home") {
-      appliedInitialRoute = true;
+    if (initialRouteUserId !== user.id && location.pathname === "/home") {
       let me: Awaited<ReturnType<typeof getMe>> | null = null;
       try {
         me = await getMe();
@@ -34,6 +34,7 @@ export const Route = createFileRoute("/_authenticated")({
         me = null; // network hiccup on the routing check -- fall through to the normal teen home
       }
       if (me?.onboarded) {
+        initialRouteUserId = user.id;
         const last = getLastContext();
         // hasLinkedTeens=false: land on whichever shell matches signup intent
         // (Family Hub shows its own empty "link your first teen" state).

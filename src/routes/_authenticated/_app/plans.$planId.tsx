@@ -25,7 +25,7 @@ import { useCompromiseSummaries } from "@/components/quorum/useCompromiseSummari
 import { ConstraintForm } from "@/components/quorum/ConstraintForm";
 import { QuickResponse } from "@/components/quorum/QuickResponse";
 import { BudgetFitPill, CostBadge } from "@/components/quorum/DashboardParts";
-import { Button, Card, Meter, Pill, Skeleton } from "@/components/quorum/ui";
+import { Button, Card, Empty, Meter, Pill, Skeleton } from "@/components/quorum/ui";
 import { FinalizedPlanHub } from "@/components/quorum/FinalizedPlanHub";
 import { VenueMap } from "@/components/quorum/VenueMap";
 import { SpotBrowser } from "@/components/quorum/SpotBrowser";
@@ -160,6 +160,7 @@ function PlanPage() {
       setEditing(false);
       void invalidate();
     },
+    onError: (e: Error) => toast.error("Couldn't save your answers", { description: e.message }),
   });
   const generate = useMutation({
     mutationFn: useServerFn(generateRecommendations),
@@ -181,7 +182,10 @@ function PlanPage() {
       haptic("select");
       void invalidate();
     },
-    onError: () => haptic("warn"),
+    onError: (e: Error) => {
+      haptic("warn");
+      toast.error("Couldn't save your vote", { description: e.message });
+    },
   });
   const finalize = useMutation({
     mutationFn: useServerFn(finalizePlan),
@@ -189,7 +193,10 @@ function PlanPage() {
       haptic("success");
       void invalidate();
     },
-    onError: () => haptic("warn"),
+    onError: (e: Error) => {
+      haptic("warn");
+      toast.error("Couldn't lock in this plan", { description: e.message });
+    },
   });
   const askParent = useMutation({
     mutationFn: useServerFn(requestParentApproval),
@@ -216,9 +223,16 @@ function PlanPage() {
     onSuccess: (row) => {
       const { planId: sharedPlanId, sig } = row as { planId: string; sig: string };
       const link = `${window.location.origin}/approve/${sharedPlanId}.${sig}`;
-      void navigator.clipboard.writeText(link);
       setApprovalLink(link);
-      toast.success("Parent link copied", { description: link });
+      if (!navigator.clipboard) {
+        toast.info("Parent link ready", { description: "Copy the link below to share it." });
+      } else {
+        void navigator.clipboard.writeText(link).then(
+          () => toast.success("Parent link copied"),
+          () =>
+            toast.info("Parent link ready", { description: "Copy the link below to share it." }),
+        );
+      }
     },
     onError: (e: unknown) =>
       toast.error("Couldn't create the link", {
@@ -281,7 +295,19 @@ function PlanPage() {
     return list;
   }, [data?.recommendations, recSort]);
 
-  if (q.isLoading || !data || !meta) {
+  if (q.isError) {
+    return (
+      <>
+        <PageHeader title="Plan" />
+        <Empty
+          title="Couldn't load this plan"
+          body="Check your connection or ask the group to confirm you still have access."
+          action={<Button onClick={() => void q.refetch()}>Try again</Button>}
+        />
+      </>
+    );
+  }
+  if (q.isLoading) {
     return (
       <>
         <PageHeader title="Plan" />
@@ -289,6 +315,14 @@ function PlanPage() {
       </>
     );
   }
+
+  if (!data || !meta)
+    return (
+      <Empty
+        title="Plan not found"
+        body="This plan may have been removed or you may no longer have access."
+      />
+    );
 
   const votes = data.votes;
   const selected = data.plan.selected_recommendation_id;
@@ -311,10 +345,7 @@ function PlanPage() {
     ? (((topRec.breakdown ?? {}) as unknown as ScoreBreakdown).budgetFit ?? null)
     : null;
 
-  const backupRec =
-    data.recommendations.find((r) => r.id !== selected && r.feasible) ??
-    data.recommendations.find((r) => r.id !== selected) ??
-    null;
+  const backupRec = data.recommendations.find((r) => r.id !== selected && r.feasible) ?? null;
   const latestApproval = data.approvals[0]?.status ?? null;
   // Set server-side by settlePastPlans() once the plan window has passed.
   const ended = data.plan.status === "completed" || data.plan.status === "cancelled";
@@ -793,6 +824,7 @@ function PlanPage() {
                   >
                     <Button
                       variant={myVote === r.id ? "primary" : "outline"}
+                      disabled={!r.feasible || vote.isPending}
                       onClick={() => vote.mutate({ data: { planId, recommendationId: r.id } })}
                     >
                       {myVote === r.id ? "Your pick" : "Vote for this"}
@@ -804,6 +836,7 @@ function PlanPage() {
                     {!isSelected ? (
                       <Button
                         variant="ghost"
+                        disabled={!r.feasible}
                         loading={
                           finalize.isPending && finalize.variables?.data.recommendationId === r.id
                         }

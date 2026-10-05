@@ -25,43 +25,46 @@ export function FairVenueCard({
     .join(" • ");
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
+    <div
       className={`w-full rounded-3xl border p-4 text-left transition ${
         selected ? "border-primary/60 bg-primary/6" : "border-border hover:bg-secondary/60"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-display text-sm font-semibold">
-            <span className="mr-1">{venue.kind === "food" ? "🍽️" : "🎟️"}</span>
-            {venue.title}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">
-            {venue.address ?? venue.subtitle}
-          </p>
+      <button
+        type="button"
+        aria-pressed={Boolean(selected)}
+        onClick={onSelect}
+        className="block w-full text-left"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate font-display text-sm font-semibold">
+              <span className="mr-1">{venue.kind === "food" ? "🍽️" : "🎟️"}</span>
+              {venue.title}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {venue.address ?? venue.subtitle}
+            </p>
+          </div>
+          <Pill tone="accent">
+            ${venue.costMin}–{venue.costMax}/person
+          </Pill>
         </div>
-        <Pill tone="accent">
-          ${venue.costMin}–{venue.costMax}/person
-        </Pill>
-      </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-caption">
-        {venue.cuisine ? <Pill>{venue.cuisine}</Pill> : null}
-        <Pill>{venue.priceLevel}</Pill>
-        {venue.fairMiles != null ? <Pill>{venue.fairMiles} mi from fair point</Pill> : null}
-      </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-caption">
+          {venue.cuisine ? <Pill>{venue.cuisine}</Pill> : null}
+          <Pill>{venue.priceLevel}</Pill>
+          {venue.fairMiles != null ? <Pill>{venue.fairMiles} mi from fair point</Pill> : null}
+        </div>
 
-      {driveLine ? <p className="mt-2 text-xs text-muted-foreground">{driveLine}</p> : null}
+        {driveLine ? <p className="mt-2 text-xs text-muted-foreground">{driveLine}</p> : null}
 
-      {venue.curfewWarnings.length ? (
-        <p className="mt-2 rounded-2xl bg-warning/15 px-3 py-2 text-xs text-warning">
-          ⚠️ Heads up: wraps up at {venue.curfewWarnings[0]!.wrapsAt}, which is past{" "}
-          {venue.curfewWarnings[0]!.name}'s {venue.curfewWarnings[0]!.curfew} curfew
-          {venue.curfewWarnings.length > 1 ? ` (+${venue.curfewWarnings.length - 1} more)` : ""}.
-        </p>
-      ) : null}
+        {!venue.scheduleFits ? (
+          <p className="mt-2 rounded-2xl bg-warning/15 px-3 py-2 text-xs text-warning">
+            This option does not meet every member's timing requirements.
+          </p>
+        ) : null}
+      </button>
 
       <a
         href={directionsUrl(venue)}
@@ -72,6 +75,6 @@ export function FairVenueCard({
       >
         Directions in Maps →
       </a>
-    </button>
+    </div>
   );
 }

@@ -44,13 +44,15 @@ export async function shareOrCopy(payload: { title: string; text: string; url?: 
     try {
       await nav.share(payload);
       return "shared" as const;
-    } catch {
-      /* user dismissed — fall through to copy */
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return "cancelled" as const;
+      /* Sharing unsupported/failed — try the clipboard. */
     }
   }
   const text = payload.url ? `${payload.text}\n${payload.url}` : payload.text;
   try {
-    await nav?.clipboard?.writeText(text);
+    if (!nav?.clipboard?.writeText) return "failed" as const;
+    await nav.clipboard.writeText(text);
     return "copied" as const;
   } catch {
     return "failed" as const;

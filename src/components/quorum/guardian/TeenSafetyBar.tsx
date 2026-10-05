@@ -63,6 +63,7 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
 
   const answer = useMutation({
     mutationFn: useServerFn(respondToCheckin),
+    onError: (e: Error) => toast.error("Couldn't send your check-in", { description: e.message }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["my-checkins"] });
       toast.success("Check-in sent");
@@ -70,6 +71,7 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
   });
   const delay = useMutation({
     mutationFn: useServerFn(sendDelay),
+    onError: (e: Error) => toast.error("Couldn't send your heads-up", { description: e.message }),
     onSuccess: () => {
       setDelayOpen(false);
       toast.success("Heads-up sent to your parents");
@@ -77,6 +79,8 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
   });
   const sos = useMutation({
     mutationFn: useServerFn(raiseSos),
+    onError: (e: Error) =>
+      toast.error("SOS was not sent. Contact your parent directly", { description: e.message }),
     onSuccess: () => {
       setSosArmed(false);
       toast.success("SOS sent", { description: "Your parents were alerted right away." });
@@ -85,6 +89,7 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
 
   const arrive = useMutation({
     mutationFn: useServerFn(arrivedSafely),
+    onError: (e: Error) => toast.error("Couldn't share your arrival", { description: e.message }),
     onSuccess: () => {
       setArrival({
         place: "your destination",

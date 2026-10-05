@@ -14,17 +14,29 @@ function pad(n: number) {
 }
 
 function toDateParts(ev: CalendarEvent) {
-  const base = ev.date ? new Date(ev.date) : new Date(Date.now() + 86400000);
+  // A date-only string is a local calendar day, not midnight UTC (which is
+  // the previous evening in US timezones).
+  const base = ev.date
+    ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(ev.date) ? `${ev.date}T12:00:00` : ev.date)
+    : new Date(Date.now() + 86400000);
   const day = Number.isNaN(base.getTime()) ? new Date() : base;
   const mk = (time: string | null, fallbackHour: number) => {
-    const [h, m] = (time ?? "").split(":");
+    const match = time?.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    const hour = match ? Number(match[1]) : fallbackHour;
+    const minute = match ? Number(match[2]) : 0;
     const d = new Date(day);
-    d.setHours(Number(h ?? fallbackHour) || fallbackHour, Number(m ?? 0) || 0, 0, 0);
+    d.setHours(
+      hour >= 0 && hour < 24 ? hour : fallbackHour,
+      minute >= 0 && minute < 60 ? minute : 0,
+      0,
+      0,
+    );
     return d;
   };
   const start = mk(ev.start, 19);
   const end = mk(ev.end, 21);
-  if (end <= start) end.setTime(start.getTime() + 2 * 3600000);
+  if (end < start) end.setDate(end.getDate() + 1);
+  if (end.getTime() === start.getTime()) end.setTime(start.getTime() + 2 * 3600000);
   return { start, end };
 }
 
@@ -49,22 +61,43 @@ export function googleCalendarUrl(ev: CalendarEvent) {
 
 export function icsFile(ev: CalendarEvent) {
   const { start, end } = toDateParts(ev);
-  const esc = (s: string) => s.replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Syncly//Plan//EN",
-    "BEGIN:VEVENT",
-    `UID:${Math.random().toString(36).slice(2)}@quorum`,
-    `DTSTAMP:${stampUtc(new Date())}`,
-    `DTSTART:${stampUtc(start)}`,
-    `DTEND:${stampUtc(end)}`,
-    `SUMMARY:${esc(ev.title)}`,
-    `DESCRIPTION:${esc(ev.description)}`,
-    `LOCATION:${esc(ev.location)}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
+  const esc = (s: string) => s.replace(/([,;\\])/g, "\\$1").replace(/\r\n|\r|\n/g, "\\n");
+  return (
+    [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Syncly//Plan//EN",
+      "BEGIN:VEVENT",
+      `UID:${Math.random().toString(36).slice(2)}@quorum`,
+      `DTSTAMP:${stampUtc(new Date())}`,
+      `DTSTART:${stampUtc(start)}`,
+      `DTEND:${stampUtc(end)}`,
+      `SUMMARY:${esc(ev.title)}`,
+      `DESCRIPTION:${esc(ev.description)}`,
+      `LOCATION:${esc(ev.location)}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ]
+      .map(foldCalendarLine)
+      .join("\r\n") + "\r\n"
+  );
+}
+
+/** iCalendar lines are limited to 75 UTF-8 octets; do not split a character. */
+function foldCalendarLine(line: string) {
+  const encoder = new TextEncoder();
+  let folded = "";
+  let length = 0;
+  for (const character of line) {
+    const bytes = encoder.encode(character).length;
+    if (length + bytes > 75) {
+      folded += "\r\n ";
+      length = 1;
+    }
+    folded += character;
+    length += bytes;
+  }
+  return folded;
 }
 
 export function downloadIcs(ev: CalendarEvent) {

@@ -260,18 +260,24 @@ function Landing() {
           />
         </section>
 
-        {/* Testimonial-ish */}
+        {/* Illustrative scenarios, not customer evidence */}
         <section className="border-y border-border bg-surface/60 py-20">
+          <p className="mx-auto mb-6 max-w-6xl px-5 text-sm text-muted-foreground">
+            Illustrative examples of how Syncly can help. These are not customer testimonials.
+          </p>
           <RevealGroup className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
             {[
               {
                 q: "We stopped having the \u201cwhere do you want to go\u201d conversation entirely.",
-                a: "Maya, 17",
+                a: "Example teen",
               },
-              { q: "I didn't have to tell six people my budget. It just worked.", a: "Dev, 16" },
+              {
+                q: "I didn't have to tell six people my budget. It just worked.",
+                a: "Another example teen",
+              },
               {
                 q: "The approval link answered every question I usually have to ask.",
-                a: "Parent of a junior",
+                a: "Example guardian",
               },
             ].map((t) => (
               <RevealItem as="figure" key={t.a}>

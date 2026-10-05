@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { reverseZip, suggestPlaces } from "@/lib/quorum/location.functions";
 import { inputClass } from "@/components/quorum/ui";
@@ -44,6 +44,9 @@ export function AddressPicker({
   placeholder?: string;
   ariaLabel?: string;
 }) {
+  const listId = useId();
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [error, setError] = useState<string | null>(null);
   const [text, setText] = useState(value);
   const [items, setItems] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -76,6 +79,9 @@ export function AddressPicker({
       setOpen(false);
       return;
     }
+    setActiveIndex(-1);
+    setOpen(false);
+    setItems([]);
     const q = text.trim();
     if (!typed.current || q.length < 3) {
       setItems([]);
@@ -90,7 +96,13 @@ export function AddressPicker({
             setOpen(true);
           }
         })
-        .catch(() => setItems([]));
+        .catch(() => {
+          if (!cancelled) {
+            setItems([]);
+            setOpen(false);
+            setError("Couldn't look up places. Try again or enter your ZIP code.");
+          }
+        });
     }, 250);
     return () => {
       cancelled = true;
@@ -107,6 +119,7 @@ export function AddressPicker({
   }, []);
 
   const commit = (s: Suggestion) => {
+    setError(null);
     setOpen(false);
     setItems([]);
     setLocked(true);
@@ -130,7 +143,11 @@ export function AddressPicker({
   };
 
   const useMyLocation = () => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setError("Location is unavailable in this browser. Enter your address or ZIP code instead.");
+      return;
+    }
+    setError(null);
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -146,10 +163,19 @@ export function AddressPicker({
             setLocked(true);
             onPick({ address: label, zip: zip ?? null, lat, lon });
           })
-          .catch(() => undefined)
+          .catch(() =>
+            setError("Couldn't look up your location. Enter your address or ZIP code instead."),
+          )
           .finally(() => setLocating(false));
       },
-      () => setLocating(false),
+      (e) => {
+        setLocating(false);
+        setError(
+          e.code === 1
+            ? "Location access is blocked. Enable it in your browser or enter your address or ZIP code."
+            : "Couldn't find your location. Try again or enter your address or ZIP code.",
+        );
+      },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
     );
   };
@@ -161,19 +187,37 @@ export function AddressPicker({
           className={inputClass}
           aria-label={ariaLabel}
           autoComplete="off"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={open && items.length > 0}
+          aria-controls={open && items.length > 0 ? listId : undefined}
+          aria-activedescendant={open && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
+          aria-describedby={error ? `${listId}-error` : undefined}
+          maxLength={300}
+          onBlur={() => setOpen(false)}
           value={text}
           placeholder={placeholder}
           onFocus={() => !locked && items.length && setOpen(true)}
           onKeyDown={(e) => {
-            if (e.key === "Escape" || e.key === "Tab") setOpen(false);
-            if (e.key === "Enter") {
+            if (e.nativeEvent.isComposing) return;
+            if ((e.key === "ArrowDown" || e.key === "ArrowUp") && items.length) {
               e.preventDefault();
-              const first = items[0];
-              if (open && first) commit(first);
-              else setOpen(false);
+              setOpen(true);
+              setActiveIndex((i) =>
+                e.key === "ArrowDown" ? (i + 1) % items.length : i <= 0 ? items.length - 1 : i - 1,
+              );
+            } else if (e.key === "Escape" || e.key === "Tab") {
+              setOpen(false);
+            } else if (e.key === "Enter" && open && items.length) {
+              e.preventDefault();
+              commit(items[Math.max(0, activeIndex)]!);
             }
           }}
           onChange={(e) => {
+            setError(null);
+            setOpen(false);
+            setItems([]);
+            setActiveIndex(-1);
             typed.current = true;
             setLocked(false);
             lastLocal.current = e.target.value;
@@ -183,7 +227,7 @@ export function AddressPicker({
         />
         {locked ? (
           <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-success/15 px-2 py-0.5 text-caption font-medium text-success">
-            ✓ Address saved
+            ✓ Address selected
           </span>
         ) : null}
       </div>
@@ -197,13 +241,28 @@ export function AddressPicker({
         <span aria-hidden>📍</span>
         {locating ? "Finding you…" : "Use my current location"}
       </button>
+      {error ? (
+        <p id={`${listId}-error`} role="status" className="mt-2 text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
       {open && items.length > 0 ? (
-        <ul className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg">
-          {items.map((s) => (
-            <li key={s.id}>
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label="Suggested places"
+          className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg"
+        >
+          {items.map((s, i) => (
+            <li key={s.id} role="presentation">
               <button
                 type="button"
-                className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-secondary active:bg-secondary"
+                id={`${listId}-${i}`}
+                role="option"
+                aria-selected={activeIndex === i}
+                tabIndex={-1}
+                onMouseDown={(e) => e.preventDefault()}
+                className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-secondary active:bg-secondary aria-selected:bg-secondary"
                 onClick={() => commit(s)}
               >
                 <span className="font-medium">{s.label}</span>

@@ -1,22 +1,13 @@
-// Hand-rolled, dependency-free service worker. TanStack Start's build pipeline
-// (nitro, targeting cloudflare) doesn't have a clean integration point for a
-// workbox-style build-time precache manifest, so this takes a simpler runtime
-// approach instead: cache static assets and pages as they're actually
-// requested, rather than precaching a fingerprinted file list.
-//
-// Bump CACHE_VERSION on any change to this file's caching behavior — it's
-// what triggers old caches to be cleared on the next activate.
-const CACHE_VERSION = "v1";
-const CACHE_NAME = `syncly-${CACHE_VERSION}`;
+// Cache public static assets only. Authenticated pages, approval links and
+// server-function responses must never survive in a shared device's cache.
+const CACHE_NAME = "syncly-v2";
 const OFFLINE_URL = "/offline.html";
-
-const PRECACHE_URLS = [OFFLINE_URL, "/manifest.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then((cache) => cache.addAll([OFFLINE_URL, "/manifest.json"]))
       .then(() => self.skipWaiting()),
   );
 });
@@ -26,7 +17,11 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith("syncly-") && key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -34,56 +29,27 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return; // never intercept mutations / server fns
+  if (request.method !== "GET") return;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return; // let Supabase/Mapbox/etc hit the network directly
+  if (url.origin !== self.location.origin) return;
 
-  // HTML navigations: network-first, falling back to a cached copy of the
-  // same URL, then to the offline page — keeps content fresh online and
-  // still renders something coherent offline.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return res;
-        })
-        .catch(() => caches.match(request).then((cached) => cached ?? caches.match(OFFLINE_URL))),
-    );
+    event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
     return;
   }
 
-  // Static assets (Vite's fingerprinted JS/CSS/images/fonts): stale-while-
-  // revalidate. Fingerprinted filenames mean a cached entry is never stale
-  // in a way that matters — a new build ships new filenames — so serving
-  // cache-first here is what makes repeat loads fast.
-  if (["script", "style", "image", "font"].includes(request.destination)) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) =>
-        cache.match(request).then((cached) => {
-          const network = fetch(request)
-            .then((res) => {
-              if (res.ok) cache.put(request, res.clone());
-              return res;
-            })
-            .catch(() => cached);
-          return cached ?? network;
-        }),
-      ),
-    );
-    return;
-  }
-
-  // Everything else same-origin (JSON, misc GET): network-first with a
-  // cache fallback for offline resilience.
+  // Vite emits public build assets under /assets. Dynamic endpoints are
+  // deliberately excluded even if they return an image, script or JSON.
+  if (!url.pathname.startsWith("/assets/")) return;
   event.respondWith(
-    fetch(request)
-      .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        return res;
-      })
-      .catch(() => caches.match(request)),
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      const response = await fetch(request);
+      if (response.ok && response.type === "basic" && !response.redirected) {
+        await cache.put(request, response.clone());
+      }
+      return response;
+    }),
   );
 });

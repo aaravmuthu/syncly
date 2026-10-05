@@ -23,11 +23,17 @@ function apply(resolved: "light" | "dark") {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeChoice>("system");
   const [systemDark, setSystemDark] = useState(false);
+  const [ready, setReady] = useState(false);
 
   // Hydration-safe: read storage + system preference after mount only.
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeChoice | null;
-    if (stored === "light" || stored === "dark" || stored === "system") setThemeState(stored);
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeChoice | null;
+      if (stored === "light" || stored === "dark" || stored === "system") setThemeState(stored);
+    } catch {
+      /* Storage may be blocked; follow the system theme. */
+    }
+    setReady(true);
     setSystemDark(systemPrefersDark());
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
@@ -38,8 +44,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const resolved: "light" | "dark" = theme === "system" ? (systemDark ? "dark" : "light") : theme;
 
   useEffect(() => {
-    apply(resolved);
-  }, [resolved]);
+    if (ready) apply(resolved);
+  }, [ready, resolved]);
 
   const setTheme = useCallback((t: ThemeChoice) => {
     setThemeState(t);

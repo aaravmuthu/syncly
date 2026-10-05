@@ -1,5 +1,31 @@
 // Pure helpers for the "works for everyone" hard filter: operating hours and
 // fairness scoring. No IO — safe to import from client or server code.
+import type { ScoredOption } from "./engine";
+
+/** Persist every hard gate in the same feasibility value the lock-in uses. */
+export function applyVenueRequirements(
+  scored: ScoredOption,
+  gates: { distanceOk: boolean; curfewOk: boolean; hoursOk: boolean },
+): ScoredOption {
+  const failed = Object.values(gates).filter((passes) => !passes).length;
+  if (!failed) return scored;
+  return {
+    ...scored,
+    feasible: false,
+    breakdown: {
+      ...scored.breakdown,
+      hardFailures: scored.breakdown.hardFailures + failed,
+      reasons: [],
+      cautions: [
+        ...new Set([
+          ...scored.breakdown.cautions,
+          "This option does not meet every member's requirements",
+          ...(!gates.hoursOk ? ["The venue may be closed during this window"] : []),
+        ]),
+      ],
+    },
+  };
+}
 
 const toMin = (hhmm: string): number => {
   const [h, m] = hhmm.split(":");
@@ -29,7 +55,8 @@ export function isOpenDuring(
 ): boolean {
   if (!start || !end) return true;
   const s = toMin(start);
-  const e = Math.max(toMin(end), s);
+  const rawEnd = toMin(end);
+  const e = rawEnd < s ? rawEnd + 24 * 60 : rawEnd;
 
   if (!openHours) {
     const [ds, de] = DEFAULT_HOURS[category] ?? DEFAULT_HOURS["custom"]!;
@@ -44,7 +71,9 @@ export function isOpenDuring(
     return [from, to] as const;
   });
   if (!ranges.length) return true;
-  return ranges.some(([from, to]) => s >= from && e <= to);
+  return ranges.some(
+    ([from, to]) => (s >= from && e <= to) || (s + 24 * 60 >= from && e + 24 * 60 <= to),
+  );
 }
 
 /**
