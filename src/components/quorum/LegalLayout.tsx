@@ -12,12 +12,14 @@ import { BRAND } from "@/lib/brand";
 export function LegalLayout({
   title,
   effectiveDate,
+  dateLabel = "Effective date",
   intro,
   toc,
   children,
 }: {
   title: string;
   effectiveDate: string;
+  dateLabel?: string;
   intro?: React.ReactNode;
   toc?: { id: string; label: string }[];
   children: React.ReactNode;
@@ -40,7 +42,9 @@ export function LegalLayout({
 
       <main className="mx-auto max-w-3xl px-5 pt-10 pb-24">
         <h1 className="text-3xl font-semibold sm:text-4xl">{title}</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Effective date: {effectiveDate}</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {dateLabel}: {effectiveDate}
+        </p>
 
         {intro ? (
           <div className="mt-6 text-base leading-relaxed text-muted-foreground">{intro}</div>
@@ -72,7 +76,7 @@ export function LegalLayout({
       <footer className="border-t border-border py-10">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 px-5 text-sm text-muted-foreground sm:flex-row sm:justify-between">
           <Wordmark size="sm" />
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
             <Link
               to="/privacy"
               className="tap-target inline-flex items-center transition-colors hover:text-foreground"
@@ -84,6 +88,12 @@ export function LegalLayout({
               className="tap-target inline-flex items-center transition-colors hover:text-foreground"
             >
               Terms
+            </Link>
+            <Link
+              to="/accessibility"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
+              Accessibility
             </Link>
             <span>
               © {new Date().getFullYear()} {BRAND.name}

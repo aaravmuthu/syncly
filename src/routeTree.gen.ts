@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -218,6 +224,7 @@ const AuthenticatedAppSettingsProfileRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accessibility': typeof AccessibilityRoute
   '/auth': typeof AuthRoute
   '/auth-callback': typeof AuthCallbackRoute
   '/demo': typeof DemoRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accessibility': typeof AccessibilityRoute
   '/auth': typeof AuthRoute
   '/auth-callback': typeof AuthCallbackRoute
   '/demo': typeof DemoRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/accessibility': typeof AccessibilityRoute
   '/auth': typeof AuthRoute
   '/auth-callback': typeof AuthCallbackRoute
   '/demo': typeof DemoRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accessibility'
     | '/auth'
     | '/auth-callback'
     | '/demo'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accessibility'
     | '/auth'
     | '/auth-callback'
     | '/demo'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/accessibility'
     | '/auth'
     | '/auth-callback'
     | '/demo'
@@ -419,6 +431,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AccessibilityRoute: typeof AccessibilityRoute
   AuthRoute: typeof AuthRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   DemoRoute: typeof DemoRoute
@@ -448,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -720,6 +740,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AccessibilityRoute: AccessibilityRoute,
   AuthRoute: AuthRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   DemoRoute: DemoRoute,
