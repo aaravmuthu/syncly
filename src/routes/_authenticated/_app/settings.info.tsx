@@ -80,8 +80,8 @@ function InfoPage() {
           <LinkRow
             icon={Mail}
             label="Contact support"
-            hint="We reply within a couple of days"
-            href="mailto:support@syncly.website"
+            hint="Privacy, support and legal questions"
+            href="mailto:syncly.web.support@gmail.com"
           />
         </div>
       </Card>

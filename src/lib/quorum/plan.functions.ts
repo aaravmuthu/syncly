@@ -20,12 +20,13 @@ export const getMe = createServerFn({ method: "GET" })
     // role (co-members must never see them), so the caller's own full row is
     // read through the trusted server client, always scoped to their user id.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
+    const { data, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
+    if (profileError) throw dbError(profileError, "getMe");
     let profile = data;
     if (profile) {
       // A profile that already carries a real display name is set up — never
@@ -205,12 +206,14 @@ export const listGroups = createServerFn({ method: "GET" })
     const { settlePastPlans } = await import("./plan-lifecycle.server");
     await settlePastPlans();
     const { supabase } = context;
-    const { data: me } = await supabase.rpc("my_profile_id");
+    const { data: me, error: meError } = await supabase.rpc("my_profile_id");
+    if (meError) throw dbError(meError, "listGroups");
     if (!me) return [];
-    const { data: memberships } = await supabase
+    const { data: memberships, error: membershipError } = await supabase
       .from("group_members")
       .select("group_id, role, groups(*)")
       .eq("profile_id", me);
+    if (membershipError) throw dbError(membershipError, "listGroups");
     const groups = (memberships ?? []).map((m) => ({
       ...((m.groups ?? {}) as Record<string, unknown>),
       role: m.role,
@@ -218,18 +221,20 @@ export const listGroups = createServerFn({ method: "GET" })
     const ids = groups.map((g) => g.id);
     if (!ids.length) return [];
 
-    const [{ data: members }, { data: plans }] = await Promise.all([
-      supabase
-        .from("group_members")
-        .select("group_id, profile_id, profiles(display_name, avatar_emoji, avatar_url)")
-        .in("group_id", ids),
-      supabase
-        .from("plans")
-        .select("id, group_id, title, status, window_start, location_area, created_at")
-        .in("group_id", ids)
-        .order("created_at", { ascending: false }),
-    ]);
+    const [{ data: members, error: membersError }, { data: plans, error: plansError }] =
+      await Promise.all([
+        supabase
+          .from("group_members")
+          .select("group_id, profile_id, profiles(display_name, avatar_emoji, avatar_url)")
+          .in("group_id", ids),
+        supabase
+          .from("plans")
+          .select("id, group_id, title, status, window_start, location_area, created_at")
+          .in("group_id", ids)
+          .order("created_at", { ascending: false }),
+      ]);
 
+    if (membersError || plansError) throw dbError((membersError ?? plansError)!, "listGroups");
     const LIVE = new Set(["collecting", "recommending", "voting"]);
     return groups.map((g) => {
       const mine = (members ?? []).filter((m) => m.group_id === g.id);
@@ -413,45 +418,53 @@ export const getDashboard = createServerFn({ method: "GET" })
     const { settlePastPlans } = await import("./plan-lifecycle.server");
     await settlePastPlans();
     const { supabase } = context;
-    const { data: myId } = await supabase.rpc("my_profile_id");
-    const { data: plans } = await supabase
+    const { data: myId, error: profileError } = await supabase.rpc("my_profile_id");
+    const { data: plans, error: plansError } = await supabase
       .from("plans")
       .select("*, groups(id, name, emoji)")
       .order("created_at", { ascending: false })
       .limit(40);
+    if (profileError || plansError) throw dbError((profileError ?? plansError)!, "getDashboard");
     const list = plans ?? [];
     if (list.length === 0) return { myProfileId: myId ?? null, plans: [] };
 
     const ids = list.map((p) => p.id as string);
-    const [{ data: parts }, { data: votes }, { data: recs }, { data: conflicts }, { data: rides }] =
-      await Promise.all([
-        supabase
-          .from("plan_participants")
-          .select(
-            "plan_id, profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)",
-          )
-          .in("plan_id", ids),
-        supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids),
-        supabase
-          .from("recommendations")
-          .select(
-            "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank, breakdown",
-          )
-          .in("plan_id", ids)
-          .order("rank"),
-        supabase
-          .from("plan_conflicts")
-          .select("id, plan_id, kind, detail")
-          .in("plan_id", ids)
-          .eq("resolved", false),
-        supabase
-          .from("transport_assignments")
-          .select(
-            "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, vehicle_desc, vehicle_color, vehicle_plate, departed_at, eta_minutes, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
-          )
-          .in("plan_id", ids),
-      ]);
+    const [
+      { data: parts, error: partsError },
+      { data: votes, error: votesError },
+      { data: recs, error: recsError },
+      { data: conflicts, error: conflictsError },
+      { data: rides, error: ridesError },
+    ] = await Promise.all([
+      supabase
+        .from("plan_participants")
+        .select(
+          "plan_id, profile_id, responded, attending, profiles(display_name, avatar_emoji, avatar_url)",
+        )
+        .in("plan_id", ids),
+      supabase.from("votes").select("plan_id, profile_id").in("plan_id", ids),
+      supabase
+        .from("recommendations")
+        .select(
+          "id, plan_id, title, subtitle, location_name, address, lat, lon, suggested_start, suggested_end, cost_min, cost_max, tags, rank, breakdown",
+        )
+        .in("plan_id", ids)
+        .order("rank"),
+      supabase
+        .from("plan_conflicts")
+        .select("id, plan_id, kind, detail")
+        .in("plan_id", ids)
+        .eq("resolved", false),
+      supabase
+        .from("transport_assignments")
+        .select(
+          "id, plan_id, car_label, driver_label, leg, passenger_profile_ids, driver_profile_id, vehicle_desc, vehicle_color, vehicle_plate, departed_at, eta_minutes, driver:profiles!transport_assignments_driver_profile_id_fkey(display_name)",
+        )
+        .in("plan_id", ids),
+    ]);
 
+    const readError = partsError ?? votesError ?? recsError ?? conflictsError ?? ridesError;
+    if (readError) throw dbError(readError, "getDashboard");
     return {
       myProfileId: (myId as string | null) ?? null,
       plans: list.map((p) => {
@@ -532,7 +545,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 export const listActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
+    const { data, error } = await context.supabase
       .from("activity_events")
       .select(
         "id, type, message, created_at, plan_id, group_id, actor_profile_id, actor:profiles!activity_events_actor_profile_id_fkey(display_name, avatar_url, avatar_emoji)",
@@ -540,6 +553,7 @@ export const listActivity = createServerFn({ method: "GET" })
       .not("group_id", "is", null)
       .order("created_at", { ascending: false })
       .limit(40);
+    if (error) throw dbError(error, "listActivity");
     return (data ?? []).map((row) => {
       const actorRaw = (row as { actor?: unknown }).actor;
       const actor = (Array.isArray(actorRaw) ? actorRaw[0] : actorRaw) as
@@ -657,35 +671,58 @@ export const getPlan = createServerFn({ method: "GET" })
       .single();
     if (error) throw dbError(error, "getPlan");
 
-    const { data: participants } = await supabase
+    const { data: participants, error: participantsError } = await supabase
       .from("plan_participants")
       .select("*, profiles(id, display_name, avatar_emoji, avatar_url, bio, school, grad_year)")
       .eq("plan_id", data.planId);
-    const { data: recommendations } = await supabase
+    const { data: recommendations, error: recommendationsError } = await supabase
       .from("recommendations")
       .select("*")
       .eq("plan_id", data.planId)
       .order("rank");
-    const { data: votes } = await supabase.from("votes").select("*").eq("plan_id", data.planId);
-    const { data: transport } = await supabase
+    const { data: votes, error: votesError } = await supabase
+      .from("votes")
+      .select("*")
+      .eq("plan_id", data.planId);
+    const { data: transport, error: transportError } = await supabase
       .from("transport_assignments")
       .select("*")
       .eq("plan_id", data.planId);
-    const { data: approvals } = await supabase
+    const { data: approvals, error: approvalsError } = await supabase
       .from("parent_approvals")
       // Never ship the parent token to plan viewers — it is a bearer credential
       // that lets the holder answer the approval. Only status is needed here.
-      .select("id, profile_id, status, condition_text, expires_at, decided_via")
+      .select("id, profile_id, status, expires_at, decided_via")
       .eq("plan_id", data.planId);
 
+    // Approval status is group-visible. Condition text is private and read
+    // with elevated access only for the caller's own approval rows.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ownApprovals, error: ownApprovalsError } = me
+      ? await supabaseAdmin
+          .from("parent_approvals")
+          .select("id, condition_text")
+          .eq("plan_id", data.planId)
+          .eq("profile_id", me)
+      : { data: [], error: null };
+
     // Only the caller's own private answers are ever returned.
-    const { data: mine } = await supabase
+    const { data: mine, error: mineError } = await supabase
       .from("plan_constraints")
       .select("payload")
       .eq("plan_id", data.planId)
       .eq("profile_id", me ?? "")
       .maybeSingle();
 
+    const readError =
+      participantsError ??
+      recommendationsError ??
+      votesError ??
+      transportError ??
+      approvalsError ??
+      ownApprovalsError ??
+      mineError;
+    if (readError) throw dbError(readError, "getPlan");
     return {
       plan,
       meProfileId: me as string | null,
@@ -693,7 +730,10 @@ export const getPlan = createServerFn({ method: "GET" })
       recommendations: recommendations ?? [],
       votes: votes ?? [],
       transport: transport ?? [],
-      approvals: approvals ?? [],
+      approvals: (approvals ?? []).map((approval) => ({
+        ...approval,
+        condition_text: ownApprovals?.find((own) => own.id === approval.id)?.condition_text ?? null,
+      })),
       myConstraints: (mine?.payload as ConstraintPayload | undefined) ?? null,
     };
   });
@@ -714,11 +754,25 @@ export const submitConstraints = createServerFn({ method: "POST" })
         { onConflict: "plan_id,profile_id" },
       );
     if (error) throw dbError(error, "submitConstraints");
-    await supabase
+    const { error: participantError } = await supabase
       .from("plan_participants")
       .update({ responded: true, attending: true })
       .eq("plan_id", data.planId)
       .eq("profile_id", me);
+    if (participantError) throw dbError(participantError, "submitConstraints");
+    // A score is valid only for the answers used to compute it. Reopen the
+    // plan and remove the previous choices before anyone can lock them in.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: invalidateError } = await supabaseAdmin
+      .from("recommendations")
+      .delete()
+      .eq("plan_id", data.planId);
+    if (invalidateError) throw dbError(invalidateError, "submitConstraints");
+    const { error: reopenError } = await supabaseAdmin
+      .from("plans")
+      .update({ status: "collecting", selected_recommendation_id: null, compatibility_score: null })
+      .eq("id", data.planId);
+    if (reopenError) throw dbError(reopenError, "submitConstraints");
     await supabase.from("activity_events").insert({
       plan_id: data.planId,
       type: "constraints_submitted",
@@ -773,6 +827,14 @@ export const castVote = createServerFn({ method: "POST" })
     const { supabase } = context;
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) throw new Error("Profile missing");
+    const { data: option, error: optionError } = await supabase
+      .from("recommendations")
+      .select("id, feasible")
+      .eq("id", data.recommendationId)
+      .eq("plan_id", data.planId)
+      .maybeSingle();
+    if (optionError) throw dbError(optionError, "castVote");
+    if (!option?.feasible) throw new Error("Choose an available option that works for everyone");
     const { error } = await supabase
       .from("votes")
       .upsert(
@@ -804,11 +866,15 @@ export const finalizePlan = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: option } = await supabaseAdmin
       .from("recommendations")
-      .select("id")
+      .select("id, feasible")
       .eq("id", data.recommendationId)
       .eq("plan_id", data.planId)
       .maybeSingle();
     if (!option) throw new Error("That option isn't on this plan");
+    if (!option.feasible)
+      throw new Error(
+        "This option does not meet every member's requirements. Refresh the options before locking it in.",
+      );
     const { error } = await supabaseAdmin
       .from("plans")
       .update({ status: "finalized", selected_recommendation_id: data.recommendationId })

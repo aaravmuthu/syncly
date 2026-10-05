@@ -3,11 +3,14 @@ import { useEffect, useState } from "react";
 /** Registers the service worker. No-ops in SSR or unsupported browsers. */
 export function registerServiceWorker() {
   if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
-  window.addEventListener("load", () => {
+  if (import.meta.env.DEV) return;
+  const register = () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {
       /* offline-resilience is a nice-to-have, never block the app on it */
     });
-  });
+  };
+  if (document.readyState === "complete") register();
+  else window.addEventListener("load", register, { once: true });
 }
 
 type BeforeInstallPromptEvent = Event & {

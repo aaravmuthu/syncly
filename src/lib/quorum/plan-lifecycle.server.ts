@@ -10,7 +10,7 @@
  */
 
 import { dbError } from "@/lib/db-error";
-import { planOverCutoff } from "./plan-time";
+import { isPlanOver, planOverCutoff } from "./plan-time";
 
 const THROTTLE_MS = 60 * 1000;
 const LIVE = ["collecting", "recommending", "voting"] as const;
@@ -51,12 +51,19 @@ async function sweep(now: number) {
 /** Rejects writes to a plan that has ended, so a stale tab can't reopen it. */
 export async function assertPlanOpen(planId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("plans")
-    .select("status")
+    .select("status, window_start, window_end")
     .eq("id", planId)
     .maybeSingle();
-  if (data?.status === "completed" || data?.status === "cancelled") {
+  if (error) throw dbError(error, "assertPlanOpen");
+  if (!data) throw new Error("Plan not found");
+  if (
+    data.status === "completed" ||
+    data.status === "cancelled" ||
+    (data.status !== "draft" &&
+      isPlanOver({ windowStart: data.window_start, windowEnd: data.window_end }, Date.now()))
+  ) {
     throw new Error("This plan has already ended");
   }
 }

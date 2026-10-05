@@ -110,15 +110,19 @@ export function CreatePlanPanel({
   });
 
   const mapPins: MapVenue[] = useMemo(() => {
-    const homes: MapVenue[] = (defaults.data?.members ?? [])
-      .filter((m) => m.lat != null && m.lon != null)
-      .map((m) => ({
-        id: `home-${m.profileId}`,
-        title: `${m.name}'s home base`,
-        lat: m.lat!,
-        lon: m.lon!,
-        kind: "home" as const,
-      }));
+    const me = defaults.data?.me;
+    const homes: MapVenue[] =
+      me?.homeLat != null && me.homeLon != null
+        ? [
+            {
+              id: "my-home",
+              title: "Your home base",
+              lat: me.homeLat,
+              lon: me.homeLon,
+              kind: "home",
+            },
+          ]
+        : [];
     const spots: MapVenue[] = (venues.data?.venues ?? [])
       .filter((v) => v.lat != null && v.lon != null)
       .map((v, i) => ({
@@ -155,7 +159,7 @@ export function CreatePlanPanel({
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
       void qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Plan launched", {
-        description: `${r.optionCount} fair-point options ready · share code ${r.inviteCode ?? inviteCode}`,
+        description: `Invite your group to answer privately · share code ${r.inviteCode ?? inviteCode}`,
       });
       void navigate({ to: "/plans/$planId", params: { planId: r.planId } });
     },

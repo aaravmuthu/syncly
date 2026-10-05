@@ -15,20 +15,27 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
   const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", planId).single();
   if (!plan) throw new Error("Plan not found");
 
-  const { data: participants } = await supabaseAdmin
+  const { data: participants, error: participantsError } = await supabaseAdmin
     .from("plan_participants")
     .select("profile_id, attending, profiles(display_name)")
     .eq("plan_id", planId);
-  const { data: constraintRows } = await supabaseAdmin
+  const { data: constraintRows, error: constraintsError } = await supabaseAdmin
     .from("plan_constraints")
     .select("profile_id, payload")
     .eq("plan_id", planId);
 
+  if (participantsError || constraintsError)
+    throw dbError((participantsError ?? constraintsError)!, "regenerateRecommendations");
   const constraintsFor = (profileId: string) =>
     ((constraintRows ?? []).find((c) => c.profile_id === profileId)
       ?.payload as ConstraintPayload) ?? {};
 
   const attending = (participants ?? []).filter((p) => p.attending !== false);
+  if (
+    !attending.length ||
+    attending.some((p) => !constraintRows?.some((c) => c.profile_id === p.profile_id))
+  )
+    throw new Error("Wait until everyone attending has submitted their private answers");
   const members: MemberInput[] = attending.map((p) => ({
     profileId: p.profile_id,
     constraints: constraintsFor(p.profile_id),
@@ -110,7 +117,8 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
     return { ...r, score: Math.round(r.score * multiplier), breakdown };
   });
 
-  const { isOpenDuring, fairnessScore, OPTION_LABELS } = await import("./hardfilter");
+  const { applyVenueRequirements, isOpenDuring, fairnessScore, OPTION_LABELS } =
+    await import("./hardfilter");
 
   // Per-member limits come from each person's PRIVATE answers; they are only
   // ever used as a pass/fail gate here and never surfaced per person.
@@ -141,8 +149,9 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
       plan.category as string,
     );
 
+    const guarded = applyVenueRequirements(r, { distanceOk, curfewOk, hoursOk });
     const breakdown: ScoreBreakdown = {
-      ...r.breakdown,
+      ...guarded.breakdown,
       fair: {
         avgMinutes,
         spreadMinutes,
@@ -150,12 +159,21 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
         drives: drives.map((d) => ({ name: d.name, miles: d.miles, minutes: d.minutes })),
         curfewOk,
         curfewNote: warnings.length
-          ? `Wraps at ${warnings[0]!.wrapsAt}, past ${warnings[0]!.name}'s ${warnings[0]!.curfew} curfew`
+          ? "This option does not meet every member's timing requirements"
           : null,
       },
     };
     const maxMinutes = mins.length ? Math.max(...mins) : 0;
-    return { ...r, breakdown, fairness, avgMinutes, maxMinutes, distanceOk, curfewOk, hoursOk };
+    return {
+      ...guarded,
+      breakdown,
+      fairness,
+      avgMinutes,
+      maxMinutes,
+      distanceOk,
+      curfewOk,
+      hoursOk,
+    };
   });
 
   // Hard filter: only venues that satisfy every member's constraints.
@@ -163,6 +181,7 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
   // Never leave the group empty-handed: relax to the best-scoring set only when
   // nothing clears the strict gate.
   const pool = (strict.length ? strict : enriched).sort((a, b) => {
+    if (a.feasible !== b.feasible) return a.feasible ? -1 : 1;
     if (b.fairness !== a.fairness) return b.fairness - a.fairness;
     return b.score - a.score;
   });
@@ -209,7 +228,18 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
   });
   const ranked = withFair;
 
-  await supabaseAdmin.from("recommendations").delete().eq("plan_id", planId);
+  // Refreshing replaces the IDs that votes and the selected option refer to.
+  // Reopen first so a failed refresh cannot leave an empty finalized plan.
+  const { error: reopenError } = await supabaseAdmin
+    .from("plans")
+    .update({ status: "collecting", selected_recommendation_id: null, compatibility_score: null })
+    .eq("id", planId);
+  if (reopenError) throw dbError(reopenError, "regenerateRecommendations");
+  const { error: deleteError } = await supabaseAdmin
+    .from("recommendations")
+    .delete()
+    .eq("plan_id", planId);
+  if (deleteError) throw dbError(deleteError, "regenerateRecommendations");
   const { data: inserted, error } = await supabaseAdmin
     .from("recommendations")
     .insert(
@@ -238,17 +268,15 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
   if (error) throw dbError(error, "regenerateRecommendations");
 
   const best = ranked[0];
-  const stillFinalizable = plan.status === "finalized" && ranked.some((r) => r.feasible);
-  await supabaseAdmin
+  const { error: statusError } = await supabaseAdmin
     .from("plans")
     .update({
-      status: plan.status === "finalized" && stillFinalizable ? "finalized" : "voting",
+      status: "voting",
       compatibility_score: best?.score ?? null,
-      ...(plan.status === "finalized" && !stillFinalizable
-        ? { selected_recommendation_id: null }
-        : {}),
+      selected_recommendation_id: null,
     })
     .eq("id", planId);
+  if (statusError) throw dbError(statusError, "regenerateRecommendations");
 
   await supabaseAdmin.from("transport_assignments").delete().eq("plan_id", planId);
   if (best) {

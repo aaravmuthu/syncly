@@ -3,17 +3,13 @@ import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dbError } from "@/lib/db-error";
-import { isValidTimeZone, zonedToInstant } from "./plan-time";
+import { isValidTimeZone, zonedDateKey, zonedToInstant } from "./plan-time";
 
 export type MemberPin = {
   profileId: string;
   name: string;
   emoji: string | null;
   avatarUrl: string | null;
-  zip: string | null;
-  lat: number | null;
-  lon: number | null;
-  curfew: string | null;
 };
 
 export type PlanDefaults = {
@@ -32,6 +28,7 @@ export type PlanDefaults = {
   };
 
   members: MemberPin[];
+  suggestedWindow: { start: string; end: string } | null;
   fairPoint: { lat: number; lon: number; label: string; zip: string; memberCount: number } | null;
   summary: string;
 };
@@ -77,7 +74,17 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
       budget ? `${budget[0]!.toUpperCase()}${budget.slice(1)} budget` : null,
     ].filter(Boolean);
 
+    const curfews = bases.map((m) => m.curfew).filter((c): c is string => Boolean(c));
+    const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    const earliest = curfews.length ? Math.min(...curfews.map(toMinutes)) : null;
+    const clock = (minutes: number) =>
+      `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+    // Leave time to get home; only the resulting shared window leaves the server.
+    const end = earliest == null ? null : Math.max(0, earliest - 30);
+
     return {
+      suggestedWindow:
+        end == null ? null : { start: clock(Math.max(0, end - 150)), end: clock(end) },
       me: {
         profileId: (myId as string | null) ?? null,
         name: (mine?.display_name as string) ?? "You",
@@ -97,10 +104,6 @@ export const getPlanDefaults = createServerFn({ method: "POST" })
         name: m.name,
         emoji: m.emoji,
         avatarUrl: m.avatarUrl,
-        zip: m.zip,
-        lat: m.lat,
-        lon: m.lon,
-        curfew: m.curfew,
       })),
       fairPoint: fp
         ? { lat: fp.lat, lon: fp.lon, label: fp.label, zip: fp.zip, memberCount: fp.memberCount }
@@ -133,7 +136,7 @@ export type FairVenue = {
   end: string;
   fairMiles: number | null;
   drives: { profileId: string; name: string; miles: number; minutes: number }[];
-  curfewWarnings: { name: string; curfew: string; wrapsAt: string }[];
+  scheduleFits: boolean;
 };
 
 /** Fair-Point clustered venue discovery with per-member drive times. */
@@ -209,7 +212,7 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
                 ? Math.round(haversineMiles(origin, { lat: v.lat, lon: v.lon }) * 10) / 10
                 : null,
             drives,
-            curfewWarnings: curfewWarnings(bases, end, drives),
+            scheduleFits: curfewWarnings(bases, end, drives).length === 0,
           };
         }),
       };
@@ -248,7 +251,8 @@ export const launchAiPlan = createServerFn({ method: "POST" })
     const { assertAiQuota } = await import("@/lib/ai-quota.server");
     await assertAiQuota(context.userId, "launch_ai_plan");
     const { parseMagicPrompt } = await import("./ai.server");
-    const draft = await parseMagicPrompt(prompt, new Date().toISOString().slice(0, 10));
+    const tz = data.timeZone && isValidTimeZone(data.timeZone) ? data.timeZone : "UTC";
+    const draft = await parseMagicPrompt(prompt, zonedDateKey(new Date().toISOString(), tz));
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: mine } = await supabaseAdmin
@@ -257,8 +261,7 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       .eq("id", me)
       .maybeSingle();
 
-    const { loadMemberBases, fairPointFor, drivesTo, curfewWarnings } =
-      await import("./fairpoint.server");
+    const { loadMemberBases, fairPointFor } = await import("./fairpoint.server");
     const bases = await loadMemberBases(data.groupId);
     const origin = await fairPointFor(
       bases,
@@ -266,11 +269,12 @@ export const launchAiPlan = createServerFn({ method: "POST" })
     );
 
     const startTime = draft.time ?? "18:30";
-    const tz = data.timeZone && isValidTimeZone(data.timeZone) ? data.timeZone : "UTC";
     const windowStart = draft.date ? zonedToInstant(draft.date, startTime, tz) : null;
     const endMins = hhmmToMin(startTime) + 150;
     const endTime = minToHHMM(endMins);
-    const windowEnd = draft.date ? zonedToInstant(draft.date, endTime, tz) : null;
+    const windowEnd = windowStart
+      ? new Date(new Date(windowStart).getTime() + 150 * 60_000).toISOString()
+      : null;
 
     const { data: plan, error } = await supabase
       .from("plans")
@@ -291,86 +295,21 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       .single();
     if (error) throw dbError(error, "launchAiPlan");
 
-    await supabase
+    const { error: participantError } = await supabase
       .from("plan_participants")
       .insert(members.map((m) => ({ plan_id: plan.id, profile_id: m.profile_id })));
+    if (participantError) throw dbError(participantError, "launchAiPlan");
 
-    let seeded = 0;
-    if (origin) {
-      const { searchVenuesGeoapify } = await import("./places.server");
-      const { queryVenuesNear } = await import("./location");
-      const query = {
-        origin,
-        category: draft.category,
-        maxRadiusMiles: draft.searchRadiusMiles ?? 12,
-        maxBudget: draft.maxSpendPerPerson,
-        limit: 3,
-      };
-      const live = await searchVenuesGeoapify(query);
-      const seeds = (live.length ? live : queryVenuesNear(query)).slice(0, 3);
-      if (seeds.length) {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await supabaseAdmin.from("recommendations").insert(
-          seeds.map((v, i) => {
-            const drives = drivesTo(bases, { lat: v.lat ?? null, lon: v.lon ?? null });
-            const warns = curfewWarnings(bases, endTime, drives);
-            return {
-              plan_id: plan.id,
-              rank: i + 1,
-              title: v.title,
-              subtitle: v.subtitle,
-              category: draft.category,
-              cost_min: v.costMin,
-              cost_max: v.costMax,
-              travel_minutes: v.travelMinutes,
-              suggested_start: startTime,
-              suggested_end: endTime,
-              location_name: v.location,
-              lat: v.lat ?? null,
-              lon: v.lon ?? null,
-              address: v.address ?? null,
-              tags: v.tags,
-              score: 88 - i * 4,
-              feasible: warns.length === 0,
-              breakdown: {
-                hardFailures: warns.length,
-                budgetFit: 80,
-                scheduleFit: warns.length ? 55 : 90,
-                travelFit: 85,
-                preferenceFit: 80,
-                dietaryFit: 90,
-                transportFit: 80,
-                fairness: 85,
-                overallFit: 82,
-                reasons: [`Clustered around the group's fair point (${origin.label})`],
-                cautions: warns.map(
-                  (w) => `Wraps at ${w.wrapsAt}, past ${w.name}'s ${w.curfew} curfew`,
-                ),
-                venue: {
-                  ...(v.address ? { address: v.address } : {}),
-                  ...(v.distanceMiles != null ? { distanceMiles: v.distanceMiles } : {}),
-                  ...(v.priceLevel ? { priceLevel: v.priceLevel } : {}),
-                  ...(v.cuisine ? { cuisine: v.cuisine } : {}),
-                  kind: v.kind ?? "activity",
-                  ...(v.lat != null ? { lat: v.lat } : {}),
-                  ...(v.lon != null ? { lon: v.lon } : {}),
-                },
-              } as never,
-            };
-          }),
-        );
-        seeded = seeds.length;
-        // Plan status is server-managed; this caller just created the plan.
-        await supabaseAdmin.from("plans").update({ status: "voting" }).eq("id", plan.id);
-      }
-    }
+    // AI creates the draft. Gather private answers before the deterministic
+    // engine declares any option feasible or assigns compatibility scores.
+    const seeded = 0;
 
     await supabase.from("activity_events").insert({
       group_id: data.groupId,
       plan_id: plan.id,
       actor_profile_id: me,
       type: "plan_created",
-      message: `${plan.title} was launched with AI — options are ready`,
+      message: `${plan.title} was launched with AI — private answers are next`,
     });
     const { notifyGroupMembers } = await import("./notify.server");
     await notifyGroupMembers(data.groupId, {

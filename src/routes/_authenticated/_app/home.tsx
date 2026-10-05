@@ -153,7 +153,18 @@ export function HomePage() {
       ...confirmed.filter((p) => p.window_start && dayKey(p.window_start) === todayKey),
     ];
     const upcoming = confirmed.filter((p) => !isPast(p) && !activeNow.includes(p));
-    const memories = confirmed.filter((p) => isPast(p) && !activeNow.includes(p)).slice(0, 5);
+    const memories = dayFiltered
+      .filter(
+        (p) =>
+          p.status === "completed" ||
+          (p.status === "finalized" && isPast(p) && !activeNow.includes(p)),
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.window_start ?? b.created_at).getTime() -
+          new Date(a.window_start ?? a.created_at).getTime(),
+      )
+      .slice(0, 5);
 
     return {
       conflicted,

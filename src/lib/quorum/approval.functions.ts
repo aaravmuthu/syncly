@@ -11,17 +11,14 @@ import { isValidTimeZone, zonedClockTime, zonedDateKey } from "./plan-time";
  * for anyone west of UTC, so each read formats with the viewer's zone and
  * falls back to UTC when the browser didn't send a valid one.
  */
-const viewerTz = (tz: string | undefined) =>
-  tz && isValidTimeZone(tz) ? tz : "UTC";
+const viewerTz = (tz: string | undefined) => (tz && isValidTimeZone(tz) ? tz : "UTC");
 
 /**
  * Public, token-scoped. A parent sees exactly one plan's logistics — never the
  * group's members, private answers, or anything else about their child's account.
  */
 export const getApproval = createServerFn({ method: "GET" })
-  .inputValidator(
-    z.object({ token: v.token, timeZone: z.string().max(64).optional() }),
-  )
+  .inputValidator(z.object({ token: v.token, timeZone: z.string().max(64).optional() }))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await supabaseAdmin
@@ -214,9 +211,7 @@ export type ParentSummary = {
  * curfew and home-distance.
  */
 export const getParentSummary = createServerFn({ method: "GET" })
-  .inputValidator(
-    z.object({ planId: v.id, sig: v.token, timeZone: z.string().max(64).optional() }),
-  )
+  .inputValidator(z.object({ planId: v.id, sig: v.token, timeZone: z.string().max(64).optional() }))
   .handler(async ({ data }): Promise<ParentSummary | null> => {
     const { verifyPlanSummarySig } = await import("./summary-link.server");
     if (!verifyPlanSummarySig(data.planId, data.sig)) return null;
@@ -284,10 +279,8 @@ export const getParentSummary = createServerFn({ method: "GET" })
         costMax = rec.cost_max;
       }
     }
-    if (!startTime && plan.window_start)
-      startTime = zonedClockTime(plan.window_start, tz);
-    if (!endTime && plan.window_end)
-      endTime = zonedClockTime(plan.window_end, tz);
+    if (!startTime && plan.window_start) startTime = zonedClockTime(plan.window_start, tz);
+    if (!endTime && plan.window_end) endTime = zonedClockTime(plan.window_end, tz);
 
     // Per-member curfew + distance-from-home, computed once the venue and end
     // time are known.

@@ -197,7 +197,12 @@ const FILTERS: { id: "all" | Kind; label: string }[] = [
 
 function ActivityPage() {
   const feed = useQuery({ queryKey: ["activity"], queryFn: useServerFn(listActivity) });
-  const { notifications, unread } = useNotifications();
+  const {
+    notifications,
+    unread,
+    isError: notificationsError,
+    refetch: refetchNotifications,
+  } = useNotifications();
   const markRead = useMarkNotificationsRead();
   const [perm, setPerm] = useState<string>("unsupported");
   const [dismissed, setDismissed] = useState(false);
@@ -312,7 +317,23 @@ function ActivityPage() {
         </div>
       ) : null}
 
-      {!feed.isLoading && visible.length === 0 ? (
+      {feed.isError || notificationsError ? (
+        <Empty
+          title="Couldn't load all activity"
+          body="Check your connection and try again."
+          action={
+            <Button
+              onClick={() => {
+                void feed.refetch();
+                void refetchNotifications();
+              }}
+            >
+              Try again
+            </Button>
+          }
+        />
+      ) : null}
+      {!feed.isLoading && !feed.isError && !notificationsError && visible.length === 0 ? (
         items.length > 0 ? (
           // A filter came up empty, not the feed -- don't show the first-run copy.
           <Empty

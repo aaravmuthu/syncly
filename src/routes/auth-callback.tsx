@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Wordmark } from "@/components/quorum/Wordmark";
+import { safeRedirectPath } from "@/lib/safe-dom";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 /**
@@ -18,11 +19,16 @@ export const Route = createFileRoute("/auth-callback")({
       { property: "og:description", content: "Finishing your Syncly sign-in." },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   component: AuthCallback,
 });
 
 function AuthCallback() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const target = safeRedirectPath(next, "/home");
   const [message, setMessage] = useState("Finishing sign-in…");
 
   useEffect(() => {
@@ -36,7 +42,7 @@ function AuthCallback() {
       const { getMe } = await import("@/lib/quorum/plan.functions");
       try {
         const me = await getMe();
-        void navigate({ to: me?.onboarded ? "/home" : "/onboarding", replace: true });
+        void navigate({ to: me?.onboarded ? target : "/onboarding", replace: true });
       } catch {
         void navigate({ to: "/onboarding", replace: true });
       }
@@ -57,7 +63,7 @@ function AuthCallback() {
       sub.subscription.unsubscribe();
       window.clearTimeout(timer);
     };
-  }, [navigate]);
+  }, [navigate, target]);
 
   return (
     <div className="paper-field grid min-h-dvh place-items-center px-6">

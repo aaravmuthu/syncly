@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
@@ -111,22 +111,9 @@ export function PlanWizard({
     staleTime: 5 * 60_000,
   });
 
-  // Earliest curfew across the squad — the plan has to clear this one.
-  const earliestCurfew = useMemo(() => {
-    const all = [
-      ...(defaults.data?.members ?? []).map((m) => m.curfew),
-      defaults.data?.me.curfew ?? null,
-    ].filter((c): c is string => Boolean(c));
-    if (!all.length) return null;
-    return all.map((c) => c.slice(0, 5)).sort((a, b) => mins(a) - mins(b))[0]!;
-  }, [defaults.data]);
-
-  const startTime = useMemo(() => {
-    if (respectCurfew && earliestCurfew)
-      return clock(Math.max(11 * 60, mins(earliestCurfew) - 150));
-    return "18:30";
-  }, [respectCurfew, earliestCurfew]);
-  const endTime = useMemo(() => clock(mins(startTime) + 150), [startTime]);
+  const startTime = respectCurfew ? (defaults.data?.suggestedWindow?.start ?? "18:30") : "18:30";
+  const endTime = respectCurfew ? (defaults.data?.suggestedWindow?.end ?? "21:00") : "21:00";
+  const [date, setDate] = useState(() => localDateKey());
 
   const activeVibeId = subVibeId ?? vibe?.vibe ?? null;
 
@@ -140,7 +127,7 @@ export function PlanWizard({
           category: vibe?.category ?? "dinner",
           vibe: activeVibeId,
           radiusMiles: 15,
-          maxSpend: budget.max || null,
+          maxSpend: budget.max,
           endTime,
         },
       }),
@@ -156,7 +143,7 @@ export function PlanWizard({
     return () => clearTimeout(t);
   }, [step]);
 
-  const top3 = (venues.data?.venues ?? []).slice(0, 3);
+  const top3 = useMemo(() => (venues.data?.venues ?? []).slice(0, 3), [venues.data?.venues]);
   const revealing = scanning || venues.isFetching || defaults.isLoading;
 
   const pins: MapVenue[] = useMemo(() => {
@@ -191,7 +178,7 @@ export function PlanWizard({
     mutationFn: useServerFn(createPlan),
     onSuccess: (plan) => {
       void qc.invalidateQueries({ queryKey: ["group", groupId] });
-      void qc.invalidateQueries({ queryKey: ["plans"] });
+      void qc.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Plan launched", {
         description: "Everyone gets their own private questionnaire.",
       });
@@ -207,8 +194,14 @@ export function PlanWizard({
   const launch = () => {
     if (!vibe) return;
     const spot = top3.find((v) => v.key === picked);
-    const today = new Date();
-    const date = localDateKey(today);
+    if (!date || !startTime || !endTime) {
+      toast.error("Choose a date, start time and end time");
+      return;
+    }
+    if (new Date(localToInstant(date, startTime)).getTime() <= Date.now()) {
+      toast.error("Choose a future date", { description: "This start time has already passed." });
+      return;
+    }
     create.mutate({
       data: {
         groupId,
@@ -230,216 +223,264 @@ export function PlanWizard({
   // viewport even though route content (its natural DOM ancestor) sits
   // inside RouteTransition's animated wrapper, whose transform would
   // otherwise make it the containing block for our `fixed` positioning.
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex flex-col bg-background/80 backdrop-blur-xl">
-      {/* header */}
-      <div className="flex items-center justify-between gap-3 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-3">
-        <button
-          type="button"
-          onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
-          className="tap-target inline-flex items-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm text-muted-foreground transition active:scale-[0.97] hover:text-foreground"
+  return (
+    <Dialog.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden /> {step === 0 ? "Close" : "Back"}
-        </button>
-        <div className="flex items-center gap-1.5" aria-label={`Step ${step + 1} of 3`}>
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ease-out ${
-                i === step ? "w-7 bg-primary" : i < step ? "w-4 bg-primary/50" : "w-4 bg-secondary"
-              }`}
-            />
-          ))}
-        </div>
-        <span className="w-14" />
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
-        <div className="mx-auto w-full max-w-xl">
-          {/* ---------- Step 1: vibe ---------- */}
-          {step === 0 ? (
-            <div key="step-0" className="animate-fade-in">
-              <h2 className="font-display text-2xl font-semibold">What's the move today?</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Pick a vibe — we'll find spots that are fair for everyone.
-              </p>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                {WIZARD_VIBES.map((v) => {
-                  const active = vibe?.id === v.id;
-                  return (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => {
-                        setVibe(v);
-                        setSubVibeId(null);
-                        setPicked(null);
-                        setTimeout(() => setStep(1), 180);
-                      }}
-                      className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.97] hover:-translate-y-0.5 hover:shadow-lg ${
-                        active
-                          ? "border-primary/60 bg-primary/10 shadow-[0_0_35px_-8px_var(--primary)]"
-                          : "border-border bg-secondary/40 hover:border-primary/40"
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br ${v.glow} to-transparent blur-2xl transition-opacity duration-300 group-hover:opacity-100 opacity-60`}
-                        aria-hidden
-                      />
-                      <span className="text-3xl">{v.emoji}</span>
-                      <span className="mt-2 block font-display text-base font-semibold">
-                        {v.title}
-                      </span>
-                      <span className="mt-1 block text-xs text-muted-foreground">{v.blurb}</span>
-                    </button>
-                  );
-                })}
-              </div>
+          <Dialog.Title className="sr-only">Create a plan</Dialog.Title>
+          {/* header */}
+          <div className="flex items-center justify-between gap-3 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-3">
+            <button
+              type="button"
+              onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
+              className="tap-target inline-flex items-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm text-muted-foreground transition active:scale-[0.97] hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden /> {step === 0 ? "Close" : "Back"}
+            </button>
+            <div className="flex items-center gap-1.5" aria-label={`Step ${step + 1} of 3`}>
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 rounded-full transition-[width,background-color] duration-300 ease-out ${
+                    i === step
+                      ? "w-7 bg-primary"
+                      : i < step
+                        ? "w-4 bg-primary/50"
+                        : "w-4 bg-secondary"
+                  }`}
+                />
+              ))}
             </div>
-          ) : null}
+            <span className="w-14" />
+          </div>
 
-          {/* ---------- Step 2: budget + curfew ---------- */}
-          {step === 1 ? (
-            <div key="step-1" className="animate-fade-in">
-              <h2 className="font-display text-2xl font-semibold">Budget & curfew</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {vibe ? `${vibe.emoji} ${vibe.title}` : ""} — set the money and the clock.
-              </p>
-
-              {vibe?.subVibes && vibe.subVibes.length > 1 ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {vibe.subVibes.map((id) => {
-                    const v = vibeById(id) ?? VIBES.find((x) => x.id === id);
-                    if (!v) return null;
-                    const active = activeVibeId === id;
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => setSubVibeId(id)}
-                        className={`pressable rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          active
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        <span className="mr-1">{v.emoji}</span>
-                        {v.label}
-                      </button>
-                    );
-                  })}
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
+            <div className="mx-auto w-full max-w-xl">
+              {/* ---------- Step 1: vibe ---------- */}
+              {step === 0 ? (
+                <div key="step-0" className="animate-fade-in">
+                  <h2 className="font-display text-2xl font-semibold">What's the move today?</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Pick a vibe — we'll find spots that are fair for everyone.
+                  </p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {WIZARD_VIBES.map((v) => {
+                      const active = vibe?.id === v.id;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => {
+                            setVibe(v);
+                            setSubVibeId(null);
+                            setPicked(null);
+                            setStep(1);
+                          }}
+                          className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.97] hover:-translate-y-0.5 hover:shadow-lg ${
+                            active
+                              ? "border-primary/60 bg-primary/10 shadow-[0_0_35px_-8px_var(--primary)]"
+                              : "border-border bg-secondary/40 hover:border-primary/40"
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br ${v.glow} to-transparent blur-2xl transition-opacity duration-300 group-hover:opacity-100 opacity-60`}
+                            aria-hidden
+                          />
+                          <span className="text-3xl">{v.emoji}</span>
+                          <span className="mt-2 block font-display text-base font-semibold">
+                            {v.title}
+                          </span>
+                          <span className="mt-1 block text-xs text-muted-foreground">
+                            {v.blurb}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : null}
 
-              <div className="mt-5 grid grid-cols-3 gap-2">
-                {BUDGETS.map((b) => {
-                  const active = budget.id === b.id;
-                  return (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => setBudget(b)}
-                      className={`tap-target rounded-2xl border px-3 py-4 text-center transition active:scale-[0.97] ${
-                        active
-                          ? "border-primary/60 bg-primary/10 shadow-[0_0_28px_-10px_var(--primary)]"
-                          : "border-border bg-secondary/40 hover:border-primary/40"
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold">{b.label}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">{b.sub}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <Card className="mt-4">
-                <label className="flex items-start justify-between gap-4">
-                  <span>
-                    <span className="block text-sm font-semibold">Respect the earliest curfew</span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {earliestCurfew
-                        ? `Earliest in the squad is ${to12(earliestCurfew)} — we start at ${to12(startTime)} and wrap by ${to12(endTime)}.`
-                        : "No curfews saved yet — defaulting to a 6:30 PM start."}
-                    </span>
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="mt-1 h-5 w-5 accent-[var(--primary)]"
-                    checked={respectCurfew}
-                    onChange={(e) => setRespectCurfew(e.target.checked)}
-                  />
-                </label>
-              </Card>
-
-              <Button className="mt-5 w-full" onClick={() => setStep(2)}>
-                Find our fair midpoint
-              </Button>
-            </div>
-          ) : null}
-
-          {/* ---------- Step 3: reveal ---------- */}
-          {step === 2 ? (
-            <div key="step-2" className="animate-fade-in">
-              {revealing ? (
-                <RadarScan />
-              ) : (
-                <>
-                  <h2 className="font-display text-2xl font-semibold">Top 3 fair spots</h2>
+              {/* ---------- Step 2: budget + curfew ---------- */}
+              {step === 1 ? (
+                <div key="step-1" className="animate-fade-in">
+                  <h2 className="font-display text-2xl font-semibold">Budget & curfew</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Clustered around everyone's midpoint
-                    {venues.data?.origin ? ` · ${venues.data.origin.label}` : ""}.
+                    {vibe ? `${vibe.emoji} ${vibe.title}` : ""} — set the money and the clock.
                   </p>
 
-                  {pins.length ? (
-                    <div className="mt-4">
-                      <VenueMap venues={pins} onSelect={(id) => setPicked(id)} />
+                  {vibe?.subVibes && vibe.subVibes.length > 1 ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {vibe.subVibes.map((id) => {
+                        const v = vibeById(id) ?? VIBES.find((x) => x.id === id);
+                        if (!v) return null;
+                        const active = activeVibeId === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setSubVibeId(id)}
+                            className={`pressable rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                              active
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            <span className="mr-1">{v.emoji}</span>
+                            {v.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   ) : null}
 
-                  <div className="mt-4 space-y-2">
-                    {top3.length ? (
-                      top3.map((v, i) => (
-                        <div key={v.key} className="relative">
-                          <span
-                            className="pointer-events-none absolute -left-1 -top-1 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-caption font-bold text-primary-foreground"
-                            aria-hidden
-                          >
-                            {v.kind === "activity" ? (
-                              <Trophy className="h-3 w-3" />
-                            ) : (
-                              <Utensils className="h-3 w-3" />
-                            )}
-                            #{i + 1}
+                  <div className="mt-5 grid grid-cols-3 gap-2">
+                    {BUDGETS.map((b) => {
+                      const active = budget.id === b.id;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => setBudget(b)}
+                          className={`tap-target rounded-2xl border px-3 py-4 text-center transition active:scale-[0.97] ${
+                            active
+                              ? "border-primary/60 bg-primary/10 shadow-[0_0_28px_-10px_var(--primary)]"
+                              : "border-border bg-secondary/40 hover:border-primary/40"
+                          }`}
+                        >
+                          <span className="block text-sm font-semibold">{b.label}</span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {b.sub}
                           </span>
-                          <FairVenueCard
-                            venue={v}
-                            meProfileId={defaults.data?.me.profileId}
-                            selected={picked === v.key}
-                            onSelect={() => setPicked(picked === v.key ? null : v.key)}
-                          />
-                        </div>
-                      ))
-                    ) : (
-                      <Card>
-                        <p className="text-sm text-muted-foreground">
-                          No spots matched that vibe and budget nearby. Go back and try another
-                          vibe.
-                        </p>
-                      </Card>
-                    )}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <Button className="mt-5 w-full" loading={create.isPending} onClick={launch}>
-                    {create.isPending ? "Launching…" : "Launch this plan"}
+                  <label className="mt-4 block text-sm font-medium">
+                    Plan date
+                    <input
+                      type="date"
+                      required
+                      min={localDateKey()}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="mt-1.5 w-full rounded-xl border border-input bg-card px-3 py-3"
+                    />
+                  </label>
+                  <Card className="mt-4">
+                    <label className="flex items-start justify-between gap-4">
+                      <span>
+                        <span className="block text-sm font-semibold">
+                          Respect the earliest curfew
+                        </span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          {defaults.data?.suggestedWindow
+                            ? `Suggested window: ${to12(startTime)} to ${to12(endTime)}, with time to get home.`
+                            : "No curfews saved yet — defaulting to a 6:30 PM start."}
+                        </span>
+                      </span>
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-5 w-5 accent-[var(--primary)]"
+                        checked={respectCurfew}
+                        onChange={(e) => setRespectCurfew(e.target.checked)}
+                      />
+                    </label>
+                  </Card>
+
+                  <Button className="mt-5 w-full" onClick={() => setStep(2)}>
+                    Find our fair midpoint
                   </Button>
-                </>
-              )}
+                </div>
+              ) : null}
+
+              {/* ---------- Step 3: reveal ---------- */}
+              {step === 2 ? (
+                <div key="step-2" className="animate-fade-in">
+                  {venues.isError || defaults.isError ? (
+                    <Card>
+                      <p role="alert">
+                        Couldn't find nearby spots. Check your connection and try again.
+                      </p>
+                      <Button
+                        className="mt-3"
+                        onClick={() => {
+                          void venues.refetch();
+                          void defaults.refetch();
+                        }}
+                      >
+                        Try again
+                      </Button>
+                    </Card>
+                  ) : revealing ? (
+                    <RadarScan />
+                  ) : (
+                    <>
+                      <h2 className="font-display text-2xl font-semibold">Top 3 fair spots</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Clustered around everyone's midpoint
+                        {venues.data?.origin ? ` · ${venues.data.origin.label}` : ""}.
+                      </p>
+
+                      {pins.length ? (
+                        <div className="mt-4">
+                          <VenueMap venues={pins} onSelect={(id) => setPicked(id)} />
+                        </div>
+                      ) : null}
+
+                      <div className="mt-4 space-y-2">
+                        {top3.length ? (
+                          top3.map((v, i) => (
+                            <div key={v.key} className="relative">
+                              <span
+                                className="pointer-events-none absolute -left-1 -top-1 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-caption font-bold text-primary-foreground"
+                                aria-hidden
+                              >
+                                {v.kind === "activity" ? (
+                                  <Trophy className="h-3 w-3" />
+                                ) : (
+                                  <Utensils className="h-3 w-3" />
+                                )}
+                                #{i + 1}
+                              </span>
+                              <FairVenueCard
+                                venue={v}
+                                meProfileId={defaults.data?.me.profileId}
+                                selected={picked === v.key}
+                                onSelect={() => setPicked(picked === v.key ? null : v.key)}
+                              />
+                            </div>
+                          ))
+                        ) : (
+                          <Card>
+                            <p className="text-sm text-muted-foreground">
+                              No spots matched that vibe and budget nearby. Go back and try another
+                              vibe.
+                            </p>
+                          </Card>
+                        )}
+                      </div>
+
+                      <Button className="mt-5 w-full" loading={create.isPending} onClick={launch}>
+                        {create.isPending ? "Launching…" : "Launch this plan"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-      </div>
-    </div>,
-    document.body,
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 

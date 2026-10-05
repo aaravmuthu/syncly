@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/quorum/AppShell";
 import { InviteCard } from "@/components/quorum/InviteCard";
 import { GroupSettings } from "@/components/quorum/GroupSettings";
 import { GroupAppearance } from "@/components/quorum/GroupAppearance";
-import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
+import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
 import { statusTone } from "@/components/quorum/status-tone";
 import { getGroup } from "@/lib/quorum/plan.functions";
 import { PlanWizard } from "@/components/quorum/PlanWizard";
@@ -77,7 +77,24 @@ function GroupPage() {
       </>
     );
   }
-  if (!q.data) return <PageHeader title="Group not found" />;
+  if (q.isError)
+    return (
+      <>
+        <PageHeader title="Group" />
+        <Empty
+          title="Couldn't load this group"
+          body="Check your connection or ask a member to confirm you still have access."
+          action={<Button onClick={() => void q.refetch()}>Try again</Button>}
+        />
+      </>
+    );
+  if (!q.data)
+    return (
+      <Empty
+        title="Group not found"
+        body="This group may have been removed or you may no longer have access."
+      />
+    );
 
   const { group, members, plans, myProfileId } = q.data;
   const memberIds = members.map((m) => m.profile_id);
@@ -155,10 +172,7 @@ function GroupPage() {
             ) : null}
 
             {tab === "chat" ? (
-              <SquadChat
-                groupId={groupId}
-                className="h-[calc(100dvh-11rem)] min-h-[520px] md:h-[calc(100vh-220px)]"
-              />
+              <SquadChat groupId={groupId} className="h-[calc(100dvh-11rem)] min-h-72" />
             ) : null}
 
             {tab === "settings" ? (

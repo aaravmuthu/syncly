@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BRAND } from "@/lib/brand";
-import { LegalLayout, List, Ph, Section, SubSection } from "@/components/quorum/LegalLayout";
+import { LEGAL } from "@/lib/legal";
+import { LegalLayout, List, Section, SubSection } from "@/components/quorum/LegalLayout";
 
 const TITLE = `Terms of Service — ${BRAND.name}`;
 const DESCRIPTION =
@@ -36,7 +37,6 @@ const TOC = [
   { id: "liability", label: "Limitation of liability" },
   { id: "indemnification", label: "Indemnification" },
   { id: "termination", label: "Termination" },
-  { id: "law", label: "Governing law & disputes" },
   { id: "changes", label: "Changes to these terms" },
   { id: "contact", label: "Contact us" },
 ];
@@ -45,14 +45,14 @@ function TermsPage() {
   return (
     <LegalLayout
       title="Terms of Service"
-      effectiveDate="August 22, 2026"
+      effectiveDate={LEGAL.effectiveDate}
       toc={TOC}
       intro={
         <p>
           These Terms of Service ("Terms") govern your access to and use of {BRAND.name}
-          ("Syncly", "we", "us", or "our"), including our website, apps, and related services (the
-          "Service"). By creating an account or using the Service, you agree to these Terms. If you
-          don't agree, don't use the Service.
+          (the "Service"), operated by {LEGAL.operators}, individual operators. "We", "us" and "our"
+          refer to these operators. By creating an account or using the Service, you agree to these
+          Terms. If you don't agree, don't use the Service.
         </p>
       }
     >
@@ -78,10 +78,11 @@ function TermsPage() {
       <Section id="service" title="2. The service">
         <p>
           Syncly helps groups plan hangouts by privately collecting each member's constraints
-          (budget, schedule, rides, etc.) and surfacing options that work for everyone. It also
-          offers optional features for teens and guardians, including live location ("radar"), safe
-          zones, check-ins, and plan approvals. Not every feature is available to every account
-          type, and we may add, change, or remove features over time.
+          (budget, schedule, rides, etc.) and comparing possible options. Scores and suggestions
+          depend on the information provided and do not guarantee that an option will suit everyone.
+          It also offers optional features for teens and guardians, including live location
+          ("radar"), safe zones, check-ins, and plan approvals. Not every feature is available to
+          every account type, and we may add, change, or remove features over time.
         </p>
       </Section>
 
@@ -96,9 +97,10 @@ function TermsPage() {
               your account. Tell us immediately if you suspect unauthorized use.
             </>,
             <>
-              You must be at least <Ph>[minimum age, e.g. 13]</Ph> to create an account. If you're
-              under 18, you should use Syncly together with a parent or guardian, including through
-              the guardian-linking feature where applicable.
+              You must be at least {LEGAL.minimumAccountAge} years old to create an account.
+              Children under {LEGAL.minimumAccountAge} may not create an account, including through
+              guardian linking. If you're under 18, we encourage you to use Syncly with a parent or
+              legal guardian.
             </>,
             <>
               One person may not maintain more than one account for the same purpose, and accounts
@@ -133,19 +135,24 @@ function TermsPage() {
         <p>
           Guardian linking connects a teen's account with a parent or guardian's account so the
           guardian can see plan, ride, and location information and provide approvals. Linking only
-          happens when both sides take an affirmative action (e.g. generating and accepting an
-          invite code).
+          happens after a teen shares a temporary pairing code, a guardian enters it to request
+          linking, and the teen separately approves the request. Entering a code alone does not
+          create a link. Syncly does not verify the guardian's identity or legal authority through
+          this pairing flow.
         </p>
 
         <SubSection title="What the teen consents to">
           <p>
-            By accepting or creating a guardian link, the teen consents to sharing the data
-            described in the Guardian-linking section of our{" "}
+            By approving a guardian link request, the teen agrees to share the data described in the
+            Guardian-linking section of our{" "}
             <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
               Privacy Policy
             </Link>{" "}
-            with the linked guardian — including live location while radar is active, plan and ride
-            details, check-ins, and approval requests — for as long as the link remains active.
+            with the linked guardian — including saved home and safety information, stored location
+            updates, plan and ride details, check-ins and approval requests. Linking creates an
+            ongoing guardian location share. Ghost Mode hides friend pins in Syncly's friend views;
+            it does not revoke stored location-share access or pause the guardian's family view.
+            Stopping new location updates does not erase previously recorded locations.
           </p>
         </SubSection>
 
@@ -153,19 +160,21 @@ function TermsPage() {
           <p>
             By linking as a guardian, the guardian consents to receiving and reviewing this data
             responsibly, using approval and safe-zone features as intended (not as a general
-            surveillance tool), and to Syncly notifying the teen when the guardian takes actions
-            that affect them (such as approving or declining a plan, or setting a safe zone). The
-            guardian is responsible for decisions made through their account, including plan
-            approvals.
+            surveillance tool). Approval decisions generate in-app notifications, but not every
+            guardian action generates a notification: creating a safe zone does not currently notify
+            the teen. Browser alerts depend on permission and a running, connected app; delivery
+            while the app is closed is not guaranteed. The guardian is responsible for decisions
+            made through their account, including plan approvals.
           </p>
         </SubSection>
 
         <SubSection title="Ending a link">
           <p>
-            Either party can unlink the accounts from Settings at any time, unilaterally, without
-            the other party's confirmation. Unlinking stops new data from being shared going
-            forward, but does not retroactively delete data already shared with the other party
-            while the link was active.
+            Either linked account can request unlinking without the other person's confirmation.
+            Teens have an unlink control in Settings → Account. Contact us if you cannot find or use
+            an unlink control. Unlinking removes the guardian relationship and its associated
+            location share. It does not erase saved records, recall copies already viewed, or revoke
+            separately granted group or approval-link access.
           </p>
         </SubSection>
 
@@ -186,16 +195,16 @@ function TermsPage() {
         </p>
         <List
           items={[
-            "Location data depends on a device's GPS, network connectivity, battery state, OS permissions, and whether the app is open or running in the background. It can be delayed, inaccurate, temporarily unavailable, or stop updating entirely without notice.",
+            "Location data depends on device permissions, positioning, battery, connectivity and whether the app is running. Updates and browser notifications are not guaranteed when the app is closed or suspended; they can be delayed, inaccurate or unavailable.",
             "A missed check-in, a safe-zone alert not firing, or a location not updating does not necessarily mean something is wrong — and the absence of an alert should never be relied upon as confirmation that someone is safe.",
             "Syncly is not a replacement for calling emergency services. In an emergency, contact local emergency services (e.g. 911 in the U.S.) directly — do not rely on Syncly to detect or respond to an emergency.",
             "Plan approvals reflect the information a guardian was shown at the time of approval; they are not a warranty that a plan is safe, that ride/transportation details will be followed as described, or that circumstances won't change after approval.",
           ]}
         />
         <p>
-          By using radar, safe-zone, or check-in features, you acknowledge these limitations and
-          agree that Syncly is not liable for decisions made, or harm arising from reliance on
-          location data being available, timely, or accurate. See{" "}
+          By using radar, safe-zone or check-in features, you acknowledge these limitations.
+          Communicate directly with the people involved and use appropriate emergency services when
+          needed. See{" "}
           <a href="#liability" className="underline underline-offset-4 hover:text-foreground">
             Limitation of Liability
           </a>
@@ -216,39 +225,32 @@ function TermsPage() {
       <Section id="third-party" title="8. Third-party services">
         <p>
           Syncly relies on third-party services to operate, including Supabase (authentication and
-          data storage), Mapbox (maps), and Google/Apple (optional sign-in). Your use of those
-          sign-in options is also subject to that provider's own terms. We're not responsible for
-          the availability or accuracy of third-party services.
+          data storage), mapping and place-search providers, Google for optional sign-in, and Google
+          Gemini or the Lovable AI gateway for AI assistance. The Privacy Policy describes
+          information shared with these providers. Your use of third-party services may also be
+          subject to their own terms. We're not responsible for the availability or accuracy of
+          third-party services.
         </p>
       </Section>
 
       <Section id="disclaimers" title="9. Disclaimers">
         <p>
-          THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND,
-          WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS
-          FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR THAT THE SERVICE WILL BE UNINTERRUPTED,
-          SECURE, OR ERROR-FREE. WITHOUT LIMITING THE FOREGOING, WE DO NOT WARRANT THE ACCURACY,
-          COMPLETENESS, OR TIMELINESS OF ANY LOCATION, RADAR, SAFE-ZONE, OR CHECK-IN DATA.
+          TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE SERVICE IS PROVIDED "AS IS" AND "AS
+          AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY,
+          INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+          NON-INFRINGEMENT, OR THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE.
+          WITHOUT LIMITING THE FOREGOING, WE DO NOT WARRANT THE ACCURACY, COMPLETENESS, OR
+          TIMELINESS OF ANY LOCATION, RADAR, SAFE-ZONE, OR CHECK-IN DATA.
         </p>
       </Section>
 
       <Section id="liability" title="10. Limitation of liability">
         <p>
-          TO THE MAXIMUM EXTENT PERMITTED BY LAW, SYNCLY AND ITS OPERATORS WILL NOT BE LIABLE FOR
-          ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF
-          DATA, SAFETY, OR PERSONAL INJURY, ARISING FROM OR RELATED TO YOUR USE OF (OR INABILITY TO
-          USE) THE SERVICE — INCLUDING RELIANCE ON LOCATION, RADAR, SAFE-ZONE, CHECK-IN, OR APPROVAL
-          FEATURES — EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR TOTAL
-          LIABILITY FOR ANY CLAIM ARISING FROM THESE TERMS OR THE SERVICE WILL NOT EXCEED{" "}
-          <Ph>
-            [e.g. "the amount you paid us in the 12 months before the claim" or "$100" — pick a cap
-            appropriate for a free product]
-          </Ph>
-          .
-        </p>
-        <p>
-          Some jurisdictions don't allow the exclusion or limitation of certain damages, so some of
-          the above limitations may not apply to you.
+          The disclaimers and limitations in these Terms apply only to the extent permitted by
+          applicable law. Nothing in these Terms excludes liability or limits rights that cannot
+          legally be excluded or limited. Some jurisdictions do not permit certain warranty
+          exclusions or liability limitations, so those exclusions or limitations may not apply to
+          you.
         </p>
       </Section>
 
@@ -262,7 +264,7 @@ function TermsPage() {
 
       <Section id="termination" title="12. Termination">
         <p>
-          You may stop using Syncly and delete your account at any time — see the "Deleting your
+          You may stop using Syncly and request account or data deletion — see the "Deleting your
           account &amp; data" section of our{" "}
           <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
             Privacy Policy
@@ -274,30 +276,24 @@ function TermsPage() {
         </p>
       </Section>
 
-      <Section id="law" title="13. Governing law & disputes">
-        <p>
-          These Terms are governed by the laws of{" "}
-          <Ph>[state/country — e.g. "the State of Delaware, USA"]</Ph>, without regard to
-          conflict-of-laws principles.{" "}
-          <Ph>
-            [Add your preferred dispute-resolution process here — e.g. informal resolution first,
-            then binding arbitration or courts in a specific venue. This is a legal/business
-            decision, not something to invent by default.]
-          </Ph>
-        </p>
-      </Section>
-
-      <Section id="changes" title="14. Changes to these terms">
+      <Section id="changes" title="13. Changes to these terms">
         <p>
           We may update these Terms from time to time. If we make material changes, we'll update the
-          effective date above and, where appropriate, notify you in the app or by email. Continuing
-          to use the Service after changes take effect means you accept the updated Terms.
+          effective date above and post the revised Terms on this page. Continuing to use the
+          Service after changes take effect means you accept the updated Terms.
         </p>
       </Section>
 
-      <Section id="contact" title="15. Contact us">
+      <Section id="contact" title="14. Contact us">
         <p>
-          Questions about these Terms can be sent to <Ph>[legal@yourdomain.example]</Ph>.
+          Contact {LEGAL.operators} for legal questions, privacy requests or support at{" "}
+          <a
+            href={`mailto:${LEGAL.contactEmail}`}
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            {LEGAL.contactEmail}
+          </a>
+          .
         </p>
       </Section>
     </LegalLayout>

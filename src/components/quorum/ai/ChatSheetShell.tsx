@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Send } from "lucide-react";
 import type { OrbState } from "thinking-orbs";
 import { Modal } from "@/components/quorum/Modal";
@@ -43,16 +43,22 @@ export function ChatSheetShell<T extends BaseTurn>({
   onSend: (text: string) => void;
   renderTurnExtra?: (turn: T, index: number) => ReactNode;
 }) {
+  const reduceMotion = useReducedMotion();
   const [input, setInput] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
+    if (!open) return;
+    const frame = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
   }, [open]);
   useEffect(() => {
-    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [turns, pending]);
+    scroller.current?.scrollTo({
+      top: scroller.current.scrollHeight,
+      behavior: reduceMotion ? "auto" : "smooth",
+    });
+  }, [turns, pending, reduceMotion]);
 
   const send = (text: string) => {
     const q = text.trim();
@@ -74,6 +80,7 @@ export function ChatSheetShell<T extends BaseTurn>({
                   <button
                     key={s}
                     type="button"
+                    disabled={pending}
                     onClick={() => send(s)}
                     className="pressable active:pressable-active rounded-full border border-border px-3 py-2 text-xs font-medium hover:bg-secondary disabled:opacity-55"
                   >
@@ -129,7 +136,7 @@ export function ChatSheetShell<T extends BaseTurn>({
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message…"
           aria-label={title}
-          className="h-11 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
+          className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
         />
         <Button
           type="submit"

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard";
+import { LEGAL } from "@/lib/legal";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/account")({
   loader: ({ context }) => {
@@ -173,11 +174,18 @@ function AccountPage() {
         <SectionHeader icon={ShieldCheck} title="Privacy & data" />
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li>
-            Your questionnaire answers are readable only by you — enforced at the database level.
+            Your private answers are processed by the scoring service; groups see compatibility
+            results rather than a list of each person's answers.
           </li>
-          <li>Groups see compatibility results, never the individual limits behind them.</li>
-          <li>Parents see one plan's details, nothing else about you or the group.</li>
-          <li>Turning off "Remember my patterns" means nothing is carried between plans.</li>
+          <li>Linked guardians can access your plan, safety and stored location information.</li>
+          <li>Stopping location sharing does not erase saved location history.</li>
+          <li>
+            See the{" "}
+            <Link to="/privacy" className="underline underline-offset-4">
+              Privacy Policy
+            </Link>{" "}
+            for sharing, retention and deletion details.
+          </li>
         </ul>
         <Button
           variant="outline"
@@ -203,7 +211,8 @@ function AccountPage() {
         <Card className="space-y-3 border-2 border-destructive/40 bg-destructive/[0.04]">
           <SectionHeader icon={AlertTriangle} title="Danger zone" />
           <p className="text-sm text-muted-foreground">
-            Permanently deletes your profile, plans, and location history. This can't be undone.
+            Attempts to remove your account. This does not guarantee deletion of every shared record
+            or uploaded file. Account removal cannot be undone.
           </p>
           <Button variant="danger" onClick={() => setDeleteOpen(true)}>
             <Trash2 className="size-4" aria-hidden /> Delete my account
@@ -218,13 +227,23 @@ function AccountPage() {
           setDeleteConfirm("");
         }}
         title="Delete your account?"
-        description="There's no undo. This permanently removes:"
+        description="Account removal cannot be undone. Please review what it covers."
       >
         <div className="space-y-4">
           <ul className="space-y-1.5 rounded-2xl border border-destructive/30 bg-destructive/[0.04] px-4 py-3 text-sm text-muted-foreground">
-            <li>Your profile, photo, and preferences</li>
-            <li>Every plan, message, and squad membership</li>
-            <li>Your location history and any active sharing</li>
+            <li>The action attempts to remove your sign-in account and associated profile.</li>
+            <li>Associated records can prevent deletion from succeeding.</li>
+            <li>
+              Shared plans, messages, location records and uploaded files are not all guaranteed to
+              be erased.
+            </li>
+            <li>
+              For help or a data-deletion request, email{" "}
+              <a href={`mailto:${LEGAL.contactEmail}`} className="underline underline-offset-4">
+                {LEGAL.contactEmail}
+              </a>
+              .
+            </li>
           </ul>
           <Field label='Type "DELETE" to confirm'>
             <input
