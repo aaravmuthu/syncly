@@ -322,6 +322,12 @@ function Landing() {
             >
               Terms
             </Link>
+            <Link
+              to="/accessibility"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
+              Accessibility
+            </Link>
             <p>
               © {new Date().getFullYear()} {BRAND.name}. Private constraints. Better plans.
             </p>
