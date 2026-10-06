@@ -9,10 +9,10 @@ import {
   Lock,
   MapPin,
   RotateCcw,
+  Undo2,
   Wallet,
   X,
 } from "lucide-react";
-import { ThinkingOrb } from "thinking-orbs";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
 import { Card, Meter, Pill } from "@/components/quorum/ui";
@@ -48,7 +48,12 @@ export const Route = createFileRoute("/demo")({
 
 const TAG_CHOICES = ["active", "indoor", "outdoor", "games", "cozy", "group", "late-night"];
 const DIET_CHOICES = ["vegetarian", "vegan", "gluten-free", "halal", "nut-free"];
-const CURFEWS = ["20:30", "21:30", "22:30", "23:30"];
+const minutes = (time: string) => {
+  const [hours, mins] = time.split(":").map(Number);
+  return hours * 60 + mins;
+};
+const timeFromMinutes = (value: number) =>
+  `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
 
 // One tap each, and every one visibly moves the result (checked against the
 // engine): a new top pick, an option dropping out, and nothing fitting at all.
@@ -102,14 +107,46 @@ function DemoPage() {
   const nameOf = (m: { id: string; name: string }) =>
     m.id === youId && youName.trim() ? youName.trim() : m.name;
   const [tried, setTried] = useState<string[]>([]);
+  const [history, setHistory] = useState<
+    { members: DemoMember[]; tried: string[]; activeId: string }[]
+  >([]);
+  const gesture = useRef(false);
+  const gestureSaved = useRef(false);
+  const [interacting, setInteracting] = useState(false);
+  const beginGesture = () => {
+    if (!gesture.current) gestureSaved.current = false;
+    gesture.current = true;
+    setInteracting(true);
+  };
+  const endGesture = () => {
+    gesture.current = false;
+    gestureSaved.current = false;
+    setInteracting(false);
+  };
+  const remember = () => {
+    if (gesture.current && gestureSaved.current) return;
+    setHistory((prev) => [...prev.slice(-19), { members, tried, activeId }]);
+    if (gesture.current) gestureSaved.current = true;
+  };
+  const undo = () => {
+    const previous = history.at(-1);
+    if (!previous) return;
+    endGesture();
+    setMembers(previous.members);
+    setTried(previous.tried);
+    setActiveId(previous.activeId);
+    setHistory((prev) => prev.slice(0, -1));
+  };
 
   const active = members.find((m) => m.id === activeId)!;
   const edited = members !== DEMO_GROUP;
 
-  const patchMember = (id: string, patch: Partial<ConstraintPayload>) =>
+  const patchMember = (id: string, patch: Partial<ConstraintPayload>) => {
+    remember();
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, constraints: { ...m.constraints, ...patch } } : m)),
     );
+  };
   const update = (patch: Partial<ConstraintPayload>) => patchMember(activeId, patch);
 
   const toggleIn = (key: "likedTags" | "dietary", value: string) => {
@@ -120,6 +157,7 @@ function DemoPage() {
   };
 
   const reset = () => {
+    remember();
     setMembers(DEMO_GROUP);
     setTried([]);
   };
@@ -130,30 +168,14 @@ function DemoPage() {
       constraints: m.constraints,
       sacrificeLoad: m.sacrificeLoad,
     }));
-    return rankOptions(DEMO_POOL, inputs).slice(0, 4);
+    return rankOptions(DEMO_POOL, inputs);
   }, [members]);
 
   const coach = useMemo(() => analyze(members, DEMO_POOL, youId), [members, youId]);
 
   const top = ranked[0];
   const anyFeasible = top.feasible;
-  const others = ranked.slice(1);
-  const othersWorking = others.filter((r) => r.feasible).length;
-
-  // The engine re-ranks synchronously, so the list is already correct on the
-  // next frame -- the orb just makes the recompute legible for a moment
-  // instead of the cards silently reshuffling under the pointer.
-  const [reranking, setReranking] = useState(false);
-  const firstRank = useRef(true);
-  useEffect(() => {
-    if (firstRank.current) {
-      firstRank.current = false;
-      return;
-    }
-    setReranking(true);
-    const t = window.setTimeout(() => setReranking(false), 650);
-    return () => window.clearTimeout(t);
-  }, [ranked]);
+  const working = ranked.filter((r) => r.feasible).length;
 
   // Name what just happened when the pick changes, without saying whose
   // answer caused it -- the same rule the real plan screen follows.
@@ -162,13 +184,16 @@ function DemoPage() {
   useEffect(() => {
     const prev = prevTop.current;
     prevTop.current = top;
-    if (prev.option.key === top.option.key && prev.feasible === top.feasible) return;
+    if (prev.option.key === top.option.key && prev.feasible === top.feasible) {
+      setChange(null);
+      return;
+    }
     const prevNow = ranked.find((r) => r.option.key === prev.option.key);
     if (!top.feasible) setChange(null);
     else if (prevNow && !prevNow.feasible)
       setChange(`${prev.option.title} no longer works for everyone.`);
     else if (!prev.feasible) setChange("Something works for everyone again.");
-    else setChange(`${prev.option.title} slipped to a closer second.`);
+    else setChange(`${top.option.title} is now the strongest match.`);
   }, [top, ranked]);
 
   const cost = estimateCost({
@@ -215,7 +240,6 @@ function DemoPage() {
     setActiveId(t.memberId);
     patchMember(t.memberId, t.patch(m.constraints));
     setTried((prev) => [...prev, t.id]);
-    if (!topVisible) window.setTimeout(scrollToTop, 120);
   };
 
   const applyMove = (move: CoachMove) => {
@@ -223,16 +247,15 @@ function DemoPage() {
     // friend, but you don't get to read their answers.
     if (move.who !== "friend") setActiveId(move.memberId);
     patchMember(move.memberId, move.patch);
-    if (!topVisible) window.setTimeout(scrollToTop, 120);
   };
 
   const swap = reduce
     ? { initial: false, animate: {}, exit: {} }
     : {
-        initial: { opacity: 0, y: 8, filter: "blur(6px)" },
-        animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-        exit: { opacity: 0, y: -8, filter: "blur(6px)" },
-        transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] as const },
+        initial: { opacity: 0, y: 6 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -4 },
+        transition: { duration: 0.18, ease: [0.22, 1, 0.36, 1] as const },
       };
 
   return (
@@ -268,7 +291,87 @@ function DemoPage() {
 
         <div className="mt-7 grid gap-5 lg:mt-9 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
           {/* 1 — the answer, first */}
-          <div className="space-y-3">
+          <div className="order-last space-y-3 lg:order-first">
+            <section aria-label="Live plan rankings" className="surface overflow-hidden p-5 sm:p-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-xl font-semibold tracking-tight">Watch the plans move</h2>
+                <span className="shrink-0 text-sm font-medium tabular-nums text-primary">
+                  {working} / {ranked.length} fit
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Drag an answer. Plans that work rise to the top.
+              </p>
+              <div
+                className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary"
+                aria-hidden="true"
+              >
+                <motion.div
+                  className="h-full origin-left rounded-full bg-primary"
+                  initial={false}
+                  animate={{ scaleX: working / ranked.length }}
+                  transition={{ duration: reduce ? 0 : 0.2 }}
+                />
+              </div>
+              <LayoutGroup id="demo-plans">
+                <ol
+                  className="mt-3 max-h-80 overflow-y-auto overscroll-contain pr-1"
+                  tabIndex={0}
+                  aria-label="Ranked plans, best match first"
+                >
+                  {ranked.map((r, index) => (
+                    <motion.li
+                      key={r.option.key}
+                      layout={reduce ? false : "position"}
+                      initial={false}
+                      animate={{ opacity: r.feasible ? 1 : 0.65 }}
+                      transition={{
+                        layout: { type: "spring", stiffness: 380, damping: 36 },
+                        opacity: { duration: reduce ? 0 : 0.15 },
+                      }}
+                      className={cn(
+                        "relative flex items-center gap-3 border-b border-border py-3 last:border-0",
+                        index === 0 && r.feasible && "text-primary",
+                      )}
+                    >
+                      <span
+                        className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold tabular-nums"
+                        aria-hidden="true"
+                      >
+                        {r.feasible ? index + 1 : "—"}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold">{r.option.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                          ${r.option.costMin}–{r.option.costMax} ·{" "}
+                          {clockRange(r.option.start, r.option.end)}
+                        </p>
+                      </div>
+                      <span
+                        className={cn(
+                          "flex shrink-0 items-center gap-1 text-xs font-medium",
+                          r.feasible ? "text-primary" : "text-muted-foreground",
+                        )}
+                      >
+                        {r.feasible ? (
+                          <Check className="size-3.5" aria-hidden />
+                        ) : (
+                          <X className="size-3.5" aria-hidden />
+                        )}
+                        {r.feasible ? (index === 0 ? "Top pick" : "Fits") : "Ruled out"}
+                      </span>
+                    </motion.li>
+                  ))}
+                </ol>
+              </LayoutGroup>
+              <p className="sr-only" role="status" aria-live={interacting ? "off" : "polite"}>
+                {working} plans work for everyone.
+                {anyFeasible
+                  ? ` Top pick: ${top.option.title}.`
+                  : " Try another answer or undo your last change."}
+              </p>
+            </section>
+
             <div ref={topRef}>
               <Card
                 as="section"
@@ -281,13 +384,8 @@ function DemoPage() {
                   <span className="text-sm font-medium text-muted-foreground">
                     {anyFeasible ? "Top pick" : "No plan yet"}
                   </span>
-                  <span aria-live="polite" className="flex items-center">
-                    {reranking ? (
-                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <ThinkingOrb state="solving" size={20} aria-hidden="true" />
-                        Re-ranking…
-                      </span>
-                    ) : anyFeasible ? (
+                  <span aria-live={interacting ? "off" : "polite"} className="flex items-center">
+                    {anyFeasible ? (
                       <Pill tone="good">
                         <Check className="size-3" /> Works for all {members.length}
                       </Pill>
@@ -401,7 +499,7 @@ function DemoPage() {
               youId={youId}
               youName={youName}
               edited={edited}
-              busy={reranking}
+              busy={interacting}
               onApply={applyMove}
               onPick={(id) => {
                 setYouId(id);
@@ -413,94 +511,28 @@ function DemoPage() {
               }}
               onName={setYouName}
             />
-
-            <Disclosure
-              label={`${others.length} other options`}
-              meta={`${othersWorking} work for everyone`}
-              className="surface px-5 py-1"
-            >
-              <LayoutGroup>
-                <ul className="-mt-1 pb-3">
-                  {others.map((r) => (
-                    <motion.li
-                      key={r.option.key}
-                      layout={reduce ? false : "position"}
-                      transition={{ type: "spring", stiffness: 420, damping: 36 }}
-                      className="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
-                    >
-                      <div className="min-w-0">
-                        <div className="truncate text-[0.9375rem] font-medium">
-                          {r.option.title}
-                        </div>
-                        <div className="text-sm text-muted-foreground tabular-nums">
-                          ${r.option.costMin}–{r.option.costMax} ·{" "}
-                          {clockRange(r.option.start, r.option.end)}
-                        </div>
-                      </div>
-                      {r.feasible ? (
-                        <Pill tone="good" className="shrink-0">
-                          <Check className="size-3" /> Works
-                        </Pill>
-                      ) : (
-                        <Pill tone="bad" className="shrink-0">
-                          <X className="size-3" /> Not for all
-                        </Pill>
-                      )}
-                    </motion.li>
-                  ))}
-                </ul>
-              </LayoutGroup>
-            </Disclosure>
           </div>
 
           {/* 2 — change something, see it move */}
-          <div ref={controlsRef} className="lg:sticky lg:top-24">
+          <div ref={controlsRef} className="order-first lg:sticky lg:top-24 lg:order-last">
             <Card as="section" className="p-5 sm:p-6">
-              <h2 className="text-xl font-semibold tracking-tight">Change what someone needs</h2>
+              <h2 className="text-xl font-semibold tracking-tight">Give the plan a twist</h2>
               <p className="mt-1.5 text-sm text-pretty text-muted-foreground">
                 You're playing all four friends. For real, everyone answers on their own phone and
                 nobody sees anyone else's answers.
               </p>
 
-              <div className="mt-5">
-                <div className="text-sm font-medium">Try one</div>
-                <div className="mt-2 flex flex-col gap-2">
-                  {TRY_THESE.map((t) => {
-                    const who = members.find((m) => m.id === t.memberId)!;
-                    const done = tried.includes(t.id);
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        disabled={done}
-                        onClick={() => tryThis(t)}
-                        className={cn(
-                          "pressable active:pressable-active tap-target flex items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-left transition-colors",
-                          done
-                            ? "border-primary/40 bg-primary/8"
-                            : "border-border hover:bg-secondary",
-                        )}
-                      >
-                        <span className="text-[0.9375rem]">
-                          “{t.quote}”
-                          <span className="ml-1.5 text-sm text-muted-foreground">
-                            — {nameOf(who)}
-                          </span>
-                        </span>
-                        {done ? (
-                          <Check className="size-4 shrink-0 text-primary" aria-label="Applied" />
-                        ) : (
-                          <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               <div className="mt-6 border-t border-border pt-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-medium">Or edit anyone's answers</div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-medium">Whose answers?</div>
+                  <button
+                    type="button"
+                    onClick={undo}
+                    disabled={!history.length}
+                    className="tap-target inline-flex items-center gap-1.5 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Undo2 className="size-3.5" aria-hidden /> Undo
+                  </button>
                   <AnimatePresence initial={false}>
                     {edited && (
                       <motion.button
@@ -518,7 +550,7 @@ function DemoPage() {
                 </div>
 
                 <div
-                  role="tablist"
+                  role="group"
                   aria-label="Whose answers"
                   className="mt-2 grid grid-cols-4 gap-1 rounded-2xl bg-secondary p-1"
                 >
@@ -526,8 +558,7 @@ function DemoPage() {
                     <button
                       key={m.id}
                       type="button"
-                      role="tab"
-                      aria-selected={m.id === activeId}
+                      aria-pressed={m.id === activeId}
                       onClick={() => setActiveId(m.id)}
                       className={cn(
                         "relative flex min-h-11 items-center justify-center gap-1 rounded-xl px-1 text-sm transition-colors",
@@ -538,7 +569,7 @@ function DemoPage() {
                     >
                       {m.id === activeId && (
                         <motion.span
-                          layoutId="demo-member"
+                          layoutId={reduce ? undefined : "demo-member"}
                           transition={{ type: "spring", stiffness: 420, damping: 34 }}
                           className="absolute inset-0 rounded-xl bg-card shadow-sm"
                         />
@@ -560,22 +591,34 @@ function DemoPage() {
                     step={5}
                     current={active.constraints.maxSpend ?? 20}
                     onChange={(v) => update({ maxSpend: v })}
+                    onStart={beginGesture}
+                    onEnd={endGesture}
+                    hint="Slide left to tighten the budget. Watch which plans still fit."
                   />
 
-                  <Group label="Home by">
-                    <div className="grid grid-cols-4 gap-2">
-                      {CURFEWS.map((t) => (
-                        <Chip
-                          key={t}
-                          on={active.constraints.latestEnd === t}
-                          onClick={() => update({ latestEnd: t })}
-                          className="px-1"
-                        >
-                          {clock(t)}
-                        </Chip>
-                      ))}
+                  <div>
+                    <Range
+                      label="Finish by"
+                      value={clock(active.constraints.latestEnd ?? "23:30")}
+                      current={minutes(active.constraints.latestEnd ?? "23:30")}
+                      min={960}
+                      max={1410}
+                      step={15}
+                      onChange={(v) => update({ latestEnd: timeFromMinutes(v) })}
+                      onStart={beginGesture}
+                      onEnd={endGesture}
+                      hint="Drag the deadline across the evening."
+                      interval={{ start: minutes(top.option.start), end: minutes(top.option.end) }}
+                    />
+                    <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+                      <span>4 pm</span>
+                      <span>11:30 pm</span>
                     </div>
-                  </Group>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Shaded: {anyFeasible ? "top pick" : "closest option"},{" "}
+                      {clockRange(top.option.start, top.option.end)}. Line: this friend's deadline.
+                    </p>
+                  </div>
 
                   <Group label="Getting there">
                     <div className="grid grid-cols-2 gap-2">
@@ -608,6 +651,8 @@ function DemoPage() {
                         step={5}
                         current={active.constraints.maxTravelMinutes ?? 20}
                         onChange={(v) => update({ maxTravelMinutes: v })}
+                        onStart={beginGesture}
+                        onEnd={endGesture}
                       />
                       <Group label="Food needs">
                         <div className="flex flex-wrap gap-2">
@@ -637,6 +682,41 @@ function DemoPage() {
                       </Group>
                     </div>
                   </Disclosure>
+                </div>
+              </div>
+              <div className="mt-6 border-t border-border pt-5">
+                <div className="text-sm font-medium">Try a plot twist</div>
+                <div className="mt-2 flex flex-col gap-2">
+                  {TRY_THESE.map((t) => {
+                    const who = members.find((m) => m.id === t.memberId)!;
+                    const done = tried.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        disabled={done}
+                        onClick={() => tryThis(t)}
+                        className={cn(
+                          "pressable active:pressable-active tap-target flex items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-left transition-colors",
+                          done
+                            ? "border-primary/40 bg-primary/8"
+                            : "border-border hover:bg-secondary",
+                        )}
+                      >
+                        <span className="text-[0.9375rem]">
+                          “{t.quote}”
+                          <span className="ml-1.5 text-sm text-muted-foreground">
+                            — {nameOf(who)}
+                          </span>
+                        </span>
+                        {done ? (
+                          <Check className="size-4 shrink-0 text-primary" aria-label="Applied" />
+                        ) : (
+                          <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </Card>
@@ -679,17 +759,13 @@ function DemoPage() {
                 anyFeasible ? "bg-success/15 text-success" : "bg-destructive/12 text-destructive",
               )}
             >
-              {reranking ? (
-                <ThinkingOrb state="solving" size={20} aria-hidden="true" />
-              ) : anyFeasible ? (
-                <Check className="size-5" />
-              ) : (
-                <X className="size-5" />
-              )}
+              {anyFeasible ? <Check className="size-5" /> : <X className="size-5" />}
             </span>
-            <span className="min-w-0 flex-1" aria-live="polite">
+            <span className="min-w-0 flex-1" aria-live={interacting ? "off" : "polite"}>
               <span className="block text-xs text-muted-foreground">
-                {anyFeasible ? `Top pick · works for all ${members.length}` : "No plan yet"}
+                {anyFeasible
+                  ? `Top pick · ${working} plans fit all ${members.length}`
+                  : "No plan yet"}
               </span>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
@@ -793,6 +869,10 @@ function Range({
   value,
   current,
   onChange,
+  onStart,
+  onEnd,
+  hint,
+  interval,
   ...bounds
 }: {
   label: string;
@@ -802,20 +882,78 @@ function Range({
   max: number;
   step: number;
   onChange: (v: number) => void;
+  onStart: () => void;
+  onEnd: () => void;
+  hint?: string;
+  interval?: { start: number; end: number };
 }) {
   return (
     <label className="block">
       <span className="flex items-baseline justify-between text-sm">
         <span className="text-muted-foreground">{label}</span>
-        <span className="text-base font-semibold tabular-nums">{value}</span>
+        <span className="text-xl font-semibold tabular-nums text-primary">{value}</span>
       </span>
-      <input
-        type="range"
-        {...bounds}
-        value={current}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1 h-11 w-full cursor-pointer accent-primary"
-      />
+      <span
+        className={cn(
+          "relative mt-1 block h-11",
+          interval &&
+            "rounded-lg bg-secondary has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary",
+        )}
+      >
+        {interval && (
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-2 inset-y-0">
+            <span
+              className="absolute inset-y-2 rounded bg-primary/25"
+              style={{
+                left: `${Math.max(0, ((interval.start - bounds.min) / (bounds.max - bounds.min)) * 100)}%`,
+                width: `${Math.max(0, ((Math.min(interval.end, bounds.max) - Math.max(interval.start, bounds.min)) / (bounds.max - bounds.min)) * 100)}%`,
+              }}
+            />
+            <span
+              className="absolute inset-y-0 w-0.5 bg-primary"
+              style={{ left: `${((current - bounds.min) / (bounds.max - bounds.min)) * 100}%` }}
+            >
+              <span className="absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-primary" />
+            </span>
+          </span>
+        )}
+        <input
+          type="range"
+          {...bounds}
+          value={current}
+          aria-label={label}
+          aria-valuetext={value}
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            onStart();
+          }}
+          onPointerUp={onEnd}
+          onPointerCancel={onEnd}
+          onKeyDown={(e) => {
+            if (
+              [
+                "ArrowLeft",
+                "ArrowRight",
+                "ArrowUp",
+                "ArrowDown",
+                "Home",
+                "End",
+                "PageUp",
+                "PageDown",
+              ].includes(e.key)
+            )
+              onStart();
+          }}
+          onKeyUp={onEnd}
+          onBlur={onEnd}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className={cn(
+            "relative h-11 w-full cursor-pointer accent-primary",
+            interval && "opacity-0",
+          )}
+        />
+      </span>
+      {hint && <span className="block text-xs text-muted-foreground">{hint}</span>}
     </label>
   );
 }
