@@ -112,6 +112,9 @@ export function SyncOrbit({
         // Phones render at a lower density: every pixel traces eight spheres.
         const sizeTo = () => {
           const rect = canvas.getBoundingClientRect();
+          // Below lg the band wraps too tightly to read; index.tsx shows the
+          // h1 there instead, on the same breakpoint.
+          e.setTagline(window.matchMedia("(min-width: 1024px)").matches);
           const cap = coarse || rect.width < 768 ? 1.5 : 1.75;
           e.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, cap));
         };

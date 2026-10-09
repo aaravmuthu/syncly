@@ -101,7 +101,7 @@ function Landing() {
             <Link
               to="/auth"
               search={{ next: "/home", mode: "signin" }}
-              className="tap-target inline-flex items-center rounded-full px-3.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="tap-target inline-flex items-center rounded-full px-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground min-[380px]:px-3.5"
             >
               Log in
             </Link>
@@ -109,7 +109,7 @@ function Landing() {
             <Link
               to="/auth"
               search={{ next: "/home", mode: "signup" }}
-              className="pressable active:pressable-active tap-target inline-flex items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
+              className="pressable active:pressable-active tap-target inline-flex items-center rounded-full bg-primary px-3.5 text-sm font-semibold whitespace-nowrap text-primary-foreground min-[380px]:px-4"
             >
               Start planning
             </Link>
@@ -133,13 +133,15 @@ function Landing() {
             className={
               flat
                 ? "relative mx-auto max-w-[980px] px-5 pt-[18svh] text-center text-[clamp(40px,6.4vw,80px)] leading-[1.05] font-semibold tracking-[-0.02em] text-balance"
-                : "sr-only"
+                : // Below lg the wrapped band is hidden (SyncOrbit), so the
+                  // headline sits above the spheres as real text.
+                  "pointer-events-none relative z-[1] mx-auto max-w-6xl px-5 pt-[clamp(20px,5svh,56px)] text-[clamp(42px,11vw,76px)] leading-[1.02] font-semibold tracking-[-0.025em] text-balance lg:sr-only"
             }
           >
             {BRAND.tagline}
           </h1>
           <div className="orbit-hero__foot">
-            <p className="max-w-[34ch] text-[clamp(17px,1.5vw,20px)] leading-[1.4] text-pretty text-muted-foreground">
+            <p className="max-w-[34ch] text-lg leading-[1.45] text-pretty text-muted-foreground sm:text-[clamp(17px,1.5vw,20px)] sm:leading-[1.4]">
               {DESCRIPTION}
             </p>
             <div className="flex flex-wrap gap-3">
@@ -413,7 +415,7 @@ function FeatureRow({
     <Reveal>
       <SpotlightCard className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-[13px] font-semibold sm:text-xs tracking-wide text-primary uppercase">
             {icon} {kicker}
           </span>
           <h3 className="mt-4 text-2xl font-semibold">{title}</h3>
@@ -459,7 +461,7 @@ function SyncPreview() {
       <div className="flex items-center gap-3 sm:flex-col sm:px-2">
         <span className="h-px w-8 bg-border sm:h-8 sm:w-px" aria-hidden />
         <motion.div
-          className="glass-pill inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground"
+          className="glass-pill inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-[13px] font-medium sm:text-xs whitespace-nowrap text-muted-foreground"
           animate={prefersReducedMotion ? undefined : { scale: [1, 1.06, 1] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
         >

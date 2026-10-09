@@ -372,6 +372,8 @@ export class SyncOrbit {
   private implodeUntil = -1;
   private acc = 0;
   private halfW = 1.19;
+  /** Phones hide the wrapped tagline (the page shows it as text instead). */
+  private tagline = true;
   private theme!: OrbitTheme;
   private raf = 0;
   private last = 0;
@@ -466,6 +468,13 @@ export class SyncOrbit {
     if (!this.running) this.render();
   }
 
+  /** Show or hide the wrapped tagline; the whisper rows stay either way. */
+  setTagline(show: boolean) {
+    if (show === this.tagline) return;
+    this.tagline = show;
+    this.drawText();
+  }
+
   /** Redraw the wrapped text, e.g. once the web font has loaded. */
   drawText() {
     const gl = this.gl;
@@ -482,8 +491,10 @@ export class SyncOrbit {
     const [a, b] = this.opts.lines;
     const lead = size * 0.98;
     const top = TILE_H / 2 - lead + size * 0.74;
-    ctx.fillText(a, TILE_W / 2, top);
-    ctx.fillText(b, TILE_W / 2, top + lead);
+    if (this.tagline) {
+      ctx.fillText(a, TILE_W / 2, top);
+      ctx.fillText(b, TILE_W / 2, top + lead);
+    }
 
     this.upload(this.textTex, c);
     this.upload(this.whisperTex, this.drawWhispers());
