@@ -1657,6 +1657,38 @@ html[data-keyboard-open="true"] .floating-chat-ride-actions {
   }
 }
 
+/* Inline errors (InlineErrorLayer): the pressed button nudges and wears a
+   tinted face that names the problem; the reason hangs just under it. */
+[data-inline-error] {
+  animation: inline-error-nudge 360ms var(--ease-out);
+}
+@keyframes inline-error-nudge {
+  20% {
+    translate: -4px 0;
+  }
+  45% {
+    translate: 3px 0;
+  }
+  70% {
+    translate: -1.5px 0;
+  }
+}
+.inline-error-face {
+  background: color-mix(in oklab, var(--destructive) 11%, var(--card));
+  color: var(--destructive);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--destructive) 40%, transparent);
+}
+.inline-error-caption {
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--destructive) 22%, transparent);
+  box-shadow: 0 10px 28px -14px color-mix(in oklab, var(--foreground) 30%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-inline-error] {
+    animation: none;
+  }
+}
+
 /* Segmented control thumb: transform-only slide that retargets mid-flight. */
 .segment-thumb {
   transition: transform 260ms var(--ease-out);

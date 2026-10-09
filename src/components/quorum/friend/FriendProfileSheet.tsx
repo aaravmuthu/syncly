@@ -17,7 +17,7 @@ import {
   Sparkle,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import {
   Drawer,
   DrawerClose,

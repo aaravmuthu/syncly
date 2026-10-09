@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { MessageCircle, X } from "lucide-react";
 import { SquadChat } from "@/components/quorum/SquadChat";
 import { postRideUpdate } from "@/lib/quorum/chat.functions";

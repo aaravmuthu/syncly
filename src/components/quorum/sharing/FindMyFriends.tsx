@@ -17,7 +17,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Modal } from "@/components/quorum/Modal";
 import { HoldToConfirmButton } from "@/components/quorum/HoldToConfirmButton";

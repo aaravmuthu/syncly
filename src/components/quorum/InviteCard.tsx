@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Modal } from "./Modal";
 import { QrCode } from "./QrCode";
 import { Button, Card } from "./ui";

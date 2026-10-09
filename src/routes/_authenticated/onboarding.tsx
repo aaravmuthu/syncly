@@ -10,7 +10,7 @@ import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { linkTeen } from "@/lib/quorum/guardian.functions";
 import { TOP_LEVEL_CATEGORIES } from "@/lib/quorum/types";
 import { categoryIcon } from "@/lib/quorum/icons";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { isValidZip } from "@/lib/quorum/location";
 import { cn } from "@/lib/utils";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";

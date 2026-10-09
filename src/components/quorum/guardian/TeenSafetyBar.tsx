@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Pill } from "@/components/quorum/ui";
 import { CheckCircle2, ChevronDown, MapPin, Share2, Siren } from "lucide-react";
 import {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button } from "./ui";
 import { magicPlanDraft, type MagicPlanResult } from "@/lib/quorum/ai.functions";
 import type { PlanCategory } from "@/lib/quorum/types";

@@ -1,4 +1,5 @@
 import { CookieConsent } from "@/components/quorum/CookieConsent";
+import { InlineErrorLayer } from "@/components/quorum/InlineErrorLayer";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Link,
@@ -182,6 +183,7 @@ function RootComponent() {
         <MotionConfig reducedMotion="user">
           <Outlet />
           <CookieConsent />
+          <InlineErrorLayer />
           <Toaster
             position="top-center"
             richColors

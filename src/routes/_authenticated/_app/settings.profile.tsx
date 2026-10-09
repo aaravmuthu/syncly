@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { SectionHeader } from "@/components/quorum/settings/shared";
 import { getMe, saveProfile, uploadAvatar } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { cn } from "@/lib/utils";
 import { MobileActions } from "@/components/quorum/MobileActions";
 import { DynamicButton } from "@/components/quorum/DynamicButton";

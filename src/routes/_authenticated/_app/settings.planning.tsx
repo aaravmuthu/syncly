@@ -8,7 +8,7 @@ import { PushEnter } from "@/components/quorum/interactions";
 import { Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { SectionHeader } from "@/components/quorum/settings/shared";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { isValidZip } from "@/lib/quorum/location";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { TimePicker } from "@/components/quorum/TimePicker";
