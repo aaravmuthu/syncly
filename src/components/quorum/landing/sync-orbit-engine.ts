@@ -336,6 +336,8 @@ export class SyncOrbit {
   private sph = new Float32Array(COUNT * 4);
   private center = [0, 0.04, 0];
   private pointer = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, active: false, moved: false };
+  // Pointer velocity on the cluster's plane (world units/s), for flicking spheres.
+  private swipe = { vx: 0, vy: 0, wx: 0, wy: 0, at: 0 };
   private time = 0;
   private acc = 0;
   private halfW = 1.19;
@@ -489,10 +491,22 @@ export class SyncOrbit {
   /** Pointer position as 0–1 from the canvas's top-left. */
   pointerMove(x: number, y: number) {
     const p = this.pointer;
+    const [wx, wy] = this.toWorld(x, y);
+    const now = performance.now();
+    const sw = this.swipe;
     if (!p.active) {
       p.px = x;
       p.py = y;
+    } else {
+      const dt = Math.max((now - sw.at) / 1000, 1 / 240);
+      // Smoothed, so one jittery event can't fling the cluster off screen.
+      const k = Math.min(1, dt * 18);
+      sw.vx += ((wx - sw.wx) / dt - sw.vx) * k;
+      sw.vy += ((wy - sw.wy) / dt - sw.vy) * k;
     }
+    sw.wx = wx;
+    sw.wy = wy;
+    sw.at = now;
     p.x = x;
     p.y = y;
     p.active = true;
@@ -501,6 +515,8 @@ export class SyncOrbit {
 
   pointerLeave() {
     this.pointer.active = false;
+    this.swipe.vx = 0;
+    this.swipe.vy = 0;
   }
 
   /** Scatter the cluster away from the pointer; gravity pulls it back. */
@@ -558,6 +574,63 @@ export class SyncOrbit {
     return [px * -CAMERA_Z, py * -CAMERA_Z];
   }
 
+  /**
+   * The cursor as a small invisible finger: spheres it reaches are pushed
+   * out of its way, and a moving cursor drags them along with it.
+   */
+  private touch(dt: number) {
+    const { pos, vel, swipe } = this;
+    const [wx, wy] = this.toWorld(this.pointer.x, this.pointer.y);
+    // Ray from the camera through the pointer.
+    let dx = wx / -CAMERA_Z,
+      dy = wy / -CAMERA_Z,
+      dz = 1;
+    const dl = Math.hypot(dx, dy, dz);
+    dx /= dl;
+    dy /= dl;
+    dz /= dl;
+    const carry = 1 - Math.exp(-dt * 14);
+    for (let i = 0; i < COUNT; i++) {
+      const o = i * 3;
+      const cx = pos[o],
+        cy = pos[o + 1],
+        cz = pos[o + 2] - CAMERA_Z;
+      const t = cx * dx + cy * dy + cz * dz;
+      if (t <= 0) continue;
+      let nx = cx - dx * t,
+        ny = cy - dy * t,
+        nz = cz - dz * t;
+      const dist = Math.hypot(nx, ny, nz);
+      const reach = RADII[i] + 0.16;
+      if (dist >= reach) continue;
+      if (dist < 1e-4) {
+        nx = 0;
+        ny = 1;
+        nz = 0;
+      } else {
+        nx /= dist;
+        ny /= dist;
+        nz /= dist;
+      }
+      const s = 1 - dist / reach;
+      // push out of the finger, firmly but not instantly
+      const push = (reach - dist) * 0.35;
+      pos[o] += nx * push;
+      pos[o + 1] += ny * push;
+      pos[o + 2] += nz * push;
+      vel[o] += nx * 40 * s * dt;
+      vel[o + 1] += ny * 40 * s * dt;
+      vel[o + 2] += nz * 40 * s * dt;
+      // and take on the cursor's motion, so a swipe flicks it
+      vel[o] += (swipe.vx * 1.15 - vel[o]) * s * carry;
+      vel[o + 1] += (swipe.vy * 1.15 - vel[o + 1]) * s * carry;
+    }
+    // A resting cursor stops flicking.
+    const settle = Math.exp(-dt * 6);
+    swipe.vx *= settle;
+    swipe.vy *= settle;
+  }
+
   private step(dt: number) {
     const { pos, vel } = this;
     // The cluster's centre leans a little towards the pointer and drifts.
@@ -572,6 +645,8 @@ export class SyncOrbit {
     const k = 1 - Math.exp(-dt * 2.5);
     this.center[0] += (tx - this.center[0]) * k;
     this.center[1] += (ty - this.center[1]) * k;
+
+    if (this.pointer.active) this.touch(dt);
 
     // Orbit axis tilted off vertical, so the cluster tumbles rather than spins flat.
     const ax = 0.28,

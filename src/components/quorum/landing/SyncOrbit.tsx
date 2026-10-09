@@ -133,14 +133,23 @@ export function SyncOrbit({
           };
           const onDown = (ev: PointerEvent) => {
             const p = local(ev);
+            if (p) e.pointerMove(p[0], p[1]);
             // Not on links and buttons: a tap there means the control, not the scene.
             if (p && !(ev.target as Element | null)?.closest("a, button")) e.burst(p[0], p[1]);
           };
+          // A lifted finger is gone, unlike a mouse resting over the page.
+          const onUp = (ev: PointerEvent) => {
+            if (ev.pointerType !== "mouse") e.pointerLeave();
+          };
           window.addEventListener("pointermove", onMove, { passive: true });
           window.addEventListener("pointerdown", onDown, { passive: true });
+          window.addEventListener("pointerup", onUp, { passive: true });
+          window.addEventListener("pointercancel", onUp, { passive: true });
           cleanups.push(() => {
             window.removeEventListener("pointermove", onMove);
             window.removeEventListener("pointerdown", onDown);
+            window.removeEventListener("pointerup", onUp);
+            window.removeEventListener("pointercancel", onUp);
           });
         }
 
