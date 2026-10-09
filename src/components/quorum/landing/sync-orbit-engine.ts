@@ -24,6 +24,11 @@ export type OrbitTheme = {
 export type OrbitOptions = {
   /** The two lines wrapped around the cylinder. */
   lines: [string, string];
+  /**
+   * Rows of quieter text above and below the tagline, turning the other way.
+   * The first half of the rows go above it, the rest below.
+   */
+  whispers: string[][];
   /** Font for the wrapped lines: CSS weight and family, e.g. `600` and `"Bricolage Grotesque"`. */
   fontWeight: string;
   fontFamily: string;
@@ -39,6 +44,11 @@ const CAMERA_Z = -3.1;
 const TILES = 4;
 const TILE_W = 2560;
 const TILE_H = 640;
+// The whisper band: taller than the tagline's, with its middle left empty so
+// the tagline shows through. Two tiles, so the same phrase never sits in view twice.
+const W_TILES = 2;
+const W_TILE_W = 4096;
+const W_TILE_H = 1536;
 
 const VERT = `#version 300 es
 in vec2 aPos;
@@ -53,6 +63,11 @@ uniform float uTiles;
 uniform float uBandH;
 uniform float uBandY;
 uniform sampler2D uText;
+uniform sampler2D uWhisper;
+uniform float uWSpin;
+uniform float uWTiles;
+uniform float uWBandH;
+uniform float uWhisperInk;
 uniform vec4 uSph[${COUNT}];
 uniform vec3 uBg, uInk, uBody, uSpark, uShadow, uGlowA, uGlowB;
 uniform float uDark;
@@ -66,29 +81,42 @@ const vec3 L = normalize(vec3(-0.45, 0.95, -0.35));
 // at infinity, so reflections read it with the same function. No early
 // returns: the screen pass samples with derivatives, and those are garbage
 // in divergent control flow (it drew dashed lines along the band's edges).
-vec2 bandUV(vec3 d, out float inside) {
+vec2 bandUV(vec3 d, float bandH, float spin, float tiles, out float inside) {
   float h = max(length(d.xz), 1e-4);
-  float v = (d.y / h - uBandY) / (2.0 * uBandH) + 0.5;
+  float v = (d.y / h - uBandY) / (2.0 * bandH) + 0.5;
   inside = step(0.0, v) * step(v, 1.0);
-  float u = (atan(d.x, d.z) + uSpin) / 6.2831853 * uTiles;
+  float u = (atan(d.x, d.z) + spin) / 6.2831853 * tiles;
   return vec2(u, 1.0 - v);
 }
 
 // Screen rays: explicit gradients, with the atan seam unwrapped.
-float textScreen(vec3 d) {
+float sampleScreen(sampler2D tex, vec3 d, float bandH, float spin, float tiles) {
   float inside;
-  vec2 uv = bandUV(d, inside);
+  vec2 uv = bandUV(d, bandH, spin, tiles, inside);
   vec2 dx = dFdx(uv), dy = dFdy(uv);
-  dx.x -= uTiles * round(dx.x / uTiles);
-  dy.x -= uTiles * round(dy.x / uTiles);
-  return textureGrad(uText, uv, dx, dy).a * inside;
+  dx.x -= tiles * round(dx.x / tiles);
+  dy.x -= tiles * round(dy.x / tiles);
+  return textureGrad(tex, uv, dx, dy).a * inside;
 }
 
 // Reflections are minified hard by the curvature; a fixed blur level reads right.
-float textReflected(vec3 d) {
+float sampleReflected(sampler2D tex, vec3 d, float bandH, float spin, float tiles) {
   float inside;
-  vec2 uv = bandUV(d, inside);
-  return textureLod(uText, uv, 2.5).a * inside;
+  vec2 uv = bandUV(d, bandH, spin, tiles, inside);
+  return textureLod(tex, uv, 2.5).a * inside;
+}
+
+// Tagline at full ink, whispers well behind it.
+float textScreen(vec3 d) {
+  float t = sampleScreen(uText, d, uBandH, uSpin, uTiles);
+  float w = sampleScreen(uWhisper, d, uWBandH, uWSpin, uWTiles);
+  return max(t, w * uWhisperInk);
+}
+
+float textReflected(vec3 d) {
+  float t = sampleReflected(uText, d, uBandH, uSpin, uTiles);
+  float w = sampleReflected(uWhisper, d, uWBandH, uWSpin, uWTiles);
+  return max(t, w * uWhisperInk);
 }
 
 float inkAlpha() { return uDark > 0.5 ? 0.92 : 0.9; }
@@ -329,6 +357,7 @@ export class SyncOrbit {
   private wave: Program | null = null;
   private out: Program;
   private textTex: WebGLTexture;
+  private whisperTex: WebGLTexture;
   private sceneRT: Target | null = null;
   private waves: [Target, Target] | null = null;
   private pos = new Float32Array(COUNT * 3);
@@ -377,6 +406,11 @@ export class SyncOrbit {
       "uBandH",
       "uBandY",
       "uText",
+      "uWhisper",
+      "uWSpin",
+      "uWTiles",
+      "uWBandH",
+      "uWhisperInk",
       "uSph",
       "uBg",
       "uInk",
@@ -413,6 +447,7 @@ export class SyncOrbit {
     }
 
     this.textTex = gl.createTexture()!;
+    this.whisperTex = gl.createTexture()!;
     this.drawText();
 
     const rand = seeded(7);
@@ -450,9 +485,67 @@ export class SyncOrbit {
     ctx.fillText(a, TILE_W / 2, top);
     ctx.fillText(b, TILE_W / 2, top + lead);
 
-    gl.bindTexture(gl.TEXTURE_2D, this.textTex);
+    this.upload(this.textTex, c);
+    this.upload(this.whisperTex, this.drawWhispers());
+    if (!this.running && this.theme) this.render();
+  }
+
+  /**
+   * The whisper rows: each one a run of phrases separated by a small dot,
+   * repeated until it spans the tile, offset per row so they don't line up.
+   */
+  private drawWhispers() {
+    const c = document.createElement("canvas");
+    c.width = W_TILE_W;
+    c.height = W_TILE_H;
+    const ctx = c.getContext("2d")!;
+    const size = 58;
+    ctx.font = `500 ${size}px ${this.opts.fontFamily}`;
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+    if ("letterSpacing" in ctx) (ctx as { letterSpacing: string }).letterSpacing = "-2px";
+    const rows = this.opts.whispers;
+    const above = Math.ceil(rows.length / 2);
+    // Rows hug the tagline: the middle third of the band is left clear for it.
+    const gapTop = 0.345,
+      gapBottom = 0.655;
+    const pitch = 0.085;
+    rows.forEach((row, i) => {
+      const v =
+        i < above ? gapTop - pitch * (above - i - 0.5) : gapBottom + pitch * (i - above + 0.5);
+      const y = v * W_TILE_H;
+      // Lay out whole phrases until the run is about one tile long, then
+      // stretch the gaps so it is exactly one tile: drawn again a tile to the
+      // left, it wraps with no seam.
+      const widths = row.map((p) => ctx.measureText(p).width);
+      const minGap = size * 1.6;
+      const phrases: number[] = [];
+      let len = 0;
+      while (len + widths[phrases.length % row.length] + minGap <= W_TILE_W || phrases.length < 2) {
+        const w = widths[phrases.length % row.length];
+        phrases.push(phrases.length % row.length);
+        len += w + minGap;
+      }
+      const gap = minGap + (W_TILE_W - len) / phrases.length;
+      let x = (i * 613) % 900;
+      for (const k of phrases) {
+        for (const dx of [0, -W_TILE_W]) {
+          ctx.fillText(row[k], x + dx, y);
+          ctx.beginPath();
+          ctx.arc(x + widths[k] + gap / 2 + dx, y, size * 0.07, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        x += widths[k] + gap;
+      }
+    });
+    return c;
+  }
+
+  private upload(tex: WebGLTexture, source: HTMLCanvasElement) {
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -460,7 +553,6 @@ export class SyncOrbit {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
     if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, 8);
-    if (!this.running && this.theme) this.render();
   }
 
   resize(width: number, height: number, dpr: number) {
@@ -761,6 +853,11 @@ export class SyncOrbit {
     // Tile aspect on the cylinder: arc length 2π/TILES over TILE_W/TILE_H.
     gl.uniform1f(s.u.uBandH, ((2 * Math.PI) / TILES / (TILE_W / TILE_H)) * 0.5);
     gl.uniform1f(s.u.uBandY, 0.02);
+    // Whispers drift the other way, slower, behind the tagline.
+    gl.uniform1f(s.u.uWSpin, this.opts.still ? 1.1 : 1.1 - this.time * 0.05);
+    gl.uniform1f(s.u.uWTiles, W_TILES);
+    gl.uniform1f(s.u.uWBandH, ((2 * Math.PI) / W_TILES / (W_TILE_W / W_TILE_H)) * 0.5);
+    gl.uniform1f(s.u.uWhisperInk, th.dark ? 0.2 : 0.16);
     gl.uniform4fv(s.u.uSph, this.sph);
     gl.uniform1f(s.u.uCamZ, CAMERA_Z);
     gl.uniform1f(s.u.uFloorY, -1.3);
@@ -780,6 +877,9 @@ export class SyncOrbit {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.textTex);
     gl.uniform1i(s.u.uText, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.whisperTex);
+    gl.uniform1i(s.u.uWhisper, 1);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     // 2. ripples

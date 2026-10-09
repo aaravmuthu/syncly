@@ -42,11 +42,13 @@ function readTheme(): OrbitTheme {
 
 export function SyncOrbit({
   lines,
+  whispers,
   className,
   onFallback,
   controlRef,
 }: {
   lines: [string, string];
+  whispers: string[][];
   className?: string;
   onFallback?: () => void;
   controlRef?: MutableRefObject<OrbitControl | null>;
@@ -58,6 +60,8 @@ export function SyncOrbit({
   const control = useRef(controlRef);
   control.current = controlRef;
   const [first, second] = lines;
+  // Read once at mount; the rows are static copy.
+  const whispersRef = useRef(whispers);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -74,6 +78,7 @@ export function SyncOrbit({
         try {
           engine = new Orbit(canvas, {
             lines: [first, second],
+            whispers: whispersRef.current,
             fontWeight: "600",
             fontFamily: '"Bricolage Grotesque", ui-serif, Georgia, serif',
             still,
