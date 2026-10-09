@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -98,6 +98,10 @@ export function PlanWizard({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [step]);
   const [vibe, setVibe] = useState<WizardVibe | null>(null);
   const [subVibeId, setSubVibeId] = useState<string | null>(null);
   const [budget, setBudget] = useState<(typeof BUDGETS)[number]>(BUDGETS[1]);
@@ -225,11 +229,11 @@ export function PlanWizard({
       <Dialog.Portal>
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-xl"
+          className="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-50 flex h-[var(--visual-viewport-height,100dvh)] flex-col bg-background/95 backdrop-blur-xl"
         >
           <Dialog.Title className="sr-only">Create a plan</Dialog.Title>
           {/* header */}
-          <div className="flex items-center justify-between gap-3 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-3">
+          <div className="flex shrink-0 items-center justify-between gap-3 px-[max(1.25rem,env(safe-area-inset-left,0px))] pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-3">
             <DynamicButton
               variant="plain"
               stateKey="back"
@@ -257,7 +261,10 @@ export function PlanWizard({
             <span className="w-14" />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
+          <div
+            ref={scroller}
+            className="mobile-sheet-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-[max(1.25rem,env(safe-area-inset-left,0px))] pb-5"
+          >
             <div className="mx-auto w-full max-w-xl">
               {/* ---------- Step 1: vibe ---------- */}
               {step === 0 ? (
@@ -390,10 +397,6 @@ export function PlanWizard({
                       />
                     </label>
                   </Card>
-
-                  <Button className="mt-5 w-full" onClick={() => setStep(2)}>
-                    Find our fair midpoint
-                  </Button>
                 </div>
               ) : null}
 
@@ -463,21 +466,32 @@ export function PlanWizard({
                           </Card>
                         )}
                       </div>
-
-                      <DynamicButton
-                        width="full"
-                        className="mt-5 w-full"
-                        loading={create.isPending}
-                        onClick={launch}
-                      >
-                        {create.isPending ? "Launching…" : "Launch this plan"}
-                      </DynamicButton>
                     </>
                   )}
                 </div>
               ) : null}
             </div>
           </div>
+          {step === 1 || (step === 2 && !revealing && !venues.isError && !defaults.isError) ? (
+            <div className="shrink-0 border-t border-border bg-background px-[max(1.25rem,env(safe-area-inset-left,0px))] pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+              <div className="mx-auto max-w-xl">
+                {step === 1 ? (
+                  <Button className="w-full" onClick={() => setStep(2)}>
+                    Find our fair midpoint
+                  </Button>
+                ) : (
+                  <DynamicButton
+                    width="full"
+                    className="w-full"
+                    loading={create.isPending}
+                    onClick={launch}
+                  >
+                    {create.isPending ? "Launching…" : "Launch this plan"}
+                  </DynamicButton>
+                )}
+              </div>
+            </div>
+          ) : null}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

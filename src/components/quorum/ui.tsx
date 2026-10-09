@@ -14,7 +14,11 @@ export function Card({
   className?: string;
   as?: "div" | "section" | "article";
 }) {
-  return <As className={cn("surface p-5", className)}>{children}</As>;
+  return (
+    <As className={cn("surface min-w-0 [overflow-wrap:anywhere] p-4 sm:p-5", className)}>
+      {children}
+    </As>
+  );
 }
 
 export function Pill({
@@ -36,7 +40,7 @@ export function Pill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium [overflow-wrap:anywhere]",
         tones[tone],
         className,
       )}
@@ -85,7 +89,7 @@ export function Button({
       disabled={rest.disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "tap-target inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-out disabled:opacity-55",
+        "tap-target inline-flex max-w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-colors duration-150 ease-out disabled:opacity-55 [&_svg]:shrink-0",
         // A busy button is still the thing you pressed; only real disabling dims it.
         loading && "disabled:opacity-100",
         variants[variant],
@@ -126,7 +130,7 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="text-sm font-medium text-foreground">{label}</span>
       {hint ? <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span> : null}
       <div className="mt-2">{children}</div>
@@ -138,7 +142,7 @@ export function Field({
 // for inputs (src/styles.css), and anything under 16px triggers iOS Safari's
 // zoom-on-focus. Let the base rule's 16px win.
 export const inputClass =
-  "w-full rounded-2xl border border-border bg-background px-3.5 py-2.5 outline-none focus:border-primary/60";
+  "min-h-11 min-w-0 w-full max-w-full rounded-2xl border border-border bg-background px-3.5 py-2.5 outline-none focus:border-primary/60";
 
 export function Meter({ value, label }: { value: number; label: string }) {
   const tone = value >= 75 ? "bg-success" : value >= 45 ? "bg-warning" : "bg-destructive";

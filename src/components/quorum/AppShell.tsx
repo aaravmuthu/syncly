@@ -119,7 +119,7 @@ export function PageHeader({
       transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
       className="mb-6 flex flex-wrap items-start justify-between gap-3 pt-3"
     >
-      <div className="min-w-0">
+      <div className="min-w-0 [overflow-wrap:anywhere]">
         {backTo ? (
           <Link
             to={backTo}
@@ -254,7 +254,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <FriendProvider>
       <div
         data-vaul-drawer-wrapper
-        className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
+        className="app-shell mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
         {/* The floating top bar: a Radar-style glass capsule with margin on
             every side, not an edge-to-edge strip, on every screen -- this is
@@ -264,7 +264,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             lunch on the backdrop-filter recompositing cost), but that's the
             deliberate tradeoff of making glass the standard look everywhere
             instead of only where a map happened to make it free. */}
-        <header className="glass-pill fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 mx-auto max-w-3xl rounded-full">
+        <header className="glass-pill fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 mx-auto max-w-3xl rounded-full">
           <div className="flex items-center justify-between px-4 py-2.5">
             <Link to="/home" className="hit-slop flex items-center gap-2">
               <Wordmark className="h-6" />
@@ -273,7 +273,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               <DesktopTabs nav={NAV} selectedTab={selectedTab} chatUnread={chatUnread} />
               {/* Desktop has room for the full icon row; mobile collapses it
                   into one overflow trigger instead (see OverflowMenu). */}
-              <div className="hidden items-center gap-2 md:flex">
+              <div
+                className={cn(
+                  "hidden items-center gap-2 md:flex",
+                  me.data?.hasLinkedTeens && "md:hidden",
+                )}
+              >
                 <ContextSwitcher />
                 <ThemeToggle />
                 <AskSynclySheet />
@@ -310,7 +315,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   />
                 </Link>
               </div>
-              <div className="md:hidden">
+              <div className={cn("md:hidden", me.data?.hasLinkedTeens && "md:block")}>
                 <OverflowMenu
                   unread={unread}
                   avatarUrl={me.data?.avatar_url}
@@ -328,7 +333,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             --chrome-bottom (styles.css) are the one place that clearance is
             defined, shared with every screen's own floating controls so
             they can't drift out of sync with the bar they're clearing. */}
-        <main className="mx-auto w-full max-w-3xl px-4 pb-[var(--chrome-bottom)] pt-[var(--chrome-top)] md:pb-6">
+        <main className="mx-auto min-w-0 w-full max-w-3xl px-4 pb-[var(--chrome-bottom)] pt-[var(--chrome-top)] md:pb-6">
           <InstallPrompt />
           <PersistentTabHost activeTab={visibleTab} />
           {visibleTab ? null : <PageTransition>{children}</PageTransition>}
@@ -336,7 +341,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Same floating-pill treatment as the header; hidden on desktop,
             where DesktopTabs in the header already covers navigation. */}
-        <nav className="glass-pill fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-md rounded-full md:hidden">
+        <nav
+          aria-label="Main navigation"
+          className="mobile-tab-bar glass-pill fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-md rounded-full md:hidden"
+        >
           <div className="relative flex items-stretch justify-between px-2 py-1.5">
             <div className="pointer-events-none absolute inset-x-2 top-1.5 h-0.5" aria-hidden>
               <span

@@ -240,7 +240,7 @@ export function PlaceAutocomplete({
           id={listId}
           role="listbox"
           aria-label="Suggested places"
-          className="absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-popover shadow-lg"
+          className="absolute z-30 mt-1.5 max-h-[min(16rem,40dvh)] w-full overflow-y-auto overscroll-contain rounded-xl border border-border bg-popover shadow-lg"
         >
           {items.map((s, i) => (
             <li key={s.id} role="presentation">

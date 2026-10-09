@@ -1,3 +1,4 @@
+import { MobileActions } from "./MobileActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
@@ -180,16 +181,18 @@ export function GroupAppearance({
         </div>
       </div>
 
-      <Button
-        className="w-full"
-        loading={save.isPending}
-        disabled={!name.trim() || uploading}
-        onClick={() =>
-          save.mutate({ data: { groupId, name, emoji, avatarUrl, coverTheme: cover } })
-        }
-      >
-        Save look
-      </Button>
+      <MobileActions>
+        <Button
+          className="w-full"
+          loading={save.isPending}
+          disabled={!name.trim() || uploading}
+          onClick={() =>
+            save.mutate({ data: { groupId, name, emoji, avatarUrl, coverTheme: cover } })
+          }
+        >
+          Save look
+        </Button>
+      </MobileActions>
     </Card>
   );
 }

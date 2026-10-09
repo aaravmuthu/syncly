@@ -18,6 +18,7 @@ import { BRAND } from "@/lib/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "@/lib/theme";
 import { registerServiceWorker } from "@/lib/quorum/pwa";
+import { useMobileViewport } from "@/lib/use-mobile-viewport";
 
 // Runs before first paint so the stored/system theme is on <html> before any
 // CSS applies. ThemeProvider only resolves it after hydration, which flashed
@@ -148,6 +149,7 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  useMobileViewport();
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 

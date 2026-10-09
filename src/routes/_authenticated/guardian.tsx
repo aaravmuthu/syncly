@@ -484,7 +484,7 @@ function TeenPanel({ teen, maxZones }: { teen: TeenCard; maxZones: number }) {
                       type="button"
                       onClick={() => setZoneKind(k)}
                       className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-medium",
+                        "tap-target rounded-full border px-3 py-1.5 text-xs font-medium",
                         zoneKind === k
                           ? "border-emerald-500/50 bg-emerald-500/10"
                           : "border-border",
@@ -499,7 +499,7 @@ function TeenPanel({ teen, maxZones }: { teen: TeenCard; maxZones: number }) {
                       type="button"
                       onClick={() => setZoneRadius(r)}
                       className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-medium",
+                        "tap-target rounded-full border px-3 py-1.5 text-xs font-medium",
                         zoneRadius === r
                           ? "border-emerald-500/50 bg-emerald-500/10"
                           : "border-border",
@@ -705,7 +705,7 @@ function TeenPanel({ teen, maxZones }: { teen: TeenCard; maxZones: number }) {
                     {r.driver_phone ? (
                       <a
                         href={`tel:${r.driver_phone}`}
-                        className="mt-1 inline-block text-xs font-medium text-primary"
+                        className="tap-target mt-1 inline-flex items-center text-xs font-medium text-primary"
                       >
                         Call driver
                       </a>
@@ -732,7 +732,10 @@ function TeenPanel({ teen, maxZones }: { teen: TeenCard; maxZones: number }) {
                         <div className="text-muted-foreground">{g.teen_name}&apos;s parent</div>
                       </div>
                       {g.phone ? (
-                        <a href={`tel:${g.phone}`} className="text-xs font-medium text-primary">
+                        <a
+                          href={`tel:${g.phone}`}
+                          className="tap-target inline-flex items-center justify-center text-xs font-medium text-primary"
+                        >
                           Call
                         </a>
                       ) : null}

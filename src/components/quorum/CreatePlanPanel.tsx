@@ -1,3 +1,4 @@
+import { MobileActions } from "./MobileActions";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -483,7 +484,7 @@ export function CreatePlanPanel({
             Wraps around {endTime} — we check that against everyone's curfew.
           </p>
 
-          <div className="flex flex-wrap gap-2">
+          <MobileActions>
             <DynamicButton
               width="full"
               className="flex-1"
@@ -525,7 +526,7 @@ export function CreatePlanPanel({
             >
               Share invite
             </Button>
-          </div>
+          </MobileActions>
         </div>
       ) : null}
     </Card>

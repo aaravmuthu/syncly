@@ -1,3 +1,4 @@
+import { MobileActions } from "@/components/quorum/MobileActions";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowRight, Car, Check, Clock, Lock, Wallet, X } from "lucide-react";
@@ -169,7 +170,7 @@ export function DemoWalkthrough({ onFinish }: { onFinish: (twist?: TwistId) => v
       ref={stageRef}
       aria-roledescription="walkthrough"
       aria-label={`${BRAND.name} demo walkthrough`}
-      className="walkthrough relative mx-auto flex w-full max-w-6xl flex-col px-4 sm:px-5"
+      className="walkthrough [--mobile-actions-surface:var(--background)] relative mx-auto flex w-full max-w-6xl flex-col px-4 sm:px-5"
     >
       <div className="flex items-center gap-3 pt-5 sm:pt-7">
         <ol className="flex flex-1 gap-1.5" aria-label="Progress">
@@ -198,13 +199,13 @@ export function DemoWalkthrough({ onFinish }: { onFinish: (twist?: TwistId) => v
         </button>
       </div>
 
-      <div className="relative flex flex-1 flex-col justify-center py-8 pb-28 sm:py-10">
+      <div className="relative flex flex-1 flex-col justify-center py-5 pb-20 sm:py-10">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={step}
             {...slide}
             transition={{ duration: reduce ? 0.15 : 0.45, ease: EASE }}
-            className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
+            className="grid items-center gap-5 sm:gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16"
           >
             <div>
               <p className="text-sm font-semibold text-primary tabular-nums">
@@ -239,7 +240,7 @@ export function DemoWalkthrough({ onFinish }: { onFinish: (twist?: TwistId) => v
         </AnimatePresence>
       </div>
 
-      <div className="safe-bottom flex items-center justify-between gap-3 border-t border-border pt-4 pb-6">
+      <MobileActions className="border-t border-border pt-4 pb-6">
         <button
           type="button"
           onClick={() => go(index - 1)}
@@ -265,7 +266,7 @@ export function DemoWalkthrough({ onFinish }: { onFinish: (twist?: TwistId) => v
           {last ? "Just open the playground" : done ? "Continue" : "Skip this step"}
           <ArrowRight className="size-4" aria-hidden />
         </motion.button>
-      </div>
+      </MobileActions>
 
       <SyncGuide
         stage={stageRef}

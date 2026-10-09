@@ -19,7 +19,7 @@ export function ChatSheet({
     <Drawer.Root open={open} onOpenChange={onOpenChange} shouldScaleBackground>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-surface border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-2xl outline-none">
+        <Drawer.Content className="mobile-sheet fixed inset-x-0 bottom-0 z-50 mx-auto flex h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-surface border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-2xl outline-none !px-0">
           <Drawer.Title className="sr-only">Chat</Drawer.Title>
           <Drawer.Description className="sr-only">
             Conversation messages and composer.

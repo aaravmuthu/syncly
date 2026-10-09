@@ -111,10 +111,11 @@ export function ConciergeSheet({
   const trigger = (
     <motion.button
       type="button"
+      data-open={false}
       onClick={() => setOpen(true)}
       whileTap={{ scale: 0.94 }}
       transition={{ type: "spring", stiffness: 420, damping: 26 }}
-      className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] left-4 z-40 grid size-12 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-lg md:bottom-24 md:inline-flex md:size-auto md:gap-2 md:px-4 md:py-3"
+      className="plan-floating-action plan-ai-trigger fixed left-[max(1rem,env(safe-area-inset-left,0px))] z-40 grid size-12 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-lg md:inline-flex md:size-auto md:gap-2 md:px-4 md:py-3"
     >
       <AiGlyph className="size-5 md:size-4" />
       <span className="sr-only md:not-sr-only">Ask AI</span>

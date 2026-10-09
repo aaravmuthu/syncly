@@ -202,7 +202,9 @@ function SquadCard({ squad }: { squad: Squad }) {
         </div>
 
         <div className="px-5 pb-1 pt-8">
-          <h3 className="font-display text-lg font-semibold text-foreground">{squad.name}</h3>
+          <h3 className="font-display text-lg font-semibold text-foreground [overflow-wrap:anywhere]">
+            {squad.name}
+          </h3>
 
           <div className="mt-3 flex items-center gap-3">
             <div className="flex -space-x-2">

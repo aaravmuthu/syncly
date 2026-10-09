@@ -78,7 +78,7 @@ export function ChatComposer({
       {top}
       <div className="flex items-end gap-1.5">
         {leading}
-        <div className="flex min-h-11 flex-1 items-end gap-1 rounded-[1.375rem] border border-border bg-background/70 py-1 pl-3.5 pr-1 focus-within:border-primary/50">
+        <div className="flex min-h-11 min-w-0 flex-1 items-end gap-1 rounded-[1.375rem] border border-border bg-background/70 py-1 pl-3.5 pr-1 focus-within:border-primary/50">
           <textarea
             ref={ref}
             value={value}
@@ -99,9 +99,9 @@ export function ChatComposer({
               }
             }}
             // No text-sm: the global 16px floor must win or iOS zooms on focus.
-            className="max-h-32 min-h-9 flex-1 resize-none self-center bg-transparent py-1.5 text-foreground outline-none placeholder:text-muted-foreground"
+            className="max-h-32 min-h-9 min-w-0 flex-1 resize-none self-center bg-transparent py-1.5 text-foreground outline-none placeholder:text-muted-foreground"
           />
-          <div className="relative grid size-9 shrink-0 place-items-center self-end">
+          <div className="relative grid size-11 shrink-0 place-items-center self-end">
             <AnimatePresence initial={false} mode="popLayout">
               {canSend ? (
                 <motion.button
@@ -115,7 +115,7 @@ export function ChatComposer({
                   animate={{ opacity: 1, transform: "scale(1)" }}
                   exit={{ opacity: 0, transform: pop, transition: { duration: 0.1 } }}
                   transition={{ duration: 0.14, ease: EASE_OUT }}
-                  className="hit-slop transition-none grid size-8 place-items-center rounded-full bg-primary text-primary-foreground"
+                  className="tap-target transition-none grid size-11 place-items-center rounded-full bg-primary text-primary-foreground"
                 >
                   <ArrowUp className="size-4" strokeWidth={2.5} aria-hidden />
                 </motion.button>

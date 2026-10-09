@@ -18,7 +18,13 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
 import { haptic } from "@/lib/quorum/haptics";
@@ -138,8 +144,18 @@ export function FriendProfileSheet() {
 
   return (
     <Drawer open={Boolean(friendId)} onOpenChange={(o) => (o ? null : closeFriend())}>
-      <DrawerContent className="mx-auto max-h-[92dvh] w-full max-w-2xl border-t border-border/60 bg-background/90 text-foreground backdrop-blur-2xl">
-        <div className="overflow-y-auto px-4 pb-[calc(env(safe-area-inset-bottom)+20px)] pt-2">
+      <DrawerContent className="mobile-sheet mx-auto w-full max-w-2xl border-t border-border/60 bg-background/90 text-foreground backdrop-blur-2xl !px-0">
+        <DrawerTitle className="sr-only">Friend profile</DrawerTitle>
+        <DrawerDescription className="sr-only">
+          Profile, shared plans and location controls.
+        </DrawerDescription>
+        <DrawerClose
+          aria-label="Close friend profile"
+          className="tap-target absolute right-3 top-2 grid place-items-center rounded-full bg-secondary text-foreground/75"
+        >
+          <X className="size-5" aria-hidden />
+        </DrawerClose>
+        <div className="mobile-sheet-scroll min-h-0 overflow-y-auto overscroll-contain px-[max(1rem,env(safe-area-inset-left,0px))] pb-[calc(env(safe-area-inset-bottom)+20px)] pt-2 [overflow-wrap:anywhere]">
           {q.isLoading || !friend ? (
             <div className="space-y-3 py-6">
               <Skeleton className="h-20 rounded-2xl" />
@@ -149,7 +165,7 @@ export function FriendProfileSheet() {
           ) : (
             <div className="space-y-4">
               {/* Header */}
-              <div className="flex items-center gap-4 pt-2">
+              <div className="flex items-center gap-4 pt-2 pr-10">
                 <span className="relative inline-grid place-items-center">
                   {tele ? (
                     <motion.span
@@ -205,14 +221,6 @@ export function FriendProfileSheet() {
                     ) : null}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={closeFriend}
-                  aria-label="Close"
-                  className="tap-target grid shrink-0 place-items-center rounded-full bg-secondary p-2 text-foreground/75 transition hover:bg-secondary active:scale-[0.97]"
-                >
-                  <X className="h-4 w-4" aria-hidden />
-                </button>
               </div>
 
               {/* Nickname editor */}

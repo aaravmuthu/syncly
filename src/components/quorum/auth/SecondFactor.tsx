@@ -1,3 +1,4 @@
+import { MobileActions } from "@/components/quorum/MobileActions";
 import { VerificationFeedback } from "./VerificationFeedback";
 import { useEffect, useState } from "react";
 import { Button, inputClass } from "@/components/quorum/ui";
@@ -193,9 +194,11 @@ export function SecondFactor({
                   digits={6}
                   disabled={busy}
                 />
-                <Button className="w-full" type="submit" loading={busy}>
-                  Verify code
-                </Button>
+                <MobileActions>
+                  <Button className="w-full" type="submit" loading={busy}>
+                    Verify code
+                  </Button>
+                </MobileActions>
                 <Button
                   type="button"
                   variant="ghost"

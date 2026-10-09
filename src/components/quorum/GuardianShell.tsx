@@ -42,14 +42,14 @@ export function GuardianShell({
     <FriendProvider>
       <div
         data-vaul-drawer-wrapper
-        className="mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
+        className="app-shell mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
         {/* No backdrop-blur: this header stays on screen through every page
             transition, and blurring animating content behind it forces a
             recomposite every frame regardless of network conditions. */}
         <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 pt-[env(safe-area-inset-top)]">
-          <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-            <Link to="/guardian" className="flex items-center gap-2">
+          <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-3">
+            <Link to="/guardian" className="tap-target flex items-center gap-2">
               <Wordmark className="h-6" />
               <span className="rounded-full bg-accent/15 px-2 py-0.5 text-caption font-semibold uppercase tracking-wide text-foreground">
                 Family
@@ -77,7 +77,7 @@ export function GuardianShell({
               <Link
                 to="/settings"
                 aria-label="Your profile"
-                className="pressable active:pressable-active"
+                className="tap-target pressable grid place-items-center active:pressable-active"
               >
                 <Avatar
                   url={me.data?.avatar_url}
@@ -93,8 +93,8 @@ export function GuardianShell({
 
         <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-6">
           {title ? (
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                 <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
                 {subtitle ? <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p> : null}
               </div>
@@ -105,7 +105,10 @@ export function GuardianShell({
         </main>
 
         {/* Same reasoning as the header above. */}
-        <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] md:hidden">
+        <nav
+          aria-label="Family navigation"
+          className="mobile-tab-bar fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] md:hidden"
+        >
           <div className="mx-auto flex max-w-xs items-stretch justify-between px-2 py-1.5">
             {NAV.map((n) => {
               const active = pathname.startsWith(n.to);
