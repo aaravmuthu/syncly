@@ -1,7 +1,8 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CircleAlert } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { haptic } from "@/lib/quorum/haptics";
 import {
   clearInlineError,
   getInlineError,
@@ -10,8 +11,10 @@ import {
 } from "@/lib/quorum/inline-error";
 
 const EDGE = 12;
-const GAP = 8;
+const GAP = 10;
+const ARROW_INSET = 16;
 const uiEaseOut = [0.23, 1, 0.32, 1] as const;
+const uiEaseInOut = [0.77, 0, 0.175, 1] as const;
 
 /** Reading time: a beat for the title plus ~50ms per character of reason. */
 function lifetime(e: InlineError) {
@@ -21,9 +24,11 @@ function lifetime(e: InlineError) {
 }
 
 /**
- * Renders the current inline error (lib/quorum/inline-error.ts): a tinted
- * face laid over the button that failed, which says what went wrong, and,
- * when there's more to say, the reason hanging just under it.
+ * Renders the current inline error (lib/quorum/inline-error.ts). The tint
+ * floods the failed button outward from where the finger landed, the label
+ * morphs to the error the way DynamicButton morphs its labels, and the reason
+ * rises out of the button on a glass caption that points back at it. A
+ * hairline along the bottom runs down until it lets go.
  */
 export function InlineErrorLayer() {
   const error = useSyncExternalStore(subscribeInlineError, getInlineError, () => null);
@@ -43,9 +48,11 @@ export function InlineErrorLayer() {
     };
     document.addEventListener("pointerdown", onPress, true);
     document.addEventListener("keydown", onKey);
-    // A nudge, unless the button is already mid-animation of its own.
+    // The nudge and the buzz land on the same frame as the tint. Skip the
+    // nudge if the button is already mid-animation of its own.
     const nudge = getComputedStyle(anchor).animationName === "none";
     if (nudge) anchor.setAttribute("data-inline-error", "");
+    haptic("warn");
     return () => {
       window.clearTimeout(timer);
       document.removeEventListener("pointerdown", onPress, true);
@@ -65,7 +72,9 @@ export function InlineErrorLayer() {
           </>
         ) : null}
       </span>
-      <AnimatePresence>{error ? <ErrorFace key={error.id} error={error} /> : null}</AnimatePresence>
+      <AnimatePresence>
+        {error ? <ErrorFace key={error.id} error={error} life={lifetime(error)} /> : null}
+      </AnimatePresence>
     </>,
     document.body,
   );
@@ -73,8 +82,9 @@ export function InlineErrorLayer() {
 
 type Box = { top: number; left: number; width: number; height: number };
 
-function ErrorFace({ error }: { error: InlineError }) {
+function ErrorFace({ error, life }: { error: InlineError; life: number }) {
   const { anchor } = error;
+  const reduce = useReducedMotion();
   const [box, setBox] = useState<Box | null>(null);
   const [shape] = useState(() => {
     const s = getComputedStyle(anchor);
@@ -120,6 +130,15 @@ function ErrorFace({ error }: { error: InlineError }) {
   }, [hasCaption, titleClipped, placed]);
 
   if (!box) return null;
+
+  // The flood starts under the finger (keyboard presses start at the
+  // center). 142% of the circle() reference radius is the full diagonal, so
+  // it covers the button from any starting point.
+  const ox = Math.min(Math.max(error.origin?.x ?? 0.5, 0), 1) * 100;
+  const oy = Math.min(Math.max(error.origin?.y ?? 0.5, 0), 1) * 100;
+  const closed = `circle(0% at ${ox}% ${oy}%)`;
+  const open = `circle(142% at ${ox}% ${oy}%)`;
+
   const vw = window.innerWidth;
   const vh = window.visualViewport?.height ?? window.innerHeight;
   const below = box.top + box.height + GAP + captionSize.height <= vh - EDGE;
@@ -128,12 +147,47 @@ function ErrorFace({ error }: { error: InlineError }) {
     Math.max(box.left + box.width / 2 - captionSize.width / 2, EDGE),
     vw - EDGE - captionSize.width,
   );
+  const arrowX = Math.min(
+    Math.max(box.left + box.width / 2 - captionLeft, ARROW_INSET),
+    captionSize.width - ARROW_INSET,
+  );
+  const measured = captionSize.width > 0;
+  const rise = below ? -6 : 6;
+
+  const caption = (
+    <>
+      <span
+        aria-hidden
+        className="inline-error-arrow absolute size-2.5"
+        data-side={below ? "top" : "bottom"}
+        style={{ left: arrowX - 5 }}
+      />
+      {titleClipped ? (
+        <p className="font-semibold tracking-[-0.006em] text-foreground">{error.title}</p>
+      ) : null}
+      {error.description ? <p className="text-pretty text-muted-foreground">{error.description}</p> : null}
+      {error.action ? (
+        <button
+          type="button"
+          className="mt-1.5 font-semibold text-primary underline-offset-2 hover:underline"
+          onClick={() => {
+            error.action?.onClick();
+            clearInlineError(error.id);
+          }}
+        >
+          {error.action.label}
+        </button>
+      ) : null}
+    </>
+  );
+  const captionClass =
+    "inline-error-caption fixed z-[1000] w-max max-w-[min(20rem,calc(100vw-1.5rem))] rounded-xl px-3 py-2 text-caption leading-snug";
 
   return (
     <>
       <motion.div
         aria-hidden
-        className="inline-error-face pointer-events-none fixed z-[1000] flex items-center justify-center gap-1.5 overflow-hidden px-3 font-semibold"
+        className="inline-error-face pointer-events-none fixed z-[1000] overflow-hidden"
         style={{
           top: box.top,
           left: box.left,
@@ -142,48 +196,87 @@ function ErrorFace({ error }: { error: InlineError }) {
           borderRadius: shape.radius,
           fontSize: shape.fontSize,
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.16, ease: uiEaseOut }}
+        initial={reduce ? { opacity: 0 } : { clipPath: closed }}
+        animate={reduce ? { opacity: 1 } : { clipPath: open }}
+        exit={
+          reduce
+            ? { opacity: 0, transition: { duration: 0.16, ease: uiEaseOut } }
+            : { clipPath: closed, transition: { duration: 0.26, ease: uiEaseInOut } }
+        }
+        transition={{ duration: reduce ? 0.16 : 0.32, ease: uiEaseOut }}
       >
-        <CircleAlert className="size-[1.1em] shrink-0" strokeWidth={2.25} />
-        {iconOnly ? null : (
-          <span ref={titleRef} className="min-w-0 truncate">
-            {error.title}
-          </span>
-        )}
+        <motion.div
+          className="flex size-full items-center justify-center gap-1.5 px-3 font-semibold tracking-[-0.011em]"
+          initial={
+            reduce
+              ? { opacity: 0 }
+              : { opacity: 0, transform: "translateY(8px)", filter: "blur(4px)" }
+          }
+          animate={{ opacity: 1, transform: "translateY(0px)", filter: "blur(0px)" }}
+          exit={
+            reduce
+              ? { opacity: 0 }
+              : { opacity: 0, transform: "translateY(-8px)", filter: "blur(4px)" }
+          }
+          transition={{ duration: 0.22, ease: uiEaseOut, delay: reduce ? 0 : 0.06 }}
+        >
+          <CircleAlert className="size-[1.1em] shrink-0" strokeWidth={2.25} />
+          {iconOnly ? null : (
+            <span ref={titleRef} className="min-w-0 truncate">
+              {error.title}
+            </span>
+          )}
+        </motion.div>
+        {/* Time left before it lets go. */}
+        <motion.span
+          className="inline-error-timer absolute inset-x-0 bottom-0 h-[2px] origin-left"
+          initial={{ transform: "scaleX(1)" }}
+          animate={{ transform: "scaleX(0)" }}
+          transition={{ duration: life / 1000, ease: "linear" }}
+        />
       </motion.div>
-      {hasCaption ? (
+      {hasCaption && !measured ? (
+        // Measured first, invisibly, so it knows which side it fits on before
+        // it starts moving.
+        <div
+          ref={captionRef}
+          aria-hidden
+          className={captionClass}
+          style={{ top: 0, left: 0, visibility: "hidden" }}
+        >
+          {caption}
+        </div>
+      ) : null}
+      {hasCaption && measured ? (
         <motion.div
           ref={captionRef}
           role="presentation"
-          className="inline-error-caption fixed z-[1000] w-max max-w-[min(20rem,calc(100vw-1.5rem))] rounded-xl px-3 py-2 text-caption"
+          className={captionClass}
           style={{
             top: captionTop,
             left: captionLeft,
-            visibility: captionSize.width ? "visible" : "hidden",
+            transformOrigin: `${arrowX}px ${below ? "0%" : "100%"}`,
             pointerEvents: error.action ? "auto" : "none",
           }}
-          initial={{ opacity: 0, y: below ? -4 : 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: below ? -4 : 4 }}
-          transition={{ duration: 0.18, ease: uiEaseOut }}
+          initial={
+            reduce ? { opacity: 0 } : { opacity: 0, transform: `translateY(${rise}px) scale(0.94)` }
+          }
+          animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
+          exit={
+            reduce
+              ? { opacity: 0, transition: { duration: 0.14 } }
+              : {
+                  opacity: 0,
+                  transform: `translateY(${rise * 0.6}px) scale(0.97)`,
+                  transition: { duration: 0.16, ease: uiEaseOut },
+                }
+          }
+          transition={{
+            transform: { type: "spring", duration: 0.38, bounce: 0, delay: 0.08 },
+            opacity: { duration: 0.2, ease: uiEaseOut, delay: 0.08 },
+          }}
         >
-          {titleClipped ? <p className="font-semibold text-foreground">{error.title}</p> : null}
-          {error.description ? <p className="text-muted-foreground">{error.description}</p> : null}
-          {error.action ? (
-            <button
-              type="button"
-              className="mt-1 font-semibold text-primary underline-offset-2 hover:underline"
-              onClick={() => {
-                error.action?.onClick();
-                clearInlineError(error.id);
-              }}
-            >
-              {error.action.label}
-            </button>
-          ) : null}
+          {caption}
         </motion.div>
       ) : null}
     </>

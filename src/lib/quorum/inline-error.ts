@@ -15,6 +15,9 @@ export type InlineError = {
   title: ReactNode;
   description?: ReactNode;
   action?: InlineErrorAction;
+  /** Where the finger landed, as 0–1 fractions of the button, so the error
+   *  can spread from that spot even if the button has moved since. */
+  origin?: { x: number; y: number };
 };
 
 // Long enough for an AI answer or an upload to come back to the button that
@@ -36,7 +39,7 @@ const PRESSABLE = [
   "[role=option]",
 ].join(",");
 
-let lastPress: { el: HTMLElement; at: number } | null = null;
+let lastPress: { el: HTMLElement; at: number; origin?: { x: number; y: number } } | null = null;
 let current: InlineError | null = null;
 let nextId = 1;
 const listeners = new Set<() => void>();
@@ -45,13 +48,23 @@ function emit() {
   for (const l of listeners) l();
 }
 
-function remember(target: EventTarget | null) {
+function remember(target: EventTarget | null, point?: { x: number; y: number }) {
   const el = target instanceof Element ? target.closest<HTMLElement>(PRESSABLE) : null;
-  lastPress = el ? { el, at: performance.now() } : null;
+  if (!el) return void (lastPress = null);
+  const r = el.getBoundingClientRect();
+  const origin =
+    point && r.width && r.height
+      ? { x: (point.x - r.left) / r.width, y: (point.y - r.top) / r.height }
+      : undefined;
+  lastPress = { el, at: performance.now(), origin };
 }
 
 if (typeof document !== "undefined") {
-  document.addEventListener("pointerdown", (e) => remember(e.target), true);
+  document.addEventListener(
+    "pointerdown",
+    (e) => remember(e.target, { x: e.clientX, y: e.clientY }),
+    true,
+  );
   document.addEventListener(
     "keydown",
     (e) => {
@@ -106,6 +119,7 @@ export function showInlineError(
     title,
     description: opts.description,
     action: opts.action,
+    origin: anchor === lastPress?.el ? lastPress.origin : undefined,
   };
   emit();
   return current.id;
