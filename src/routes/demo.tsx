@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { DEMO_GROUP, DEMO_POOL, type DemoMember } from "@/lib/quorum/demo-group";
 import { analyze, type CoachMove } from "@/lib/quorum/demo-coach";
 import { DemoCoach } from "@/components/quorum/demo/DemoCoach";
+import { DemoWalkthrough } from "@/components/quorum/demo/DemoWalkthrough";
 
 const TITLE = `Try ${BRAND.name} — interactive demo, no account needed`;
 const DESCRIPTION =
@@ -98,6 +99,12 @@ function clockRange(a: string, b: string) {
 
 function DemoPage() {
   const reduce = useReducedMotion();
+  // Visitors start with the guided walkthrough, then get the playground.
+  const [stage, setStage] = useState<"tour" | "play">("tour");
+  const startPlaying = () => {
+    setStage("play");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
   const [members, setMembers] = useState<DemoMember[]>(DEMO_GROUP);
   const [activeId, setActiveId] = useState("m1");
   // Who the visitor is playing, and the name they gave. The name is display
@@ -229,8 +236,8 @@ function DemoPage() {
     if (topRef.current) io.observe(topRef.current);
     if (controlsRef.current) io.observe(controlsRef.current);
     return () => io.disconnect();
-  }, []);
-  const showLiveBar = controlsVisible && !topVisible;
+  }, [stage]);
+  const showLiveBar = stage === "play" && controlsVisible && !topVisible;
 
   const scrollToTop = () =>
     topRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
@@ -280,466 +287,479 @@ function DemoPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pt-7 pb-32 sm:px-5 sm:pt-10 lg:pb-16">
-        <h1 className="max-w-[18ch] text-[2rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-4xl">
-          Four friends, one Friday night
-        </h1>
-        <p className="mt-3 max-w-[52ch] text-base text-pretty text-muted-foreground">
-          Each of them answered a few questions privately. {BRAND.name} found a plan that works for
-          all four. Change anyone's answers and watch it adapt.
-        </p>
+      {stage === "tour" ? (
+        <DemoWalkthrough onFinish={startPlaying} />
+      ) : (
+        <main className="demo-enter mx-auto max-w-6xl px-4 pt-7 pb-32 sm:px-5 sm:pt-10 lg:pb-16">
+          <h1 className="max-w-[18ch] text-[2rem] leading-[1.08] font-semibold tracking-tight text-balance sm:text-4xl">
+            Four friends, one Friday night
+          </h1>
+          <p className="mt-3 max-w-[52ch] text-base text-pretty text-muted-foreground">
+            Each of them answered a few questions privately. {BRAND.name} found a plan that works
+            for all four. Change anyone's answers and watch it adapt.
+          </p>
 
-        <div className="mt-7 grid gap-5 lg:mt-9 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
-          {/* 1 — the answer, first */}
-          <div className="order-last space-y-3 lg:order-first">
-            <section aria-label="Live plan rankings" className="surface overflow-hidden p-5 sm:p-6">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-xl font-semibold tracking-tight">Watch the plans move</h2>
-                <span className="shrink-0 text-sm font-medium tabular-nums text-primary">
-                  {working} / {ranked.length} fit
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Drag an answer. Plans that work rise to the top.
-              </p>
-              <div
-                className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary"
-                aria-hidden="true"
+          <div className="mt-7 grid gap-5 lg:mt-9 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-8">
+            {/* 1 — the answer, first */}
+            <div className="order-last space-y-3 lg:order-first">
+              <section
+                aria-label="Live plan rankings"
+                className="surface overflow-hidden p-5 sm:p-6"
               >
-                <motion.div
-                  className="h-full origin-left rounded-full bg-primary"
-                  initial={false}
-                  animate={{ scaleX: working / ranked.length }}
-                  transition={{ duration: reduce ? 0 : 0.2 }}
-                />
-              </div>
-              <LayoutGroup id="demo-plans">
-                <ol
-                  className="mt-3 max-h-80 overflow-y-auto overscroll-contain pr-1"
-                  tabIndex={0}
-                  aria-label="Ranked plans, best match first"
-                >
-                  {ranked.map((r, index) => (
-                    <motion.li
-                      key={r.option.key}
-                      layout={reduce ? false : "position"}
-                      initial={false}
-                      animate={{ opacity: r.feasible ? 1 : 0.65 }}
-                      transition={{
-                        layout: { type: "spring", stiffness: 380, damping: 36 },
-                        opacity: { duration: reduce ? 0 : 0.15 },
-                      }}
-                      className={cn(
-                        "relative flex items-center gap-3 border-b border-border py-3 last:border-0",
-                        index === 0 && r.feasible && "text-primary",
-                      )}
-                    >
-                      <span
-                        className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold tabular-nums"
-                        aria-hidden="true"
-                      >
-                        {r.feasible ? index + 1 : "—"}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold">{r.option.title}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-                          ${r.option.costMin}–{r.option.costMax} ·{" "}
-                          {clockRange(r.option.start, r.option.end)}
-                        </p>
-                      </div>
-                      <span
-                        className={cn(
-                          "flex shrink-0 items-center gap-1 text-xs font-medium",
-                          r.feasible ? "text-primary" : "text-muted-foreground",
-                        )}
-                      >
-                        {r.feasible ? (
-                          <Check className="size-3.5" aria-hidden />
-                        ) : (
-                          <X className="size-3.5" aria-hidden />
-                        )}
-                        {r.feasible ? (index === 0 ? "Top pick" : "Fits") : "Ruled out"}
-                      </span>
-                    </motion.li>
-                  ))}
-                </ol>
-              </LayoutGroup>
-              <p className="sr-only" role="status" aria-live={interacting ? "off" : "polite"}>
-                {working} plans work for everyone.
-                {anyFeasible
-                  ? ` Top pick: ${top.option.title}.`
-                  : " Try another answer or undo your last change."}
-              </p>
-            </section>
-
-            <div ref={topRef}>
-              <Card
-                as="section"
-                className={cn(
-                  "p-5 sm:p-6",
-                  anyFeasible ? "ring-1 ring-primary/35" : "ring-1 ring-destructive/30",
-                )}
-              >
-                <div className="flex min-h-7 items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {anyFeasible ? "Top pick" : "No plan yet"}
-                  </span>
-                  <span aria-live={interacting ? "off" : "polite"} className="flex items-center">
-                    {anyFeasible ? (
-                      <Pill tone="good">
-                        <Check className="size-3" /> Works for all {members.length}
-                      </Pill>
-                    ) : (
-                      <Pill tone="bad">
-                        <X className="size-3" /> Nothing fits everyone
-                      </Pill>
-                    )}
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 className="text-xl font-semibold tracking-tight">Watch the plans move</h2>
+                  <span className="shrink-0 text-sm font-medium tabular-nums text-primary">
+                    {working} / {ranked.length} fit
                   </span>
                 </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Drag an answer. Plans that work rise to the top.
+                </p>
+                <div
+                  className="mt-4 h-1.5 overflow-hidden rounded-full bg-secondary"
+                  aria-hidden="true"
+                >
+                  <motion.div
+                    className="h-full origin-left rounded-full bg-primary"
+                    initial={false}
+                    animate={{ scaleX: working / ranked.length }}
+                    transition={{ duration: reduce ? 0 : 0.2 }}
+                  />
+                </div>
+                <LayoutGroup id="demo-plans">
+                  <ol
+                    className="mt-3 max-h-80 overflow-y-auto overscroll-contain pr-1"
+                    tabIndex={0}
+                    aria-label="Ranked plans, best match first"
+                  >
+                    {ranked.map((r, index) => (
+                      <motion.li
+                        key={r.option.key}
+                        layout={reduce ? false : "position"}
+                        initial={false}
+                        animate={{ opacity: r.feasible ? 1 : 0.65 }}
+                        transition={{
+                          layout: { type: "spring", stiffness: 380, damping: 36 },
+                          opacity: { duration: reduce ? 0 : 0.15 },
+                        }}
+                        className={cn(
+                          "relative flex items-center gap-3 border-b border-border py-3 last:border-0",
+                          index === 0 && r.feasible && "text-primary",
+                        )}
+                      >
+                        <span
+                          className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold tabular-nums"
+                          aria-hidden="true"
+                        >
+                          {r.feasible ? index + 1 : "—"}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold">{r.option.title}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+                            ${r.option.costMin}–{r.option.costMax} ·{" "}
+                            {clockRange(r.option.start, r.option.end)}
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            "flex shrink-0 items-center gap-1 text-xs font-medium",
+                            r.feasible ? "text-primary" : "text-muted-foreground",
+                          )}
+                        >
+                          {r.feasible ? (
+                            <Check className="size-3.5" aria-hidden />
+                          ) : (
+                            <X className="size-3.5" aria-hidden />
+                          )}
+                          {r.feasible ? (index === 0 ? "Top pick" : "Fits") : "Ruled out"}
+                        </span>
+                      </motion.li>
+                    ))}
+                  </ol>
+                </LayoutGroup>
+                <p className="sr-only" role="status" aria-live={interacting ? "off" : "polite"}>
+                  {working} plans work for everyone.
+                  {anyFeasible
+                    ? ` Top pick: ${top.option.title}.`
+                    : " Try another answer or undo your last change."}
+                </p>
+              </section>
 
-                <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.div key={anyFeasible ? top.option.key : "none"} {...swap}>
-                    {anyFeasible ? (
-                      <>
-                        <h2 className="mt-3 text-2xl leading-tight font-semibold tracking-tight sm:text-[1.75rem]">
-                          {top.option.title}
-                        </h2>
-                        <p className="mt-1 text-base text-muted-foreground">
-                          {top.option.subtitle}
-                        </p>
-                        <dl className="mt-4 grid grid-cols-3 gap-2">
-                          <Fact icon={Wallet} label="Each">
-                            ${cost.perPersonMin}–{cost.perPersonMax}
-                          </Fact>
-                          <Fact icon={Clock} label="When">
-                            {clockRange(top.option.start, top.option.end)}
-                          </Fact>
-                          <Fact icon={MapPin} label="Away">
-                            {top.option.travelMinutes} min
-                          </Fact>
-                        </dl>
-                        <ul className="mt-4 space-y-2 text-[0.9375rem]">
-                          {top.breakdown.reasons.slice(0, 3).map((reason) => (
-                            <li key={reason} className="flex gap-2.5">
-                              <Check className="mt-0.5 size-4 shrink-0 text-success" />
-                              {reason}
+              <div ref={topRef}>
+                <Card
+                  as="section"
+                  className={cn(
+                    "p-5 sm:p-6",
+                    anyFeasible ? "ring-1 ring-primary/35" : "ring-1 ring-destructive/30",
+                  )}
+                >
+                  <div className="flex min-h-7 items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {anyFeasible ? "Top pick" : "No plan yet"}
+                    </span>
+                    <span aria-live={interacting ? "off" : "polite"} className="flex items-center">
+                      {anyFeasible ? (
+                        <Pill tone="good">
+                          <Check className="size-3" /> Works for all {members.length}
+                        </Pill>
+                      ) : (
+                        <Pill tone="bad">
+                          <X className="size-3" /> Nothing fits everyone
+                        </Pill>
+                      )}
+                    </span>
+                  </div>
+
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    <motion.div key={anyFeasible ? top.option.key : "none"} {...swap}>
+                      {anyFeasible ? (
+                        <>
+                          <h2 className="mt-3 text-2xl leading-tight font-semibold tracking-tight sm:text-[1.75rem]">
+                            {top.option.title}
+                          </h2>
+                          <p className="mt-1 text-base text-muted-foreground">
+                            {top.option.subtitle}
+                          </p>
+                          <dl className="mt-4 grid grid-cols-3 gap-2">
+                            <Fact icon={Wallet} label="Each">
+                              ${cost.perPersonMin}–{cost.perPersonMax}
+                            </Fact>
+                            <Fact icon={Clock} label="When">
+                              {clockRange(top.option.start, top.option.end)}
+                            </Fact>
+                            <Fact icon={MapPin} label="Away">
+                              {top.option.travelMinutes} min
+                            </Fact>
+                          </dl>
+                          <ul className="mt-4 space-y-2 text-[0.9375rem]">
+                            {top.breakdown.reasons.slice(0, 3).map((reason) => (
+                              <li key={reason} className="flex gap-2.5">
+                                <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                                {reason}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="mt-3 text-2xl leading-tight font-semibold tracking-tight">
+                            Nothing works for everyone
+                          </h2>
+                          <p className="mt-2 text-base text-pretty text-muted-foreground">
+                            Someone's limits rule out every option. Nobody finds out whose — the
+                            group just sees it's time to loosen something.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={reset}
+                            className="pressable active:pressable-active tap-target mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-92"
+                          >
+                            <RotateCcw className="size-4" /> Reset the group
+                          </button>
+                        </>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+
+                  <AnimatePresence initial={false}>
+                    {change && anyFeasible && (
+                      <motion.p
+                        key={change}
+                        initial={reduce ? false : { opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden text-sm text-muted-foreground"
+                      >
+                        <span className="mt-4 flex items-start gap-2 rounded-2xl bg-primary/8 px-3 py-2.5 text-foreground">
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                          <span>
+                            <span className="font-semibold">New top pick.</span> {change}
+                          </span>
+                        </span>
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+
+                  {anyFeasible && (
+                    <Disclosure label="Why it's the top pick" className="mt-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Meter label="Fits what people like" value={top.breakdown.overallFit} />
+                        <Meter label="Fair to everyone" value={top.breakdown.fairness} />
+                      </div>
+                      <p className="mt-3 text-sm text-pretty text-muted-foreground">
+                        Budget, curfew and travel are pass/fail — anything that breaks one is out
+                        before ranking starts. What's left is ranked by how well it fits what people
+                        like, and whether the same person keeps compromising.
+                      </p>
+                      {transport && (
+                        <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+                          {transport.cars.map((c) => (
+                            <li key={c.label}>
+                              <span className="font-medium text-foreground">{c.driver}</span> drives
+                              {c.passengers.length ? ` ${c.passengers.join(", ")}` : ""}
                             </li>
                           ))}
                         </ul>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="mt-3 text-2xl leading-tight font-semibold tracking-tight">
-                          Nothing works for everyone
-                        </h2>
-                        <p className="mt-2 text-base text-pretty text-muted-foreground">
-                          Someone's limits rule out every option. Nobody finds out whose — the group
-                          just sees it's time to loosen something.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={reset}
-                          className="pressable active:pressable-active tap-target mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-92"
-                        >
-                          <RotateCcw className="size-4" /> Reset the group
-                        </button>
-                      </>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-
-                <AnimatePresence initial={false}>
-                  {change && anyFeasible && (
-                    <motion.p
-                      key={change}
-                      initial={reduce ? false : { opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden text-sm text-muted-foreground"
-                    >
-                      <span className="mt-4 flex items-start gap-2 rounded-2xl bg-primary/8 px-3 py-2.5 text-foreground">
-                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                        <span>
-                          <span className="font-semibold">New top pick.</span> {change}
-                        </span>
-                      </span>
-                    </motion.p>
+                      )}
+                    </Disclosure>
                   )}
-                </AnimatePresence>
+                </Card>
+              </div>
 
-                {anyFeasible && (
-                  <Disclosure label="Why it's the top pick" className="mt-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Meter label="Fits what people like" value={top.breakdown.overallFit} />
-                      <Meter label="Fair to everyone" value={top.breakdown.fairness} />
-                    </div>
-                    <p className="mt-3 text-sm text-pretty text-muted-foreground">
-                      Budget, curfew and travel are pass/fail — anything that breaks one is out
-                      before ranking starts. What's left is ranked by how well it fits what people
-                      like, and whether the same person keeps compromising.
-                    </p>
-                    {transport && (
-                      <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-                        {transport.cars.map((c) => (
-                          <li key={c.label}>
-                            <span className="font-medium text-foreground">{c.driver}</span> drives
-                            {c.passengers.length ? ` ${c.passengers.join(", ")}` : ""}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </Disclosure>
-                )}
-              </Card>
+              <DemoCoach
+                coach={coach}
+                members={members}
+                youId={youId}
+                youName={youName}
+                edited={edited}
+                busy={interacting}
+                onApply={applyMove}
+                onPick={(id) => {
+                  setYouId(id);
+                  setActiveId(id);
+                }}
+                onClear={() => {
+                  setYouId(null);
+                  setYouName("");
+                }}
+                onName={setYouName}
+              />
             </div>
 
-            <DemoCoach
-              coach={coach}
-              members={members}
-              youId={youId}
-              youName={youName}
-              edited={edited}
-              busy={interacting}
-              onApply={applyMove}
-              onPick={(id) => {
-                setYouId(id);
-                setActiveId(id);
-              }}
-              onClear={() => {
-                setYouId(null);
-                setYouName("");
-              }}
-              onName={setYouName}
-            />
-          </div>
+            {/* 2 — change something, see it move */}
+            <div ref={controlsRef} className="order-first lg:sticky lg:top-24 lg:order-last">
+              <Card as="section" className="p-5 sm:p-6">
+                <h2 className="text-xl font-semibold tracking-tight">Give the plan a twist</h2>
+                <p className="mt-1.5 text-sm text-pretty text-muted-foreground">
+                  You're playing all four friends. For real, everyone answers on their own phone and
+                  nobody sees anyone else's answers.
+                </p>
 
-          {/* 2 — change something, see it move */}
-          <div ref={controlsRef} className="order-first lg:sticky lg:top-24 lg:order-last">
-            <Card as="section" className="p-5 sm:p-6">
-              <h2 className="text-xl font-semibold tracking-tight">Give the plan a twist</h2>
-              <p className="mt-1.5 text-sm text-pretty text-muted-foreground">
-                You're playing all four friends. For real, everyone answers on their own phone and
-                nobody sees anyone else's answers.
-              </p>
-
-              <div className="mt-6 border-t border-border pt-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm font-medium">Whose answers?</div>
-                  <button
-                    type="button"
-                    onClick={undo}
-                    disabled={!history.length}
-                    className="tap-target inline-flex items-center gap-1.5 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <Undo2 className="size-3.5" aria-hidden /> Undo
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {edited && (
-                      <motion.button
-                        type="button"
-                        onClick={reset}
-                        initial={reduce ? false : { opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="tap-target -my-2 inline-flex items-center gap-1.5 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        <RotateCcw className="size-3.5" /> Reset
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div
-                  role="group"
-                  aria-label="Whose answers"
-                  className="mt-2 grid grid-cols-4 gap-1 rounded-2xl bg-secondary p-1"
-                >
-                  {members.map((m) => (
+                <div className="mt-6 border-t border-border pt-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-sm font-medium">Whose answers?</div>
                     <button
-                      key={m.id}
                       type="button"
-                      aria-pressed={m.id === activeId}
-                      onClick={() => setActiveId(m.id)}
-                      className={cn(
-                        "relative flex min-h-11 items-center justify-center gap-1 rounded-xl px-1 text-sm transition-colors",
-                        m.id === activeId
-                          ? "font-semibold text-foreground"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
+                      onClick={undo}
+                      disabled={!history.length}
+                      className="tap-target inline-flex items-center gap-1.5 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {m.id === activeId && (
-                        <motion.span
-                          layoutId={reduce ? undefined : "demo-member"}
-                          transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                          className="absolute inset-0 rounded-xl bg-card shadow-sm"
-                        />
-                      )}
-                      <span aria-hidden className="relative">
-                        {m.emoji}
-                      </span>
-                      <span className="relative">{nameOf(m)}</span>
+                      <Undo2 className="size-3.5" aria-hidden /> Undo
                     </button>
-                  ))}
-                </div>
-
-                <div className="mt-5 space-y-5">
-                  <Range
-                    label="Can spend up to"
-                    value={`$${active.constraints.maxSpend ?? 0}`}
-                    min={5}
-                    max={80}
-                    step={5}
-                    current={active.constraints.maxSpend ?? 20}
-                    onChange={(v) => update({ maxSpend: v })}
-                    onStart={beginGesture}
-                    onEnd={endGesture}
-                    hint="Slide left to tighten the budget. Watch which plans still fit."
-                  />
-
-                  <div>
-                    <Range
-                      label="Finish by"
-                      value={clock(active.constraints.latestEnd ?? "23:30")}
-                      current={minutes(active.constraints.latestEnd ?? "23:30")}
-                      min={960}
-                      max={1410}
-                      step={15}
-                      onChange={(v) => update({ latestEnd: timeFromMinutes(v) })}
-                      onStart={beginGesture}
-                      onEnd={endGesture}
-                      hint="Drag the deadline across the evening."
-                      interval={{ start: minutes(top.option.start), end: minutes(top.option.end) }}
-                    />
-                    <div className="mt-1 flex justify-between text-xs text-muted-foreground">
-                      <span>4 pm</span>
-                      <span>11:30 pm</span>
-                    </div>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Shaded: {anyFeasible ? "top pick" : "closest option"},{" "}
-                      {clockRange(top.option.start, top.option.end)}. Line: this friend's deadline.
-                    </p>
+                    <AnimatePresence initial={false}>
+                      {edited && (
+                        <motion.button
+                          type="button"
+                          onClick={reset}
+                          initial={reduce ? false : { opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          className="tap-target -my-2 inline-flex items-center gap-1.5 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground"
+                        >
+                          <RotateCcw className="size-3.5" /> Reset
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
                   </div>
 
-                  <Group label="Getting there">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Chip
-                        on={!!active.constraints.canDrive}
-                        onClick={() =>
-                          update({ canDrive: !active.constraints.canDrive, needsRide: false })
-                        }
+                  <div
+                    role="group"
+                    aria-label="Whose answers"
+                    className="mt-2 grid grid-cols-4 gap-1 rounded-2xl bg-secondary p-1"
+                  >
+                    {members.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        aria-pressed={m.id === activeId}
+                        onClick={() => setActiveId(m.id)}
+                        className={cn(
+                          "relative flex min-h-11 items-center justify-center gap-1 rounded-xl px-1 text-sm transition-colors",
+                          m.id === activeId
+                            ? "font-semibold text-foreground"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
                       >
-                        Can drive
-                      </Chip>
-                      <Chip
-                        on={!!active.constraints.needsRide}
-                        onClick={() =>
-                          update({ needsRide: !active.constraints.needsRide, canDrive: false })
-                        }
-                      >
-                        Needs a ride
-                      </Chip>
-                    </div>
-                  </Group>
+                        {m.id === activeId && (
+                          <motion.span
+                            layoutId={reduce ? undefined : "demo-member"}
+                            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                            className="absolute inset-0 rounded-xl bg-card shadow-sm"
+                          />
+                        )}
+                        <span aria-hidden className="relative">
+                          {m.emoji}
+                        </span>
+                        <span className="relative">{nameOf(m)}</span>
+                      </button>
+                    ))}
+                  </div>
 
-                  <Disclosure label="More answers" meta="Travel, food, interests">
-                    <div className="space-y-5 pb-1">
+                  <div className="mt-5 space-y-5">
+                    <Range
+                      label="Can spend up to"
+                      value={`$${active.constraints.maxSpend ?? 0}`}
+                      min={5}
+                      max={80}
+                      step={5}
+                      current={active.constraints.maxSpend ?? 20}
+                      onChange={(v) => update({ maxSpend: v })}
+                      onStart={beginGesture}
+                      onEnd={endGesture}
+                      hint="Slide left to tighten the budget. Watch which plans still fit."
+                    />
+
+                    <div>
                       <Range
-                        label="Will travel up to"
-                        value={`${active.constraints.maxTravelMinutes ?? 0} min`}
-                        min={5}
-                        max={60}
-                        step={5}
-                        current={active.constraints.maxTravelMinutes ?? 20}
-                        onChange={(v) => update({ maxTravelMinutes: v })}
+                        label="Finish by"
+                        value={clock(active.constraints.latestEnd ?? "23:30")}
+                        current={minutes(active.constraints.latestEnd ?? "23:30")}
+                        min={960}
+                        max={1410}
+                        step={15}
+                        onChange={(v) => update({ latestEnd: timeFromMinutes(v) })}
                         onStart={beginGesture}
                         onEnd={endGesture}
+                        hint="Drag the deadline across the evening."
+                        interval={{
+                          start: minutes(top.option.start),
+                          end: minutes(top.option.end),
+                        }}
                       />
-                      <Group label="Food needs">
-                        <div className="flex flex-wrap gap-2">
-                          {DIET_CHOICES.map((d) => (
-                            <Chip
-                              key={d}
-                              on={(active.constraints.dietary ?? []).includes(d)}
-                              onClick={() => toggleIn("dietary", d)}
-                            >
-                              {d}
-                            </Chip>
-                          ))}
-                        </div>
-                      </Group>
-                      <Group label="Into">
-                        <div className="flex flex-wrap gap-2">
-                          {TAG_CHOICES.map((t) => (
-                            <Chip
-                              key={t}
-                              on={(active.constraints.likedTags ?? []).includes(t)}
-                              onClick={() => toggleIn("likedTags", t)}
-                            >
-                              {t}
-                            </Chip>
-                          ))}
-                        </div>
-                      </Group>
+                      <div className="mt-1 flex justify-between text-xs text-muted-foreground">
+                        <span>4 pm</span>
+                        <span>11:30 pm</span>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Shaded: {anyFeasible ? "top pick" : "closest option"},{" "}
+                        {clockRange(top.option.start, top.option.end)}. Line: this friend's
+                        deadline.
+                      </p>
                     </div>
-                  </Disclosure>
-                </div>
-              </div>
-              <div className="mt-6 border-t border-border pt-5">
-                <div className="text-sm font-medium">Try a plot twist</div>
-                <div className="mt-2 flex flex-col gap-2">
-                  {TRY_THESE.map((t) => {
-                    const who = members.find((m) => m.id === t.memberId)!;
-                    const done = tried.includes(t.id);
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        disabled={done}
-                        onClick={() => tryThis(t)}
-                        className={cn(
-                          "pressable active:pressable-active tap-target flex items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-left transition-colors",
-                          done
-                            ? "border-primary/40 bg-primary/8"
-                            : "border-border hover:bg-secondary",
-                        )}
-                      >
-                        <span className="text-[0.9375rem]">
-                          “{t.quote}”
-                          <span className="ml-1.5 text-sm text-muted-foreground">
-                            — {nameOf(who)}
-                          </span>
-                        </span>
-                        {done ? (
-                          <Check className="size-4 shrink-0 text-primary" aria-label="Applied" />
-                        ) : (
-                          <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
 
-        {/* 3 — then do it for real */}
-        <section className="mt-10 flex flex-col items-start gap-4 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Now do it with your real group</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Invite links, parent approvals and saved plans. Free, no app to install.
-            </p>
+                    <Group label="Getting there">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Chip
+                          on={!!active.constraints.canDrive}
+                          onClick={() =>
+                            update({ canDrive: !active.constraints.canDrive, needsRide: false })
+                          }
+                        >
+                          Can drive
+                        </Chip>
+                        <Chip
+                          on={!!active.constraints.needsRide}
+                          onClick={() =>
+                            update({ needsRide: !active.constraints.needsRide, canDrive: false })
+                          }
+                        >
+                          Needs a ride
+                        </Chip>
+                      </div>
+                    </Group>
+
+                    <Disclosure label="More answers" meta="Travel, food, interests">
+                      <div className="space-y-5 pb-1">
+                        <Range
+                          label="Will travel up to"
+                          value={`${active.constraints.maxTravelMinutes ?? 0} min`}
+                          min={5}
+                          max={60}
+                          step={5}
+                          current={active.constraints.maxTravelMinutes ?? 20}
+                          onChange={(v) => update({ maxTravelMinutes: v })}
+                          onStart={beginGesture}
+                          onEnd={endGesture}
+                        />
+                        <Group label="Food needs">
+                          <div className="flex flex-wrap gap-2">
+                            {DIET_CHOICES.map((d) => (
+                              <Chip
+                                key={d}
+                                on={(active.constraints.dietary ?? []).includes(d)}
+                                onClick={() => toggleIn("dietary", d)}
+                              >
+                                {d}
+                              </Chip>
+                            ))}
+                          </div>
+                        </Group>
+                        <Group label="Into">
+                          <div className="flex flex-wrap gap-2">
+                            {TAG_CHOICES.map((t) => (
+                              <Chip
+                                key={t}
+                                on={(active.constraints.likedTags ?? []).includes(t)}
+                                onClick={() => toggleIn("likedTags", t)}
+                              >
+                                {t}
+                              </Chip>
+                            ))}
+                          </div>
+                        </Group>
+                      </div>
+                    </Disclosure>
+                  </div>
+                </div>
+                <div className="mt-6 border-t border-border pt-5">
+                  <div className="text-sm font-medium">Try a plot twist</div>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {TRY_THESE.map((t) => {
+                      const who = members.find((m) => m.id === t.memberId)!;
+                      const done = tried.includes(t.id);
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          disabled={done}
+                          onClick={() => tryThis(t)}
+                          className={cn(
+                            "pressable active:pressable-active tap-target flex items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-left transition-colors",
+                            done
+                              ? "border-primary/40 bg-primary/8"
+                              : "border-border hover:bg-secondary",
+                          )}
+                        >
+                          <span className="text-[0.9375rem]">
+                            “{t.quote}”
+                            <span className="ml-1.5 text-sm text-muted-foreground">
+                              — {nameOf(who)}
+                            </span>
+                          </span>
+                          {done ? (
+                            <Check className="size-4 shrink-0 text-primary" aria-label="Applied" />
+                          ) : (
+                            <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Card>
+            </div>
           </div>
-          <Link
-            to="/auth"
-            search={{ next: "/home", mode: "signup" }}
-            className="pressable active:pressable-active inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-base font-semibold text-primary-foreground hover:opacity-92 sm:w-auto"
-          >
-            Create a group <ArrowRight className="size-4" />
-          </Link>
-        </section>
-      </main>
+
+          {/* 3 — then do it for real */}
+          <section className="mt-10 flex flex-col items-start gap-4 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold tracking-tight">
+                Now do it with your real group
+              </h2>
+              <p className="mt-1 text-base text-muted-foreground">
+                Invite links, parent approvals and saved plans. Free, no app to install.
+              </p>
+            </div>
+            <Link
+              to="/auth"
+              search={{ next: "/home", mode: "signup" }}
+              className="pressable active:pressable-active inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-base font-semibold text-primary-foreground hover:opacity-92 sm:w-auto"
+            >
+              Create a group <ArrowRight className="size-4" />
+            </Link>
+          </section>
+        </main>
+      )}
 
       {/* Phones only: the live result, while the controls are on screen */}
       <AnimatePresence>

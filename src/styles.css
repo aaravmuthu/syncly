@@ -1648,3 +1648,34 @@
     #000 var(--warp-hole)
   );
 }
+
+/* Demo walkthrough (components/quorum/demo/DemoWalkthrough.tsx): one step
+   per screen under the sticky header. */
+.walkthrough {
+  min-height: calc(100svh - 65px - env(safe-area-inset-top, 0px));
+}
+/* The playground arrives in reading order after the walkthrough instead of
+   all at once: heading, intro, then the two columns. */
+.demo-enter > * {
+  animation: demo-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-enter > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+.demo-enter > :nth-child(3) {
+  animation-delay: 0.18s;
+}
+.demo-enter > :nth-child(n + 4) {
+  animation-delay: 0.3s;
+}
+@keyframes demo-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-enter > * {
+    animation: none;
+  }
+}
