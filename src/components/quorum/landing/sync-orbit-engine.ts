@@ -34,6 +34,8 @@ export type OrbitOptions = {
   fontFamily: string;
   /** Render a single settled frame and never animate. */
   still: boolean;
+  /** Touch-first screens (tablets in any orientation) always get the poster. */
+  touch?: boolean;
 };
 
 const COUNT = 8;
@@ -49,6 +51,11 @@ const TILE_H = 640;
 const W_TILES = 2;
 const W_TILE_W = 4096;
 const W_TILE_H = 1536;
+// Below this width (and on touch screens) the cylinder wraps too tightly to
+// read, so the tagline is set flat on a poster behind the cluster instead.
+const COMPACT_BELOW = 1024;
+// The poster's type is drawn at this size and scaled to the screen.
+const POSTER_SIZE = 220;
 
 const VERT = `#version 300 es
 in vec2 aPos;
@@ -58,6 +65,8 @@ const SCENE_FRAG = `#version 300 es
 precision highp float;
 uniform vec2 uRes;
 uniform float uHalfW;
+// Lens shift: raises the whole scene, in screen-plane units.
+uniform float uLift;
 uniform float uSpin;
 uniform float uTiles;
 uniform float uBandH;
@@ -68,6 +77,9 @@ uniform float uWSpin;
 uniform float uWTiles;
 uniform float uWBandH;
 uniform float uWhisperInk;
+uniform sampler2D uPoster;
+// Poster rect in screen-plane units: centre xy, half size zw (zero when off).
+uniform vec4 uPosterRect;
 uniform vec4 uSph[${COUNT}];
 uniform vec3 uBg, uInk, uBody, uSpark, uShadow, uGlowA, uGlowB;
 uniform float uDark;
@@ -106,15 +118,38 @@ float sampleReflected(sampler2D tex, vec3 d, float bandH, float spin, float tile
   return textureLod(tex, uv, 2.5).a * inside;
 }
 
+// The flat poster sits on the image plane, so screen rays read it
+// undistorted; reflections project onto the same plane. Same uniform
+// control flow rule as the band.
+vec2 posterUV(vec3 d, out float inside) {
+  vec2 p = d.xy / max(d.z, 1e-3);
+  vec2 uv = (p - uPosterRect.xy) / (2.0 * max(uPosterRect.zw, vec2(1e-4))) + 0.5;
+  inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0)
+    * step(1e-3, d.z) * step(1e-4, uPosterRect.z);
+  return vec2(uv.x, 1.0 - uv.y);
+}
+
+float posterScreen(vec3 d) {
+  float inside;
+  vec2 uv = posterUV(d, inside);
+  return textureGrad(uPoster, uv, dFdx(uv), dFdy(uv)).a * inside;
+}
+
+float posterReflected(vec3 d) {
+  float inside;
+  vec2 uv = posterUV(d, inside);
+  return textureLod(uPoster, uv, 2.5).a * inside;
+}
+
 // Tagline at full ink, whispers well behind it.
 float textScreen(vec3 d) {
-  float t = sampleScreen(uText, d, uBandH, uSpin, uTiles);
+  float t = max(sampleScreen(uText, d, uBandH, uSpin, uTiles), posterScreen(d));
   float w = sampleScreen(uWhisper, d, uWBandH, uWSpin, uWTiles);
   return max(t, w * uWhisperInk);
 }
 
 float textReflected(vec3 d) {
-  float t = sampleReflected(uText, d, uBandH, uSpin, uTiles);
+  float t = max(sampleReflected(uText, d, uBandH, uSpin, uTiles), posterReflected(d));
   float w = sampleReflected(uWhisper, d, uWBandH, uWSpin, uWTiles);
   return max(t, w * uWhisperInk);
 }
@@ -170,7 +205,7 @@ vec3 sphereColor(int i) { return i == ${SPARK} ? uSpark : uBody; }
 
 void main() {
   vec2 frag = gl_FragCoord.xy;
-  vec2 q = (frag - 0.5 * uRes) / (0.5 * uRes.x) * uHalfW;
+  vec2 q = (frag - 0.5 * uRes) / (0.5 * uRes.x) * uHalfW - vec2(0.0, uLift);
   vec3 ro = vec3(0.0, 0.0, uCamZ);
   vec3 rd = normalize(vec3(q, 1.0));
   float pix = 2.0 * uHalfW / uRes.x;
@@ -317,6 +352,32 @@ void main() {
   outColor = vec4(c, 1.0);
 }`;
 
+/**
+ * Break words into `count` lines whose widest line is as narrow as
+ * possible, so a re-wrapped headline keeps an even shape.
+ */
+function balance(words: string[], count: number, measure: (t: string) => number) {
+  const n = Math.min(count, words.length);
+  let best: string[] = [words.join(" ")];
+  let bestW = Infinity;
+  const walk = (start: number, left: number, acc: string[]) => {
+    if (left === 1) {
+      const lines = [...acc, words.slice(start).join(" ")];
+      const w = Math.max(...lines.map(measure));
+      if (w < bestW) {
+        bestW = w;
+        best = lines;
+      }
+      return;
+    }
+    for (let i = start + 1; i <= words.length - left + 1; i++) {
+      walk(i, left - 1, [...acc, words.slice(start, i).join(" ")]);
+    }
+  };
+  walk(0, n, []);
+  return best;
+}
+
 type Program = { prog: WebGLProgram; u: Record<string, WebGLUniformLocation | null> };
 type Target = { tex: WebGLTexture; fb: WebGLFramebuffer; w: number; h: number };
 
@@ -358,6 +419,7 @@ export class SyncOrbit {
   private out: Program;
   private textTex: WebGLTexture;
   private whisperTex: WebGLTexture;
+  private posterTex: WebGLTexture;
   private sceneRT: Target | null = null;
   private waves: [Target, Target] | null = null;
   private pos = new Float32Array(COUNT * 3);
@@ -372,8 +434,20 @@ export class SyncOrbit {
   private implodeUntil = -1;
   private acc = 0;
   private halfW = 1.19;
-  /** Phones hide the wrapped tagline (the page shows it as text instead). */
-  private tagline = true;
+  /** Lens shift in screen-plane units (see uLift). */
+  private lift = 0;
+  /** Height in px the page's copy covers at the bottom of the scene. */
+  private reserve = 0;
+  /** Phones and tablets set the tagline flat behind the cluster. */
+  private compact = false;
+  /** Lines the poster is broken into, and its drawn size in px. */
+  private posterLines: string[] = [];
+  private posterSize = { w: 1, h: 1 };
+  private posterRect = [0, 0, 0, 0];
+  /** Clear band the whisper rows leave for the tagline, as tile fractions. */
+  private whisperGap = [0.345, 0.655];
+  private cssWidth = 0;
+  private cssHeight = 0;
   private theme!: OrbitTheme;
   private raf = 0;
   private last = 0;
@@ -403,6 +477,7 @@ export class SyncOrbit {
     this.scene = compile(gl, SCENE_FRAG, [
       "uRes",
       "uHalfW",
+      "uLift",
       "uSpin",
       "uTiles",
       "uBandH",
@@ -413,6 +488,8 @@ export class SyncOrbit {
       "uWTiles",
       "uWBandH",
       "uWhisperInk",
+      "uPoster",
+      "uPosterRect",
       "uSph",
       "uBg",
       "uInk",
@@ -450,6 +527,7 @@ export class SyncOrbit {
 
     this.textTex = gl.createTexture()!;
     this.whisperTex = gl.createTexture()!;
+    this.posterTex = gl.createTexture()!;
     this.drawText();
 
     const rand = seeded(7);
@@ -468,13 +546,6 @@ export class SyncOrbit {
     if (!this.running) this.render();
   }
 
-  /** Show or hide the wrapped tagline; the whisper rows stay either way. */
-  setTagline(show: boolean) {
-    if (show === this.tagline) return;
-    this.tagline = show;
-    this.drawText();
-  }
-
   /** Redraw the wrapped text, e.g. once the web font has loaded. */
   drawText() {
     const gl = this.gl;
@@ -491,14 +562,95 @@ export class SyncOrbit {
     const [a, b] = this.opts.lines;
     const lead = size * 0.98;
     const top = TILE_H / 2 - lead + size * 0.74;
-    if (this.tagline) {
+    if (!this.compact) {
       ctx.fillText(a, TILE_W / 2, top);
       ctx.fillText(b, TILE_W / 2, top + lead);
     }
 
     this.upload(this.textTex, c);
+    this.upload(this.posterTex, this.drawPoster(), true);
+    this.layoutPoster();
     this.upload(this.whisperTex, this.drawWhispers());
     if (!this.running && this.theme) this.render();
+  }
+
+  /**
+   * The flat tagline for narrow screens: the words re-broken into balanced
+   * lines (three on phones, two on tablets), centred like the page's type.
+   */
+  private drawPoster() {
+    const c = document.createElement("canvas");
+    const ctx = c.getContext("2d")!;
+    const size = POSTER_SIZE;
+    const font = `${this.opts.fontWeight} ${size}px ${this.opts.fontFamily}`;
+    const spacing = `${-0.03 * size}px`;
+    const setup = () => {
+      ctx.font = font;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = "#fff";
+      if ("letterSpacing" in ctx) (ctx as { letterSpacing: string }).letterSpacing = spacing;
+    };
+    if (!this.compact) {
+      c.width = c.height = 1;
+      this.posterLines = [];
+      return c;
+    }
+    setup();
+    const lines = balance(
+      this.opts.lines.join(" ").split(/\s+/),
+      this.cssWidth < 640 ? 3 : 2,
+      (t) => ctx.measureText(t).width,
+    );
+    const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
+    const lead = size * 1.02;
+    const pad = size * 0.12;
+    c.width = Math.ceil(widest + pad * 2);
+    c.height = Math.ceil(lead * (lines.length - 1) + size * 1.06 + pad * 2);
+    // Resizing the canvas resets its state.
+    setup();
+    lines.forEach((l, i) => ctx.fillText(l, c.width / 2, pad + size * 0.86 + lead * i));
+    this.posterLines = lines;
+    this.posterSize = { w: c.width, h: c.height };
+    return c;
+  }
+
+  /**
+   * Fit the poster to the screen: most of the width, capped so type never
+   * outgrows a tablet, centred on the cluster. The whisper rows open up
+   * around it.
+   */
+  private layoutPoster() {
+    if (!this.compact || !this.posterLines.length || !this.cssWidth) {
+      this.posterRect = [0, 0, 0, 0];
+      return this.setWhisperGap([0.345, 0.655]);
+    }
+    const maxType = this.cssWidth < 640 ? 84 : 112;
+    const { w, h } = this.posterSize;
+    // Share of the screen width the poster spans, and never more than about
+    // a third of the scene's height, so short screens keep room for the copy.
+    const frac = Math.min(0.9, (maxType * w) / (POSTER_SIZE * this.cssWidth));
+    const halfH = (this.halfW * this.cssHeight) / this.cssWidth;
+    const hw = Math.min(this.halfW * frac, (0.34 * halfH * w) / h);
+    const hh = (hw * h) / w;
+    const cy = 0.02;
+    this.posterRect = [0, cy, hw, hh];
+    // Whisper band rows: tile fraction f = 0.5 - (y - bandY) / (2 * bandH).
+    const bandH = ((2 * Math.PI) / W_TILES / (W_TILE_W / W_TILE_H)) * 0.5;
+    const f = (y: number) => 0.5 - (y - 0.02) / (2 * bandH);
+    const margin = 0.03;
+    return this.setWhisperGap([
+      Math.max(0.2, f(cy + hh) - margin),
+      Math.min(0.8, f(cy - hh) + margin),
+    ]);
+  }
+
+  /** True when the gap moved enough that the whisper rows need redrawing. */
+  private setWhisperGap(gap: number[]) {
+    const [a, b] = this.whisperGap;
+    if (Math.abs(a - gap[0]) < 0.005 && Math.abs(b - gap[1]) < 0.005) return false;
+    this.whisperGap = gap;
+    return true;
   }
 
   /**
@@ -517,9 +669,8 @@ export class SyncOrbit {
     if ("letterSpacing" in ctx) (ctx as { letterSpacing: string }).letterSpacing = "-2px";
     const rows = this.opts.whispers;
     const above = Math.ceil(rows.length / 2);
-    // Rows hug the tagline: the middle third of the band is left clear for it.
-    const gapTop = 0.345,
-      gapBottom = 0.655;
+    // Rows hug the tagline: the middle of the band is left clear for it.
+    const [gapTop, gapBottom] = this.whisperGap;
     const pitch = 0.085;
     rows.forEach((row, i) => {
       const v =
@@ -552,7 +703,7 @@ export class SyncOrbit {
     return c;
   }
 
-  private upload(tex: WebGLTexture, source: HTMLCanvasElement) {
+  private upload(tex: WebGLTexture, source: HTMLCanvasElement, clamp = false) {
     const gl = this.gl;
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -560,24 +711,44 @@ export class SyncOrbit {
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, clamp ? gl.CLAMP_TO_EDGE : gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
     if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, 8);
   }
 
-  resize(width: number, height: number, dpr: number) {
+  /** `reserve`: px at the bottom covered by the page's copy and buttons. */
+  resize(width: number, height: number, dpr: number, reserve = 0) {
     const gl = this.gl;
     this.dpr = dpr;
     const w = Math.max(1, Math.round(width * dpr));
     const h = Math.max(1, Math.round(height * dpr));
-    if (this.canvas.width === w && this.canvas.height === h && this.sceneRT) return;
+    const same = this.canvas.width === w && this.canvas.height === h && this.sceneRT;
+    if (same && reserve === this.reserve) return;
+    this.reserve = reserve;
     this.canvas.width = w;
     this.canvas.height = h;
     // Portrait screens get a narrower field of view so the cluster and the
     // text keep their presence instead of shrinking to the width.
     const aspect = width / height;
     this.halfW = 1.19 * Math.pow(Math.min(1, aspect), 0.95);
+    const wasPhone = this.cssWidth < 640;
+    this.cssWidth = width;
+    this.cssHeight = height;
+    const compact = width < COMPACT_BELOW || !!this.opts.touch;
+    if (compact !== this.compact || (compact && wasPhone !== width < 640)) {
+      this.compact = compact;
+      this.drawText();
+    } else if (this.layoutPoster()) {
+      this.upload(this.whisperTex, this.drawWhispers());
+    }
+    // With the tagline in the scene, centre the scene in the space above
+    // the copy rather than in the whole hero.
+    this.lift = this.compact ? ((reserve / 2) * 2 * this.halfW) / width : 0;
+    if (same) {
+      if (!this.running && this.theme) this.render();
+      return;
+    }
 
     if (this.sceneRT) this.freeTarget(this.sceneRT);
     this.sceneRT = this.makeTarget(w, h, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, gl.LINEAR);
@@ -662,7 +833,7 @@ export class SyncOrbit {
     const h = this.canvas.height / this.dpr;
     return {
       x: 0.5 + cx / depth / (2 * this.halfW),
-      y: 0.5 - (cy / depth / (2 * this.halfW)) * (w / h),
+      y: 0.5 - ((cy / depth + this.lift) / (2 * this.halfW)) * (w / h),
       r: 0.55 / depth / (2 * this.halfW),
     };
   }
@@ -702,7 +873,7 @@ export class SyncOrbit {
     const w = this.canvas.width / this.dpr;
     const h = this.canvas.height / this.dpr;
     const px = (x - 0.5) * 2 * this.halfW;
-    const py = (0.5 - y) * 2 * this.halfW * (h / w);
+    const py = (0.5 - y) * 2 * this.halfW * (h / w) - this.lift;
     return [px * -CAMERA_Z, py * -CAMERA_Z];
   }
 
@@ -859,6 +1030,7 @@ export class SyncOrbit {
     gl.useProgram(s.prog);
     gl.uniform2f(s.u.uRes, W, H);
     gl.uniform1f(s.u.uHalfW, this.halfW);
+    gl.uniform1f(s.u.uLift, this.lift);
     gl.uniform1f(s.u.uSpin, this.opts.still ? 0.35 : 0.35 + this.time * 0.09);
     gl.uniform1f(s.u.uTiles, TILES);
     // Tile aspect on the cylinder: arc length 2π/TILES over TILE_W/TILE_H.
@@ -891,6 +1063,10 @@ export class SyncOrbit {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.whisperTex);
     gl.uniform1i(s.u.uWhisper, 1);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this.posterTex);
+    gl.uniform1i(s.u.uPoster, 2);
+    gl.uniform4fv(s.u.uPosterRect, this.posterRect);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     // 2. ripples
