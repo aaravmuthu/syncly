@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Modal } from "@/components/quorum/Modal";
+import { HoldToConfirmButton } from "@/components/quorum/HoldToConfirmButton";
 import { Button, Card, inputClass } from "@/components/quorum/ui";
 import { deleteGroup, leaveGroup, transferGroupOwnership } from "@/lib/quorum/group.functions";
 
@@ -187,14 +188,14 @@ export function GroupSettings({
                 <p className="text-sm text-muted-foreground">
                   You're the only member left, so leaving means deleting the group.
                 </p>
-                <Button
-                  variant="danger"
+                <HoldToConfirmButton
                   className="w-full"
                   loading={remove.isPending}
-                  onClick={() => remove.mutate({ data: { groupId } })}
+                  confirmedContent="Deleting…"
+                  onConfirm={() => remove.mutate({ data: { groupId } })}
                 >
-                  Delete group
-                </Button>
+                  Hold to delete group
+                </HoldToConfirmButton>
               </>
             )
           ) : (
@@ -202,14 +203,14 @@ export function GroupSettings({
               <p className="text-sm text-muted-foreground">
                 Your votes and private constraints in this group's plans will be cleared.
               </p>
-              <Button
-                variant="danger"
+              <HoldToConfirmButton
                 className="w-full"
                 loading={leave.isPending}
-                onClick={() => leave.mutate({ data: { groupId } })}
+                confirmedContent="Leaving…"
+                onConfirm={() => leave.mutate({ data: { groupId } })}
               >
-                Leave group
-              </Button>
+                Hold to leave group
+              </HoldToConfirmButton>
             </>
           )}
         </div>
@@ -225,14 +226,14 @@ export function GroupSettings({
             <Button variant="outline" className="flex-1" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
-            <Button
-              variant="danger"
+            <HoldToConfirmButton
               className="flex-1"
               loading={remove.isPending}
-              onClick={() => remove.mutate({ data: { groupId } })}
+              confirmedContent="Deleting…"
+              onConfirm={() => remove.mutate({ data: { groupId } })}
             >
-              Delete
-            </Button>
+              Hold to delete
+            </HoldToConfirmButton>
           </div>
         </div>
       </Modal>

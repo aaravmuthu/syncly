@@ -10,6 +10,8 @@ import { uploadGroupImage } from "@/lib/quorum/group.functions";
 import { COVER_THEMES, GROUP_EMOJI, GROUP_PRESET_IMAGES, coverTheme } from "@/lib/quorum/covers";
 import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
+import { Upload } from "lucide-react";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const qc = useQueryClient();
@@ -123,14 +125,15 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
                 e.target.value = "";
               }}
             />
-            <Button
+            <DynamicButton
+              icon={<Upload aria-hidden />}
               type="button"
               variant="outline"
               loading={uploading}
               onClick={() => fileRef.current?.click()}
             >
               {uploading ? "Uploading…" : "Upload"}
-            </Button>
+            </DynamicButton>
             {GROUP_PRESET_IMAGES.map((url, index) => (
               <button
                 key={url}
@@ -220,7 +223,8 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
         </div>
       </div>
 
-      <Button
+      <DynamicButton
+        width="full"
         className="mt-4 w-full"
         loading={create.isPending}
         disabled={!name.trim() || uploading}
@@ -231,7 +235,7 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
         }
       >
         {create.isPending ? "Creating…" : "Create squad"}
-      </Button>
+      </DynamicButton>
     </Modal>
   );
 }

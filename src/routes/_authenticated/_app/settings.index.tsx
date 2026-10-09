@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTheme, type ThemeChoice } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/")({
   loader: ({ context }) => {
@@ -320,9 +321,9 @@ function SettingsHub() {
                 ) : null
               }
             />
-            <Button loading={save.isPending} onClick={() => save.mutate({ data: form })}>
+            <DynamicButton loading={save.isPending} onClick={() => save.mutate({ data: form })}>
               {save.isPending ? "Saving…" : "Save changes"}
-            </Button>
+            </DynamicButton>
           </div>
         ) : null}
       </Card>

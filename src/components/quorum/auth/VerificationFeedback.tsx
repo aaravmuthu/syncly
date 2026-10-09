@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Button } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 import { VerificationContext } from "./verification-context";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 // Screen-out overlaps the next step's entrance, as in the motion spec.
 const HANDOFF_MS = 120;
@@ -112,7 +112,7 @@ export function VerificationFeedback({
               </p>
             )}
             {offerButton && (
-              <Button
+              <DynamicButton
                 type="button"
                 variant="ghost"
                 loading={busy}
@@ -120,7 +120,7 @@ export function VerificationFeedback({
                 className="auth-step"
               >
                 {error ? "Try continuing again" : "Continue"}
-              </Button>
+              </DynamicButton>
             )}
           </div>
         )}

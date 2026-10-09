@@ -8,6 +8,7 @@ import { Button, inputClass } from "./ui";
 import { isValidCode, normalizeCode } from "@/lib/quorum/invite";
 import { joinGroup } from "@/lib/quorum/plan.functions";
 import { haptic } from "@/lib/quorum/haptics";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [code, setCode] = useState("");
@@ -55,7 +56,8 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
         }}
       />
 
-      <Button
+      <DynamicButton
+        width="full"
         className="mt-4 w-full"
         loading={join.isPending}
         orb="connecting"
@@ -63,7 +65,7 @@ export function JoinGroupModal({ open, onClose }: { open: boolean; onClose: () =
         onClick={() => join.mutate({ data: { code } })}
       >
         {join.isPending ? "Joining…" : "Join group"}
-      </Button>
+      </DynamicButton>
     </Modal>
   );
 }

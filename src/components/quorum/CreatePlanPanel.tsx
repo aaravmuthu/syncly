@@ -22,6 +22,7 @@ import { inviteLink, shareOrCopy } from "@/lib/quorum/invite";
 import { isValidZip } from "@/lib/quorum/location";
 import { localToInstant } from "@/lib/quorum/plan-time";
 import { EST_COST_PRESETS, estCostLabel } from "@/lib/quorum/estcost";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 /**
  * Frictionless, map-centric plan creation: saved defaults, a Fair-Point venue
@@ -238,7 +239,9 @@ export function CreatePlanPanel({
           placeholder="Post-game dinner and bowling nearby before 10 PM curfew"
         />
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button
+          <DynamicButton
+            width="full"
+            icon={<Rocket aria-hidden />}
             className="flex-1"
             loading={launch.isPending}
             orb="shaping"
@@ -256,9 +259,8 @@ export function CreatePlanPanel({
               })
             }
           >
-            <Rocket className="h-4 w-4" aria-hidden />
             {launch.isPending ? "Building your plan…" : "Launch plan now"}
-          </Button>
+          </DynamicButton>
           <Button
             variant="outline"
             onClick={() => {
@@ -309,13 +311,14 @@ export function CreatePlanPanel({
       </div>
 
       {/* 4. Quick edit form */}
-      <button
+      <DynamicButton
+        variant="plain"
         type="button"
         className="mt-4 text-xs font-medium text-primary underline-offset-4 hover:underline"
         onClick={() => setShowForm((v) => !v)}
       >
         {showForm ? "Hide plan details" : "Edit plan details manually"}
-      </button>
+      </DynamicButton>
 
       {showForm ? (
         <div className="mt-4 space-y-4">
@@ -481,7 +484,8 @@ export function CreatePlanPanel({
           </p>
 
           <div className="flex flex-wrap gap-2">
-            <Button
+            <DynamicButton
+              width="full"
               className="flex-1"
               loading={create.isPending}
               disabled={!title.trim()}
@@ -506,7 +510,7 @@ export function CreatePlanPanel({
               }}
             >
               {create.isPending ? "Creating…" : "Create plan"}
-            </Button>
+            </DynamicButton>
             <Button
               variant="outline"
               onClick={() =>

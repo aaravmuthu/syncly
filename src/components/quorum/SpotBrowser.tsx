@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { VenueMap } from "@/components/quorum/VenueMap";
@@ -23,6 +23,7 @@ import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
 import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 import { firstName } from "@/lib/quorum/names";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 /**
  * Live restaurant / activity picker. Searches Geoapify around the member's
@@ -335,13 +336,14 @@ export function SpotBrowser({
                 </button>
                 <div className="mt-3 flex items-center gap-3">
                   {planId && canAdd ? (
-                    <Button
+                    <DynamicButton
+                      icon={added.includes(s.key) ? <Check aria-hidden /> : <Plus aria-hidden />}
                       variant={added.includes(s.key) ? "outline" : "primary"}
                       disabled={add.isPending || added.includes(s.key)}
                       onClick={() => add.mutate({ planId, spot: s })}
                     >
-                      {added.includes(s.key) ? "Added ✓" : "Add to plan"}
-                    </Button>
+                      {added.includes(s.key) ? "Added" : "Add to plan"}
+                    </DynamicButton>
                   ) : null}
                   <a
                     href={directionsUrl({
@@ -420,13 +422,14 @@ export function SpotBrowser({
           detail ? (
             <>
               {planId && canAdd ? (
-                <Button
+                <DynamicButton
+                  icon={added.includes(detail.key) ? <Check aria-hidden /> : <Plus aria-hidden />}
                   variant={added.includes(detail.key) ? "outline" : "primary"}
                   disabled={add.isPending || added.includes(detail.key)}
                   onClick={() => add.mutate({ planId, spot: detail })}
                 >
-                  {added.includes(detail.key) ? "Added ✓" : "Add to plan"}
-                </Button>
+                  {added.includes(detail.key) ? "Added" : "Add to plan"}
+                </DynamicButton>
               ) : null}
               <button
                 type="button"
@@ -504,13 +507,14 @@ function SavedSpotRow({
       ) : null}
       <div className="mt-3 flex items-center gap-3">
         {planId && canAdd ? (
-          <Button
+          <DynamicButton
+            icon={added ? <Check aria-hidden /> : <Plus aria-hidden />}
             variant={added ? "outline" : "primary"}
             disabled={adding || added}
             onClick={() => onAdd(asBrowseSpot)}
           >
-            {added ? "Added ✓" : "Add to plan"}
-          </Button>
+            {added ? "Added" : "Add to plan"}
+          </DynamicButton>
         ) : null}
         <a
           href={directionsUrl({

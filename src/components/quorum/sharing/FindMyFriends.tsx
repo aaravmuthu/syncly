@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Modal } from "@/components/quorum/Modal";
+import { HoldToConfirmButton } from "@/components/quorum/HoldToConfirmButton";
 import { Button, Card, Empty, Pill, Skeleton } from "@/components/quorum/ui";
 import {
   getFriendPins,
@@ -44,6 +45,7 @@ import {
 import { useFriends } from "@/lib/quorum/friends-context";
 import { cn } from "@/lib/utils";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 const ago = (iso: string) => {
   const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
@@ -147,15 +149,17 @@ export function FindMyFriends() {
           <Button variant="outline" onClick={() => setSheet("manage")}>
             <Users className="h-4 w-4" aria-hidden /> Manage
           </Button>
-          <Button
+          <DynamicButton
+            stateKey="ghost"
+            icon={<Ghost aria-hidden />}
             variant={gh?.active ? "primary" : "ghost"}
             onClick={() =>
               gh?.active ? ghost.mutate({ data: { choice: "resume" } }) : setSheet("ghost")
             }
             loading={ghost.isPending}
           >
-            <Ghost className="h-4 w-4" aria-hidden /> {gh?.active ? "Go live" : "Ghost"}
-          </Button>
+            {gh?.active ? "Go live" : "Ghost"}
+          </DynamicButton>
         </div>
       </Card>
 
@@ -433,14 +437,14 @@ export function FindMyFriends() {
                 Share back with {focus.name}
               </Button>
             )}
-            <Button
-              variant="danger"
+            <HoldToConfirmButton
               className="w-full"
               loading={unwatch.isPending}
-              onClick={() => unwatch.mutate({ data: { ownerProfileId: focus.profileId } })}
+              confirmedContent="Removing…"
+              onConfirm={() => unwatch.mutate({ data: { ownerProfileId: focus.profileId } })}
             >
-              Remove from my map
-            </Button>
+              Hold to remove from my map
+            </HoldToConfirmButton>
           </div>
         ) : null}
       </Modal>

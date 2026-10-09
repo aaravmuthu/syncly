@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { reverseZip, suggestPlaces } from "@/lib/quorum/location.functions";
 import { inputClass } from "@/components/quorum/ui";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export type PickedPlace = {
   address: string;
@@ -232,15 +233,17 @@ export function AddressPicker({
         ) : null}
       </div>
 
-      <button
+      <DynamicButton
+        variant="plain"
+        stateKey="pin"
+        icon={<span aria-hidden>📍</span>}
         type="button"
         onClick={useMyLocation}
         disabled={locating}
         className="hit-slop mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
       >
-        <span aria-hidden>📍</span>
         {locating ? "Finding you…" : "Use my current location"}
-      </button>
+      </DynamicButton>
       {error ? (
         <p id={`${listId}-error`} role="status" className="mt-2 text-xs text-destructive">
           {error}

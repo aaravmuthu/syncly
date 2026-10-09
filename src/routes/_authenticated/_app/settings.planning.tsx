@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { MapPinned } from "lucide-react";
 import { SubpageHeader } from "@/components/quorum/AppShell";
 import { PushEnter } from "@/components/quorum/interactions";
-import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
+import { Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { SectionHeader } from "@/components/quorum/settings/shared";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { isValidZip } from "@/lib/quorum/location";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { TimePicker } from "@/components/quorum/TimePicker";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/planning")({
   loader: ({ context }) => {
@@ -135,7 +136,7 @@ function PlanningPage() {
       </Card>
 
       <div className="mt-5">
-        <Button
+        <DynamicButton
           loading={save.isPending}
           onClick={() => {
             const zip = String(form["zip_code"] ?? "").trim();
@@ -155,7 +156,7 @@ function PlanningPage() {
           }}
         >
           {save.isPending ? "Saving…" : "Save changes"}
-        </Button>
+        </DynamicButton>
       </div>
     </PushEnter>
   );

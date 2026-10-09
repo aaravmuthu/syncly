@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button, Card, Pill } from "@/components/quorum/ui";
-import { CheckCircle2, ChevronDown, MapPin, Share2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, MapPin, Share2, Siren } from "lucide-react";
 import {
   arrivedSafely,
   getMyCheckins,
@@ -12,6 +12,7 @@ import {
   respondToCheckin,
   sendDelay,
 } from "@/lib/quorum/guardian.functions";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 const DELAY_REASONS = [
   { label: "Traffic", minutes: 15 },
@@ -212,7 +213,9 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
             <Button variant="outline" onClick={() => setDelayOpen((v) => !v)}>
               Running late
             </Button>
-            <Button
+            <DynamicButton
+              icon={<Siren aria-hidden />}
+              stateKey="sos"
               variant={sosArmed ? "danger" : "outline"}
               loading={sos.isPending}
               onClick={async () => {
@@ -231,7 +234,7 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
               }}
             >
               {sosArmed ? "Tap again to send SOS" : "SOS"}
-            </Button>
+            </DynamicButton>
           </div>
 
           {delayOpen ? (
