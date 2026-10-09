@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react";
 import { cn } from "@/lib/utils";
 import type { OrbitTheme, SyncOrbit as Engine } from "./sync-orbit-engine";
 import type { WarpOrigin } from "./warp";
@@ -46,12 +46,15 @@ export function SyncOrbit({
   className,
   onFallback,
   controlRef,
+  footRef,
 }: {
   lines: [string, string];
   whispers: string[][];
   className?: string;
   onFallback?: () => void;
   controlRef?: MutableRefObject<OrbitControl | null>;
+  /** The copy over the bottom of the scene; the scene centres above it. */
+  footRef?: RefObject<HTMLElement | null>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [live, setLive] = useState(false);
@@ -62,6 +65,8 @@ export function SyncOrbit({
   const [first, second] = lines;
   // Read once at mount; the rows are static copy.
   const whispersRef = useRef(whispers);
+  const foot = useRef(footRef);
+  foot.current = footRef;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -82,6 +87,7 @@ export function SyncOrbit({
             fontWeight: "600",
             fontFamily: '"Bricolage Grotesque", ui-serif, Georgia, serif',
             still,
+            touch: coarse,
           });
         } catch {
           fallbackRef.current?.();
@@ -112,15 +118,15 @@ export function SyncOrbit({
         // Phones render at a lower density: every pixel traces eight spheres.
         const sizeTo = () => {
           const rect = canvas.getBoundingClientRect();
-          // Below lg the band wraps too tightly to read; index.tsx shows the
-          // h1 there instead, on the same breakpoint.
-          e.setTagline(window.matchMedia("(min-width: 1024px)").matches);
           const cap = coarse || rect.width < 768 ? 1.5 : 1.75;
-          e.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, cap));
+          const reserve = foot.current?.current?.offsetHeight ?? 0;
+          e.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, cap), reserve);
         };
         sizeTo();
         const ro = new ResizeObserver(sizeTo);
         ro.observe(canvas);
+        const footEl = foot.current?.current;
+        if (footEl) ro.observe(footEl);
         cleanups.push(() => ro.disconnect());
 
         // Follow the site theme toggle.

@@ -1603,9 +1603,9 @@
     transition: none;
   }
 }
-/* Below lg the headline is page text above the spheres (index.tsx), so
-   short phones need extra height to keep it, the scene and the copy apart. */
-@media (max-width: 1023.98px) {
+/* Phones: the tagline sits behind the spheres in the scene, so short
+   screens need enough height to keep it clear of the copy below. */
+@media (max-width: 639.98px) {
   .orbit-hero {
     min-height: 720px;
   }

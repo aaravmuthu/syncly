@@ -65,6 +65,7 @@ function Landing() {
   const [flat, setFlat] = useState(false);
   const router = useRouter();
   const orbit = useRef<OrbitControl | null>(null);
+  const heroFoot = useRef<HTMLDivElement>(null);
   const warping = useRef(false);
 
   // "Try the demo" flies you there: the spheres collapse into one, it grows
@@ -127,20 +128,21 @@ function Landing() {
             className="absolute inset-0 size-full"
             onFallback={() => setFlat(true)}
             controlRef={orbit}
+            footRef={heroFoot}
           />
           <h1
             id="hero-title"
             className={
               flat
                 ? "relative mx-auto max-w-[980px] px-5 pt-[18svh] text-center text-[clamp(40px,6.4vw,80px)] leading-[1.05] font-semibold tracking-[-0.02em] text-balance"
-                : // Below lg the wrapped band is hidden (SyncOrbit), so the
-                  // headline sits above the spheres as real text.
-                  "pointer-events-none relative z-[1] mx-auto max-w-6xl px-5 pt-[clamp(20px,5svh,56px)] text-[clamp(42px,11vw,76px)] leading-[1.02] font-semibold tracking-[-0.025em] text-balance lg:sr-only"
+                : // The scene draws the tagline behind the spheres at every
+                  // size (wrapped on desktop, flat below lg).
+                  "sr-only"
             }
           >
             {BRAND.tagline}
           </h1>
-          <div className="orbit-hero__foot">
+          <div ref={heroFoot} className="orbit-hero__foot">
             <p className="max-w-[34ch] text-lg leading-[1.45] text-pretty text-muted-foreground sm:text-[clamp(17px,1.5vw,20px)] sm:leading-[1.4]">
               {DESCRIPTION}
             </p>
