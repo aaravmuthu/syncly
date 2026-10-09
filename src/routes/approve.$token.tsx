@@ -139,6 +139,8 @@ function TokenApproval({ token }: { token: string }) {
               </Button>
               <div className="space-y-2">
                 <input
+                  aria-label="Approval condition"
+                  enterKeyHint="done"
                   className={inputClass}
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
@@ -165,7 +167,11 @@ function TokenApproval({ token }: { token: string }) {
               >
                 Decline
               </Button>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              ) : null}
             </div>
           )}
         </Card>
@@ -177,8 +183,8 @@ function TokenApproval({ token }: { token: string }) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4 border-b border-border pb-2.5 last:border-0">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right font-medium">{value}</dd>
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-right font-medium [overflow-wrap:anywhere]">{value}</dd>
     </div>
   );
 }

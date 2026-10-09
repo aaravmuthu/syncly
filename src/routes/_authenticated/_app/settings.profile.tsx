@@ -12,6 +12,7 @@ import { getMe, saveProfile, uploadAvatar } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { MobileActions } from "@/components/quorum/MobileActions";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/profile")({
@@ -286,7 +287,7 @@ function ProfilePage() {
         </div>
       </Card>
 
-      <div className="mt-5">
+      <MobileActions className="mt-5">
         <DynamicButton
           loading={save.isPending}
           onClick={() =>
@@ -301,7 +302,7 @@ function ProfilePage() {
         >
           {save.isPending ? "Saving…" : "Save changes"}
         </DynamicButton>
-      </div>
+      </MobileActions>
     </PushEnter>
   );
 }

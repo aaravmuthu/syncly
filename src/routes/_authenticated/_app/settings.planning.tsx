@@ -13,6 +13,7 @@ import { isValidZip } from "@/lib/quorum/location";
 import { PlaceAutocomplete } from "@/components/quorum/PlaceAutocomplete";
 import { TimePicker } from "@/components/quorum/TimePicker";
 import { AddressPicker } from "@/components/quorum/AddressPicker";
+import { MobileActions } from "@/components/quorum/MobileActions";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/planning")({
@@ -135,7 +136,7 @@ function PlanningPage() {
         </div>
       </Card>
 
-      <div className="mt-5">
+      <MobileActions className="mt-5">
         <DynamicButton
           loading={save.isPending}
           onClick={() => {
@@ -157,7 +158,7 @@ function PlanningPage() {
         >
           {save.isPending ? "Saving…" : "Save changes"}
         </DynamicButton>
-      </div>
+      </MobileActions>
     </PushEnter>
   );
 }

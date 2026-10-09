@@ -77,7 +77,22 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Create a squad">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Create a squad"
+      footer={
+        <DynamicButton
+          icon={<Upload aria-hidden />}
+          type="button"
+          variant="outline"
+          loading={uploading}
+          onClick={() => fileRef.current?.click()}
+        >
+          {uploading ? "Uploading…" : "Upload"}
+        </DynamicButton>
+      }
+    >
       {create.isError ? (
         <p role="alert" className="mb-3 text-sm text-destructive">
           Couldn't create that squad. {create.error.message}
@@ -85,7 +100,7 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
       ) : null}
       <div className={cn("relative h-24 overflow-hidden rounded-2xl", theme.banner)}>
         <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />
-        <div className="absolute bottom-3 left-3 flex items-center gap-3">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3">
           <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-background/70 text-2xl ring-1 ring-white/20 backdrop-blur">
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -93,7 +108,7 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
               emoji
             )}
           </span>
-          <span className="font-display text-base font-semibold text-white drop-shadow">
+          <span className="min-w-0 truncate font-display text-base font-semibold text-white drop-shadow">
             {name.trim() || "New squad"}
           </span>
         </div>
@@ -125,15 +140,7 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
                 e.target.value = "";
               }}
             />
-            <DynamicButton
-              icon={<Upload aria-hidden />}
-              type="button"
-              variant="outline"
-              loading={uploading}
-              onClick={() => fileRef.current?.click()}
-            >
-              {uploading ? "Uploading…" : "Upload"}
-            </DynamicButton>
+
             {GROUP_PRESET_IMAGES.map((url, index) => (
               <button
                 key={url}

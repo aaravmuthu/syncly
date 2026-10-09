@@ -1,3 +1,4 @@
+import { MobileActions } from "@/components/quorum/MobileActions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -321,9 +322,11 @@ function SettingsHub() {
                 ) : null
               }
             />
-            <DynamicButton loading={save.isPending} onClick={() => save.mutate({ data: form })}>
-              {save.isPending ? "Saving…" : "Save changes"}
-            </DynamicButton>
+            <MobileActions>
+              <DynamicButton loading={save.isPending} onClick={() => save.mutate({ data: form })}>
+                {save.isPending ? "Saving…" : "Save changes"}
+              </DynamicButton>
+            </MobileActions>
           </div>
         ) : null}
       </Card>

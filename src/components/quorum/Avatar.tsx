@@ -36,6 +36,9 @@ export function Avatar({
           className="h-full w-full object-cover"
           onError={() => setBroken(true)}
           loading="lazy"
+          decoding="async"
+          width={size}
+          height={size}
         />
       ) : (
         <span aria-hidden>{emoji ?? "🙂"}</span>

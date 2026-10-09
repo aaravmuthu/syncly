@@ -220,7 +220,7 @@ export function BubbleSurface({
             <div
               role="group"
               aria-label="React"
-              className="flex items-center gap-0.5 rounded-full border border-border bg-popover p-1 shadow-xl"
+              className="flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-0.5 rounded-3xl border border-border bg-popover p-1 shadow-xl"
             >
               {reactionEmojis.map((emoji) => (
                 <button
@@ -302,7 +302,7 @@ export function ReactionChips({
             onClick={() => onToggle(emoji)}
             aria-pressed={myReactions.has(emoji)}
             className={cn(
-              "transition-none rounded-full border px-2 py-0.5 text-caption leading-tight",
+              "tap-target transition-none rounded-full border px-2 py-0.5 text-caption leading-tight",
               myReactions.has(emoji)
                 ? "border-primary/50 bg-primary/15 text-primary"
                 : "border-border bg-secondary/60 text-muted-foreground",

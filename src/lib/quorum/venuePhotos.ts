@@ -88,6 +88,14 @@ export function venuePhoto(v: {
   return v.kind === "activity" ? DEFAULT_ACTIVITY : DEFAULT_FOOD;
 }
 
+/** Let the browser select a smaller preview on phones and slow connections. */
+export function venuePhotoSrcSet(v: Parameters<typeof venuePhoto>[0]): string {
+  const photo = venuePhoto(v);
+  return [400, 800, 1200]
+    .map((width) => `${photo.replace(/w=\d+/, `w=${width}`)} ${width}w`)
+    .join(", ");
+}
+
 function hash(str: string): number {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) {

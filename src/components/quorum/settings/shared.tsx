@@ -20,7 +20,7 @@ export function SectionHeader({
       <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         <Icon className="size-4" aria-hidden />
       </span>
-      <div>
+      <div className="min-w-0">
         <h2 className="font-display text-base font-semibold">{title}</h2>
         {subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p> : null}
       </div>
@@ -52,7 +52,7 @@ export function ToggleCard({
         type={onToggle ? "button" : undefined}
         onClick={onToggle}
         className={cn(
-          "flex flex-1 items-center gap-4",
+          "min-w-0 min-h-11 flex flex-1 items-center gap-4",
           onToggle && "text-left transition active:scale-[0.99]",
         )}
       >

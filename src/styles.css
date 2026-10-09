@@ -255,6 +255,111 @@
   --chrome-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
 }
 
+/* Shared form footers retain their footprint: fields can scroll clear of them. */
+.mobile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+@media (max-width: 63.99rem), (max-width: 64rem) and (max-height: 31rem), (pointer: coarse) {
+  .mobile-actions {
+    position: sticky;
+    bottom: var(--mobile-actions-bottom, var(--keyboard-inset, 0px));
+    z-index: 20;
+    padding-block: 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
+    background: var(--mobile-actions-surface, var(--card));
+    border-top: 1px solid var(--border);
+  }
+  .mobile-actions > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .mobile-actions > :last-child {
+    flex: 1 1 8rem;
+  }
+  html {
+    scroll-padding-block: var(--chrome-top) calc(var(--chrome-bottom) + 6rem);
+  }
+  /* Outside the base layer so text-sm utilities cannot re-enable iOS zoom. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: max(1rem, 1em);
+    min-width: 0;
+    max-width: 100%;
+  }
+  .app-shell {
+    --mobile-actions-bottom: var(--chrome-bottom);
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  }
+  html[data-keyboard-open="true"] .app-shell {
+    --mobile-actions-bottom: var(--keyboard-inset, 0px);
+  }
+  html[data-keyboard-open="true"] .mobile-tab-bar {
+    display: none;
+  }
+  html[data-keyboard-open="true"] .auth-avatar {
+    position: static;
+  }
+}
+
+@media (min-width: 48rem) {
+  .app-shell {
+    --mobile-actions-bottom: var(--keyboard-inset, 0px);
+  }
+}
+
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: max(1rem, 1em);
+  }
+}
+
+.mobile-sheet {
+  max-height: min(
+    88dvh,
+    calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - 1rem)
+  );
+  padding-inline: max(1.25rem, env(safe-area-inset-left, 0px))
+    max(1.25rem, env(safe-area-inset-right, 0px));
+}
+.mobile-sheet-scroll {
+  scroll-padding-block: 1rem 6rem;
+}
+
+.floating-chat {
+  --chat-bottom: var(--plan-form-bottom, var(--chrome-bottom));
+}
+@media (max-width: 63.99rem) {
+  html[data-keyboard-open="true"] .plan-floating-action[data-open="false"] {
+    display: none;
+  }
+}
+@media (min-width: 48rem) {
+  .floating-chat {
+    --chat-bottom: var(--plan-form-bottom, calc(env(safe-area-inset-bottom, 0px) + 1.5rem));
+  }
+}
+html[data-keyboard-open="true"] .floating-chat {
+  --chat-bottom: var(--keyboard-inset, 0px);
+}
+html[data-keyboard-open="true"] .floating-chat-ride-actions {
+  display: none;
+}
+.plan-ai-trigger {
+  bottom: var(--plan-form-bottom, var(--chrome-bottom));
+}
+@media (min-width: 48rem) {
+  .plan-ai-trigger {
+    bottom: var(--plan-form-bottom, 6rem);
+  }
+}
+
 @keyframes q-rise {
   from {
     opacity: 0;

@@ -57,7 +57,7 @@ export function CookieConsent() {
         {visible && (
           <motion.section
             aria-labelledby="cookie-title"
-            className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-40 mx-auto max-w-3xl rounded-2xl bg-card p-5 shadow-xl sm:inset-x-6 sm:p-6"
+            className="fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] z-[60] mx-auto max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-1.5rem)] max-w-3xl overflow-y-auto overscroll-contain rounded-2xl bg-card p-4 shadow-xl sm:inset-x-6 sm:p-6"
             initial={{ opacity: 0, transform: reduce ? "none" : "translateY(20px)" }}
             animate={{ opacity: 1, transform: "translateY(0px)" }}
             exit={{ opacity: 0, transform: reduce ? "none" : "translateY(20px)" }}

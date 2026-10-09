@@ -146,7 +146,7 @@ function GroupPage() {
             {tab === "plans" ? (
               <PullToRefresh onRefresh={() => q.refetch()}>
                 <section className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <SquadStats
                       plans={
                         plans as unknown as { status: string; location_area?: string | null }[]
