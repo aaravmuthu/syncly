@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
@@ -18,7 +18,8 @@ import { GlowButton } from "@/components/quorum/GlowButton";
 import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { Reveal, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
-import { ScrollHero } from "@/components/quorum/landing/ScrollHero";
+import { SyncOrbit, type OrbitControl } from "@/components/quorum/landing/SyncOrbit";
+import { warpTo } from "@/components/quorum/landing/warp";
 
 const TITLE = "Syncly — Squad Planning & Live Radar";
 const DESCRIPTION = "Sync hangouts in seconds with live location radar and smart parent safety.";
@@ -50,6 +51,36 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  // Without WebGL the scene can't draw the wrapped tagline, so the h1 shows.
+  const [flat, setFlat] = useState(false);
+  const router = useRouter();
+  const orbit = useRef<OrbitControl | null>(null);
+  const warping = useRef(false);
+
+  // "Try the demo" flies you there: the spheres collapse into one, it grows
+  // to fill the screen, and the demo opens up from inside it.
+  const toDemo = (ev: MouseEvent<HTMLAnchorElement>) => {
+    if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    ev.preventDefault();
+    if (warping.current) return;
+    warping.current = true;
+    const button = ev.currentTarget.getBoundingClientRect();
+    const fromCluster = orbit.current?.implode();
+    const origin = fromCluster ?? {
+      x: button.left + button.width / 2,
+      y: button.top + button.height / 2,
+      r: button.height / 2,
+    };
+    void warpTo({
+      origin,
+      delay: fromCluster ? 320 : 0,
+      ready: router.preloadRoute({ to: "/demo" }),
+      go: () => router.navigate({ to: "/demo" }),
+    }).finally(() => {
+      warping.current = false;
+    });
+  };
   return (
     <div className="paper-field relative min-h-dvh">
       <MouseSpotlight />
@@ -77,35 +108,51 @@ function Landing() {
       </header>
 
       <main className="relative z-10">
-        {/* Hero: the scroll-driven iPad (components/quorum/landing/ScrollHero.tsx) */}
-        <ScrollHero>
-          <p className="text-lg leading-[1.35] font-semibold">Syncly</p>
-          <h1 className="mx-auto mt-4 max-w-[980px] text-[clamp(40px,6.4vw,80px)] leading-[1.05] font-semibold tracking-[-0.02em] text-balance">
-            Plans that actually work for everyone.
+        {/* Hero: the squad as eight spheres pulled into one plan, with the
+            tagline turning around them (components/quorum/landing/SyncOrbit.tsx) */}
+        <section className="orbit-hero" aria-labelledby="hero-title">
+          <SyncOrbit
+            lines={["Plans that actually", "work for everyone."]}
+            className="absolute inset-0 size-full"
+            onFallback={() => setFlat(true)}
+            controlRef={orbit}
+          />
+          <h1
+            id="hero-title"
+            className={
+              flat
+                ? "relative mx-auto max-w-[980px] px-5 pt-[18svh] text-center text-[clamp(40px,6.4vw,80px)] leading-[1.05] font-semibold tracking-[-0.02em] text-balance"
+                : "sr-only"
+            }
+          >
+            {BRAND.tagline}
           </h1>
-          <p className="mx-auto mt-6 max-w-[640px] text-[clamp(19px,1.9vw,24px)] leading-[1.33] text-pretty text-muted-foreground">
-            {DESCRIPTION}
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <GlowButton
-              to="/auth"
-              search={{ next: "/home", mode: "signup" }}
-              glow="primary"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-[22px] py-[11px] text-lg leading-6 text-primary-foreground"
-            >
-              <span className="inline-flex items-center gap-2">
-                Start planning <ArrowRight className="size-4" />
-              </span>
-            </GlowButton>
-            <GlowButton
-              to="/demo"
-              glow="neutral"
-              className="inline-flex min-h-11 items-center rounded-full border border-primary px-[22px] py-[11px] text-lg leading-6 text-primary transition-colors hover:bg-primary/[0.06]"
-            >
-              Try the demo
-            </GlowButton>
+          <div className="orbit-hero__foot">
+            <p className="max-w-[34ch] text-[clamp(17px,1.5vw,20px)] leading-[1.4] text-pretty text-muted-foreground">
+              {DESCRIPTION}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <GlowButton
+                to="/auth"
+                search={{ next: "/home", mode: "signup" }}
+                glow="primary"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-[22px] py-[11px] text-lg leading-6 text-primary-foreground"
+              >
+                <span className="inline-flex items-center gap-2">
+                  Start planning <ArrowRight className="size-4" />
+                </span>
+              </GlowButton>
+              <GlowButton
+                to="/demo"
+                glow="neutral"
+                onClick={toDemo}
+                className="glass-pill inline-flex min-h-11 items-center rounded-full border border-primary px-[22px] py-[11px] text-lg leading-6 text-primary transition-colors hover:bg-primary/[0.06]"
+              >
+                Try the demo
+              </GlowButton>
+            </div>
           </div>
-        </ScrollHero>
+        </section>
 
         <Reveal>
           <TrendingPills />

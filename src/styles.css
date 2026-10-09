@@ -896,100 +896,6 @@
   }
 }
 
-/* Landing scroll hero (components/quorum/landing/ScrollHero.tsx). Geometry
-   is the Claude Design reference's: a 16:11 iPad in a graphite casing, sized to
-   whichever runs out first of 1000px, 88vw, or the height left under the nav.
-   Under 640px the iPad stands upright (the screen is ~1.44x taller than wide,
-   plus bezel), so the live screen inside stays readable at phone width. */
-.scroll-hero {
-  /* sticky site header: 64px bar + 1px hairline, plus the notch in standalone */
-  --hero-nav: calc(65px + env(safe-area-inset-top, 0px));
-}
-.hero-device {
-  width: min(1000px, 88vw, calc((100svh - var(--hero-nav) - 88px) * 1.4));
-}
-@media (width < 40rem) {
-  .hero-device {
-    width: min(88vw, calc((100svh - var(--hero-nav) - 88px) * 0.68));
-  }
-}
-.hero-bezel {
-  padding: clamp(10px, 1.5vw, 16px);
-  border-radius: clamp(22px, 3.4vw, 36px);
-  background: #1d1d1f;
-  box-shadow:
-    /* machined edge, so the casing still reads against the dark theme */
-    0 0 0 1px rgb(255 255 255 / 0.06),
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    3px 5px 30px 0 rgb(0 0 0 / 0.22);
-}
-.dark .hero-bezel {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.1),
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    3px 5px 30px 0 rgb(0 0 0 / 0.5);
-}
-.hero-screen {
-  border-radius: clamp(12px, 1.9vw, 20px);
-  /* keep the rounded clip on the GPU while the casing rotates */
-  transform: translateZ(0);
-}
-/* Someone answering privately on the hero's live screen. */
-.live-ring {
-  border: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
-  animation: q-radar-pulse 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
-}
-/* Light caught on the glass while it is tilted back; gone once it faces you. */
-.hero-glare {
-  background: linear-gradient(
-    172deg,
-    rgb(255 255 255 / 0.2) 0%,
-    rgb(255 255 255 / 0.05) 38%,
-    transparent 60%
-  );
-}
-@media (prefers-reduced-motion: reduce) {
-  /* The finished hero as a plain column, from first paint: headline, then the
-     upright tablet, both fully in view. These beat the server-rendered start
-     values before hydration has read the preference. The scroll-scrubbed
-     stage can't hold both in one screen, so it stops being sticky. */
-  .scroll-hero {
-    height: auto !important;
-  }
-  .hero-stage {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  .hero-frame {
-    position: relative !important;
-    height: auto !important;
-    overflow: visible !important;
-    perspective: none !important;
-    padding: calc(var(--hero-nav) + 7svh) 0 3rem;
-  }
-  .hero-rings {
-    display: none;
-  }
-  .hero-headline {
-    position: static !important;
-    opacity: 1 !important;
-    transform: none !important;
-    visibility: visible !important;
-  }
-  .hero-device {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    margin: 2.5rem auto 0;
-    transform: none !important;
-  }
-  .hero-off,
-  .hero-glare,
-  .live-ring {
-    display: none;
-  }
-}
-
 /* Tailwind's stock transition-colors drops transform, which made the global
    button:active scale snap instead of ease on every button that also fades its
    colours. Unlayered so it beats the utility; timing still comes from it. */
@@ -1657,4 +1563,88 @@
   .segment-thumb {
     transition-duration: 0ms;
   }
+}
+
+/* Landing hero (routes/index.tsx + components/quorum/landing/SyncOrbit.tsx):
+   the WebGL scene fills the first screen under the sticky header; the pitch
+   and actions sit on its floor. */
+.orbit-hero {
+  position: relative;
+  isolation: isolate;
+  height: calc(100svh - 65px - env(safe-area-inset-top, 0px));
+  min-height: 560px;
+  max-height: 980px;
+  overflow: hidden;
+  background: var(--background);
+}
+.sync-orbit {
+  display: block;
+  opacity: 0;
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sync-orbit[data-live] {
+  opacity: 1;
+}
+.orbit-hero__foot {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 40px;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 0 1.25rem max(clamp(24px, 4.5vh, 48px), env(safe-area-inset-bottom));
+}
+@media (prefers-reduced-motion: reduce) {
+  .sync-orbit {
+    transition: none;
+  }
+}
+
+/* Landing → demo warp (components/quorum/landing/warp.ts): a glossy evergreen
+   sphere that fills the screen, then opens a hole from the same point. */
+@property --warp-hole {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --warp-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 100vmax;
+}
+.warp-overlay {
+  --warp-hole: 0px;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: auto;
+  transform-origin: var(--warp-x) var(--warp-y);
+  /* Lit like the hero's spheres: highlight up and to the left, body
+     darkening to the rim. Both scale with the growing radius. */
+  background:
+    radial-gradient(
+      circle at calc(var(--warp-x) - var(--warp-r) * 0.36)
+        calc(var(--warp-y) - var(--warp-r) * 0.42),
+      color-mix(in oklab, var(--primary) 45%, white) 0,
+      transparent calc(var(--warp-r) * 0.55)
+    ),
+    radial-gradient(
+      circle at var(--warp-x) var(--warp-y),
+      var(--primary) 0,
+      color-mix(in oklab, var(--primary) 45%, black) var(--warp-r)
+    );
+  -webkit-mask-image: radial-gradient(
+    circle at var(--warp-x) var(--warp-y),
+    transparent calc(var(--warp-hole) - 56px),
+    #000 var(--warp-hole)
+  );
+  mask-image: radial-gradient(
+    circle at var(--warp-x) var(--warp-y),
+    transparent calc(var(--warp-hole) - 56px),
+    #000 var(--warp-hole)
+  );
 }
