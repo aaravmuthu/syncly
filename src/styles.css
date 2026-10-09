@@ -369,22 +369,6 @@
   }
 }
 
-@utility spotlight-orb {
-  position: absolute;
-  will-change: transform;
-  height: 640px;
-  width: 640px;
-  border-radius: 9999px;
-  filter: blur(60px);
-  opacity: 0.55;
-  background: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--primary) 26%, transparent) 0%,
-    color-mix(in oklab, var(--accent) 14%, transparent) 45%,
-    transparent 70%
-  );
-}
-
 @keyframes q-marquee {
   from {
     transform: translateX(0);
@@ -404,13 +388,6 @@
   width: max-content;
   gap: 0.75rem;
   animation: q-marquee 34s linear infinite;
-}
-
-/* Cursor-reactive layers only run on real pointer devices. */
-@media (hover: none) {
-  .spotlight-orb {
-    display: none;
-  }
 }
 
 /* Dark-themed Mapbox markers */
@@ -893,100 +870,6 @@
   }
   *::-webkit-scrollbar-corner {
     background: transparent;
-  }
-}
-
-/* Landing scroll hero (components/quorum/landing/ScrollHero.tsx). Geometry
-   is the Claude Design reference's: a 16:11 iPad in a graphite casing, sized to
-   whichever runs out first of 1000px, 88vw, or the height left under the nav.
-   Under 640px the iPad stands upright (the screen is ~1.44x taller than wide,
-   plus bezel), so the live screen inside stays readable at phone width. */
-.scroll-hero {
-  /* sticky site header: 64px bar + 1px hairline, plus the notch in standalone */
-  --hero-nav: calc(65px + env(safe-area-inset-top, 0px));
-}
-.hero-device {
-  width: min(1000px, 88vw, calc((100svh - var(--hero-nav) - 88px) * 1.4));
-}
-@media (width < 40rem) {
-  .hero-device {
-    width: min(88vw, calc((100svh - var(--hero-nav) - 88px) * 0.68));
-  }
-}
-.hero-bezel {
-  padding: clamp(10px, 1.5vw, 16px);
-  border-radius: clamp(22px, 3.4vw, 36px);
-  background: #1d1d1f;
-  box-shadow:
-    /* machined edge, so the casing still reads against the dark theme */
-    0 0 0 1px rgb(255 255 255 / 0.06),
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    3px 5px 30px 0 rgb(0 0 0 / 0.22);
-}
-.dark .hero-bezel {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.1),
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    3px 5px 30px 0 rgb(0 0 0 / 0.5);
-}
-.hero-screen {
-  border-radius: clamp(12px, 1.9vw, 20px);
-  /* keep the rounded clip on the GPU while the casing rotates */
-  transform: translateZ(0);
-}
-/* Someone answering privately on the hero's live screen. */
-.live-ring {
-  border: 2px solid color-mix(in oklab, var(--primary) 60%, transparent);
-  animation: q-radar-pulse 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
-}
-/* Light caught on the glass while it is tilted back; gone once it faces you. */
-.hero-glare {
-  background: linear-gradient(
-    172deg,
-    rgb(255 255 255 / 0.2) 0%,
-    rgb(255 255 255 / 0.05) 38%,
-    transparent 60%
-  );
-}
-@media (prefers-reduced-motion: reduce) {
-  /* The finished hero as a plain column, from first paint: headline, then the
-     upright tablet, both fully in view. These beat the server-rendered start
-     values before hydration has read the preference. The scroll-scrubbed
-     stage can't hold both in one screen, so it stops being sticky. */
-  .scroll-hero {
-    height: auto !important;
-  }
-  .hero-stage {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  .hero-frame {
-    position: relative !important;
-    height: auto !important;
-    overflow: visible !important;
-    perspective: none !important;
-    padding: calc(var(--hero-nav) + 7svh) 0 3rem;
-  }
-  .hero-rings {
-    display: none;
-  }
-  .hero-headline {
-    position: static !important;
-    opacity: 1 !important;
-    transform: none !important;
-    visibility: visible !important;
-  }
-  .hero-device {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    margin: 2.5rem auto 0;
-    transform: none !important;
-  }
-  .hero-off,
-  .hero-glare,
-  .live-ring {
-    display: none;
   }
 }
 
@@ -1656,5 +1539,631 @@
 @media (prefers-reduced-motion: reduce) {
   .segment-thumb {
     transition-duration: 0ms;
+  }
+}
+
+/* Landing (routes/index.tsx), built around the Unicorn Studio hero scene.
+   Its palette is sampled from the scene: the teal "pool" the duotone lays
+   over everything, the deep green under the spheres, the duotone's mint
+   highlight, and near-black ink. It is one fixed world, the same in light
+   and dark theme, so it doesn't read any app theme tokens. */
+@font-face {
+  font-family: "Geist Pixel";
+  src: url("/fonts/geist/GeistPixel-Square.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.us-landing {
+  --us-pool: #069f73;
+  --us-deep: #042917;
+  --us-abyss: #03150d;
+  --us-ink: #000b02;
+  --us-mint: #00fbd1;
+  --us-foam: #e3f5ec;
+  --us-foam-muted: color-mix(in oklab, var(--us-foam) 68%, var(--us-abyss));
+  --us-hair: color-mix(in oklab, var(--us-foam) 14%, transparent);
+  --us-pixel: "Geist Pixel", ui-monospace, monospace;
+  --us-sans: "Geist", -apple-system, "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  --us-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --us-section-y: clamp(96px, 12vw, 168px);
+
+  min-height: 100dvh;
+  background: var(--us-abyss);
+  color: var(--us-foam);
+  font-family: var(--us-sans);
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+  color-scheme: dark;
+}
+.us-landing ::selection {
+  background: var(--us-mint);
+  color: var(--us-ink);
+}
+.us-landing :focus-visible {
+  outline: 2px solid var(--us-mint);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.us-landing .us-hero :focus-visible,
+.us-landing .us-band :focus-visible,
+.us-landing .us-nav:not([data-solid]) :focus-visible {
+  outline-color: var(--us-ink);
+}
+
+.us-wrap {
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 40px);
+}
+
+.us-skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  background: var(--us-mint);
+  color: var(--us-ink);
+  font-weight: 600;
+  transform: translateY(-160%);
+  transition: transform 0.2s var(--us-ease);
+}
+.us-skip:focus-visible {
+  transform: none;
+}
+
+/* Nav: ink on the teal scene, then a solid abyss bar over the dark page. */
+.us-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  color: var(--us-ink);
+  transition:
+    background-color 0.35s var(--us-ease),
+    color 0.35s var(--us-ease),
+    box-shadow 0.35s var(--us-ease);
+}
+.us-nav[data-solid] {
+  color: var(--us-foam);
+  background: color-mix(in oklab, var(--us-abyss) 86%, transparent);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 1px 0 var(--us-hair);
+}
+.us-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-family: var(--us-pixel);
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+.us-navlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-radius: 9999px;
+  font-size: 15px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.86;
+  transition: opacity 0.2s ease;
+}
+.us-navlink:hover {
+  opacity: 1;
+}
+
+/* Buttons */
+.us-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 9999px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition:
+    background-color 0.25s var(--us-ease),
+    color 0.25s var(--us-ease),
+    box-shadow 0.25s var(--us-ease),
+    transform 0.25s var(--us-ease);
+}
+.us-btn svg {
+  transition: transform 0.25s var(--us-ease);
+}
+.us-btn:hover svg {
+  transform: translateX(3px);
+}
+.us-btn:active {
+  transform: scale(0.97);
+}
+.us-btn--ink {
+  background: var(--us-ink);
+  color: var(--us-foam);
+  box-shadow: 0 10px 24px -12px rgb(0 11 2 / 0.6);
+}
+.us-btn--ink:hover {
+  background: var(--us-deep);
+  box-shadow: 0 14px 30px -12px rgb(0 11 2 / 0.7);
+}
+.us-btn--line {
+  color: var(--us-ink);
+  box-shadow: inset 0 0 0 1.5px var(--us-ink);
+}
+.us-btn--line:hover {
+  background: color-mix(in oklab, var(--us-ink) 9%, transparent);
+}
+.us-btn--nav {
+  min-height: 40px;
+  padding: 9px 16px;
+  font-size: 15px;
+  background: var(--us-ink);
+  color: var(--us-foam);
+}
+.us-nav[data-solid] .us-btn--nav {
+  background: var(--us-mint);
+  color: var(--us-ink);
+}
+.us-btn--lg {
+  min-height: 60px;
+  padding: 16px 30px;
+  font-size: 18px;
+}
+
+/* Hero: the scene fills the first screen; the pitch and actions sit on the
+   floor of it. Above-the-fold copy stays inside the scene's open teal. */
+.us-hero {
+  position: relative;
+  isolation: isolate;
+  height: 100svh;
+  min-height: 600px;
+  max-height: 1100px;
+  overflow: hidden;
+  background: var(--us-pool);
+  color: var(--us-ink);
+}
+.us-scene {
+  overflow: hidden;
+}
+.us-scene__poster,
+.us-scene__poster img,
+.us-scene__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.us-scene__poster img {
+  object-fit: cover;
+}
+.us-scene__canvas {
+  opacity: 0;
+  transition: opacity 0.9s var(--us-ease);
+}
+.us-scene[data-live] .us-scene__canvas {
+  opacity: 1;
+}
+/* Once the scene is up the still steps aside, so the phone band's feathered
+   edges fade into the hero's own teal rather than into a frozen frame. */
+.us-scene__poster {
+  transition: opacity 0.9s var(--us-ease) 0.6s;
+}
+.us-scene[data-live] .us-scene__poster {
+  opacity: 0;
+}
+/* Phones: the scene sizes its spheres to the canvas height, so a full
+   portrait screen makes them swallow the headline. There the canvas is a
+   shorter band in the upper part of the hero, feathered into the same teal,
+   and the pitch and actions get the open floor below it. */
+@media (width < 48rem) {
+  .us-hero .us-scene__canvas {
+    top: 9svh;
+    height: 62svh;
+    -webkit-mask-image: linear-gradient(transparent, #000 10%, #000 78%, transparent);
+    mask-image: linear-gradient(transparent, #000 10%, #000 78%, transparent);
+  }
+}
+.us-hero__foot {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px 40px;
+  padding-bottom: max(clamp(24px, 4.5vh, 48px), env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.us-hero__foot > * {
+  pointer-events: auto;
+}
+.us-hero__pitch {
+  max-width: 34ch;
+  font-size: clamp(17px, 1.45vw, 20px);
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--us-ink);
+  text-wrap: pretty;
+}
+.us-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Category ticker straight under the hero */
+.us-ticker {
+  padding-block: clamp(28px, 4vw, 48px) clamp(36px, 5vw, 64px);
+  border-bottom: 1px solid var(--us-hair);
+}
+.us-ticker__track {
+  gap: 0;
+  animation-duration: 42s;
+}
+.us-ticker__row {
+  display: flex;
+  flex-shrink: 0;
+}
+.us-ticker__row li {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--us-pixel);
+  font-size: clamp(44px, 7.4vw, 112px);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--us-mint);
+  white-space: nowrap;
+}
+.us-ticker__row li::after {
+  content: "";
+  width: 0.16em;
+  height: 0.16em;
+  margin-inline: 0.42em;
+  background: var(--us-pool);
+}
+.us-ticker__works {
+  margin-top: clamp(20px, 3vw, 32px);
+  font-size: 15px;
+  color: var(--us-foam-muted);
+}
+
+/* Shared section rhythm */
+.us-section {
+  padding-block: var(--us-section-y);
+}
+.us-section--deep {
+  background: var(--us-deep);
+}
+.us-band {
+  padding-block: var(--us-section-y);
+  background: var(--us-pool);
+  color: var(--us-ink);
+}
+.us-display {
+  font-family: var(--us-pixel);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.us-display--xxl {
+  font-size: clamp(44px, 7vw, 96px);
+  line-height: 0.98;
+}
+.us-display--xl {
+  font-size: clamp(36px, 5.2vw, 76px);
+  line-height: 1.02;
+}
+.us-display--lg {
+  font-size: clamp(32px, 3.8vw, 56px);
+  line-height: 1.04;
+}
+.us-display--md {
+  font-size: clamp(26px, 2.6vw, 38px);
+  line-height: 1.1;
+}
+.us-lede {
+  font-size: clamp(18px, 1.5vw, 21px);
+  line-height: 1.45;
+  color: var(--us-foam-muted);
+  text-wrap: pretty;
+}
+.us-band .us-lede {
+  color: var(--us-ink);
+}
+
+/* The things nobody says */
+.us-unsaid {
+  margin-top: clamp(48px, 7vw, 88px);
+  border-top: 1px solid var(--us-hair);
+}
+.us-unsaid li {
+  display: grid;
+  gap: 8px 40px;
+  padding-block: clamp(22px, 3vw, 34px);
+  border-bottom: 1px solid var(--us-hair);
+}
+@media (width >= 48rem) {
+  .us-unsaid li {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+.us-unsaid__quote {
+  font-family: var(--us-pixel);
+  font-size: clamp(26px, 3.2vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--us-mint);
+}
+.us-unsaid__why {
+  max-width: 40ch;
+  color: var(--us-foam-muted);
+}
+
+/* How it works */
+.us-steps {
+  display: grid;
+  gap: 40px 28px;
+  margin-top: clamp(48px, 7vw, 88px);
+}
+@media (width >= 40rem) {
+  .us-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (width >= 64rem) {
+  .us-steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.us-step {
+  position: relative;
+  padding-top: 24px;
+}
+.us-step__rule {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--us-ink);
+  transform-origin: left center;
+}
+.us-step__n {
+  display: block;
+  font-family: var(--us-pixel);
+  font-size: clamp(56px, 6vw, 84px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.us-step__title {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.us-step__desc {
+  margin-top: 8px;
+  max-width: 30ch;
+  font-size: 16px;
+}
+
+/* Features with a sticky index */
+.us-index {
+  display: none;
+  margin-top: 40px;
+}
+@media (width >= 64rem) {
+  .us-index {
+    display: block;
+  }
+}
+.us-index ul {
+  border-top: 1px solid var(--us-hair);
+}
+.us-index__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--us-hair);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--us-foam-muted);
+  transition:
+    color 0.3s var(--us-ease),
+    padding 0.3s var(--us-ease);
+}
+.us-index__link:hover {
+  color: var(--us-foam);
+}
+.us-index__link[aria-current] {
+  padding-left: 10px;
+  color: var(--us-mint);
+}
+.us-feature {
+  padding-block: clamp(36px, 5vw, 64px);
+  border-top: 1px solid var(--us-hair);
+  scroll-margin-top: 96px;
+}
+.us-feature:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.us-feature__body {
+  margin-top: 18px;
+  max-width: 58ch;
+  color: var(--us-foam-muted);
+}
+.us-feature__bullets {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  font-size: 16px;
+}
+.us-feature__bullets li {
+  display: flex;
+  gap: 10px;
+}
+.us-feature__bullets svg {
+  color: var(--us-mint);
+}
+
+/* Sync preview */
+.us-device {
+  background: #010804;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--us-foam) 10%, transparent),
+    0 30px 60px -28px rgb(0 0 0 / 0.7);
+}
+.us-device--web {
+  width: 100%;
+  max-width: 22rem;
+  padding: 6px;
+  border-radius: 20px;
+}
+.us-device--phone {
+  width: 12rem;
+  flex-shrink: 0;
+  padding: 8px;
+  border-radius: 1.8rem;
+}
+.us-device__screen {
+  padding: 16px;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--us-deep) 70%, #000);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--us-foam) 8%, transparent);
+}
+.us-device--phone .us-device__screen {
+  padding: 14px;
+  border-radius: 1.3rem;
+}
+.us-device__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--us-foam) 7%, transparent);
+  color: var(--us-foam-muted);
+}
+.us-device__row .font-semibold {
+  color: var(--us-foam);
+}
+.us-device__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: var(--us-mint);
+}
+.us-device__wire {
+  width: 32px;
+  height: 1px;
+  background: var(--us-hair);
+}
+@media (width >= 40rem) {
+  .us-device__wire {
+    width: 1px;
+    height: 32px;
+  }
+}
+.us-device__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  background: var(--us-mint);
+  color: var(--us-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Illustrative voices */
+.us-note {
+  font-size: 14px;
+  color: var(--us-foam-muted);
+}
+.us-voices {
+  display: grid;
+  gap: 48px 40px;
+  margin-top: 40px;
+}
+@media (width >= 48rem) {
+  .us-voices {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .us-voices figure:nth-child(2) {
+    margin-top: 72px;
+  }
+  .us-voices figure:nth-child(3) {
+    margin-top: 144px;
+  }
+}
+.us-voices blockquote {
+  font-family: var(--us-pixel);
+  font-size: clamp(24px, 2.3vw, 32px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+.us-voices figcaption {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--us-hair);
+  font-size: 14px;
+  color: var(--us-foam-muted);
+}
+
+/* Footer */
+.us-footer {
+  padding-block: 40px calc(40px + env(safe-area-inset-bottom));
+  font-size: 14px;
+  color: var(--us-foam-muted);
+}
+.us-footer .us-brand {
+  color: var(--us-foam);
+  font-size: 19px;
+}
+.us-footlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+.us-footlink:hover {
+  color: var(--us-foam);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .us-scene__canvas,
+  .us-nav,
+  .us-btn,
+  .us-btn svg,
+  .us-index__link {
+    transition: none;
   }
 }
