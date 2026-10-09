@@ -1603,3 +1603,48 @@
     transition: none;
   }
 }
+
+/* Landing → demo warp (components/quorum/landing/warp.ts): a glossy evergreen
+   sphere that fills the screen, then opens a hole from the same point. */
+@property --warp-hole {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --warp-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 100vmax;
+}
+.warp-overlay {
+  --warp-hole: 0px;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: auto;
+  transform-origin: var(--warp-x) var(--warp-y);
+  /* Lit like the hero's spheres: highlight up and to the left, body
+     darkening to the rim. Both scale with the growing radius. */
+  background:
+    radial-gradient(
+      circle at calc(var(--warp-x) - var(--warp-r) * 0.36)
+        calc(var(--warp-y) - var(--warp-r) * 0.42),
+      color-mix(in oklab, var(--primary) 45%, white) 0,
+      transparent calc(var(--warp-r) * 0.55)
+    ),
+    radial-gradient(
+      circle at var(--warp-x) var(--warp-y),
+      var(--primary) 0,
+      color-mix(in oklab, var(--primary) 45%, black) var(--warp-r)
+    );
+  -webkit-mask-image: radial-gradient(
+    circle at var(--warp-x) var(--warp-y),
+    transparent calc(var(--warp-hole) - 56px),
+    #000 var(--warp-hole)
+  );
+  mask-image: radial-gradient(
+    circle at var(--warp-x) var(--warp-y),
+    transparent calc(var(--warp-hole) - 56px),
+    #000 var(--warp-hole)
+  );
+}

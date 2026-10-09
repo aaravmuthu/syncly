@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
 
@@ -11,6 +11,8 @@ type Props = {
   /** Hover glow tint — emerald for the primary CTA, a soft neutral glow
    * for dark/secondary buttons. */
   glow?: "primary" | "neutral";
+  /** Runs before navigation; call preventDefault() to take it over. */
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
 };
 
 const GLOW_SHADOW: Record<NonNullable<Props["glow"]>, string> = {
@@ -25,7 +27,15 @@ const MotionLink = motion.create(Link);
  * press it scales down for tactile feedback. Pure hover/press state —
  * no cursor-position tracking of any kind.
  */
-export function GlowButton({ children, className, to, href, search, glow = "primary" }: Props) {
+export function GlowButton({
+  children,
+  className,
+  to,
+  href,
+  search,
+  glow = "primary",
+  onClick,
+}: Props) {
   const gestures = {
     whileHover: {
       y: -3,
@@ -37,13 +47,19 @@ export function GlowButton({ children, className, to, href, search, glow = "prim
 
   if (to) {
     return (
-      <MotionLink to={to} search={search as never} className={className} {...gestures}>
+      <MotionLink
+        to={to}
+        search={search as never}
+        className={className}
+        onClick={onClick}
+        {...gestures}
+      >
         {children}
       </MotionLink>
     );
   }
   return (
-    <motion.a href={href ?? "#"} className={className} {...gestures}>
+    <motion.a href={href ?? "#"} className={className} onClick={onClick} {...gestures}>
       {children}
     </motion.a>
   );

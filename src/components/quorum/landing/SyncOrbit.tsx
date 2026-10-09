@@ -1,6 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { cn } from "@/lib/utils";
 import type { OrbitTheme, SyncOrbit as Engine } from "./sync-orbit-engine";
+import type { WarpOrigin } from "./warp";
+
+export type OrbitControl = {
+  /** Collapse the cluster; returns its viewport position and radius in px. */
+  implode: () => WarpOrigin;
+};
 
 /**
  * The hero's WebGL scene (sync-orbit-engine.ts), sized to its container and
@@ -38,15 +44,19 @@ export function SyncOrbit({
   lines,
   className,
   onFallback,
+  controlRef,
 }: {
   lines: [string, string];
   className?: string;
   onFallback?: () => void;
+  controlRef?: MutableRefObject<OrbitControl | null>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [live, setLive] = useState(false);
   const fallbackRef = useRef(onFallback);
   fallbackRef.current = onFallback;
+  const control = useRef(controlRef);
+  control.current = controlRef;
   const [first, second] = lines;
 
   useEffect(() => {
@@ -74,6 +84,19 @@ export function SyncOrbit({
         }
         const e = engine;
         e.setTheme(readTheme());
+        if (control.current) {
+          control.current.current = {
+            implode: () => {
+              e.start();
+              const p = e.implode();
+              const r = canvas.getBoundingClientRect();
+              return { x: r.left + p.x * r.width, y: r.top + p.y * r.height, r: p.r * r.width };
+            },
+          };
+          cleanups.push(() => {
+            if (control.current) control.current.current = null;
+          });
+        }
 
         // The display face arrives from Google Fonts; redraw the band once it's in.
         document.fonts

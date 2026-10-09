@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
@@ -18,7 +18,8 @@ import { GlowButton } from "@/components/quorum/GlowButton";
 import { TrendingPills } from "@/components/quorum/TrendingPills";
 import { Reveal, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
 import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
-import { SyncOrbit } from "@/components/quorum/landing/SyncOrbit";
+import { SyncOrbit, type OrbitControl } from "@/components/quorum/landing/SyncOrbit";
+import { warpTo } from "@/components/quorum/landing/warp";
 
 const TITLE = "Syncly — Squad Planning & Live Radar";
 const DESCRIPTION = "Sync hangouts in seconds with live location radar and smart parent safety.";
@@ -52,6 +53,34 @@ export const Route = createFileRoute("/")({
 function Landing() {
   // Without WebGL the scene can't draw the wrapped tagline, so the h1 shows.
   const [flat, setFlat] = useState(false);
+  const router = useRouter();
+  const orbit = useRef<OrbitControl | null>(null);
+  const warping = useRef(false);
+
+  // "Try the demo" flies you there: the spheres collapse into one, it grows
+  // to fill the screen, and the demo opens up from inside it.
+  const toDemo = (ev: MouseEvent<HTMLAnchorElement>) => {
+    if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    ev.preventDefault();
+    if (warping.current) return;
+    warping.current = true;
+    const button = ev.currentTarget.getBoundingClientRect();
+    const fromCluster = orbit.current?.implode();
+    const origin = fromCluster ?? {
+      x: button.left + button.width / 2,
+      y: button.top + button.height / 2,
+      r: button.height / 2,
+    };
+    void warpTo({
+      origin,
+      delay: fromCluster ? 320 : 0,
+      ready: router.preloadRoute({ to: "/demo" }),
+      go: () => router.navigate({ to: "/demo" }),
+    }).finally(() => {
+      warping.current = false;
+    });
+  };
   return (
     <div className="paper-field relative min-h-dvh">
       <MouseSpotlight />
@@ -86,6 +115,7 @@ function Landing() {
             lines={["Plans that actually", "work for everyone."]}
             className="absolute inset-0 size-full"
             onFallback={() => setFlat(true)}
+            controlRef={orbit}
           />
           <h1
             id="hero-title"
@@ -115,6 +145,7 @@ function Landing() {
               <GlowButton
                 to="/demo"
                 glow="neutral"
+                onClick={toDemo}
                 className="glass-pill inline-flex min-h-11 items-center rounded-full border border-primary px-[22px] py-[11px] text-lg leading-6 text-primary transition-colors hover:bg-primary/[0.06]"
               >
                 Try the demo

@@ -339,6 +339,8 @@ export class SyncOrbit {
   // Pointer velocity on the cluster's plane (world units/s), for flicking spheres.
   private swipe = { vx: 0, vy: 0, wx: 0, wy: 0, at: 0 };
   private time = 0;
+  /** Until this scene time, the cluster collapses into a tight spinning knot. */
+  private implodeUntil = -1;
   private acc = 0;
   private halfW = 1.19;
   private theme!: OrbitTheme;
@@ -535,6 +537,33 @@ export class SyncOrbit {
     this.pointer.moved = true;
   }
 
+  /**
+   * Collapse the cluster into a tight, fast-spinning knot (the lead-in to
+   * the demo warp). Returns where it sits on the canvas, 0–1 from top-left,
+   * and its radius as a fraction of the canvas width.
+   */
+  implode(seconds = 1.2) {
+    this.implodeUntil = this.time + seconds;
+    let cx = 0,
+      cy = 0,
+      cz = 0;
+    for (let i = 0; i < COUNT; i++) {
+      cx += this.pos[i * 3] / COUNT;
+      cy += this.pos[i * 3 + 1] / COUNT;
+      cz += this.pos[i * 3 + 2] / COUNT;
+    }
+    this.center[0] = cx;
+    this.center[1] = cy;
+    const depth = cz - CAMERA_Z;
+    const w = this.canvas.width / this.dpr;
+    const h = this.canvas.height / this.dpr;
+    return {
+      x: 0.5 + cx / depth / (2 * this.halfW),
+      y: 0.5 - (cy / depth / (2 * this.halfW)) * (w / h),
+      r: 0.55 / depth / (2 * this.halfW),
+    };
+  }
+
   start() {
     if (this.running || this.opts.still || this.disposed) return;
     this.running = true;
@@ -642,11 +671,15 @@ export class SyncOrbit {
       tx += wx * 0.28;
       ty += wy * 0.28;
     }
-    const k = 1 - Math.exp(-dt * 2.5);
+    // While imploding the centre holds still, so the warp grows from where the knot is.
+    const imploding = t < this.implodeUntil;
+    const k = imploding ? 0 : 1 - Math.exp(-dt * 2.5);
     this.center[0] += (tx - this.center[0]) * k;
     this.center[1] += (ty - this.center[1]) * k;
 
-    if (this.pointer.active) this.touch(dt);
+    if (this.pointer.active && !imploding) this.touch(dt);
+    const pull = imploding ? 48 : 6;
+    const swirl = imploding ? 9 : 1.7;
 
     // Orbit axis tilted off vertical, so the cluster tumbles rather than spins flat.
     const ax = 0.28,
@@ -659,9 +692,9 @@ export class SyncOrbit {
       const dy = pos[o + 1] - this.center[1];
       const dz = pos[o + 2] - this.center[2];
       // pull to the centre, plus a swirl around the axis
-      vel[o] += (-6 * dx + (ay * dz - az * dy) * 1.7) * dt;
-      vel[o + 1] += (-6 * dy + (az * dx - ax * dz) * 1.7) * dt;
-      vel[o + 2] += (-6 * dz + (ax * dy - ay * dx) * 1.7) * dt;
+      vel[o] += (-pull * dx + (ay * dz - az * dy) * swirl) * dt;
+      vel[o + 1] += (-pull * dy + (az * dx - ax * dz) * swirl) * dt;
+      vel[o + 2] += (-pull * dz + (ax * dy - ay * dx) * swirl) * dt;
       vel[o] *= damp;
       vel[o + 1] *= damp;
       vel[o + 2] *= damp;
