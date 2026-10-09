@@ -1784,6 +1784,7 @@ export type Database = {
       is_plan_owner: { Args: { _plan_id: string }; Returns: boolean };
       is_thread_member: { Args: { _thread_id: string }; Returns: boolean };
       my_profile_id: { Args: never; Returns: string };
+      prepare_account_deletion: { Args: { _user_id: string }; Returns: undefined };
       shares_group_with_me: {
         Args: { _other_profile_id: string };
         Returns: boolean;

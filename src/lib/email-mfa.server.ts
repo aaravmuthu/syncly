@@ -1,4 +1,5 @@
 import { codeDigest } from "./email-mfa-crypto.server";
+import { securityCodeEmail } from "./email-mfa-template.server";
 import { hasIndependentPrimary } from "./email-mfa-policy";
 import { randomInt, randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -87,12 +88,7 @@ export async function sendEmailChallenge(context: Context, purpose: Purpose) {
         "Content-Type": "application/json",
         "Idempotency-Key": challengeId,
       },
-      body: JSON.stringify({
-        from,
-        to: [email],
-        subject: "Your Syncly security code",
-        text: `Your Syncly ${purpose === "enroll" ? "two-factor setup" : purpose === "disable" ? "two-factor removal" : "sign-in verification"} code is ${code}.\n\nIt expires in 10 minutes and can be used once. If you did not request this code, do not share it.`,
-      }),
+      body: JSON.stringify({ from, to: [email], ...securityCodeEmail(purpose, code) }),
     });
     if (!response.ok) throw new Error("Delivery failed");
   } catch {

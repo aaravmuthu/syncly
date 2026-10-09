@@ -184,13 +184,19 @@ export const uploadAvatar = createServerFn({ method: "POST" })
   });
 
 /**
- * Permanently deletes the caller's auth user. `profiles.user_id` cascades on
- * delete, so the profile row (and everything FK'd to it) goes with it.
+ * Permanently deletes the caller's auth user. Groups and plans they own are
+ * handed to another member first (or removed if nobody else is in them); then
+ * `profiles.user_id` cascades, and every key to profiles either cascades or
+ * clears the author (migration 20261009020000).
  */
 export const deleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: prepError } = await supabaseAdmin.rpc("prepare_account_deletion", {
+      _user_id: context.userId,
+    });
+    if (prepError) throw dbError(prepError, "deleteAccount");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
     if (error) throw dbError(error, "deleteAccount");
     return { ok: true as const };
