@@ -50,6 +50,16 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+// The things friends don't say out loud, drifting behind the tagline. Each
+// row is one line of the wrapped band: the first two sit above it, the last
+// two below.
+const HERO_WHISPERS = [
+  ["Friday after 6?", "Somewhere close", "Nothing too loud", "Can we split it?"],
+  ["I can't spend that much.", "I need a ride.", "Home by 10.", "I can't eat there."],
+  ["I'm vegetarian.", "Not too late?", "Who's driving?", "Under $20?"],
+  ["My parents need to know.", "Somewhere indoors", "Gluten-free, please.", "I'm in!"],
+];
+
 function Landing() {
   // Without WebGL the scene can't draw the wrapped tagline, so the h1 shows.
   const [flat, setFlat] = useState(false);
@@ -113,6 +123,7 @@ function Landing() {
         <section className="orbit-hero" aria-labelledby="hero-title">
           <SyncOrbit
             lines={["Plans that actually", "work for everyone."]}
+            whispers={HERO_WHISPERS}
             className="absolute inset-0 size-full"
             onFallback={() => setFlat(true)}
             controlRef={orbit}
