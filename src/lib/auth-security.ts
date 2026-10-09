@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// SMS costs money (Twilio + Supabase phone MFA), so phone sign-up and SMS
+// two-factor stay hidden until a provider is configured. Existing SMS factors
+// are still challenged and can be removed.
+export const PHONE_AUTH_ENABLED = false;
+
 export function normalizePhone(value: string) {
   const phone = value.trim().replace(/[\s().-]/g, "");
   if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
