@@ -23,10 +23,13 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
   // animated wrapper, whose transform would otherwise become the
   // containing block for our `fixed` positioning.
   return createPortal(
-    <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] right-4 z-[60] flex flex-col items-end gap-2 md:bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
+    <div
+      data-open={open}
+      className="plan-floating-action floating-chat fixed bottom-[var(--chat-bottom)] right-[max(1rem,env(safe-area-inset-right,0px))] z-[60] flex flex-col items-end gap-2"
+    >
       {open ? (
-        <div className="w-[min(92vw,380px)] overflow-hidden rounded-3xl">
-          <div className="flex flex-wrap gap-1.5 rounded-t-3xl border border-b-0 border-white/10 bg-neutral-950/80 p-3 backdrop-blur-xl">
+        <div className="flex max-h-[calc(var(--visual-viewport-height,100dvh)-var(--chat-bottom)-var(--chrome-top)-4rem)] w-[min(calc(100vw-env(safe-area-inset-left,0px)-env(safe-area-inset-right,0px)-2rem),380px)] flex-col overflow-hidden rounded-3xl">
+          <div className="floating-chat-ride-actions flex shrink-0 flex-wrap gap-1.5 rounded-t-3xl border border-b-0 border-white/10 bg-neutral-950/80 p-3 backdrop-blur-xl">
             {RIDES.map((r) => (
               <button
                 key={r.status}
@@ -39,7 +42,7 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
                     toast.error("Could not post your ride status");
                   }
                 }}
-                className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-caption text-white/75 hover:border-emerald-400/40 hover:bg-emerald-400/10"
+                className="tap-target rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-caption text-white/75 hover:border-emerald-400/40 hover:bg-emerald-400/10"
               >
                 {r.label}
               </button>
@@ -48,7 +51,7 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
           <SquadChat
             groupId={groupId}
             planId={planId}
-            className="h-[60dvh] max-h-[520px] rounded-t-none"
+            className="min-h-0 h-[60dvh] max-h-[520px] shrink rounded-t-none"
           />
         </div>
       ) : null}

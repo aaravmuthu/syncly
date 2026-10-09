@@ -1,3 +1,4 @@
+import { MobileActions } from "@/components/quorum/MobileActions";
 import { VerificationFeedback } from "@/components/quorum/auth/VerificationFeedback";
 import { EmailSecondFactor } from "@/components/quorum/auth/EmailSecondFactor";
 import { getEmailSecurity } from "@/lib/email-mfa.functions";
@@ -392,7 +393,7 @@ function AuthPage() {
   }
 
   return (
-    <div className="paper-field min-h-dvh px-5 py-8">
+    <div className="paper-field min-h-dvh [--mobile-actions-surface:var(--background)] pl-[max(1.25rem,env(safe-area-inset-left,0px))] pr-[max(1.25rem,env(safe-area-inset-right,0px))] pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:py-8 [overflow-wrap:anywhere]">
       <Link
         to="/"
         className="tap-target -ml-1 inline-flex items-center gap-1.5 px-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -400,12 +401,12 @@ function AuthPage() {
         <ArrowLeft className="size-4" /> Back
       </Link>
 
-      <div className="mx-auto mt-10 w-full max-w-sm">
+      <div className="mx-auto mt-4 w-full max-w-sm sm:mt-10">
         <Wordmark />
         {(mode === "signin" || mode === "signup") && (
           // Pinned under the status bar on phones so the keyboard and the
           // browser's scroll-into-view never carry the avatar off screen.
-          <div className="z-20 mt-4 flex justify-center pt-3 pb-2 max-md:sticky max-md:top-[env(safe-area-inset-top)] max-md:-mx-5 max-md:bg-background/85 max-md:backdrop-blur-md md:mt-7">
+          <div className="auth-avatar z-20 mt-2 flex justify-center pt-2 pb-2 max-md:sticky max-md:top-[env(safe-area-inset-top)] max-md:bg-background/85 max-md:backdrop-blur-md md:mt-7">
             <SyncAvatar mood={mood} look={look} pulse={pulse} size={isMobile ? 84 : 120} />
           </div>
         )}
@@ -434,14 +435,14 @@ function AuthPage() {
 
         {!mfa && !emailMfa && !otp && (mode === "signin" || mode === "signup") ? (
           <>
-            <div className="mt-7">
+            <div className="mt-4 sm:mt-7">
               <SocialButtons
                 onGoogle={() => void signInWith("google")}
                 pending={social}
                 disabled={busy}
               />
             </div>
-            <div className="my-6 flex items-center gap-3">
+            <div className="my-4 flex items-center gap-3 sm:my-6">
               <span className="h-px flex-1 bg-border" />
               <span className="text-xs text-muted-foreground">or continue with</span>
               <span className="h-px flex-1 bg-border" />
@@ -545,6 +546,7 @@ function AuthPage() {
               className={otp ? "min-h-56" : undefined}
             >
               <form
+                id="auth-form"
                 aria-describedby={formError ? "auth-error" : undefined}
                 onSubmit={submit}
                 className={mode === "reset" ? "mt-8 space-y-4" : "space-y-4"}
@@ -630,9 +632,14 @@ function AuthPage() {
                       />
                     </label>
                   )}
+              </form>
+            </VerificationFeedback>
+            {!accepted ? (
+              <MobileActions>
                 <DynamicButton
                   width="full"
                   type="submit"
+                  form="auth-form"
                   loading={busy}
                   disabled={Boolean(social)}
                   orb="connecting"
@@ -652,8 +659,8 @@ function AuthPage() {
                               ? "Send recovery code"
                               : "Send reset link"}
                 </DynamicButton>
-              </form>
-            </VerificationFeedback>
+              </MobileActions>
+            ) : null}
             {otp && !accepted && (
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button

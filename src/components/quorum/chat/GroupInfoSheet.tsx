@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Drawer } from "vaul";
+import { X } from "lucide-react";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Skeleton } from "@/components/quorum/ui";
 import { useFriends } from "@/lib/quorum/friends-context";
@@ -55,13 +56,21 @@ export function GroupInfoSheet({
     <Drawer.NestedRoot open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[55] bg-black/40" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[55] mx-auto flex max-h-[80dvh] w-full max-w-2xl flex-col rounded-t-surface border border-border bg-card text-foreground shadow-2xl outline-none">
+        <Drawer.Content className="mobile-sheet fixed inset-x-0 bottom-0 z-[55] mx-auto flex w-full max-w-2xl flex-col rounded-t-surface border border-border bg-card text-foreground shadow-2xl outline-none !px-0">
           <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-foreground/20" />
-          <div className="flex flex-col items-center gap-1 px-4 pb-3 pt-4 text-center">
+          <div className="relative flex shrink-0 flex-col items-center gap-1 px-12 pb-3 pt-4 text-center">
+            <Drawer.Close
+              aria-label="Close group info"
+              className="tap-target absolute right-2 top-2 grid place-items-center rounded-full text-muted-foreground"
+            >
+              <X className="size-5" aria-hidden />
+            </Drawer.Close>
             <span className="grid size-16 place-items-center overflow-hidden rounded-full bg-secondary text-3xl">
               {avatarUrl ? <img src={avatarUrl} alt="" className="size-16 object-cover" /> : emoji}
             </span>
-            <Drawer.Title className="mt-1 text-base font-semibold">{name}</Drawer.Title>
+            <Drawer.Title className="mt-1 max-w-full text-base font-semibold [overflow-wrap:anywhere]">
+              {name}
+            </Drawer.Title>
             <Drawer.Description className="text-caption text-muted-foreground">
               {q.isLoading
                 ? "Loading members…"
@@ -127,7 +136,7 @@ export function GroupInfoSheet({
                   })}
           </ul>
 
-          <div className="border-t border-border/60 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
+          <div className="shrink-0 border-t border-border/60 p-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]">
             <Link
               to="/groups/$groupId"
               params={{ groupId }}

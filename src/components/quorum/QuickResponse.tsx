@@ -159,7 +159,7 @@ export function QuickResponse({
               transition={spring}
               onClick={() => confirm.mutate({ data: { planId, attending: true } })}
               className={cn(
-                "tap-target inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
+                "tap-target min-w-0 inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60 [&_svg]:shrink-0",
                 variant === "stacked"
                   ? "w-full bg-primary py-3.5 text-base text-primary-foreground hover:opacity-92"
                   : "bg-primary/15 text-primary ring-1 ring-primary/30 backdrop-blur-xl hover:bg-primary/25",
@@ -175,7 +175,7 @@ export function QuickResponse({
               transition={spring}
               onClick={() => setPicking(true)}
               className={cn(
-                "tap-target inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60",
+                "tap-target min-w-0 inline-flex items-center justify-center gap-1.5 rounded-2xl font-semibold transition-colors disabled:opacity-60 [&_svg]:shrink-0",
                 variant === "stacked"
                   ? "w-full text-sm text-muted-foreground hover:text-foreground"
                   : "bg-warning/18 text-warning ring-1 ring-warning/30 backdrop-blur-xl hover:bg-warning/25",
@@ -220,7 +220,7 @@ export function QuickResponse({
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={() => setEditing(true)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+              className="tap-target inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition hover:text-foreground"
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden /> Edit vote
             </motion.button>

@@ -20,6 +20,7 @@ import { SyncAvatar, type SyncMood } from "@/components/quorum/auth/SyncAvatar";
 import { SyncSay, type SayLine } from "@/components/quorum/auth/SyncSay";
 import { useAvatarFollow } from "@/components/quorum/auth/useAvatarFollow";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
+import { MobileActions } from "@/components/quorum/MobileActions";
 
 const GREET_DELAY_MS = 400;
 const GREET_MS = 1500;
@@ -52,6 +53,14 @@ function Onboarding() {
   const navigate = useNavigate();
   const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
   const [step, setStep] = useState(0);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const previousStep = useRef(step);
+  useEffect(() => {
+    if (previousStep.current === step) return;
+    previousStep.current = step;
+    heading.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    heading.current?.focus({ preventScroll: true });
+  }, [step]);
   const [form, setForm] = useState<Record<string, unknown>>({
     avatar_emoji: "🙂",
     account_type: "teen",
@@ -462,7 +471,7 @@ function Onboarding() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-4 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-[max(1rem,env(safe-area-inset-left,0px))] pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:py-10">
       <Wordmark className="mx-auto mb-5 h-7" />
       <div className="flex justify-center">
         <SyncAvatar mood={mood} follow={follow} pulse={pulse} size={108} />
@@ -478,12 +487,16 @@ function Onboarding() {
               />
             ))}
           </div>
-          <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight">
+          <h1
+            ref={heading}
+            tabIndex={-1}
+            className="mt-5 font-display text-2xl font-semibold tracking-tight"
+          >
             {current.title}
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{current.caption}</p>
-          <div className="mt-6">{current.body}</div>
-          <div data-avatar-ignore className="mt-8 flex items-center justify-between">
+          <div className="mt-4 sm:mt-6">{current.body}</div>
+          <MobileActions className="mt-4 sm:mt-8">
             <DynamicButton
               variant="plain"
               type="button"
@@ -531,7 +544,7 @@ function Onboarding() {
                       : "Start planning"
                     : "Continue"}
             </DynamicButton>
-          </div>
+          </MobileActions>
         </Card>
       </div>
     </main>

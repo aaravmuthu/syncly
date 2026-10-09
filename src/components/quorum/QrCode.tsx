@@ -23,11 +23,17 @@ export function QrCode({ value, size = 220 }: { value: string; size?: number }) 
 
   return (
     <div
-      className="grid place-items-center overflow-hidden rounded-2xl bg-white p-3"
-      style={{ width: size + 24, height: size + 24 }}
+      className="grid max-w-full aspect-square place-items-center overflow-hidden rounded-2xl bg-white p-3"
+      style={{ width: size + 24 }}
     >
       {src ? (
-        <img src={src} alt={`QR code linking to ${value}`} width={size} height={size} />
+        <img
+          src={src}
+          alt={`QR code linking to ${value}`}
+          width={size}
+          height={size}
+          className="max-w-full h-auto"
+        />
       ) : (
         // Always a white tile, so pin dark dots regardless of the page theme.
         <ThinkingOrb state="shaping" size={20} theme="light" aria-label="Generating QR code" />

@@ -3,7 +3,12 @@ import { useServerFn } from "@tanstack/react-start";
 import { Modal } from "@/components/quorum/Modal";
 import { Pill, Skeleton } from "@/components/quorum/ui";
 import { getVenueInsight } from "@/lib/quorum/reviews.functions";
-import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
+import {
+  googleReviewsUrl,
+  venuePhoto,
+  venuePhotoSrcSet,
+  venueStats,
+} from "@/lib/quorum/venuePhotos";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
@@ -56,6 +61,9 @@ export function VenueDetailModal({
         <div className="relative overflow-hidden rounded-2xl">
           <img
             src={venuePhoto(venue)}
+            srcSet={venuePhotoSrcSet(venue)}
+            sizes="(max-width: 511px) calc(100vw - 2.5rem), 470px"
+            decoding="async"
             alt={`${venue.title} — ${venue.cuisine ?? venue.subtitle ?? "venue"}`}
             loading="lazy"
             className="h-40 w-full object-cover"

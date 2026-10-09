@@ -61,7 +61,7 @@ export function TimePicker({
               aria-pressed={on}
               onClick={() => pick(p)}
               className={cn(
-                "hit-slop rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums backdrop-blur transition duration-150",
+                "tap-target rounded-full border px-3 py-1.5 text-xs font-semibold tabular-nums backdrop-blur transition duration-150",
                 on
                   ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-6px_var(--success)]"
                   : "border-border/70 bg-secondary/60 text-secondary-foreground hover:border-primary/40",
@@ -78,7 +78,7 @@ export function TimePicker({
             aria-pressed={normalized === null}
             onClick={() => pick(null)}
             className={cn(
-              "hit-slop rounded-full border px-3 py-1.5 text-xs font-semibold transition duration-150",
+              "tap-target rounded-full border px-3 py-1.5 text-xs font-semibold transition duration-150",
               normalized === null
                 ? "border-success/60 bg-success/15 text-success shadow-[0_0_18px_-6px_var(--success)]"
                 : "border-border/70 bg-secondary/60 text-secondary-foreground hover:border-primary/40",
@@ -91,7 +91,7 @@ export function TimePicker({
       </div>
 
       <div className="rounded-2xl border border-border/70 bg-background/40 p-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-xs text-muted-foreground">Slide for a custom time</span>
           <span className="font-display text-lg font-semibold tabular-nums">
             {prettyTime(normalized)}
@@ -106,7 +106,7 @@ export function TimePicker({
             value={mins}
             aria-label="Time"
             onChange={(e) => onChange(fromMinutes(Number(e.target.value)))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-background/70 accent-primary"
+            className="h-11 w-full cursor-pointer rounded-full accent-primary"
           />
         </div>
         <div className="mt-1.5 flex justify-between text-caption uppercase tracking-wide text-muted-foreground">
@@ -119,6 +119,8 @@ export function TimePicker({
 
       <div className="flex items-center gap-2">
         <input
+          aria-label="Custom time"
+          enterKeyHint="done"
           className="h-11 w-full rounded-2xl border border-border bg-background px-3.5 py-2 outline-none transition-colors focus:border-primary/60"
           placeholder='Type "1030", "10:30pm" or "midnight"'
           value={custom}

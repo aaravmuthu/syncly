@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Card, Field, Pill, inputClass } from "./ui";
 import { TimePicker } from "./TimePicker";
 import { QUESTIONNAIRES, type Field as FieldDef, type Step } from "@/lib/quorum/questionnaires";
@@ -6,6 +6,7 @@ import { AVAILABILITY_SLOTS, prettySlot } from "@/lib/quorum/availability";
 import type { ConstraintPayload } from "@/lib/quorum/types";
 import { cn } from "@/lib/utils";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
+import { MobileActions } from "./MobileActions";
 
 export function ConstraintForm({
   questionnaire,
@@ -23,12 +24,20 @@ export function ConstraintForm({
   const [value, setValue] = useState<ConstraintPayload>(initial ?? {});
   const step = steps[stepIndex]!;
   const last = stepIndex === steps.length - 1;
+  const heading = useRef<HTMLHeadingElement>(null);
+  const previousStep = useRef(stepIndex);
+  useEffect(() => {
+    if (previousStep.current === stepIndex) return;
+    previousStep.current = stepIndex;
+    heading.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    heading.current?.focus({ preventScroll: true });
+  }, [stepIndex]);
 
   const set = (key: keyof ConstraintPayload, v: unknown) =>
     setValue((prev) => ({ ...prev, [key]: v }));
 
   return (
-    <Card>
+    <Card className="constraint-flow">
       <div className="flex items-center gap-1.5">
         {steps.map((s, i) => (
           <span
@@ -42,7 +51,13 @@ export function ConstraintForm({
       </div>
 
       <div className="mt-5">
-        <h2 className="font-display text-xl font-semibold tracking-tight">{step.title}</h2>
+        <h2
+          ref={heading}
+          tabIndex={-1}
+          className="font-display text-xl font-semibold tracking-tight"
+        >
+          {step.title}
+        </h2>
         {step.caption ? (
           <p className="mt-1.5 text-sm text-muted-foreground">{step.caption}</p>
         ) : null}
@@ -54,10 +69,11 @@ export function ConstraintForm({
         ))}
       </div>
 
-      <div className="mt-7 flex items-center justify-between gap-3">
+      <MobileActions className="mt-5 sm:mt-7">
         <DynamicButton
           variant="plain"
           type="button"
+          disabled={saving}
           className="text-sm text-muted-foreground underline-offset-4 hover:underline"
           onClick={() =>
             stepIndex === 0 ? onSubmit({ ...value, skipped: true }) : setStepIndex(stepIndex - 1)
@@ -72,7 +88,7 @@ export function ConstraintForm({
         >
           {saving ? "Saving…" : last ? "Submit privately" : "Continue"}
         </DynamicButton>
-      </div>
+      </MobileActions>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
         Only you can see these answers. The group sees which options work — never why.
@@ -99,8 +115,9 @@ function FieldRenderer({
       <button
         type="button"
         onClick={() => onChange(field.key, !on)}
+        aria-pressed={on}
         className={cn(
-          "flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition",
+          "tap-target flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition",
           on ? "border-primary/50 bg-primary/8" : "border-border hover:bg-secondary",
         )}
       >
@@ -112,7 +129,7 @@ function FieldRenderer({
         </span>
         <span
           className={cn(
-            "h-6 w-10 rounded-full p-0.5 transition",
+            "h-6 w-10 shrink-0 rounded-full p-0.5 transition",
             on ? "bg-primary" : "bg-secondary-foreground/20",
           )}
         >
@@ -138,7 +155,7 @@ function FieldRenderer({
       <div>
         <span className="text-sm font-medium">{field.label}</span>
         {field.hint ? <p className="mt-0.5 text-xs text-muted-foreground">{field.hint}</p> : null}
-        <div className="mt-2 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+        <div className="mt-2 grid grid-cols-3 gap-2 min-[390px]:grid-cols-4 sm:grid-cols-6">
           {AVAILABILITY_SLOTS.map((slot) => {
             const on = selected.includes(slot);
             return (
@@ -148,7 +165,7 @@ function FieldRenderer({
                 aria-pressed={on}
                 onClick={() => toggle(slot)}
                 className={cn(
-                  "rounded-xl px-2 py-2.5 text-xs font-medium tabular-nums transition",
+                  "tap-target rounded-xl px-2 py-2.5 text-xs font-medium tabular-nums transition",
                   on ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
                 )}
               >
@@ -160,14 +177,14 @@ function FieldRenderer({
         <div className="mt-2 flex gap-3 text-xs">
           <button
             type="button"
-            className="text-muted-foreground underline-offset-4 hover:underline"
+            className="tap-target text-muted-foreground underline-offset-4 hover:underline"
             onClick={() => onChange(field.key, [...AVAILABILITY_SLOTS])}
           >
             Free all day
           </button>
           <button
             type="button"
-            className="text-muted-foreground underline-offset-4 hover:underline"
+            className="tap-target text-muted-foreground underline-offset-4 hover:underline"
             onClick={() => onChange(field.key, [])}
           >
             Clear
@@ -193,11 +210,12 @@ function FieldRenderer({
               <button
                 key={o}
                 type="button"
+                aria-pressed={on}
                 onClick={() =>
                   onChange(field.key, on ? selected.filter((s) => s !== o) : [...selected, o])
                 }
                 className={cn(
-                  "rounded-full px-3 py-1.5 text-sm transition first-letter:uppercase",
+                  "tap-target rounded-full px-3 py-1.5 text-sm transition first-letter:uppercase",
                   on
                     ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-secondary-foreground",
@@ -260,6 +278,8 @@ function FieldRenderer({
         {prefix ? <span className="text-muted-foreground">{prefix}</span> : null}
         <input
           type={type}
+          inputMode={field.kind === "money" ? "decimal" : "numeric"}
+          aria-label={field.label}
           className={inputClass}
           value={(current as string | number | null) ?? ""}
           onChange={(e) =>
@@ -273,7 +293,7 @@ function FieldRenderer({
             )
           }
         />
-        {suffix ? <span className="text-sm text-muted-foreground">{suffix}</span> : null}
+        {suffix ? <span className="shrink-0 text-sm text-muted-foreground">{suffix}</span> : null}
       </div>
     </div>
   );

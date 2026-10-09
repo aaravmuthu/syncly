@@ -69,7 +69,39 @@ export function ChatSheetShell<T extends BaseTurn>({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={title} description={description}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      description={description}
+      footer={
+        <form
+          className="flex items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send(input);
+          }}
+        >
+          <input
+            enterKeyHint="send"
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type a message…"
+            aria-label={title}
+            className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
+          />
+          <Button
+            type="submit"
+            disabled={!input.trim() || pending}
+            aria-label="Send"
+            className="h-11 px-4"
+          >
+            <Send className="h-4 w-4" aria-hidden />
+          </Button>
+        </form>
+      }
+    >
       <div ref={scroller} className="max-h-[46dvh] space-y-3 overflow-y-auto pr-1">
         {turns.length === 0 ? (
           <div className="space-y-2">
@@ -82,7 +114,7 @@ export function ChatSheetShell<T extends BaseTurn>({
                     type="button"
                     disabled={pending}
                     onClick={() => send(s)}
-                    className="pressable active:pressable-active rounded-full border border-border px-3 py-2 text-xs font-medium hover:bg-secondary disabled:opacity-55"
+                    className="tap-target pressable active:pressable-active rounded-full border border-border px-3 py-2 text-xs font-medium hover:bg-secondary disabled:opacity-55"
                   >
                     {s}
                   </button>
@@ -122,31 +154,6 @@ export function ChatSheetShell<T extends BaseTurn>({
           />
         ) : null}
       </div>
-
-      <form
-        className="mt-4 flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send(input);
-        }}
-      >
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message…"
-          aria-label={title}
-          className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
-        />
-        <Button
-          type="submit"
-          disabled={!input.trim() || pending}
-          aria-label="Send"
-          className="h-11 px-4"
-        >
-          <Send className="h-4 w-4" aria-hidden />
-        </Button>
-      </form>
     </Modal>
   );
 }
@@ -155,7 +162,7 @@ export function ChatSheetShell<T extends BaseTurn>({
 export function MessageBody({ text }: { text: string }) {
   const lines = text.split("\n").filter((l) => l.trim().length);
   return (
-    <div className="space-y-1.5 leading-relaxed">
+    <div className="space-y-1.5 leading-relaxed [overflow-wrap:anywhere]">
       {lines.map((line, i) => {
         const bullet = /^\s*([-*•]|\d+\.)\s+/.test(line);
         const clean = line.replace(/^\s*([-*•]|\d+\.)\s+/, "").replace(/\*\*/g, "");
@@ -164,7 +171,7 @@ export function MessageBody({ text }: { text: string }) {
             <span aria-hidden className="text-primary">
               •
             </span>
-            <span>{clean}</span>
+            <span className="min-w-0">{clean}</span>
           </p>
         ) : (
           <p key={i}>{clean}</p>

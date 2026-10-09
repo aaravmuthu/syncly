@@ -20,7 +20,12 @@ import {
 } from "@/lib/quorum/spots.functions";
 import type { VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
 import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
-import { googleReviewsUrl, venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
+import {
+  googleReviewsUrl,
+  venuePhoto,
+  venuePhotoSrcSet,
+  venueStats,
+} from "@/lib/quorum/venuePhotos";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 import { firstName } from "@/lib/quorum/names";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
@@ -226,14 +231,16 @@ export function SpotBrowser({
           {/* Search + radius */}
           <div className="flex flex-wrap items-end gap-3">
             <form
-              className="flex min-w-[220px] flex-1 gap-2"
+              className="flex min-w-0 basis-full gap-2 sm:min-w-[220px] sm:flex-1 sm:basis-auto"
               onSubmit={(e) => {
                 e.preventDefault();
                 setSubmitted(query.trim());
               }}
             >
               <input
-                className="h-11 w-full rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
+                type="search"
+                enterKeyHint="search"
+                className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-3.5 outline-none transition-colors focus:border-primary/60"
                 placeholder="Search a place (e.g. Chipotle)"
                 aria-label="Search local spots"
                 value={query}
@@ -243,7 +250,7 @@ export function SpotBrowser({
                 Search
               </Button>
             </form>
-            <div className="min-w-[190px]">
+            <div className="min-w-0 w-full sm:w-auto sm:min-w-[190px]">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="spot-radius">
                 Radius · {radius} mi
               </label>
@@ -320,6 +327,9 @@ export function SpotBrowser({
                   <span className="relative block">
                     <img
                       src={venuePhoto(s)}
+                      srcSet={venuePhotoSrcSet(s)}
+                      sizes="(max-width: 767px) calc(100vw - 4rem), 700px"
+                      decoding="async"
                       alt={`${s.title} — ${s.cuisine ?? s.subtitle}`}
                       loading="lazy"
                       className="h-28 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
