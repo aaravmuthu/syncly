@@ -1679,3 +1679,36 @@
     animation: none;
   }
 }
+
+/* Sync's speech bubble on the demo walkthrough (demo/SyncGuide.tsx). */
+.guide-bubble {
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-wrap: pretty;
+  box-shadow: 0 14px 30px -16px rgb(0 0 0 / 0.45);
+}
+.guide-bubble::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+}
+.guide-bubble[data-side="right"]::before {
+  left: -4px;
+}
+.guide-bubble[data-side="left"]::before {
+  right: -4px;
+}
+.guide-bubble[data-side="below"]::before {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}

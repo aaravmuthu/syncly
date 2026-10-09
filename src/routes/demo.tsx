@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { DEMO_GROUP, DEMO_POOL, type DemoMember } from "@/lib/quorum/demo-group";
 import { analyze, type CoachMove } from "@/lib/quorum/demo-coach";
 import { DemoCoach } from "@/components/quorum/demo/DemoCoach";
-import { DemoWalkthrough } from "@/components/quorum/demo/DemoWalkthrough";
+import { DemoWalkthrough, type TwistId } from "@/components/quorum/demo/DemoWalkthrough";
 
 const TITLE = `Try ${BRAND.name} — interactive demo, no account needed`;
 const DESCRIPTION =
@@ -101,9 +101,12 @@ function DemoPage() {
   const reduce = useReducedMotion();
   // Visitors start with the guided walkthrough, then get the playground.
   const [stage, setStage] = useState<"tour" | "play">("tour");
-  const startPlaying = () => {
+  const startPlaying = (twist?: TwistId) => {
     setStage("play");
     window.scrollTo({ top: 0, behavior: "instant" });
+    // A twist picked on the last step lands already applied.
+    const t = twist && TRY_THESE.find((x) => x.id === twist);
+    if (t) tryThis(t);
   };
   const [members, setMembers] = useState<DemoMember[]>(DEMO_GROUP);
   const [activeId, setActiveId] = useState("m1");
