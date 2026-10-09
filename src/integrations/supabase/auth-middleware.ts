@@ -31,8 +31,8 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   };
 }
 
-export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
-  async ({ next }) => {
+function authMiddleware(enforceMfa: boolean) {
+  return createMiddleware({ type: "function" }).server(async ({ next }) => {
     // Lovable Secrets expose these under SB_* (it reserves the SUPABASE_ prefix);
     // local dev keeps using the original SUPABASE_* names.
     const SUPABASE_URL = process.env["SB_URL"] || process.env["SUPABASE_URL"];
@@ -97,12 +97,23 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
       throw new Error("Unauthorized: No user ID found in token");
     }
 
+    // Also gates service-role handlers, which otherwise bypass database RLS.
+    if (enforceMfa) {
+      const { data: mfaAllowed, error: mfaError } = await supabase.rpc("has_required_mfa");
+      if (mfaError) throw new Error("Could not verify account security. Please try again.");
+      if (!mfaAllowed) throw new Error("Two-factor verification required. Finish signing in.");
+    }
+
     return next({
       context: {
         supabase,
         userId: data.claims.sub,
         claims: data.claims,
+        accessToken: token,
       },
     });
-  },
-);
+  });
+}
+export const requireSupabaseAuth = authMiddleware(true);
+// Only the second-factor bootstrap endpoints may use this session-only gate.
+export const requireSupabaseSession = authMiddleware(false);

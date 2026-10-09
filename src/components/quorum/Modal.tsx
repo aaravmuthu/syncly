@@ -23,6 +23,7 @@ export function Modal({
     <DrawerPrimitive.Root
       open={open}
       onOpenChange={(v) => (v ? null : onClose())}
+      autoFocus
       shouldScaleBackground
     >
       <DrawerPrimitive.Portal>

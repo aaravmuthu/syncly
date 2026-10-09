@@ -1,3 +1,4 @@
+import { CookieSettingsButton } from "@/components/quorum/CookieConsent";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BRAND } from "@/lib/brand";
 import { LEGAL } from "@/lib/legal";
@@ -276,6 +277,16 @@ function PrivacyPage() {
           other users or service providers may also remain. Contact us for a data-deletion request
           or questions about what remains.
         </p>
+      </Section>
+
+      <Section id="cookies" title="Cookies & browser storage">
+        <p>
+          Essential browser storage keeps you signed in and remembers your theme and cookie choices.
+          Optional analytics and marketing storage is off by default. Syncly currently has no
+          optional analytics or advertising cookies. Consent choices are saved in this browser for
+          six months; you can update them below.
+        </p>
+        <CookieSettingsButton />
       </Section>
 
       <Section id="security" title="9. Security">

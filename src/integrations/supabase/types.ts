@@ -1752,6 +1752,29 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      email_mfa_status: { Args: { _user_id: string; _session_id: string }; Returns: Json };
+      reserve_email_mfa_challenge: {
+        Args: {
+          _user_id: string;
+          _session_id: string;
+          _challenge_id: string;
+          _code_hash: string;
+          _email_address: string;
+          _purpose: string;
+        };
+        Returns: undefined;
+      };
+      verify_email_mfa_challenge: {
+        Args: {
+          _user_id: string;
+          _session_id: string;
+          _challenge_id: string;
+          _code_hash: string;
+          _email_address: string;
+        };
+        Returns: Json;
+      };
+      has_required_mfa: { Args: Record<PropertyKey, never>; Returns: boolean };
       can_see_group_message: { Args: { _message_id: string }; Returns: boolean };
       can_see_plan: { Args: { _plan_id: string }; Returns: boolean };
       is_group_admin: { Args: { _group_id: string }; Returns: boolean };

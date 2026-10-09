@@ -1,3 +1,5 @@
+import { AccountSecurity } from "@/components/quorum/auth/AccountSecurity";
+import { CookieSettingsButton } from "@/components/quorum/CookieConsent";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -170,7 +172,10 @@ function AccountPage() {
         </Button>
       </Card>
 
+      <AccountSecurity />
+
       <Card className="mt-4 space-y-4">
+        <CookieSettingsButton />
         <SectionHeader icon={ShieldCheck} title="Privacy & data" />
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li>

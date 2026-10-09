@@ -7,19 +7,22 @@ type Policy = {
   qual: string;
   with_check: string;
   roles: string;
+  permissive: string;
 };
 
-function policies(schema: string, table: string): Policy[] {
+function policies(schema: string, table: string, includeRestrictive = false): Policy[] {
   const sql = `select coalesce(json_agg(json_build_object(
       'policyname', policyname,
       'cmd', cmd,
       'qual', coalesce(qual, ''),
       'with_check', coalesce(with_check, ''),
-      'roles', array_to_string(roles, ',')
+      'roles', array_to_string(roles, ','),
+      'permissive', permissive
     )), '[]'::json)::text
     from pg_policies where schemaname = '${schema}' and tablename = '${table}';`;
   const out = execFileSync("psql", ["-At", "-c", sql], { encoding: "utf8" });
-  return JSON.parse(out.trim()) as Policy[];
+  const rows = JSON.parse(out.trim()) as Policy[];
+  return includeRestrictive ? rows : rows.filter((p) => p.permissive === "PERMISSIVE");
 }
 
 const byCmd = (list: Policy[], cmd: string) => list.filter((p) => p.cmd === cmd);
@@ -98,5 +101,41 @@ describe("group_preferences policies (group_preferences_missing_delete_insert_ow
   it("limits SELECT to group members and has no ALL policy", () => {
     expect(norm(byCmd(list, "SELECT")[0]!.qual)).toContain("is_group_member(group_id)");
     expect(byCmd(list, "ALL")).toEqual([]);
+  });
+});
+
+describe("MFA database enforcement", () => {
+  it("requires MFA through restrictive policies without granting access", () => {
+    for (const [schema, table] of [
+      ["public", "profiles"],
+      ["public", "group_messages"],
+      ["public", "location_pings"],
+      ["storage", "objects"],
+    ]) {
+      const gate = policies(schema!, table!, true).find(
+        (p) => p.policyname === "require_verified_mfa",
+      );
+      expect(gate, `${schema}.${table} MFA policy missing`).toBeDefined();
+      expect(gate!.permissive).toBe("RESTRICTIVE");
+      expect(gate!.cmd).toBe("ALL");
+      expect(gate!.roles).toBe("authenticated");
+      expect(norm(gate!.qual)).toContain("has_required_mfa()");
+      expect(norm(gate!.with_check)).toContain("has_required_mfa()");
+    }
+  });
+});
+
+describe("email MFA private state", () => {
+  it("keeps challenge and verification tables private to the service role", () => {
+    const sql = `select bool_and(not has_table_privilege(role_name, 'public.' || table_name, 'SELECT,INSERT,UPDATE,DELETE'))
+      from unnest(array['anon','authenticated']) role_name
+      cross join unnest(array['account_security','email_mfa_sessions','email_mfa_challenges','email_mfa_send_limits']) table_name;`;
+    expect(execFileSync("psql", ["-At", "-c", sql], { encoding: "utf8" }).trim()).toBe("t");
+  });
+  it("does not expose service verification RPCs to a first-factor client", () => {
+    const sql = `select bool_and(not has_function_privilege(role_name, function_name, 'EXECUTE'))
+      from unnest(array['anon','authenticated']) role_name
+      cross join unnest(array['public.email_mfa_status(uuid,uuid)', 'public.reserve_email_mfa_challenge(uuid,uuid,uuid,text,text,text)', 'public.verify_email_mfa_challenge(uuid,uuid,uuid,text,text)']) function_name;`;
+    expect(execFileSync("psql", ["-At", "-c", sql], { encoding: "utf8" }).trim()).toBe("t");
   });
 });
