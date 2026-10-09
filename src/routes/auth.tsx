@@ -17,7 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { safeRedirectPath } from "@/lib/safe-dom";
 import { SecondFactor } from "@/components/quorum/auth/SecondFactor";
 import { CodeInput } from "@/components/quorum/auth/CodeInput";
-import { needsSecondFactor, normalizePhone } from "@/lib/auth-security";
+import { PHONE_AUTH_ENABLED, needsSecondFactor, normalizePhone } from "@/lib/auth-security";
 import { cn } from "@/lib/utils";
 
 type Mode = "signin" | "signup" | "reset" | "update";
@@ -501,41 +501,43 @@ function AuthPage() {
           </div>
         ) : (
           <>
-            {!otp && (mode === "signin" || mode === "signup" || mode === "reset") && (
-              <div
-                role="group"
-                aria-label={mode === "reset" ? "Recovery method" : "Sign-in method"}
-                className="relative mb-5 flex rounded-2xl bg-secondary p-1"
-              >
-                {/* One pill that slides between options, so the switch reads as
+            {PHONE_AUTH_ENABLED &&
+              !otp &&
+              (mode === "signin" || mode === "signup" || mode === "reset") && (
+                <div
+                  role="group"
+                  aria-label={mode === "reset" ? "Recovery method" : "Sign-in method"}
+                  className="relative mb-5 flex rounded-2xl bg-secondary p-1"
+                >
+                  {/* One pill that slides between options, so the switch reads as
                     a single physical control rather than two buttons swapping fills. */}
-                <span
-                  aria-hidden="true"
-                  className="segment-thumb absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-card shadow-sm"
-                  data-side={method === "phone" ? "end" : undefined}
-                />
-                {(["email", "phone"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={method === value}
-                    disabled={busy || !!social}
-                    onClick={() => {
-                      setMethod(value);
-                      setPassword("");
-                      setFormError(null);
-                      setNotice(null);
-                    }}
-                    className={cn(
-                      "tap-target relative flex-1 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors",
-                      method === value && "text-foreground",
-                    )}
-                  >
-                    {value === "email" ? "Email" : "Phone number"}
-                  </button>
-                ))}
-              </div>
-            )}
+                  <span
+                    aria-hidden="true"
+                    className="segment-thumb absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-card shadow-sm"
+                    data-side={method === "phone" ? "end" : undefined}
+                  />
+                  {(["email", "phone"] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={method === value}
+                      disabled={busy || !!social}
+                      onClick={() => {
+                        setMethod(value);
+                        setPassword("");
+                        setFormError(null);
+                        setNotice(null);
+                      }}
+                      className={cn(
+                        "tap-target relative flex-1 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors",
+                        method === value && "text-foreground",
+                      )}
+                    >
+                      {value === "email" ? "Email" : "Phone number"}
+                    </button>
+                  ))}
+                </div>
+              )}
             <VerificationFeedback
               accepted={accepted}
               onComplete={completeCode}

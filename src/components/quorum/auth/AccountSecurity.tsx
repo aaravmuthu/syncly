@@ -1,4 +1,5 @@
 import { EmailSecondFactor } from "./EmailSecondFactor";
+import { PHONE_AUTH_ENABLED } from "@/lib/auth-security";
 import { getEmailSecurity } from "@/lib/email-mfa.functions";
 import { useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
@@ -132,7 +133,7 @@ export function AccountSecurity() {
                 </Button>
               </div>
             ))
-          ) : (
+          ) : PHONE_AUTH_ENABLED ? (
             <Button
               variant="outline"
               disabled={busy}
@@ -143,14 +144,21 @@ export function AccountSecurity() {
             >
               {busy ? "Loading…" : "Set up SMS verification"}
             </Button>
-          )}
-          <div className="border-t border-border pt-4 space-y-3">
+          ) : null}
+          <div
+            className={
+              factors.length || PHONE_AUTH_ENABLED
+                ? "border-t border-border pt-4 space-y-3"
+                : "space-y-3"
+            }
+          >
             <p className="text-sm font-medium">
               Email verification {emailEnabled ? "· enabled" : "· off"}
             </p>
             <p className="text-sm text-muted-foreground">
-              Require a separate email code after signing in with your password or Google. If you
-              enable both email and SMS verification, each sign-in requires both codes.
+              Require a separate email code after signing in with your password or Google.
+              {(factors.length > 0 || PHONE_AUTH_ENABLED) &&
+                " If you enable both email and SMS verification, each sign-in requires both codes."}
             </p>
             {!confirmedEmail && (
               <form onSubmit={addEmail} className="space-y-3">
