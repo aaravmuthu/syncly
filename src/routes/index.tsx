@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
@@ -12,9 +12,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import { BRAND } from "@/lib/brand";
-import { cn } from "@/lib/utils";
-import { LogoMarkDark } from "@/components/quorum/Logo";
-import { UnicornScene, type UnicornSceneHandle } from "@/components/quorum/landing/UnicornScene";
+import { Wordmark } from "@/components/quorum/Wordmark";
+import { MouseSpotlight } from "@/components/quorum/MouseSpotlight";
+import { GlowButton } from "@/components/quorum/GlowButton";
+import { TrendingPills } from "@/components/quorum/TrendingPills";
+import { Reveal, RevealGroup, RevealItem, SpotlightCard } from "@/components/quorum/interactions";
+import { WorksWithMarquee } from "@/components/quorum/WorksWithMarquee";
+import { SyncOrbit } from "@/components/quorum/landing/SyncOrbit";
 
 const TITLE = "Syncly — Squad Planning & Live Radar";
 const DESCRIPTION = "Sync hangouts in seconds with live location radar and smart parent safety.";
@@ -40,334 +44,304 @@ export const Route = createFileRoute("/")({
       { name: "twitter:description", content: DESCRIPTION },
       { name: "twitter:image", content: OG_IMAGE },
     ],
-    links: [
-      { rel: "canonical", href: "https://syncly.website/" },
-      {
-        rel: "preload",
-        href: "/fonts/geist/GeistPixel-Square.woff2",
-        as: "font",
-        type: "font/woff2",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "preload",
-        href: "/fonts/geist/Geist-Variable.woff2",
-        as: "font",
-        type: "font/woff2",
-        crossOrigin: "anonymous",
-      },
-      { rel: "preconnect", href: "https://assets.unicorn.studio", crossOrigin: "anonymous" },
-    ],
+    links: [{ rel: "canonical", href: "https://syncly.website/" }],
   }),
   component: Landing,
 });
 
-// Published from Unicorn Studio ("Orbital Metallic Spheres (Remix)"). Edit the
-// scene there and republish; the embed picks it up from the production CDN.
-const HERO_SCENE = "V60yaPp4htyj82871SMZ";
-const HERO_LABEL =
-  "Eight metallic spheres pulled together on an evergreen field, ringed by the words Syncly, plans that work for everyone. Moving the cursor sends ripples through the scene.";
-
-// Layer ids in that scene. The text layer's font size is live in the published
-// scene, so phones get it bigger at runtime.
-const HERO_TEXT_LAYER = "8c6adbca-f422-4f70-bab7-2a2de3396d84";
-const tuneHero = (scene: UnicornSceneHandle, small: boolean) => {
-  if (small && window.innerWidth < 768) scene.setProp(HERO_TEXT_LAYER, "fontSize", 0.15);
-};
-
-const SIGNUP = { next: "/home", mode: "signup" } as const;
-
-const CATEGORIES = ["Dinner", "Concerts", "Recreation", "Movies", "Road trips", "Game night"];
-
-// Every name here must be a service Syncly actually calls today.
-const SERVICES = ["Mapbox", "OpenStreetMap", "Geoapify", "Open-Meteo", "Supabase"];
-
-const UNSAID = [
-  { t: "“I can't spend that much.”", s: "Budget is the hardest thing to say in a group chat." },
-  { t: "“I need a ride.”", s: "Getting there is half the plan and never gets planned." },
-  { t: "“I have to be home by 10.”", s: "Curfews quietly kill otherwise perfect plans." },
-  { t: "“I can't eat there.”", s: "Dietary needs get remembered at the table, too late." },
-];
-
-const STEPS = [
-  { n: "01", t: "Create a plan", d: "Pick a category, a date window, and a group." },
-  {
-    n: "02",
-    t: "Everyone answers privately",
-    d: "Budget, timing, rides, food, rules — seen by nobody else.",
-  },
-  {
-    n: "03",
-    t: "We compute what's possible",
-    d: "Hard limits filter. Preferences rank. Fairness breaks ties.",
-  },
-  {
-    n: "04",
-    t: "Vote on real options",
-    d: "Every option on the ballot already works for everyone.",
-  },
-];
-
-const FEATURES: {
-  id: string;
-  icon: ComponentType<{ className?: string }>;
-  name: string;
-  title: string;
-  body: string;
-  bullets: string[];
-}[] = [
-  {
-    id: "privacy",
-    icon: ShieldCheck,
-    name: "Privacy",
-    title: "Your friends don't need to know why you can't.",
-    body: "Constraints stay on your side of the wall. The group only ever sees whether an option works — never who it didn't work for, and never why.",
-    bullets: [
-      "Private answers are readable only by you",
-      "Group sees compatibility, never individual limits",
-      "Neutral language everywhere: “doesn't meet every requirement”",
-    ],
-  },
-  {
-    id: "compatibility",
-    icon: Sparkles,
-    name: "Compatibility",
-    title: "A score you can actually trust.",
-    body: "Hard constraints eliminate. Soft preferences rank. And fairness makes sure the same person isn't quietly sacrificed every single weekend.",
-    bullets: [
-      "Feasibility before popularity",
-      "Fairness-aware ranking across plans",
-      "Clear, non-identifying explanations",
-    ],
-  },
-  {
-    id: "parents",
-    icon: CalendarCheck,
-    name: "Parent approval",
-    title: "Approval without downloading anything.",
-    body: "Send one link. A parent sees the plan, the people, the cost, the ride, and the return time — then approves, declines, or approves with a condition.",
-    bullets: [
-      "Conditions attach privately to that person",
-      "The plan re-checks itself instantly",
-      "Alternatives appear if it no longer fits",
-    ],
-  },
-  {
-    id: "rides",
-    icon: Car,
-    name: "Transportation",
-    title: "Rides are part of the plan, not an afterthought.",
-    body: "Seats, drivers, distance limits and return times get solved together, so nobody finds out at 9pm that they have no way home.",
-    bullets: ["Car-by-car assignments", "Respects capacity and curfews", "Ride needs stay private"],
-  },
-  {
-    id: "radar",
-    icon: MapPin,
-    name: "Live radar",
-    title: "See who's close, without oversharing.",
-    body: "One clear switch in Settings, off by default. Turn it on and the squad sees live pins, ETAs and arrival status — no digging through a group chat to ask “where are you.”",
-    bullets: [
-      "One toggle controls sharing — no silent background tracking",
-      "Battery and ETA at a glance",
-      "Check or turn it off from Settings any time",
-    ],
-  },
-];
-
-const VOICES = [
-  {
-    q: "We stopped having the “where do you want to go” conversation entirely.",
-    a: "Example teen",
-  },
-  { q: "I didn't have to tell six people my budget. It just worked.", a: "Another example teen" },
-  {
-    q: "The approval link answered every question I usually have to ask.",
-    a: "Example guardian",
-  },
-];
-
 function Landing() {
-  const heroRef = useRef<HTMLElement>(null);
-  const [pastHero, setPastHero] = useState(false);
-
-  // The nav reads ink-on-teal over the scene and turns solid once the dark
-  // sections slide under it.
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-    const io = new IntersectionObserver(([entry]) => setPastHero(!entry.isIntersecting), {
-      rootMargin: "-64px 0px 0px 0px",
-    });
-    io.observe(hero);
-    return () => io.disconnect();
-  }, []);
-
+  // Without WebGL the scene can't draw the wrapped tagline, so the h1 shows.
+  const [flat, setFlat] = useState(false);
   return (
-    <div className="us-landing">
-      <a href="#main" className="us-skip">
-        Skip to content
-      </a>
-      <header className="us-nav safe-top" data-solid={pastHero || undefined}>
-        <div className="us-wrap flex h-16 items-center justify-between gap-3">
-          <Link to="/" className="us-brand" aria-label={`${BRAND.name} home`}>
-            <LogoMarkDark size={30} className="drop-shadow-none" />
-            <span>{BRAND.name}</span>
-          </Link>
-          <nav className="flex items-center gap-1.5 sm:gap-2" aria-label="Account">
-            <Link to="/auth" search={{ next: "/home", mode: "signin" }} className="us-navlink">
+    <div className="paper-field relative min-h-dvh">
+      <MouseSpotlight />
+      <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-2.5">
+          <Wordmark />
+          <div className="flex items-center gap-2">
+            <Link
+              to="/auth"
+              search={{ next: "/home", mode: "signin" }}
+              className="tap-target inline-flex items-center rounded-full px-3.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
               Log in
             </Link>
-            <Link to="/auth" search={SIGNUP} className="us-btn us-btn--nav">
+
+            <Link
+              to="/auth"
+              search={{ next: "/home", mode: "signup" }}
+              className="pressable active:pressable-active tap-target inline-flex items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
+            >
               Start planning
             </Link>
-          </nav>
+          </div>
         </div>
       </header>
 
-      <main id="main">
-        <section ref={heroRef} className="us-hero" aria-labelledby="hero-title">
-          <UnicornScene
-            projectId={HERO_SCENE}
-            label={HERO_LABEL}
-            poster={{ desktop: "/hero/unicorn-desktop.jpg", mobile: "/hero/unicorn-mobile.jpg" }}
-            tune={tuneHero}
-            className="absolute inset-0"
+      <main className="relative z-10">
+        {/* Hero: the squad as eight spheres pulled into one plan, with the
+            tagline turning around them (components/quorum/landing/SyncOrbit.tsx) */}
+        <section className="orbit-hero" aria-labelledby="hero-title">
+          <SyncOrbit
+            lines={["Plans that actually", "work for everyone."]}
+            className="absolute inset-0 size-full"
+            onFallback={() => setFlat(true)}
           />
-          <h1 id="hero-title" className="sr-only">
-            {BRAND.name} — {BRAND.tagline}
+          <h1
+            id="hero-title"
+            className={
+              flat
+                ? "relative mx-auto max-w-[980px] px-5 pt-[18svh] text-center text-[clamp(40px,6.4vw,80px)] leading-[1.05] font-semibold tracking-[-0.02em] text-balance"
+                : "sr-only"
+            }
+          >
+            {BRAND.tagline}
           </h1>
-          <div className="us-hero__foot us-wrap">
-            <p className="us-hero__pitch">{BRAND.shortPitch}</p>
-            <div className="us-hero__actions">
-              <Link to="/auth" search={SIGNUP} className="us-btn us-btn--ink">
-                Start planning <ArrowRight className="size-4" aria-hidden />
-              </Link>
-              <Link to="/demo" className="us-btn us-btn--line">
-                Try the demo
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        <section className="us-ticker" aria-label="Plan categories and the services Syncly uses">
-          <div className="marquee">
-            <div className="marquee-track us-ticker__track">
-              {[0, 1].map((copy) => (
-                <ul key={copy} className="us-ticker__row" aria-hidden={copy === 1 || undefined}>
-                  {CATEGORIES.map((c) => (
-                    <li key={c}>{c}</li>
-                  ))}
-                </ul>
-              ))}
-            </div>
-          </div>
-          <p className="us-wrap us-ticker__works">
-            Works with the tools &amp; places you already use:{" "}
-            {SERVICES.map((s, i) => (
-              <span key={s}>
-                <span className="text-[var(--us-foam)]">{s}</span>
-                {i < SERVICES.length - 1 ? " · " : ""}
-              </span>
-            ))}
-          </p>
-        </section>
-
-        <section className="us-section" aria-labelledby="unsaid-title">
-          <div className="us-wrap">
-            <h2 id="unsaid-title" className="us-display us-display--xl max-w-[18ch]">
-              Group plans don't fail because nobody cares. They fail because of everything nobody
-              wants to say out loud.
-            </h2>
-            <ul className="us-unsaid">
-              {UNSAID.map((c) => (
-                <li key={c.t}>
-                  <p className="us-unsaid__quote">{c.t}</p>
-                  <p className="us-unsaid__why">{c.s}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section id="how" className="us-band" aria-labelledby="how-title">
-          <div className="us-wrap">
-            <h2 id="how-title" className="us-display us-display--xl">
-              Four steps. No negotiating.
-            </h2>
-            <ol className="us-steps">
-              {STEPS.map((s, i) => (
-                <Step key={s.n} index={i} {...s} />
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <Features />
-
-        <section className="us-section us-section--deep" aria-labelledby="sync-title">
-          <div className="us-wrap grid items-center gap-14 lg:grid-cols-[1fr_1.15fr]">
-            <div>
-              <h2 id="sync-title" className="us-display us-display--lg max-w-[16ch]">
-                Change it on your phone. It's already there on the web.
-              </h2>
-              <p className="us-lede mt-6 max-w-[44ch]">
-                One plan, kept in sync live across every device your squad opens it on.
-              </p>
-            </div>
-            <SyncPreview />
-          </div>
-        </section>
-
-        <section className="us-section" aria-labelledby="voices-title">
-          <div className="us-wrap">
-            <h2 id="voices-title" className="sr-only">
-              Example scenarios
-            </h2>
-            <p className="us-note">
-              Illustrative examples of how Syncly can help. These are not customer testimonials.
+          <div className="orbit-hero__foot">
+            <p className="max-w-[34ch] text-[clamp(17px,1.5vw,20px)] leading-[1.4] text-pretty text-muted-foreground">
+              {DESCRIPTION}
             </p>
-            <div className="us-voices">
-              {VOICES.map((v) => (
-                <figure key={v.a}>
-                  <blockquote>{v.q}</blockquote>
-                  <figcaption>{v.a}</figcaption>
-                </figure>
-              ))}
+            <div className="flex flex-wrap gap-3">
+              <GlowButton
+                to="/auth"
+                search={{ next: "/home", mode: "signup" }}
+                glow="primary"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-[22px] py-[11px] text-lg leading-6 text-primary-foreground"
+              >
+                <span className="inline-flex items-center gap-2">
+                  Start planning <ArrowRight className="size-4" />
+                </span>
+              </GlowButton>
+              <GlowButton
+                to="/demo"
+                glow="neutral"
+                className="glass-pill inline-flex min-h-11 items-center rounded-full border border-primary px-[22px] py-[11px] text-lg leading-6 text-primary transition-colors hover:bg-primary/[0.06]"
+              >
+                Try the demo
+              </GlowButton>
             </div>
           </div>
         </section>
 
-        <section className="us-band us-close" aria-labelledby="close-title">
-          <div className="us-wrap flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 id="close-title" className="us-display us-display--xxl max-w-[14ch]">
-                Everyone gets a seat at the table.
-              </h2>
-              <p className="us-lede mt-6">
-                Private constraints. Better plans. Free to start with your group.
-              </p>
-            </div>
-            <Link to="/auth" search={SIGNUP} className="us-btn us-btn--ink us-btn--lg shrink-0">
-              Start planning <ArrowRight className="size-5" aria-hidden />
-            </Link>
+        <Reveal>
+          <TrendingPills />
+        </Reveal>
+        <Reveal>
+          <WorksWithMarquee />
+        </Reveal>
+
+        {/* Web <-> iPhone sync */}
+        <section className="mx-auto max-w-6xl px-5 py-16">
+          <Reveal className="mx-auto max-w-xl text-center">
+            <h2 className="text-3xl font-semibold sm:text-4xl">
+              Change it on your phone. It's already there on the web.
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              One plan, kept in sync live across every device your squad opens it on.
+            </p>
+          </Reveal>
+          <Reveal className="mt-12">
+            <SyncPreview />
+          </Reveal>
+        </section>
+
+        {/* Problem */}
+        <section className="mx-auto max-w-6xl px-5 py-16">
+          <Reveal as="h2" className="max-w-2xl text-3xl font-semibold sm:text-4xl">
+            Group plans don't fail because nobody cares. They fail because of everything nobody
+            wants to say out loud.
+          </Reveal>
+          <RevealGroup className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                t: "\u201cI can't spend that much.\u201d",
+                s: "Budget is the hardest thing to say in a group chat.",
+              },
+              {
+                t: "\u201cI need a ride.\u201d",
+                s: "Getting there is half the plan and never gets planned.",
+              },
+              {
+                t: "\u201cI have to be home by 10.\u201d",
+                s: "Curfews quietly kill otherwise perfect plans.",
+              },
+              {
+                t: "\u201cI can't eat there.\u201d",
+                s: "Dietary needs get remembered at the table, too late.",
+              },
+            ].map((c) => (
+              <RevealItem key={c.t}>
+                <SpotlightCard tilt className="card-surface h-full p-5">
+                  <p className="font-semibold">{c.t}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{c.s}</p>
+                </SpotlightCard>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </section>
+
+        {/* How it works */}
+        <section id="how" className="border-y border-border bg-surface/60 py-20">
+          <div className="mx-auto max-w-6xl px-5">
+            <Reveal>
+              <h2 className="text-3xl font-semibold sm:text-4xl">Four steps. No negotiating.</h2>
+            </Reveal>
+            <RevealGroup as="ol" stagger={0.1} className="mt-10 grid gap-5 md:grid-cols-4">
+              {[
+                { n: "01", t: "Create a plan", d: "Pick a category, a date window, and a group." },
+                {
+                  n: "02",
+                  t: "Everyone answers privately",
+                  d: "Budget, timing, rides, food, rules — seen by nobody else.",
+                },
+                {
+                  n: "03",
+                  t: "We compute what's possible",
+                  d: "Hard limits filter. Preferences rank. Fairness breaks ties.",
+                },
+                {
+                  n: "04",
+                  t: "Vote on real options",
+                  d: "Every option on the ballot already works for everyone.",
+                },
+              ].map((s) => (
+                <RevealItem as="li" key={s.n}>
+                  <SpotlightCard tilt className="card-surface h-full p-6">
+                    <span className="font-display text-2xl text-primary">{s.n}</span>
+                    <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
+                  </SpotlightCard>
+                </RevealItem>
+              ))}
+            </RevealGroup>
           </div>
         </section>
+
+        {/* Feature trio */}
+        <section className="mx-auto max-w-6xl space-y-5 px-5 py-20">
+          <FeatureRow
+            icon={<ShieldCheck className="size-5" />}
+            kicker="Privacy"
+            title="Your friends don't need to know why you can't."
+            body="Constraints stay on your side of the wall. The group only ever sees whether an option works — never who it didn't work for, and never why."
+            bullets={[
+              "Private answers are readable only by you",
+              "Group sees compatibility, never individual limits",
+              "Neutral language everywhere: \u201cdoesn't meet every requirement\u201d",
+            ]}
+          />
+          <FeatureRow
+            icon={<Sparkles className="size-5" />}
+            kicker="Compatibility"
+            title="A score you can actually trust."
+            body="Hard constraints eliminate. Soft preferences rank. And fairness makes sure the same person isn't quietly sacrificed every single weekend."
+            bullets={[
+              "Feasibility before popularity",
+              "Fairness-aware ranking across plans",
+              "Clear, non-identifying explanations",
+            ]}
+          />
+          <FeatureRow
+            icon={<CalendarCheck className="size-5" />}
+            kicker="Parent approval"
+            title="Approval without downloading anything."
+            body="Send one link. A parent sees the plan, the people, the cost, the ride, and the return time — then approves, declines, or approves with a condition."
+            bullets={[
+              "Conditions attach privately to that person",
+              "The plan re-checks itself instantly",
+              "Alternatives appear if it no longer fits",
+            ]}
+          />
+          <FeatureRow
+            icon={<Car className="size-5" />}
+            kicker="Transportation"
+            title="Rides are part of the plan, not an afterthought."
+            body="Seats, drivers, distance limits and return times get solved together, so nobody finds out at 9pm that they have no way home."
+            bullets={[
+              "Car-by-car assignments",
+              "Respects capacity and curfews",
+              "Ride needs stay private",
+            ]}
+          />
+          <FeatureRow
+            icon={<MapPin className="size-5" />}
+            kicker="Live radar"
+            title="See who's close, without oversharing."
+            body="One clear switch in Settings, off by default. Turn it on and the squad sees live pins, ETAs and arrival status — no digging through a group chat to ask “where are you.”"
+            bullets={[
+              "One toggle controls sharing — no silent background tracking",
+              "Battery and ETA at a glance",
+              "Check or turn it off from Settings any time",
+            ]}
+          />
+        </section>
+
+        {/* Illustrative scenarios, not customer evidence */}
+        <section className="border-y border-border bg-surface/60 py-20">
+          <p className="mx-auto mb-6 max-w-6xl px-5 text-sm text-muted-foreground">
+            Illustrative examples of how Syncly can help. These are not customer testimonials.
+          </p>
+          <RevealGroup className="mx-auto grid max-w-6xl gap-5 px-5 md:grid-cols-3">
+            {[
+              {
+                q: "We stopped having the \u201cwhere do you want to go\u201d conversation entirely.",
+                a: "Example teen",
+              },
+              {
+                q: "I didn't have to tell six people my budget. It just worked.",
+                a: "Another example teen",
+              },
+              {
+                q: "The approval link answered every question I usually have to ask.",
+                a: "Example guardian",
+              },
+            ].map((t) => (
+              <RevealItem as="figure" key={t.a}>
+                <SpotlightCard tilt className="card-surface h-full p-6">
+                  <blockquote className="font-display text-lg leading-snug">{t.q}</blockquote>
+                  <figcaption className="mt-4 text-sm text-muted-foreground">{t.a}</figcaption>
+                </SpotlightCard>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </section>
+
+        {/* CTA */}
+        <Reveal as="section" className="mx-auto max-w-3xl px-5 py-24 text-center">
+          <h2 className="text-3xl font-semibold sm:text-4xl">Everyone gets a seat at the table.</h2>
+          <p className="mt-4 text-muted-foreground">
+            Private constraints. Better plans. Free to start with your group.
+          </p>
+          <Link
+            to="/auth"
+            search={{ next: "/home", mode: "signup" }}
+            className="pressable active:pressable-active mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground"
+          >
+            Start planning <ArrowRight className="size-4" />
+          </Link>
+        </Reveal>
       </main>
 
-      <footer className="us-footer">
-        <div className="us-wrap flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <Link to="/" className="us-brand" aria-label={`${BRAND.name} home`}>
-            <LogoMarkDark size={26} className="drop-shadow-none" />
-            <span>{BRAND.name}</span>
-          </Link>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <Link to="/privacy" className="us-footlink">
+      <footer className="border-t border-border py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 text-sm text-muted-foreground sm:flex-row sm:justify-between">
+          <Wordmark size="sm" />
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+            <Link
+              to="/privacy"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
               Privacy
             </Link>
-            <Link to="/terms" className="us-footlink">
+            <Link
+              to="/terms"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
               Terms
             </Link>
-            <Link to="/accessibility" className="us-footlink">
+            <Link
+              to="/accessibility"
+              className="tap-target inline-flex items-center transition-colors hover:text-foreground"
+            >
               Accessibility
             </Link>
             <p>
@@ -380,134 +354,86 @@ function Landing() {
   );
 }
 
-/** One step of "how it works"; its rule draws in as the row reaches view. */
-function Step({ n, t, d, index }: { n: string; t: string; d: string; index: number }) {
-  const reduce = useReducedMotion();
+function FeatureRow({
+  icon,
+  kicker,
+  title,
+  body,
+  bullets,
+}: {
+  icon: React.ReactNode;
+  kicker: string;
+  title: string;
+  body: string;
+  bullets: string[];
+}) {
   return (
-    <li className="us-step">
-      <motion.span
-        className="us-step__rule"
-        aria-hidden
-        initial={reduce ? false : { scaleX: 0 }}
-        whileInView={{ scaleX: 1 }}
-        viewport={{ once: true, margin: "0px 0px -15% 0px" }}
-        transition={{ duration: 0.9, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
-      />
-      <span className="us-step__n">{n}</span>
-      <h3 className="us-step__title">{t}</h3>
-      <p className="us-step__desc">{d}</p>
-    </li>
-  );
-}
-
-/**
- * The feature list with a sticky index beside it on wide screens: the entry
- * for whichever feature sits in the middle of the viewport lights up.
- */
-function Features() {
-  const [active, setActive] = useState(FEATURES[0].id);
-
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) setActive(e.target.id);
-      },
-      { rootMargin: "-45% 0px -50% 0px" },
-    );
-    for (const f of FEATURES) {
-      const el = document.getElementById(f.id);
-      if (el) io.observe(el);
-    }
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <section className="us-section" aria-labelledby="features-title">
-      <div className="us-wrap grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
-        <div className="lg:sticky lg:top-28 lg:self-start">
-          <h2 id="features-title" className="us-display us-display--lg max-w-[14ch]">
-            Everything a group plan quietly depends on.
-          </h2>
-          <nav aria-label="Features" className="us-index">
-            <ul>
-              {FEATURES.map(({ id, icon: Icon, name }) => (
-                <li key={id}>
-                  <a
-                    href={`#${id}`}
-                    aria-current={active === id ? "true" : undefined}
-                    className="us-index__link"
-                  >
-                    <Icon className="size-4 shrink-0" aria-hidden />
-                    {name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+    <Reveal>
+      <SpotlightCard className="card-surface grid gap-6 p-7 sm:p-9 md:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary uppercase">
+            {icon} {kicker}
+          </span>
+          <h3 className="mt-4 text-2xl font-semibold">{title}</h3>
         </div>
         <div>
-          {FEATURES.map(({ id, title, body, bullets }) => (
-            <article key={id} id={id} className="us-feature" aria-labelledby={`${id}-title`}>
-              <h3 id={`${id}-title`} className="us-display us-display--md">
-                {title}
-              </h3>
-              <p className="us-feature__body">{body}</p>
-              <ul className="us-feature__bullets">
-                {bullets.map((b) => (
-                  <li key={b}>
-                    <Check className="mt-1 size-4 shrink-0" aria-hidden />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
+          <p className="text-muted-foreground">{body}</p>
+          <ul className="mt-4 space-y-2">
+            {bullets.map((b) => (
+              <li key={b} className="flex items-start gap-2 text-sm">
+                <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
-    </section>
+      </SpotlightCard>
+    </Reveal>
   );
 }
 
 /**
  * Two mocked-up devices sharing the same plan snippet, with a "Live sync"
- * connector pulsing between them — separately styled but identically valued,
- * so it reads on its own even without the pulse (reduced motion).
+ * connector pulsing between them — the update on the phone and its mirror
+ * on the web render as separately-styled but identically-valued cards
+ * rather than one screenshot split in half, so it's legible on its own
+ * even without the pulse animation (reduced motion / static export).
  */
 function SyncPreview() {
-  const reduce = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+    <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 sm:flex-row sm:justify-center">
       <DeviceFrame variant="web">
-        <p className="text-sm font-semibold">Saturday Night Out</p>
-        <div className="us-device__row mt-3 px-3 py-2 text-sm">
-          <span>Your budget</span>
-          <span className="font-semibold">$30</span>
+        <p className="text-sm font-semibold text-foreground">Saturday Night Out</p>
+        <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">Your budget</span>
+          <span className="font-semibold text-foreground">$30</span>
         </div>
-        <span className="us-device__ok mt-2.5 text-xs">
-          <Check className="size-3.5" aria-hidden /> Synced
+        <span className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-medium text-success">
+          <Check className="size-3.5" /> Synced
         </span>
       </DeviceFrame>
 
-      <div className="flex items-center gap-3 sm:flex-col sm:px-1">
-        <span className="us-device__wire" aria-hidden />
+      <div className="flex items-center gap-3 sm:flex-col sm:px-2">
+        <span className="h-px w-8 bg-border sm:h-8 sm:w-px" aria-hidden />
         <motion.div
-          className="us-device__pill"
-          animate={reduce ? undefined : { scale: [1, 1.06, 1] }}
+          className="glass-pill inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium whitespace-nowrap text-muted-foreground"
+          animate={prefersReducedMotion ? undefined : { scale: [1, 1.06, 1] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
         >
-          <RefreshCw className="size-3.5" aria-hidden /> Live sync
+          <RefreshCw className="size-3.5 text-primary" aria-hidden /> Live sync
         </motion.div>
-        <span className="us-device__wire" aria-hidden />
+        <span className="h-px w-8 bg-border sm:h-8 sm:w-px" aria-hidden />
       </div>
 
       <DeviceFrame variant="phone">
-        <p className="text-xs font-semibold">Saturday Night Out</p>
-        <div className="us-device__row mt-2.5 px-2.5 py-1.5 text-xs">
-          <span>Your budget</span>
-          <span className="font-semibold">$30</span>
+        <p className="text-xs font-semibold text-foreground">Saturday Night Out</p>
+        <div className="mt-2.5 flex items-center justify-between rounded-lg bg-secondary/60 px-2.5 py-1.5 text-xs">
+          <span className="text-muted-foreground">Your budget</span>
+          <span className="font-semibold text-foreground">$30</span>
         </div>
-        <span className="us-device__ok mt-2 text-xs">
-          <span className="size-1.5 rounded-full bg-current" aria-hidden /> Updated just now
+        <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-success">
+          <span className="size-1.5 rounded-full bg-success" /> Updated just now
         </span>
       </DeviceFrame>
     </div>
@@ -515,16 +441,25 @@ function SyncPreview() {
 }
 
 function DeviceFrame({ variant, children }: { variant: "web" | "phone"; children: ReactNode }) {
-  return (
-    <div className={cn("us-device", variant === "web" ? "us-device--web" : "us-device--phone")}>
-      {variant === "web" && (
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5" aria-hidden>
+  if (variant === "web") {
+    return (
+      <div className="dark w-full max-w-xs rounded-2xl border border-white/10 bg-neutral-950 p-1.5 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)] sm:max-w-sm">
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5">
           <span className="size-2 rounded-full bg-white/15" />
           <span className="size-2 rounded-full bg-white/15" />
           <span className="size-2 rounded-full bg-white/15" />
         </div>
-      )}
-      <div className="us-device__screen">{children}</div>
+        <div className="rounded-xl border border-white/10 bg-card/90 p-4 backdrop-blur-2xl">
+          {children}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="dark w-48 shrink-0 rounded-[1.8rem] bg-neutral-950 p-2 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.5)]">
+      <div className="rounded-[1.3rem] border border-white/10 bg-card/90 p-3.5 backdrop-blur-2xl">
+        {children}
+      </div>
     </div>
   );
 }
