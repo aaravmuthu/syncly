@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -102,7 +102,6 @@ export function PlanWizard({
   const [budget, setBudget] = useState<(typeof BUDGETS)[number]>(BUDGETS[1]);
   const [respectCurfew, setRespectCurfew] = useState(true);
   const [picked, setPicked] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
 
   const fetchDefaults = useServerFn(getPlanDefaults);
   const defaults = useQuery({
@@ -135,16 +134,8 @@ export function PlanWizard({
     staleTime: 60_000,
   });
 
-  // A short radar sweep before the reveal, even when the data comes back fast.
-  useEffect(() => {
-    if (step !== 2) return;
-    setScanning(true);
-    const t = setTimeout(() => setScanning(false), 1600);
-    return () => clearTimeout(t);
-  }, [step]);
-
   const top3 = useMemo(() => (venues.data?.venues ?? []).slice(0, 3), [venues.data?.venues]);
-  const revealing = scanning || venues.isFetching || defaults.isLoading;
+  const revealing = venues.isLoading || defaults.isLoading;
 
   const pins: MapVenue[] = useMemo(() => {
     const fp = defaults.data?.fairPoint;

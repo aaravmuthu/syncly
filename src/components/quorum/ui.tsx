@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { motion } from "motion/react";
 import { ThinkingOrb, type OrbState } from "thinking-orbs";
 import type { LucideIcon } from "lucide-react";
 import { haptic } from "@/lib/quorum/haptics";
@@ -77,14 +76,12 @@ export function Button({
     glass: "glass-pill rounded-full text-foreground",
   };
   return (
-    <motion.button
-      {...(rest as Record<string, unknown>)}
+    <button
+      {...rest}
       onPointerDown={(e: React.PointerEvent<HTMLButtonElement>) => {
         if (!rest.disabled && !loading) haptic("tap");
         rest.onPointerDown?.(e);
       }}
-      whileTap={rest.disabled || loading ? undefined : { scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 520, damping: 34 }}
       disabled={rest.disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
@@ -103,7 +100,7 @@ export function Button({
         )
       ) : null}
       {children}
-    </motion.button>
+    </button>
   );
 }
 
@@ -151,13 +148,20 @@ export function Meter({ value, label }: { value: number; label: string }) {
         <span className="text-muted-foreground">{label}</span>
         <span className="font-semibold tabular-nums">{value}</span>
       </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
+      <div
+        role="meter"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.max(0, Math.min(100, value))}
+        className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary"
+      >
         <div
           className={cn(
-            "h-full rounded-full transition-[width,background-color] duration-300 ease-out",
+            "h-full w-full origin-left rounded-full transition-[transform,background-color] duration-200 ease-out",
             tone,
           )}
-          style={{ width: `${value}%` }}
+          style={{ transform: `scaleX(${Math.max(0, Math.min(100, value)) / 100})` }}
         />
       </div>
     </div>
@@ -226,14 +230,12 @@ export function GlassIconButton({
   className?: string;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
       onClick={onClick}
       aria-label={label}
       aria-pressed={expanded == null ? (active ?? undefined) : undefined}
       aria-expanded={expanded}
-      whileTap={{ scale: 0.94 }}
-      transition={{ type: "spring", stiffness: 520, damping: 34 }}
       className={cn(
         // h-11/w-11 match tap-target's own min-height/min-width so the class
         // list isn't lying about the actual rendered size.
@@ -243,6 +245,6 @@ export function GlassIconButton({
       )}
     >
       <Icon className="h-4.5 w-4.5" aria-hidden />
-    </motion.button>
+    </button>
   );
 }

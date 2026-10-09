@@ -49,13 +49,14 @@ const AVATARS = ["🙂", "😎", "🦊", "🐙", "🌵", "🍄", "⚡", "🌙", 
 function Onboarding() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe) });
+  const me = useQuery({ queryKey: ["me"], queryFn: useServerFn(getMe), retry: false });
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, unknown>>({
     avatar_emoji: "🙂",
     account_type: "teen",
     preferred_categories: [] as string[],
     parent_features_enabled: false,
+    location_sharing_enabled: false,
     transport_features_enabled: true,
   });
 
@@ -431,6 +432,33 @@ function Onboarding() {
                   ? "happy"
                   : "watching"
                 : "idle";
+
+  if (me.isPending) {
+    return (
+      <div
+        role="status"
+        className="paper-field grid min-h-dvh place-items-center text-sm text-muted-foreground"
+      >
+        Loading your profile…
+      </div>
+    );
+  }
+
+  if (me.isError) {
+    return (
+      <div className="paper-field grid min-h-dvh place-items-center px-5">
+        <Card className="w-full max-w-md text-center">
+          <h1 className="font-display text-xl font-semibold">Couldn't load your profile</h1>
+          <p role="alert" className="mt-2 text-sm text-muted-foreground">
+            Try again in a moment. If this keeps happening, contact support.
+          </p>
+          <Button className="mt-5" loading={me.isFetching} onClick={() => void me.refetch()}>
+            Try again
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-4 py-10">

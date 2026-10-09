@@ -29,7 +29,7 @@ import { Wordmark } from "./Wordmark";
 import { ContextSwitcher } from "./ContextSwitcher";
 
 import { Avatar } from "./Avatar";
-import { Pill } from "./ui";
+import { Pill, Skeleton } from "./ui";
 import { InstallPrompt } from "./InstallPrompt";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/lib/theme";
@@ -104,10 +104,12 @@ export function PageHeader({
   title,
   subtitle,
   action,
+  backTo,
 }: {
   title?: string;
   subtitle?: string;
   action?: ReactNode;
+  backTo?: string;
 }) {
   if (!title) return null;
   return (
@@ -115,9 +117,18 @@ export function PageHeader({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-      className="mb-6 flex items-start justify-between gap-4 pt-3"
+      className="mb-6 flex flex-wrap items-start justify-between gap-3 pt-3"
     >
-      <div>
+      <div className="min-w-0">
+        {backTo ? (
+          <Link
+            to={backTo}
+            className="tap-target pressable -ml-2 mb-1 inline-flex items-center gap-1 rounded-full px-2 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="size-4" aria-hidden /> Back to{" "}
+            {backTo.split("/").filter(Boolean).pop()}
+          </Link>
+        ) : null}
         <h1 className="font-display text-3xl leading-tight font-semibold tracking-tight text-balance">
           {title}
         </h1>
@@ -351,6 +362,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   key={n.to}
                   to={n.to}
+                  aria-current={active ? "page" : undefined}
                   preload="intent"
                   onPointerDown={(event) => navigateOnTouch(event, n.to as TabPath)}
                   onClick={suppressTouchClick}
@@ -509,6 +521,7 @@ function DesktopTabs({
               else items.current.delete(item.to as TabPath);
             }}
             to={item.to}
+            aria-current={active ? "page" : undefined}
             preload="intent"
             className={cn(
               "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity,color,background-color] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
@@ -537,15 +550,6 @@ function PersistentTabHost({ activeTab }: { activeTab: TabPath | null }) {
   const [visited, setVisited] = useState<Set<TabPath>>(() => new Set(activeTab ? [activeTab] : []));
   const previousTab = useRef<TabPath | null>(activeTab);
   const scrollPositions = useRef(new Map<TabPath, number>());
-  // Purely cosmetic fade-in state -- which tab (if any) is mid-transition
-  // right now. This is intentionally its OWN state, separate from
-  // everything above: it never decides which tab is active or when a
-  // switch happens (that's entirely activeTab, owned by AppShell's
-  // navigateOnTouch/suppressTouchClick), it only reacts after the fact to
-  // dress up an already-decided switch. Safe to delete this whole
-  // mechanism without touching navigation behavior at all.
-  const [enteringTab, setEnteringTab] = useState<TabPath | null>(null);
-
   useEffect(() => {
     if (!activeTab) return;
     setVisited((current) => {
@@ -568,22 +572,8 @@ function PersistentTabHost({ activeTab }: { activeTab: TabPath | null }) {
     return () => window.cancelAnimationFrame(frame);
   }, [activeTab]);
 
-  // Sets the entering tab's opacity to 0 BEFORE the browser paints the
-  // switch (useLayoutEffect, same reasoning as the scroll-restore effect
-  // above) so there's an actual "from" state to transition out of; the
-  // separate effect below then flips it back to opaque on the next frame,
-  // which is what the browser actually animates.
-  useLayoutEffect(() => {
-    if (activeTab) setEnteringTab(activeTab);
-  }, [activeTab]);
-  useEffect(() => {
-    if (!enteringTab) return;
-    const frame = window.requestAnimationFrame(() => setEnteringTab(null));
-    return () => window.cancelAnimationFrame(frame);
-  }, [enteringTab]);
-
   return (
-    <Suspense fallback={null}>
+    <>
       {BASE_NAV.map((item) => {
         if (!visited.has(item.to) && activeTab !== item.to) return null;
         const Component = TAB_COMPONENTS[item.to];
@@ -594,15 +584,21 @@ function PersistentTabHost({ activeTab }: { activeTab: TabPath | null }) {
             hidden={!active}
             aria-hidden={!active || undefined}
             inert={!active || undefined}
-            className={cn(
-              "transition-opacity duration-150 ease-out motion-reduce:transition-none",
-              active && enteringTab === item.to ? "opacity-0" : "opacity-100",
-            )}
           >
-            <Component />
+            <Suspense
+              fallback={
+                <div role="status" aria-label="Loading page" className="space-y-4 py-3">
+                  <Skeleton className="h-8 w-40" />
+                  <Skeleton className="h-40 rounded-surface" />
+                  <Skeleton className="h-32 rounded-surface" />
+                </div>
+              }
+            >
+              <Component />
+            </Suspense>
           </div>
         );
       })}
-    </Suspense>
+    </>
   );
 }

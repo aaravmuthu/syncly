@@ -50,10 +50,8 @@ export function Magnetic({
         y.set(0);
       }}
       onPointerDown={() => haptic("tap")}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.94 }}
       transition={{ type: "spring", stiffness: 400, damping: 24 }}
-      className={cn("inline-flex will-change-transform", className)}
+      className={cn("inline-flex", className)}
     >
       {children}
     </motion.span>

@@ -100,7 +100,7 @@ export function AddressPicker({
           if (!cancelled) {
             setItems([]);
             setOpen(false);
-            setError("Couldn't look up places. Try again or enter your ZIP code.");
+            setError("Couldn't look up addresses. Try again in a moment.");
           }
         });
     }, 250);

@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { isFinePointer, prefersReducedMotion } from "@/lib/quorum/haptics";
 
@@ -22,6 +22,7 @@ export function SpotlightCard({
   intensity?: number;
   as?: "div" | "article" | "section";
 }) {
+  const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
   const gx = useMotionValue(50);
@@ -38,7 +39,7 @@ export function SpotlightCard({
 
   const onMove = (e: React.MouseEvent) => {
     const el = ref.current;
-    if (!el || !isFinePointer()) return;
+    if (!el || !isFinePointer() || reduce) return;
     const r = el.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width;
     const py = (e.clientY - r.top) / r.height;
@@ -64,11 +65,9 @@ export function SpotlightCard({
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      style={tilt ? { rotateX: rx, rotateY: ry, transformPerspective: 900 } : undefined}
-      whileHover={{ scale: 1.01, y: -2 }}
-      whileTap={{ scale: 0.99 }}
+      style={tilt && !reduce ? { rotateX: rx, rotateY: ry, transformPerspective: 900 } : undefined}
       transition={{ type: "spring", stiffness: 320, damping: 26 }}
-      className={cn("relative isolate will-change-transform", className)}
+      className={cn("relative isolate", className)}
     >
       <motion.span
         aria-hidden

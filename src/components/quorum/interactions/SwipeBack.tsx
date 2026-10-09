@@ -16,14 +16,16 @@ const TRIGGER_RATIO = 0.32; // fraction of viewport width that commits the pop
 export function SwipeBack({ children }: { children: ReactNode }) {
   const router = useRouter();
   const x = useMotionValue(0);
+  const startY = useRef(0);
   const startX = useRef<number | null>(null);
   const dragging = useRef(false);
   const viewportWidth = useRef(typeof window !== "undefined" ? window.innerWidth : 375);
 
   const onTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
-    if (!touch || touch.clientX > EDGE_ZONE) return;
+    if (!touch || e.touches.length !== 1 || touch.clientX > EDGE_ZONE) return;
     startX.current = touch.clientX;
+    startY.current = touch.clientY;
     dragging.current = false;
     viewportWidth.current = window.innerWidth;
   };
@@ -31,7 +33,12 @@ export function SwipeBack({ children }: { children: ReactNode }) {
   const onTouchMove = (e: React.TouchEvent) => {
     if (startX.current == null) return;
     const touch = e.touches[0];
-    if (!touch) return;
+    if (!touch || e.touches.length !== 1 || Math.abs(touch.clientY - startY.current) > 32) {
+      startX.current = null;
+      dragging.current = false;
+      void animate(x, 0, { type: "spring", stiffness: 420, damping: 34 });
+      return;
+    }
     const dx = touch.clientX - startX.current;
     if (dx <= 0) {
       x.set(0);
@@ -67,7 +74,11 @@ export function SwipeBack({ children }: { children: ReactNode }) {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      onTouchCancel={onTouchEnd}
+      onTouchCancel={() => {
+        startX.current = null;
+        dragging.current = false;
+        void animate(x, 0, { type: "spring", stiffness: 420, damping: 34 });
+      }}
     >
       <motion.div style={{ x }}>{children}</motion.div>
     </div>

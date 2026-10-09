@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -23,11 +23,12 @@ import {
 import { PageHeader } from "@/components/quorum/AppShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Empty, Pill, Skeleton, Button } from "@/components/quorum/ui";
-import { Magnetic, PullToRefresh, SpotlightCard, SwipeRow } from "@/components/quorum/interactions";
+import { PullToRefresh, SpotlightCard, SwipeRow } from "@/components/quorum/interactions";
 import { getDashboard } from "@/lib/quorum/plan.functions";
 import { confirmAttendance } from "@/lib/quorum/conflict.functions";
 import { categoryIcon } from "@/lib/quorum/icons";
 import { estCostLabel } from "@/lib/quorum/estcost";
+import { ListSearch, ListFilters } from "@/components/quorum/ListControls";
 import { BudgetFitPill } from "@/components/quorum/DashboardParts";
 
 export const Route = createFileRoute("/_authenticated/_app/plans/")({
@@ -97,6 +98,13 @@ function curfewState(endIso: string | null | undefined) {
   return past10 ? ("warn" as const) : ("ok" as const);
 }
 
+const PLAN_FILTERS = [
+  { id: "all", label: "All plans" },
+  { id: "live", label: "Live" },
+  { id: "finalized", label: "Locked in" },
+  { id: "past", label: "Past plans" },
+] as const;
+
 export function PlansPage() {
   const dash = useQuery({ queryKey: ["dashboard"], queryFn: useServerFn(getDashboard) });
   const qc = useQueryClient();
@@ -105,6 +113,18 @@ export function PlansPage() {
   const plans = [...(dash.data?.plans ?? [])].sort(
     (a, b) => Number(isEnded(a.status)) - Number(isEnded(b.status)),
   );
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<(typeof PLAN_FILTERS)[number]["id"]>("all");
+  const shown = plans.filter((plan) => {
+    const text = `${plan.title} ${plan.groups?.name ?? ""}`.toLocaleLowerCase();
+    return (
+      text.includes(search.trim().toLocaleLowerCase()) &&
+      (filter === "all" ||
+        (filter === "live" && !isEnded(plan.status)) ||
+        (filter === "finalized" && plan.status === "finalized") ||
+        (filter === "past" && isEnded(plan.status)))
+    );
+  });
   const [muted, setMuted] = useState<string[]>([]);
 
   const attend = useMutation({
@@ -126,6 +146,30 @@ export function PlansPage() {
             : "Everything your groups are working out right now."
         }
       />
+      <ListSearch value={search} onChange={setSearch} label="Search plans or squads" />
+      <ListFilters
+        options={PLAN_FILTERS}
+        value={filter}
+        onChange={setFilter}
+        label="Filter plans"
+      />
+      {!dash.isLoading && !dash.isError && plans.length > 0 && shown.length === 0 ? (
+        <Empty
+          title="No matching plans"
+          body="Try another search or show all your plans."
+          action={
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearch("");
+                setFilter("all");
+              }}
+            >
+              Clear filters
+            </Button>
+          }
+        />
+      ) : null}
       {dash.isLoading ? <Skeleton className="h-40 rounded-surface" /> : null}
 
       {dash.isError ? (
@@ -141,10 +185,11 @@ export function PlansPage() {
           title="Nothing planned"
           body="Plans start inside a group so the right people get asked."
           action={
-            <Link to="/groups">
-              <Button>
-                <Users className="size-4" /> Go to groups
-              </Button>
+            <Link
+              to="/groups"
+              className="tap-target pressable inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              <Users className="size-4" aria-hidden /> Go to groups
             </Link>
           }
         />
@@ -152,10 +197,10 @@ export function PlansPage() {
 
       <PullToRefresh onRefresh={() => dash.refetch()}>
         <div className="mx-auto w-full max-w-4xl space-y-4">
-          {plans.map((p, i) => (
+          {shown.map((p, i) => (
             <SwipeRow
               key={p.id}
-              disabled={p.status === "finalized" || isEnded(p.status)}
+              disabled={attend.isPending || p.status === "finalized" || isEnded(p.status)}
               left={{
                 label: "I'm in",
                 icon: <ThumbsUp className="size-4" />,
@@ -163,12 +208,21 @@ export function PlansPage() {
                 onAction: () => attend.mutate({ data: { planId: p.id, attending: true } }),
               }}
               right={{
-                label: "Mute",
+                label: muted.includes(p.id) ? "Restore" : "Dim",
                 icon: <BellOff className="size-4" />,
                 tone: "muted",
                 onAction: () => {
-                  setMuted((m) => (m.includes(p.id) ? m : [...m, p.id]));
-                  toast("Muted — you won't get pings for this plan");
+                  if (muted.includes(p.id)) {
+                    setMuted((m) => m.filter((id) => id !== p.id));
+                  } else {
+                    setMuted((m) => [...m, p.id]);
+                    toast("Plan dimmed for this visit", {
+                      action: {
+                        label: "Undo",
+                        onClick: () => setMuted((m) => m.filter((id) => id !== p.id)),
+                      },
+                    });
+                  }
                 },
               }}
             >
@@ -184,7 +238,7 @@ export function PlansPage() {
         </div>
       </PullToRefresh>
       <p className="mt-4 text-center text-xs text-muted-foreground md:hidden">
-        Swipe a plan right to join · left to mute
+        Swipe a plan right to join · left to dim
       </p>
     </>
   );
@@ -234,6 +288,7 @@ function PlanCard({
   muted?: boolean;
   myProfileId: string | null;
 }) {
+  const reduce = useReducedMotion();
   const [detailsOpen, setDetailsOpen] = useState(false);
   const Icon = categoryIcon(plan.category);
   const group = plan.groups as { name?: string; emoji?: string } | null;
@@ -272,7 +327,6 @@ function PlanCard({
   return (
     <SpotlightCard
       as="article"
-      tilt
       // .surface already supplies background/border/radius/blur -- the old
       // rounded-3xl + border-border/70 + backdrop-blur-xl here were
       // redundant, cascade-order-dependent overrides of the same properties.
@@ -281,13 +335,12 @@ function PlanCard({
       }`}
     >
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={reduce ? false : { opacity: 0, transform: "translateY(6px)" }}
+        animate={{ opacity: 1, transform: "translateY(0px)" }}
         transition={{
-          type: "spring",
-          stiffness: 260,
-          damping: 26,
-          delay: Math.min(index, 6) * 0.04,
+          duration: 0.18,
+          ease: [0.23, 1, 0.32, 1],
+          delay: Math.min(index, 3) * 0.025,
         }}
       >
         {/* Top bar -- one priority pill instead of stacking voting/locked +
@@ -397,9 +450,9 @@ function PlanCard({
               </div>
               <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-secondary">
                 <motion.div
-                  className="h-full rounded-full bg-primary"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${votedPct}%` }}
+                  className="h-full w-full origin-left rounded-full bg-primary"
+                  initial={false}
+                  animate={{ transform: `scaleX(${votedPct / 100})` }}
                   transition={{ type: "spring", stiffness: 320, damping: 34 }}
                 />
               </div>
@@ -453,12 +506,12 @@ function PlanCard({
           </div>
         ) : null}
 
-        <Link to="/plans/$planId" params={{ planId: plan.id }} className="mt-4 block">
-          <Magnetic className="w-full">
-            <Button className="w-full">
-              Open plan dashboard <ArrowRight className="size-4" />
-            </Button>
-          </Magnetic>
+        <Link
+          to="/plans/$planId"
+          params={{ planId: plan.id }}
+          className="tap-target pressable mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-92"
+        >
+          Open plan dashboard <ArrowRight className="size-4" aria-hidden />
         </Link>
       </motion.div>
     </SpotlightCard>

@@ -72,7 +72,7 @@ function GroupPage() {
   if (q.isLoading) {
     return (
       <>
-        <PageHeader title="Group" />
+        <PageHeader backTo="/groups" title="Group" />
         <Skeleton className="h-32 rounded-surface" />
       </>
     );
@@ -80,7 +80,7 @@ function GroupPage() {
   if (q.isError)
     return (
       <>
-        <PageHeader title="Group" />
+        <PageHeader backTo="/groups" title="Group" />
         <Empty
           title="Couldn't load this group"
           body="Check your connection or ask a member to confirm you still have access."
@@ -110,6 +110,7 @@ function GroupPage() {
   return (
     <>
       <PageHeader
+        backTo="/groups"
         title={`${group.emoji} ${group.name}`}
         subtitle={`${members.length} member${members.length === 1 ? "" : "s"}`}
       />

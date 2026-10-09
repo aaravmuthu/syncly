@@ -177,8 +177,8 @@
   [role="button"] {
     transition: transform 0.1s ease-out;
   }
-  button:active,
-  [role="button"]:active {
+  button:active:not(:disabled),
+  [role="button"]:active:not([aria-disabled="true"]) {
     transform: scale(0.96);
   }
   h1,
@@ -205,10 +205,10 @@
    --card lightness step actually reads against the canvas instead of being
    diluted back toward --background by the transparent remainder. */
 @utility surface {
-  background: color-mix(in oklab, var(--card) 74%, transparent);
   border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
   border-radius: var(--radius-surface);
-  backdrop-filter: blur(40px) saturate(180%);
+  /* Repeated surfaces scroll with content; reserve live blur for floating chrome. */
+  background: color-mix(in oklab, var(--card) 94%, var(--background));
 }
 
 @utility card-surface {
@@ -252,7 +252,7 @@
    together instead of drifting out of sync screen by screen. */
 :root {
   --chrome-top: calc(env(safe-area-inset-top, 0px) + 4.75rem);
-  --chrome-bottom: calc(env(safe-area-inset-bottom, 0px) + 4.5rem);
+  --chrome-bottom: calc(env(safe-area-inset-bottom, 0px) + 6rem);
 }
 
 @keyframes q-rise {
@@ -266,7 +266,7 @@
   }
 }
 @utility animate-rise {
-  animation: q-rise 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: q-rise 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes q-sheet {
@@ -552,7 +552,8 @@
   background: color-mix(in oklab, var(--elevated) 72%, transparent);
   border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
   border-radius: var(--radius-surface);
-  backdrop-filter: blur(40px) saturate(180%);
+  /* Repeated surfaces scroll with content; reserve live blur for floating chrome. */
+  background: color-mix(in oklab, var(--card) 94%, var(--background));
   box-shadow:
     0 24px 60px -32px color-mix(in oklab, var(--foreground) 55%, transparent),
     inset 0 1px 0 color-mix(in oklab, var(--foreground) 8%, transparent);
@@ -617,7 +618,8 @@
   box-shadow: var(--glass-shadow);
 }
 @media (prefers-reduced-transparency: reduce) {
-  .glass-pill {
+  .glass-pill,
+  .surface {
     background: var(--card);
     backdrop-filter: none;
   }
@@ -1503,5 +1505,43 @@
   }
   .chat-rec {
     animation: none;
+  }
+}
+
+/* Keep feedback legible while removing spatial and repeating motion. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .sheet-in {
+    animation: q-fade 120ms ease-out both;
+  }
+  .animate-ping,
+  .animate-pulse,
+  .animate-spin {
+    animation: none !important;
+  }
+  button:active:not(:disabled),
+  [role="button"]:active:not([aria-disabled="true"]) {
+    transform: none;
+  }
+  .pressable,
+  .transition-colors,
+  .transition-transform {
+    transition-property: color, background-color, border-color, opacity;
+  }
+}
+
+/* Sheets settle quickly; a drag still owns its position through Vaul. */
+[data-vaul-drawer][data-vaul-drawer-direction] {
+  transition-duration: 240ms;
+}
+[data-vaul-overlay] {
+  transition-duration: 160ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer][data-vaul-drawer-direction] {
+    transition-duration: 0ms;
+  }
+  [data-vaul-overlay] {
+    transition-duration: 120ms;
   }
 }

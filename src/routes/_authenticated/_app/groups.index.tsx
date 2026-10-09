@@ -17,8 +17,7 @@ import {
   RevealItem,
   SpotlightCard,
 } from "@/components/quorum/interactions";
-import { motion } from "motion/react";
-import { haptic } from "@/lib/quorum/haptics";
+import { ListSearch, ListFilters } from "@/components/quorum/ListControls";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_app/groups/")({
@@ -74,20 +73,23 @@ const FILTERS = [
 export function GroupsPage() {
   const groups = useQuery({ queryKey: ["groups"], queryFn: useServerFn(listGroups) });
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
 
   const squads = useMemo(() => (groups.data ?? []) as unknown as Squad[], [groups.data]);
   const shown = useMemo(
     () =>
-      squads.filter((g) =>
-        filter === "active"
-          ? Boolean(g.active_plan)
-          : filter === "oneoff"
-            ? g.kind === "temporary"
-            : true,
-      ),
-    [squads, filter],
+      squads
+        .filter((g) => g.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()))
+        .filter((g) =>
+          filter === "active"
+            ? Boolean(g.active_plan)
+            : filter === "oneoff"
+              ? g.kind === "temporary"
+              : true,
+        ),
+    [squads, filter, search],
   );
 
   return (
@@ -96,7 +98,7 @@ export function GroupsPage() {
         title="Squad hub"
         subtitle="Your circles, live votes, and one-tap plan launches."
         action={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="glass" className="text-primary" onClick={() => setCreateOpen(true)}>
               <Plus className="size-4" aria-hidden /> Create group
             </Button>
@@ -107,39 +109,8 @@ export function GroupsPage() {
         }
       />
       <PullToRefresh onRefresh={async () => void (await groups.refetch())}>
-        <div
-          role="tablist"
-          aria-label="Filter squads"
-          className="scrollbar-none sticky top-2 z-20 -mx-1 mb-5 flex snap-x gap-2 overflow-x-auto px-1 py-1"
-        >
-          {FILTERS.map((f) => (
-            <motion.button
-              key={f.id}
-              type="button"
-              role="tab"
-              aria-selected={filter === f.id}
-              whileTap={{ scale: 0.94 }}
-              animate={{ scale: filter === f.id ? 1.03 : 1 }}
-              transition={{ type: "spring", stiffness: 420, damping: 26 }}
-              onClick={() => {
-                haptic("select");
-                setFilter(f.id);
-              }}
-              className={cn(
-                "tap-target inline-flex shrink-0 items-center justify-center rounded-full px-4 text-sm font-semibold transition",
-                // Filled primary is a real selection indicator here (this is
-                // a segmented filter, not just "the more important button"),
-                // so the active pill stays solid while inactive ones get the
-                // floating-glass treatment instead of the old flat bg-secondary.
-                filter === f.id
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "glass-pill text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {f.label}
-            </motion.button>
-          ))}
-        </div>
+        <ListSearch value={search} onChange={setSearch} label="Search squads" />
+        <ListFilters options={FILTERS} value={filter} onChange={setFilter} label="Filter squads" />
 
         {groups.isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2">
@@ -158,24 +129,36 @@ export function GroupsPage() {
 
         {!groups.isLoading && !groups.isError && shown.length === 0 ? (
           <Empty
-            title={squads.length ? "Nothing in this filter" : "No squads yet"}
+            title={squads.length ? "No matching squads" : "No squads yet"}
             body={
               squads.length
-                ? "Try another tab, or launch a plan to light one up."
+                ? "Try another search or show all your squads."
                 : "Create a squad or join one with a six-character code."
             }
             action={
-              <Button onClick={() => setCreateOpen(true)}>
-                <Plus className="size-4" aria-hidden /> Create group
-              </Button>
+              squads.length ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearch("");
+                    setFilter("all");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              ) : (
+                <Button onClick={() => setCreateOpen(true)}>
+                  <Plus className="size-4" aria-hidden /> Create group
+                </Button>
+              )
             }
           />
         ) : null}
 
         <RevealGroup className="grid gap-4 sm:grid-cols-2" stagger={0.07}>
           {shown.map((g) => (
-            <RevealItem key={g.id}>
-              <SpotlightCard tilt className="rounded-surface">
+            <RevealItem key={g.id} lift={false}>
+              <SpotlightCard className="rounded-surface">
                 <SquadCard squad={g} />
               </SpotlightCard>
             </RevealItem>

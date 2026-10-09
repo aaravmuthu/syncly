@@ -76,6 +76,11 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
 
   return (
     <Modal open={open} onClose={onClose} title="Create a squad">
+      {create.isError ? (
+        <p role="alert" className="mb-3 text-sm text-destructive">
+          Couldn't create that squad. {create.error.message}
+        </p>
+      ) : null}
       <div className={cn("relative h-24 overflow-hidden rounded-2xl", theme.banner)}>
         <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_10%_0%,rgba(255,255,255,0.18),transparent_60%)]" />
         <div className="absolute bottom-3 left-3 flex items-center gap-3">
@@ -92,7 +97,7 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
         </div>
       </div>
 
-      <div className="mt-4 max-h-[52vh] space-y-4 overflow-y-auto pr-1">
+      <div className="mt-4 space-y-4">
         <Field label="Squad name">
           <input
             className={inputClass}
@@ -126,13 +131,15 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
             >
               {uploading ? "Uploading…" : "Upload"}
             </Button>
-            {GROUP_PRESET_IMAGES.map((url) => (
+            {GROUP_PRESET_IMAGES.map((url, index) => (
               <button
                 key={url}
+                aria-label={`Group picture ${index + 1}`}
+                aria-pressed={avatarUrl === url}
                 type="button"
                 onClick={() => setAvatarUrl(url)}
                 className={cn(
-                  "h-10 w-10 overflow-hidden rounded-xl ring-1 transition",
+                  "tap-target h-11 w-11 overflow-hidden rounded-xl ring-1 transition",
                   avatarUrl === url ? "ring-2 ring-primary" : "ring-border hover:ring-primary/50",
                 )}
               >
@@ -157,10 +164,12 @@ export function CreateGroupModal({ open, onClose }: { open: boolean; onClose: ()
             {GROUP_EMOJI.map((e) => (
               <button
                 key={e}
+                aria-label={`Use ${e} icon`}
+                aria-pressed={emoji === e}
                 type="button"
                 onClick={() => setEmoji(e)}
                 className={cn(
-                  "h-9 w-9 rounded-xl text-lg transition",
+                  "tap-target h-11 w-11 rounded-xl text-lg transition",
                   emoji === e ? "bg-primary/15 ring-1 ring-primary/40" : "bg-secondary",
                 )}
               >

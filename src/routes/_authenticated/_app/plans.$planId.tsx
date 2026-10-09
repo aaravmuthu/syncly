@@ -298,7 +298,7 @@ function PlanPage() {
   if (q.isError) {
     return (
       <>
-        <PageHeader title="Plan" />
+        <PageHeader backTo="/plans" title="Plan" />
         <Empty
           title="Couldn't load this plan"
           body="Check your connection or ask the group to confirm you still have access."
@@ -310,7 +310,7 @@ function PlanPage() {
   if (q.isLoading) {
     return (
       <>
-        <PageHeader title="Plan" />
+        <PageHeader backTo="/plans" title="Plan" />
         <Skeleton className="h-40 rounded-surface" />
       </>
     );
@@ -353,6 +353,7 @@ function PlanPage() {
   return (
     <>
       <PageHeader
+        backTo="/plans"
         title={data.plan.title}
         subtitle={`${meta.label} · ${responded} of ${total} have answered privately`}
       />
@@ -477,6 +478,11 @@ function PlanPage() {
               {generate.isPending ? "Finding fair spots…" : "Find options"}
             </Button>
           </div>
+          {generate.isError ? (
+            <p role="alert" className="mt-3 text-sm text-destructive">
+              Couldn't find options right now. Your answers are saved. Try again in a moment.
+            </p>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
             {data.participants.map((p) => {
               const prof = p.profiles as {

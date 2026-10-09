@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { unreadSquadMessageIds } from "./chat-unread";
 import { dbError, UPLOAD_FAILED } from "@/lib/db-error";
 
 /** Finds (or creates) the 1-on-1 thread between me and another profile. */
@@ -135,9 +136,7 @@ export const listInbox = createServerFn({ method: "GET" })
       } | null;
       const rows = (gmsgs ?? []).filter((x) => x.group_id === m.group_id);
       const last = rows[0] ?? null;
-      const unread = rows.filter(
-        (x) => x.sender_id !== mine && !readIds.has(x.id as string),
-      ).length;
+      const unread = unreadSquadMessageIds(rows, mine, readIds).length;
       return {
         id: m.group_id as string,
         name: g?.name ?? "Squad",

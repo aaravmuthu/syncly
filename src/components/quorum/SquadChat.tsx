@@ -10,6 +10,7 @@ import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Spinner } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/quorum/haptics";
+import { unreadSquadMessageIds } from "@/lib/quorum/chat-unread";
 import { listMessages, markRead, sendMessage, uploadChatImage } from "@/lib/quorum/chat.functions";
 import { prepareImageUpload } from "@/lib/quorum/safe-upload";
 import { ChatComposer } from "@/components/quorum/chat/Composer";
@@ -251,10 +252,14 @@ export function SquadChat({
     const run = () => {
       if (document.visibilityState !== "visible") return;
       const mine = new Set(reads.filter((r) => r.profile_id === me).map((r) => r.message_id));
-      const todo = messages
-        .filter((m) => m.sender_id && m.sender_id !== me && !mine.has(m.id))
-        .map((m) => m.id);
-      if (todo.length > 0) void mark({ data: { messageIds: todo } });
+      const todo = unreadSquadMessageIds(messages, me, mine);
+      if (todo.length > 0)
+        void mark({ data: { messageIds: todo } })
+          .then(() => {
+            void qc.invalidateQueries({ queryKey: ["dm-inbox"] });
+            refetchSoon();
+          })
+          .catch(() => console.warn("[chat] Could not mark messages as read"));
     };
     run();
     document.addEventListener("visibilitychange", run);

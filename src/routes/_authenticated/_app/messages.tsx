@@ -154,6 +154,8 @@ export function MessagesPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search people, handles or circles"
+              type="search"
               placeholder="Search people, handles or circles"
               className="w-full bg-transparent outline-none placeholder:text-muted-foreground"
             />

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform, animate } from "motion/react";
+import { motion, useMotionValue, useTransform, animate, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/quorum/haptics";
 
@@ -40,6 +40,7 @@ export function SwipeRow({
   disabled?: boolean;
   threshold?: number;
 }) {
+  const reduce = useReducedMotion();
   const x = useMotionValue(0);
   const [armed, setArmed] = useState<"left" | "right" | null>(null);
   const leftOpacity = useTransform(x, [0, threshold], [0, 1]);
@@ -55,7 +56,12 @@ export function SwipeRow({
         <motion.button
           type="button"
           style={{ opacity: leftOpacity }}
-          onClick={() => left.onAction()}
+          onFocus={() => x.set(threshold)}
+          onBlur={() => x.set(0)}
+          onClick={() => {
+            left.onAction();
+            x.set(0);
+          }}
           className={cn(
             "absolute inset-y-0 left-0 flex w-32 items-center gap-2 rounded-l-[28px] px-5 text-sm font-semibold",
             TONES[left.tone ?? "primary"],
@@ -69,7 +75,12 @@ export function SwipeRow({
         <motion.button
           type="button"
           style={{ opacity: rightOpacity }}
-          onClick={() => right.onAction()}
+          onFocus={() => x.set(-threshold)}
+          onBlur={() => x.set(0)}
+          onClick={() => {
+            right.onAction();
+            x.set(0);
+          }}
           className={cn(
             "absolute inset-y-0 right-0 flex w-32 items-center justify-end gap-2 rounded-r-[28px] px-5 text-sm font-semibold",
             TONES[right.tone ?? "muted"],
@@ -107,9 +118,9 @@ export function SwipeRow({
             right.onAction();
           }
           setArmed(null);
-          void animate(x, 0, spring);
+          void animate(x, 0, reduce ? { duration: 0 } : spring);
         }}
-        className="relative touch-pan-y will-change-transform"
+        className="relative touch-pan-y"
       >
         {children}
       </motion.div>

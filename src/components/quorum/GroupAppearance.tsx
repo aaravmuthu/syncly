@@ -107,13 +107,15 @@ export function GroupAppearance({
           >
             {uploading ? "Uploading…" : "Upload"}
           </Button>
-          {GROUP_PRESET_IMAGES.map((url) => (
+          {GROUP_PRESET_IMAGES.map((url, index) => (
             <button
               key={url}
+              aria-label={`Group picture ${index + 1}`}
+              aria-pressed={avatarUrl === url}
               type="button"
               onClick={() => setAvatarUrl(url)}
               className={cn(
-                "h-10 w-10 overflow-hidden rounded-xl ring-1 transition",
+                "tap-target h-11 w-11 overflow-hidden rounded-xl ring-1 transition",
                 avatarUrl === url ? "ring-2 ring-primary" : "ring-border hover:ring-primary/50",
               )}
             >
@@ -138,10 +140,12 @@ export function GroupAppearance({
           {GROUP_EMOJI.map((e) => (
             <button
               key={e}
+              aria-label={`Use ${e} icon`}
+              aria-pressed={emoji === e}
               type="button"
               onClick={() => setEmoji(e)}
               className={cn(
-                "h-9 w-9 rounded-xl text-lg transition",
+                "tap-target h-11 w-11 rounded-xl text-lg transition",
                 emoji === e ? "bg-primary/15 ring-1 ring-primary/40" : "bg-secondary",
               )}
             >

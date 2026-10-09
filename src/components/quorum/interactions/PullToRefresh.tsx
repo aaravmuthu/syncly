@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform, animate } from "motion/react";
+import { motion, useMotionValue, useTransform, animate, useReducedMotion } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { ThinkingOrb } from "thinking-orbs";
+import { toast } from "sonner";
 import { haptic } from "@/lib/quorum/haptics";
 
 const MAX = 110;
@@ -18,8 +19,15 @@ export function PullToRefresh({
   onRefresh: () => Promise<unknown> | unknown;
   children: ReactNode;
 }) {
+  const reduce = useReducedMotion();
+  const refresh = useRef(onRefresh);
+  useEffect(() => {
+    refresh.current = onRefresh;
+  }, [onRefresh]);
   const y = useMotionValue(0);
   const [busy, setBusy] = useState(false);
+  const refreshing = useRef(false);
+  const startX = useRef(0);
   const startY = useRef<number | null>(null);
   const armed = useRef(false);
   const scope = useRef<HTMLDivElement>(null);
@@ -31,15 +39,43 @@ export function PullToRefresh({
   useEffect(() => {
     const el = scope.current;
     if (!el) return;
+    let mounted = true;
+    const settle = (value: number) =>
+      void animate(
+        y,
+        value,
+        reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 },
+      );
 
     const onStart = (e: TouchEvent) => {
-      if (busy) return;
+      if (refreshing.current || e.touches.length !== 1) return;
       if (window.scrollY > 2) return;
+      const target = e.target as HTMLElement;
+      if (
+        target.closest(
+          'input, textarea, select, button, a, [role="slider"], [data-no-pull-refresh]',
+        )
+      )
+        return;
+      // Nested transcripts/sheets own their scrolling; don't pull the page through them.
+      for (let parent = target; parent && parent !== el; parent = parent.parentElement!) {
+        if (
+          parent.scrollHeight > parent.clientHeight &&
+          /auto|scroll/.test(getComputedStyle(parent).overflowY)
+        )
+          return;
+      }
       startY.current = e.touches[0]?.clientY ?? null;
+      startX.current = e.touches[0]?.clientX ?? 0;
       armed.current = false;
     };
     const onMove = (e: TouchEvent) => {
-      if (startY.current == null || busy) return;
+      if (startY.current == null || refreshing.current) return;
+      if (e.touches.length !== 1 || Math.abs((e.touches[0]?.clientX ?? 0) - startX.current) > 24) {
+        startY.current = null;
+        y.set(0);
+        return;
+      }
       const dy = (e.touches[0]?.clientY ?? 0) - startY.current;
       if (dy <= 0 || window.scrollY > 2) {
         y.set(0);
@@ -54,38 +90,56 @@ export function PullToRefresh({
       }
     };
     const onEnd = async () => {
+      if (startY.current == null) return;
       const pulled = y.get();
       startY.current = null;
-      if (pulled >= TRIGGER && !busy) {
+      if (pulled >= TRIGGER && !refreshing.current) {
+        refreshing.current = true;
         setBusy(true);
         haptic("success");
-        void animate(y, 56, { type: "spring", stiffness: 320, damping: 30 });
+        settle(56);
         try {
-          await onRefresh();
+          await refresh.current();
+        } catch {
+          toast.error("Couldn't refresh. Check your connection and try again.");
         } finally {
-          setBusy(false);
-          void animate(y, 0, { type: "spring", stiffness: 320, damping: 30 });
+          refreshing.current = false;
+          if (mounted) {
+            setBusy(false);
+            settle(0);
+          }
         }
       } else {
-        void animate(y, 0, { type: "spring", stiffness: 420, damping: 34 });
+        settle(0);
       }
       armed.current = false;
+    };
+
+    const onCancel = () => {
+      startY.current = null;
+      armed.current = false;
+      if (!refreshing.current) settle(0);
     };
 
     el.addEventListener("touchstart", onStart, { passive: true });
     el.addEventListener("touchmove", onMove, { passive: true });
     el.addEventListener("touchend", onEnd);
-    el.addEventListener("touchcancel", onEnd);
+    el.addEventListener("touchcancel", onCancel);
     return () => {
+      mounted = false;
+      startY.current = null;
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
-      el.removeEventListener("touchcancel", onEnd);
+      el.removeEventListener("touchcancel", onCancel);
     };
-  }, [busy, onRefresh, y]);
+  }, [reduce, y]);
 
   return (
-    <div ref={scope} className="relative">
+    <div ref={scope} className="relative" aria-busy={busy || undefined}>
+      <span className="sr-only" role="status">
+        {busy ? "Refreshing…" : ""}
+      </span>
       <motion.div
         style={{ opacity: spinnerOpacity, scale: spinnerScale, y: useTransform(y, (v) => v * 0.4) }}
         className="pointer-events-none absolute inset-x-0 -top-9 z-20 flex justify-center"
@@ -103,9 +157,7 @@ export function PullToRefresh({
         </motion.span>
       </motion.div>
 
-      <motion.div style={{ y }} className="will-change-transform">
-        {children}
-      </motion.div>
+      <motion.div style={{ y }}>{children}</motion.div>
     </div>
   );
 }

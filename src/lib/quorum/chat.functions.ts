@@ -94,10 +94,11 @@ export const markRead = createServerFn({ method: "POST" })
     if (ids.length === 0) return { ok: true };
     const { data: me } = await supabase.rpc("my_profile_id");
     if (!me) return { ok: true };
-    await supabase.from("message_reads").upsert(
+    const { error } = await supabase.from("message_reads").upsert(
       ids.map((message_id) => ({ message_id, profile_id: me as string })),
       { onConflict: "message_id,profile_id", ignoreDuplicates: true },
     );
+    if (error) throw dbError(error, "markRead");
     return { ok: true };
   });
 
