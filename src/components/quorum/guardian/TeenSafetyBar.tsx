@@ -12,7 +12,7 @@ import {
   respondToCheckin,
   sendDelay,
 } from "@/lib/quorum/guardian.functions";
-import { DynamicButton } from "@/components/quorum/DynamicButton";
+import { HoldToConfirmButton } from "@/components/quorum/HoldToConfirmButton";
 
 const DELAY_REASONS = [
   { label: "Traffic", minutes: 15 },
@@ -52,7 +52,8 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
   const qc = useQueryClient();
   const [delayOpen, setDelayOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
-  const [sosArmed, setSosArmed] = useState(false);
+  // Covers the location lookup between the hold completing and the send.
+  const [sosLocating, setSosLocating] = useState(false);
   const [arrival, setArrival] = useState<{ place: string; at: string } | null>(null);
 
   const ping = useServerFn(pushLocation);
@@ -83,7 +84,6 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
     onError: (e: Error) =>
       toast.error("SOS was not sent. Contact your parent directly", { description: e.message }),
     onSuccess: () => {
-      setSosArmed(false);
       toast.success("SOS sent", { description: "Your parents were alerted right away." });
     },
   });
@@ -213,28 +213,27 @@ export function TeenSafetyBar({ sharing }: { sharing: boolean }) {
             <Button variant="outline" onClick={() => setDelayOpen((v) => !v)}>
               Running late
             </Button>
-            <DynamicButton
-              icon={<Siren aria-hidden />}
-              stateKey="sos"
-              variant={sosArmed ? "danger" : "outline"}
-              loading={sos.isPending}
-              onClick={async () => {
-                if (!sosArmed) {
-                  setSosArmed(true);
-                  setTimeout(() => setSosArmed(false), 5000);
-                  return;
+            <HoldToConfirmButton
+              duration={1200}
+              loading={sosLocating || sos.isPending}
+              confirmedContent="Sending SOS…"
+              onConfirm={async () => {
+                setSosLocating(true);
+                try {
+                  const pos = await currentPosition();
+                  sos.mutate({
+                    data: {
+                      lat: pos?.coords.latitude ?? null,
+                      lon: pos?.coords.longitude ?? null,
+                    },
+                  });
+                } finally {
+                  setSosLocating(false);
                 }
-                const pos = await currentPosition();
-                sos.mutate({
-                  data: {
-                    lat: pos?.coords.latitude ?? null,
-                    lon: pos?.coords.longitude ?? null,
-                  },
-                });
               }}
             >
-              {sosArmed ? "Tap again to send SOS" : "SOS"}
-            </DynamicButton>
+              <Siren className="size-4" aria-hidden /> Hold for SOS
+            </HoldToConfirmButton>
           </div>
 
           {delayOpen ? (
