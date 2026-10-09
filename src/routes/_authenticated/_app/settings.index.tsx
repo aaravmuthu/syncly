@@ -11,6 +11,7 @@ import {
   Palette,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Sun,
   SunMoon,
   UserRound,
@@ -190,6 +191,14 @@ function SettingsHub() {
           subtitle="Parent pairing, password, data & danger zone"
           to="/settings/account"
         />
+        {me.data?.account_type === "guardian" || me.data?.hasLinkedTeens ? (
+          <NavRow
+            icon={Sparkles}
+            title="Family Plus"
+            subtitle="Your plan, safe zones & history"
+            to="/family-plus"
+          />
+        ) : null}
         <NavRow
           icon={MapPinned}
           title="Planning defaults"

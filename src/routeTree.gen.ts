@@ -22,6 +22,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/_app/route'
+import { Route as AuthenticatedFamilyPlusRouteImport } from './routes/_authenticated/family-plus'
 import { Route as AuthenticatedGuardianRouteImport } from './routes/_authenticated/guardian'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
@@ -106,6 +107,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   } as any)
 const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
   id: '/_app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFamilyPlusRoute = AuthenticatedFamilyPlusRouteImport.update({
+  id: '/family-plus',
+  path: '/family-plus',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGuardianRoute = AuthenticatedGuardianRouteImport.update({
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/family-plus': typeof AuthenticatedFamilyPlusRoute
   '/guardian': typeof AuthenticatedGuardianRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/family-plus': typeof AuthenticatedFamilyPlusRoute
   '/guardian': typeof AuthenticatedGuardianRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/_app': typeof AuthenticatedAppRouteRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/family-plus': typeof AuthenticatedFamilyPlusRoute
   '/_authenticated/guardian': typeof AuthenticatedGuardianRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/family-plus'
     | '/guardian'
     | '/onboarding'
     | '/approve/$token'
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/family-plus'
     | '/guardian'
     | '/onboarding'
     | '/approve/$token'
@@ -406,6 +417,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/family-plus'
     | '/_authenticated/guardian'
     | '/_authenticated/onboarding'
     | '/approve/$token'
@@ -538,6 +550,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedAppRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/family-plus': {
+      id: '/_authenticated/family-plus'
+      path: '/family-plus'
+      fullPath: '/family-plus'
+      preLoaderRoute: typeof AuthenticatedFamilyPlusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/guardian': {
@@ -724,12 +743,14 @@ const AuthenticatedAppRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRouteRoute: typeof AuthenticatedAppRouteRouteWithChildren
+  AuthenticatedFamilyPlusRoute: typeof AuthenticatedFamilyPlusRoute
   AuthenticatedGuardianRoute: typeof AuthenticatedGuardianRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRouteRoute: AuthenticatedAppRouteRouteWithChildren,
+  AuthenticatedFamilyPlusRoute: AuthenticatedFamilyPlusRoute,
   AuthenticatedGuardianRoute: AuthenticatedGuardianRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
 }
