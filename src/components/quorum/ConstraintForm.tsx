@@ -5,6 +5,7 @@ import { QUESTIONNAIRES, type Field as FieldDef, type Step } from "@/lib/quorum/
 import { AVAILABILITY_SLOTS, prettySlot } from "@/lib/quorum/availability";
 import type { ConstraintPayload } from "@/lib/quorum/types";
 import { cn } from "@/lib/utils";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export function ConstraintForm({
   questionnaire,
@@ -54,7 +55,8 @@ export function ConstraintForm({
       </div>
 
       <div className="mt-7 flex items-center justify-between gap-3">
-        <button
+        <DynamicButton
+          variant="plain"
           type="button"
           className="text-sm text-muted-foreground underline-offset-4 hover:underline"
           onClick={() =>
@@ -62,13 +64,14 @@ export function ConstraintForm({
           }
         >
           {stepIndex === 0 ? "Skip — no strong opinions" : "Back"}
-        </button>
-        <Button
+        </DynamicButton>
+        <DynamicButton
+          loading={saving}
           disabled={saving}
           onClick={() => (last ? onSubmit(value) : setStepIndex(stepIndex + 1))}
         >
           {saving ? "Saving…" : last ? "Submit privately" : "Continue"}
-        </Button>
+        </DynamicButton>
       </div>
 
       <p className="mt-4 text-center text-xs text-muted-foreground">

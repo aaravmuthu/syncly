@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button, Card, inputClass } from "@/components/quorum/ui";
 import { SectionHeader } from "@/components/quorum/settings/shared";
 import { SecondFactor } from "./SecondFactor";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export function AccountSecurity() {
   const [factors, setFactors] = useState<{ id: string; phone?: string }[]>([]);
@@ -134,7 +135,7 @@ export function AccountSecurity() {
               </div>
             ))
           ) : PHONE_AUTH_ENABLED ? (
-            <Button
+            <DynamicButton
               variant="outline"
               disabled={busy}
               onClick={() => {
@@ -143,7 +144,7 @@ export function AccountSecurity() {
               }}
             >
               {busy ? "Loading…" : "Set up SMS verification"}
-            </Button>
+            </DynamicButton>
           ) : null}
           <div
             className={
@@ -183,7 +184,7 @@ export function AccountSecurity() {
                 {notice}
               </p>
             )}
-            <Button
+            <DynamicButton
               variant="outline"
               disabled={busy || !confirmedEmail}
               onClick={() => {
@@ -192,7 +193,7 @@ export function AccountSecurity() {
               }}
             >
               {emailEnabled ? "Turn off email verification" : "Set up email verification"}
-            </Button>
+            </DynamicButton>
             {!confirmedEmail && (
               <p className="text-xs text-muted-foreground">
                 Confirm an email address before enabling email verification.

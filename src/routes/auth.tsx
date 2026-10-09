@@ -19,6 +19,7 @@ import { SecondFactor } from "@/components/quorum/auth/SecondFactor";
 import { CodeInput } from "@/components/quorum/auth/CodeInput";
 import { PHONE_AUTH_ENABLED, needsSecondFactor, normalizePhone } from "@/lib/auth-security";
 import { cn } from "@/lib/utils";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 type Mode = "signin" | "signup" | "reset" | "update";
 type Field = "email" | "password";
@@ -629,7 +630,8 @@ function AuthPage() {
                       />
                     </label>
                   )}
-                <Button
+                <DynamicButton
+                  width="full"
                   type="submit"
                   loading={busy}
                   disabled={Boolean(social)}
@@ -649,7 +651,7 @@ function AuthPage() {
                             : method === "phone"
                               ? "Send recovery code"
                               : "Send reset link"}
-                </Button>
+                </DynamicButton>
               </form>
             </VerificationFeedback>
             {otp && !accepted && (
@@ -676,7 +678,8 @@ function AuthPage() {
               </div>
             )}
             {!otp && !accepted && mode === "signin" && method === "email" && (
-              <button
+              <DynamicButton
+                variant="plain"
                 disabled={busy || !!social}
                 type="button"
                 className="tap-target mt-3 text-sm underline underline-offset-4"
@@ -687,7 +690,7 @@ function AuthPage() {
                 }}
               >
                 {emailCode ? "Use your password instead" : "Email me a sign-in code"}
-              </button>
+              </DynamicButton>
             )}
           </>
         )}

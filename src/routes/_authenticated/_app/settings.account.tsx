@@ -18,6 +18,7 @@ import { SubpageHeader } from "@/components/quorum/AppShell";
 import { PushEnter } from "@/components/quorum/interactions";
 import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { Modal } from "@/components/quorum/Modal";
+import { HoldToConfirmButton } from "@/components/quorum/HoldToConfirmButton";
 import { SectionHeader } from "@/components/quorum/settings/shared";
 import { getMe, deleteAccount } from "@/lib/quorum/plan.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -258,15 +259,15 @@ function AccountPage() {
               autoComplete="off"
             />
           </Field>
-          <Button
-            variant="danger"
+          <HoldToConfirmButton
             className="w-full"
             disabled={deleteConfirm !== "DELETE"}
             loading={removeAccount.isPending}
-            onClick={() => removeAccount.mutate({})}
+            confirmedContent="Deleting your account…"
+            onConfirm={() => removeAccount.mutate({})}
           >
-            Permanently delete my account
-          </Button>
+            Hold to permanently delete
+          </HoldToConfirmButton>
         </div>
       </Modal>
     </PushEnter>

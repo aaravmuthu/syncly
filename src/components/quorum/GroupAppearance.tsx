@@ -6,6 +6,8 @@ import { Button, Card, Field, inputClass } from "./ui";
 import { updateGroupLook, uploadGroupImage } from "@/lib/quorum/group.functions";
 import { COVER_THEMES, GROUP_EMOJI, GROUP_PRESET_IMAGES, coverTheme } from "@/lib/quorum/covers";
 import { cn } from "@/lib/utils";
+import { Upload } from "lucide-react";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 /** Admin-only editor for a squad's name, picture, icon and cover banner. */
 export function GroupAppearance({
@@ -99,14 +101,15 @@ export function GroupAppearance({
               e.target.value = "";
             }}
           />
-          <Button
+          <DynamicButton
+            icon={<Upload aria-hidden />}
             type="button"
             variant="outline"
             loading={uploading}
             onClick={() => fileRef.current?.click()}
           >
             {uploading ? "Uploading…" : "Upload"}
-          </Button>
+          </DynamicButton>
           {GROUP_PRESET_IMAGES.map((url, index) => (
             <button
               key={url}

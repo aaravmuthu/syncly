@@ -19,6 +19,7 @@ import { AddressPicker } from "@/components/quorum/AddressPicker";
 import { SyncAvatar, type SyncMood } from "@/components/quorum/auth/SyncAvatar";
 import { SyncSay, type SayLine } from "@/components/quorum/auth/SyncSay";
 import { useAvatarFollow } from "@/components/quorum/auth/useAvatarFollow";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 const GREET_DELAY_MS = 400;
 const GREET_MS = 1500;
@@ -483,7 +484,8 @@ function Onboarding() {
           <p className="mt-1.5 text-sm text-muted-foreground">{current.caption}</p>
           <div className="mt-6">{current.body}</div>
           <div data-avatar-ignore className="mt-8 flex items-center justify-between">
-            <button
+            <DynamicButton
+              variant="plain"
               type="button"
               className="text-sm text-muted-foreground underline-offset-4 hover:underline"
               onClick={() => {
@@ -494,8 +496,8 @@ function Onboarding() {
               }}
             >
               {step === 0 ? "Skip setup" : isGuardian && last ? "Skip — link later" : "Back"}
-            </button>
-            <Button
+            </DynamicButton>
+            <DynamicButton
               loading={save.isPending || link.isPending}
               orb={link.isPending ? "connecting" : undefined}
               onClick={() => {
@@ -528,7 +530,7 @@ function Onboarding() {
                       ? "Link & finish"
                       : "Start planning"
                     : "Continue"}
-            </Button>
+            </DynamicButton>
           </div>
         </Card>
       </div>

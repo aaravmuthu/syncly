@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "./ui";
 import { magicPlanDraft, type MagicPlanResult } from "@/lib/quorum/ai.functions";
 import type { PlanCategory } from "@/lib/quorum/types";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export type MagicApply = {
   title: string;
@@ -60,7 +61,8 @@ export function MagicPlanBox({
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Dinner and bowling in Frisco this Friday around 7 PM under $30 each"
       />
-      <Button
+      <DynamicButton
+        width="full"
         className="mt-3 w-full"
         loading={run.isPending}
         orb="solving"
@@ -68,7 +70,7 @@ export function MagicPlanBox({
         onClick={() => run.mutate({ data: { prompt, fallbackZip: fallbackZip ?? null } })}
       >
         {run.isPending ? "Reading your plan…" : "Draft it for me"}
-      </Button>
+      </DynamicButton>
 
       {result ? (
         <div className="mt-4 space-y-2">

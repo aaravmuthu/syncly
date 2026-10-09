@@ -5,13 +5,14 @@ import { useEffect, useState } from "react";
 import { UserCog, UserRound } from "lucide-react";
 import { SubpageHeader } from "@/components/quorum/AppShell";
 import { PushEnter } from "@/components/quorum/interactions";
-import { Button, Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
+import { Card, Field, Skeleton, inputClass } from "@/components/quorum/ui";
 import { Switch } from "@/components/ui/switch";
 import { SectionHeader } from "@/components/quorum/settings/shared";
 import { getMe, saveProfile, uploadAvatar } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/profile")({
   loader: ({ context }) => {
@@ -286,7 +287,7 @@ function ProfilePage() {
       </Card>
 
       <div className="mt-5">
-        <Button
+        <DynamicButton
           loading={save.isPending}
           onClick={() =>
             save.mutate({
@@ -299,7 +300,7 @@ function ProfilePage() {
           }
         >
           {save.isPending ? "Saving…" : "Save changes"}
-        </Button>
+        </DynamicButton>
       </div>
     </PushEnter>
   );

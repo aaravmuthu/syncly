@@ -138,6 +138,7 @@ function PlanConflictBanner({
 import { useFriends } from "@/lib/quorum/friends-context";
 import { ConflictCard } from "@/components/quorum/ConflictCard";
 import { getPlanConflicts } from "@/lib/quorum/conflict.functions";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 function PlanPage() {
   const { planId } = Route.useParams();
   const { alias, openFriend } = useFriends();
@@ -402,15 +403,19 @@ function PlanPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <CostBadge min={data.plan.est_cost_min} max={data.plan.est_cost_max} />
                 <BudgetFitPill budgetFit={topBudgetFit} />
-                <Button variant="outline" onClick={() => setEditing((v) => !v)}>
+                <DynamicButton
+                  stateKey="edit"
+                  icon={<Pencil aria-hidden />}
+                  variant="outline"
+                  onClick={() => setEditing((v) => !v)}
+                >
                   {/* Opens the organizer's own private answers, not the plan itself. */}
-                  <Pencil className="size-4" aria-hidden />{" "}
                   {editing
                     ? "Close"
                     : myParticipant?.responded
                       ? "Edit my answers"
                       : "Add my answers"}
-                </Button>
+                </DynamicButton>
               </div>
             </div>
           </Card>
@@ -435,13 +440,14 @@ function PlanPage() {
               </div>
             </div>
             <QuickResponse planId={planId} className="mt-3" />
-            <button
+            <DynamicButton
+              variant="plain"
               type="button"
               className="hit-slop mt-3 text-xs font-medium text-primary underline-offset-4 hover:underline"
               onClick={() => setEditing((v) => !v)}
             >
               {editing ? "Hide extra details" : "Add optional details (budget, curfew, ride)"}
-            </button>
+            </DynamicButton>
           </Card>
         )}
 
@@ -468,7 +474,7 @@ function PlanPage() {
                     : `Waiting on ${total - responded} more ${total - responded === 1 ? "person" : "people"}.`}
               </p>
             </div>
-            <Button
+            <DynamicButton
               variant={responded === total ? "primary" : "outline"}
               loading={generate.isPending}
               orb="searching"
@@ -476,7 +482,7 @@ function PlanPage() {
               onClick={() => generate.mutate({ data: { planId, shuffle } })}
             >
               {generate.isPending ? "Finding fair spots…" : "Find options"}
-            </Button>
+            </DynamicButton>
           </div>
           {generate.isError ? (
             <p role="alert" className="mt-3 text-sm text-destructive">
@@ -828,13 +834,14 @@ function PlanPage() {
                   <div
                     className={`mt-5 flex flex-wrap items-center gap-2${ended ? " hidden" : ""}`}
                   >
-                    <Button
+                    <DynamicButton
+                      icon={myVote === r.id ? <Check aria-hidden /> : undefined}
                       variant={myVote === r.id ? "primary" : "outline"}
                       disabled={!r.feasible || vote.isPending}
                       onClick={() => vote.mutate({ data: { planId, recommendationId: r.id } })}
                     >
                       {myVote === r.id ? "Your pick" : "Vote for this"}
-                    </Button>
+                    </DynamicButton>
                     <span className="text-xs text-muted-foreground">
                       {count} {count === 1 ? "vote" : "votes"}
                     </span>
@@ -932,21 +939,21 @@ function PlanPage() {
               link to send them — no account required.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <Button
+              <DynamicButton
                 variant="outline"
                 loading={askParent.isPending}
                 orb="connecting"
                 onClick={() => askParent.mutate({ data: { planId } })}
               >
                 {askParent.isPending ? "Asking…" : "Ask a parent"}
-              </Button>
-              <Button
+              </DynamicButton>
+              <DynamicButton
                 loading={shareSummary.isPending}
                 orb="connecting"
                 onClick={() => shareSummary.mutate({ data: { planId } })}
               >
                 {shareSummary.isPending ? "Creating link…" : "Share parent summary link"}
-              </Button>
+              </DynamicButton>
               {approvalLink ? (
                 <button
                   type="button"

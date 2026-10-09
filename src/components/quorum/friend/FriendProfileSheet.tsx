@@ -33,6 +33,7 @@ import { nudgeFriendPin, shareLocationWith, stopSharingWith } from "@/lib/quorum
 import { SHARE_OPTIONS, directionsUrl, shareCountdown, type ShareMode } from "@/lib/quorum/sharing";
 import { cn } from "@/lib/utils";
 import { UNNAMED } from "@/lib/quorum/names";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 const when = (iso: string | null) =>
   iso
@@ -318,7 +319,9 @@ export function FriendProfileSheet() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {friend.sharingWithThem ? (
                     <>
-                      <Button
+                      <DynamicButton
+                        stateKey="ghost"
+                        icon={<Ghost aria-hidden />}
                         variant="outline"
                         className="border-border text-foreground"
                         loading={ghost.isPending}
@@ -331,9 +334,8 @@ export function FriendProfileSheet() {
                           })
                         }
                       >
-                        <Ghost className="h-4 w-4" aria-hidden />
                         {friend.sharingWithThem.hidden ? "Unghost contact" : "Ghost this contact"}
-                      </Button>
+                      </DynamicButton>
                       <Button
                         variant="ghost"
                         className="text-foreground/75"

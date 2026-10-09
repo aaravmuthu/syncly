@@ -5,6 +5,7 @@ import { Car } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Field, Pill, inputClass } from "@/components/quorum/ui";
 import { markRideLeaving, saveVehicleDetails } from "@/lib/quorum/guardian.functions";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 export type ShieldRide = {
   id: string;
@@ -95,13 +96,14 @@ export function CarpoolShield({
 
             {iAmDriver ? (
               <>
-                <button
+                <DynamicButton
+                  variant="plain"
                   type="button"
                   className="mt-1 text-xs font-medium text-primary"
                   onClick={() => setOpenId(openId === r.id ? null : r.id)}
                 >
                   {openId === r.id ? "Close" : "Edit car details"}
-                </button>
+                </DynamicButton>
                 {openId === r.id ? (
                   <div className="mt-2 space-y-2">
                     <Field label="Car">

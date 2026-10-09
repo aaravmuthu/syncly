@@ -14,6 +14,7 @@ import { getPlanDefaults, previewFairPointVenues } from "@/lib/quorum/planner.fu
 import type { PlanCategory } from "@/lib/quorum/types";
 import { VIBES, vibeById } from "@/lib/quorum/vibes";
 import { localDateKey, localToInstant } from "@/lib/quorum/plan-time";
+import { DynamicButton } from "@/components/quorum/DynamicButton";
 
 /* ---------------------------------------------------------------- */
 /* Step 1 vibes                                                      */
@@ -229,13 +230,16 @@ export function PlanWizard({
           <Dialog.Title className="sr-only">Create a plan</Dialog.Title>
           {/* header */}
           <div className="flex items-center justify-between gap-3 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-3">
-            <button
+            <DynamicButton
+              variant="plain"
+              stateKey="back"
+              icon={<ArrowLeft aria-hidden />}
               type="button"
               onClick={() => (step === 0 ? onClose() : setStep((s) => s - 1))}
               className="tap-target inline-flex items-center gap-1.5 rounded-2xl px-2 py-1.5 text-sm text-muted-foreground transition active:scale-[0.97] hover:text-foreground"
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden /> {step === 0 ? "Close" : "Back"}
-            </button>
+              {step === 0 ? "Close" : "Back"}
+            </DynamicButton>
             <div className="flex items-center gap-1.5" aria-label={`Step ${step + 1} of 3`}>
               {[0, 1, 2].map((i) => (
                 <span
@@ -460,9 +464,14 @@ export function PlanWizard({
                         )}
                       </div>
 
-                      <Button className="mt-5 w-full" loading={create.isPending} onClick={launch}>
+                      <DynamicButton
+                        width="full"
+                        className="mt-5 w-full"
+                        loading={create.isPending}
+                        onClick={launch}
+                      >
                         {create.isPending ? "Launching…" : "Launch this plan"}
-                      </Button>
+                      </DynamicButton>
                     </>
                   )}
                 </div>
