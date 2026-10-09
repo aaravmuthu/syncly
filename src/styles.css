@@ -1648,3 +1648,67 @@
     #000 var(--warp-hole)
   );
 }
+
+/* Demo walkthrough (components/quorum/demo/DemoWalkthrough.tsx): one step
+   per screen under the sticky header. */
+.walkthrough {
+  min-height: calc(100svh - 65px - env(safe-area-inset-top, 0px));
+}
+/* The playground arrives in reading order after the walkthrough instead of
+   all at once: heading, intro, then the two columns. */
+.demo-enter > * {
+  animation: demo-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.demo-enter > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+.demo-enter > :nth-child(3) {
+  animation-delay: 0.18s;
+}
+.demo-enter > :nth-child(n + 4) {
+  animation-delay: 0.3s;
+}
+@keyframes demo-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-enter > * {
+    animation: none;
+  }
+}
+
+/* Sync's speech bubble on the demo walkthrough (demo/SyncGuide.tsx). */
+.guide-bubble {
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-wrap: pretty;
+  box-shadow: 0 14px 30px -16px rgb(0 0 0 / 0.45);
+}
+.guide-bubble::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+}
+.guide-bubble[data-side="right"]::before {
+  left: -4px;
+}
+.guide-bubble[data-side="left"]::before {
+  right: -4px;
+}
+.guide-bubble[data-side="below"]::before {
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
