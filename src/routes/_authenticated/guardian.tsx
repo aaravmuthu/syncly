@@ -783,6 +783,7 @@ function PlusPrompt({ title, body }: { title: string; body: string }) {
       >
         Start {FAMILY_PLUS.foundingTrialMonths} months free
       </Link>
+      <p className="text-center text-xs text-muted-foreground">No credit card needed.</p>
     </Card>
   );
 }
