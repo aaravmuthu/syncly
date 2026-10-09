@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { GuardianShell } from "@/components/quorum/GuardianShell";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -25,6 +25,12 @@ import { haptic } from "@/lib/quorum/haptics";
 import type { TeenCard } from "@/lib/quorum/guardian.types";
 import { statusLabel } from "@/components/quorum/dashboard-format";
 import { cn } from "@/lib/utils";
+import {
+  FAMILY_PLUS,
+  isPlusRequiredError,
+  limitsFor,
+  plusErrorText,
+} from "@/lib/quorum/family-plan";
 
 export const Route = createFileRoute("/_authenticated/guardian")({
   validateSearch: (search: Record<string, unknown>): { invite?: string } =>
@@ -93,6 +99,16 @@ function GuardianHub() {
     },
     onError: (e: unknown) => {
       haptic("warn");
+      if (isPlusRequiredError(e)) {
+        toast("Linking another teen needs Family Plus", {
+          description: plusErrorText(e),
+          action: {
+            label: "See Family Plus",
+            onClick: () => void navigate({ to: "/family-plus" }),
+          },
+        });
+        return;
+      }
       toast.error("Couldn't link that code", {
         description: e instanceof Error ? e.message : "Try again.",
       });
@@ -119,6 +135,10 @@ function GuardianHub() {
   }, [invite, hub.isLoading]);
 
   const teen = teens.find((t) => t.id === activeTeen) ?? teens[0] ?? null;
+  const familyTier = hub.data?.familyTier ?? "free";
+  const limits = limitsFor(familyTier);
+  const canAddTeen =
+    teens.length + (hub.data?.pendingRequests ?? []).length < limits.teensPerGuardian;
 
   return (
     <GuardianShell title="Family hub" subtitle="Plans, rides and safe arrivals — no group chatter.">
@@ -134,6 +154,7 @@ function GuardianHub() {
         </span>
         <ChevronRight className="size-4 shrink-0 text-primary" aria-hidden />
       </Link>
+      {hub.data ? <PlanRow plus={familyTier === "plus"} /> : null}
       {invite ? (
         <Card className="mb-4 border-primary/40">
           {link.isPending ? (
@@ -230,7 +251,12 @@ function GuardianHub() {
               </button>
             </div>
 
-            {activeTeen === "__add" ? (
+            {activeTeen === "__add" && !canAddTeen ? (
+              <PlusPrompt
+                title="Link every teen with Family Plus"
+                body={`The free plan covers ${limits.teensPerGuardian} teen. ${FAMILY_PLUS.name} links every teen in your family, with unlimited safe zones for each.`}
+              />
+            ) : activeTeen === "__add" ? (
               <div className="space-y-4">
                 <Card className="space-y-3">
                   <div className="text-sm font-semibold">Link another teen</div>
@@ -259,7 +285,7 @@ function GuardianHub() {
                 </Card>
               </div>
             ) : teen ? (
-              <TeenPanel teen={teen} />
+              <TeenPanel teen={teen} maxZones={limits.safeZonesPerTeen} />
             ) : null}
 
             {(hub.data?.alerts ?? []).length > 0 ? (
@@ -291,8 +317,9 @@ function GuardianHub() {
   );
 }
 
-function TeenPanel({ teen }: { teen: TeenCard }) {
+function TeenPanel({ teen, maxZones }: { teen: TeenCard; maxZones: number }) {
   const qc = useQueryClient();
+  const navigate = Route.useNavigate();
   const refresh = () => void qc.invalidateQueries({ queryKey: ["guardian-hub"] });
 
   const checkin = useMutation({
@@ -312,7 +339,25 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
       refresh();
       toast.success("Safe zone added");
     },
+    onError: (e: unknown) => {
+      haptic("warn");
+      if (isPlusRequiredError(e)) {
+        refresh();
+        toast("You've used your free safe zones", {
+          description: plusErrorText(e),
+          action: {
+            label: "See Family Plus",
+            onClick: () => void navigate({ to: "/family-plus" }),
+          },
+        });
+        return;
+      }
+      toast.error("Couldn't add that safe zone", {
+        description: e instanceof Error ? e.message : "Try again.",
+      });
+    },
   });
+  const atZoneLimit = teen.zones.length >= maxZones;
   const dropZone = useMutation({
     mutationFn: useServerFn(removeSafeZone),
     onSuccess: refresh,
@@ -380,7 +425,8 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
             Ask for a check-in
           </Button>
           <Button variant="ghost" onClick={() => setZoneOpen((v) => !v)}>
-            Safe zones ({teen.zones.length})
+            Safe zones ({teen.zones.length}
+            {Number.isFinite(maxZones) ? ` of ${maxZones}` : ""})
           </Button>
         </div>
 
@@ -411,67 +457,80 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
                 </Button>
               </div>
             ))}
-            <Field label="Add a safe zone" hint="You'll get a ping on arrival and departure.">
-              <input
-                className={inputClass}
-                placeholder="Label (Home, School, Practice)"
-                value={zoneLabel}
-                onChange={(e) => setZoneLabel(e.target.value)}
+            {atZoneLimit ? (
+              <PlusPrompt
+                title={`${teen.name} has ${maxZones} of ${maxZones} free safe zones`}
+                body={`${FAMILY_PLUS.name} makes safe zones unlimited, so practice, a friend's place and work can all ping you.`}
               />
-            </Field>
-            <AddressPicker
-              value={zoneLabel}
-              placeholder="Search the address"
-              onPick={(p) => setZonePoint({ lat: p.lat, lon: p.lon })}
-            />
-            <div className="flex flex-wrap gap-2">
-              {["home", "school", "venue", "friend"].map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setZoneKind(k)}
-                  className={cn(
-                    "tap-target rounded-full border px-3 py-1.5 text-xs font-medium",
-                    zoneKind === k ? "border-emerald-500/50 bg-emerald-500/10" : "border-border",
-                  )}
+            ) : (
+              <>
+                <Field label="Add a safe zone" hint="You'll get a ping on arrival and departure.">
+                  <input
+                    className={inputClass}
+                    placeholder="Label (Home, School, Practice)"
+                    value={zoneLabel}
+                    onChange={(e) => setZoneLabel(e.target.value)}
+                  />
+                </Field>
+                <AddressPicker
+                  value={zoneLabel}
+                  placeholder="Search the address"
+                  onPick={(p) => setZonePoint({ lat: p.lat, lon: p.lon })}
+                />
+                <div className="flex flex-wrap gap-2">
+                  {["home", "school", "venue", "friend"].map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setZoneKind(k)}
+                      className={cn(
+                        "tap-target rounded-full border px-3 py-1.5 text-xs font-medium",
+                        zoneKind === k
+                          ? "border-emerald-500/50 bg-emerald-500/10"
+                          : "border-border",
+                      )}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                  {[150, 250, 500].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setZoneRadius(r)}
+                      className={cn(
+                        "tap-target rounded-full border px-3 py-1.5 text-xs font-medium",
+                        zoneRadius === r
+                          ? "border-emerald-500/50 bg-emerald-500/10"
+                          : "border-border",
+                      )}
+                    >
+                      {r}m
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  className="w-full"
+                  loading={addZone.isPending}
+                  disabled={!zoneLabel || !zonePoint}
+                  onClick={() =>
+                    zonePoint &&
+                    addZone.mutate({
+                      data: {
+                        teenProfileId: teen.id,
+                        label: zoneLabel,
+                        kind: zoneKind,
+                        lat: zonePoint.lat,
+                        lon: zonePoint.lon,
+                        radiusM: zoneRadius,
+                      },
+                    })
+                  }
                 >
-                  {k}
-                </button>
-              ))}
-              {[150, 250, 500].map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setZoneRadius(r)}
-                  className={cn(
-                    "tap-target rounded-full border px-3 py-1.5 text-xs font-medium",
-                    zoneRadius === r ? "border-emerald-500/50 bg-emerald-500/10" : "border-border",
-                  )}
-                >
-                  {r}m
-                </button>
-              ))}
-            </div>
-            <Button
-              className="w-full"
-              loading={addZone.isPending}
-              disabled={!zoneLabel || !zonePoint}
-              onClick={() =>
-                zonePoint &&
-                addZone.mutate({
-                  data: {
-                    teenProfileId: teen.id,
-                    label: zoneLabel,
-                    kind: zoneKind,
-                    lat: zonePoint.lat,
-                    lon: zonePoint.lon,
-                    radiusM: zoneRadius,
-                  },
-                })
-              }
-            >
-              Save zone
-            </Button>
+                  Save zone
+                </Button>
+              </>
+            )}
           </div>
         ) : null}
       </Card>
@@ -689,5 +748,45 @@ function TeenPanel({ teen }: { teen: TeenCard }) {
         ))
       )}
     </div>
+  );
+}
+
+/** Links to the Family Plus page; shows which plan the family is on. */
+function PlanRow({ plus }: { plus: boolean }) {
+  return (
+    <Link
+      to="/family-plus"
+      className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border px-4 py-3 text-sm transition hover:border-primary/40 active:scale-[0.99]"
+    >
+      <span className="flex items-center gap-2">
+        <Sparkles className="size-4 shrink-0 text-primary" aria-hidden />
+        <span>
+          <span className="font-semibold">{plus ? FAMILY_PLUS.name : "Free plan"}</span>
+          <span className="text-muted-foreground">
+            {plus ? " · manage your plan" : ` · ${FAMILY_PLUS.name} adds unlimited safe zones`}
+          </span>
+        </span>
+      </span>
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+    </Link>
+  );
+}
+
+/** Shown in place of an action the free plan doesn't cover. */
+function PlusPrompt({ title, body }: { title: string; body: string }) {
+  return (
+    <Card className="space-y-3 border-primary/40">
+      <div>
+        <div className="text-sm font-semibold">{title}</div>
+        <p className="mt-1 text-xs text-muted-foreground">{body}</p>
+      </div>
+      <Link
+        to="/family-plus"
+        className="tap-target pressable active:pressable-active inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+      >
+        Start {FAMILY_PLUS.foundingTrialMonths} months free
+      </Link>
+      <p className="text-center text-xs text-muted-foreground">No credit card needed.</p>
+    </Card>
   );
 }
