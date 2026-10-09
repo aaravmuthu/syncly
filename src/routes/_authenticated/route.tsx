@@ -1,3 +1,4 @@
+import { needsAccountVerification } from "@/lib/auth-security";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getMe } from "@/lib/quorum/plan.functions";
@@ -23,6 +24,10 @@ export const Route = createFileRoute("/_authenticated")({
     const user = data.session?.user ?? null;
     if (error || !user) {
       initialRouteUserId = null;
+      throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
+    }
+
+    if (await needsAccountVerification()) {
       throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
     }
 

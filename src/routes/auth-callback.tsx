@@ -1,3 +1,4 @@
+import { needsAccountVerification } from "@/lib/auth-security";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,15 @@ function AuthCallback() {
       const { data } = await supabase.auth.getSession();
       if (!data.session) return;
       done = true;
+      try {
+        if (await needsAccountVerification()) {
+          void navigate({ to: "/auth", search: { next: target, mode: "signin" }, replace: true });
+          return;
+        }
+      } catch {
+        void navigate({ to: "/auth", search: { next: target, mode: "signin" }, replace: true });
+        return;
+      }
       setMessage("Loading your account…");
       const { getMe } = await import("@/lib/quorum/plan.functions");
       try {

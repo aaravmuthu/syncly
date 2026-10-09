@@ -1,5 +1,8 @@
+import { VerificationFeedback } from "@/components/quorum/auth/VerificationFeedback";
+import { EmailSecondFactor } from "@/components/quorum/auth/EmailSecondFactor";
+import { getEmailSecurity } from "@/lib/email-mfa.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +15,9 @@ import { SyncAvatar, type SyncMood } from "@/components/quorum/auth/SyncAvatar";
 import { caretLook } from "@/components/quorum/auth/caret-look";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { safeRedirectPath } from "@/lib/safe-dom";
+import { SecondFactor } from "@/components/quorum/auth/SecondFactor";
+import { CodeInput } from "@/components/quorum/auth/CodeInput";
+import { needsSecondFactor, normalizePhone } from "@/lib/auth-security";
 import { cn } from "@/lib/utils";
 
 type Mode = "signin" | "signup" | "reset" | "update";
@@ -61,6 +67,20 @@ function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
+  const [method, setMethod] = useState<"email" | "phone">("email");
+  const [phone, setPhone] = useState("");
+  const [emailCode, setEmailCode] = useState(false);
+  const [otp, setOtp] = useState<{
+    destination: string;
+    type: "email" | "sms";
+    recovery?: boolean;
+  } | null>(null);
+  const [accepted, setAccepted] = useState(false);
+  const [code, setCode] = useState("");
+  const [emailMfa, setEmailMfa] = useState(false);
+  const [phoneRecovery, setPhoneRecovery] = useState(false);
+  const [mfa, setMfa] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [social, setSocial] = useState<"google" | null>(null);
@@ -75,6 +95,40 @@ function AuthPage() {
   const isMobile = useIsMobile();
   const target = safeNext(next);
 
+  const finishSignIn = useCallback(async () => {
+    if (await needsSecondFactor()) {
+      setAccepted(false);
+      setOtp(null);
+      setEmailMfa(false);
+      setMfa(true);
+      return;
+    }
+    const security = await getEmailSecurity();
+    if (security.enabled && !security.verified) {
+      if (security.requiresPassword) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        setAccepted(false);
+        setMfa(false);
+        setEmailMfa(false);
+        setOtp(null);
+        setEmailCode(false);
+        setPassword("");
+        setMode("signin");
+        setNotice("Sign in with your password or Google to use email as your second factor.");
+        return;
+      }
+      setAccepted(false);
+      setOtp(null);
+      setMfa(false);
+      setEmailMfa(true);
+      return;
+    }
+    window.location.href = target.startsWith("/.lovable/")
+      ? target
+      : `/auth-callback?next=${encodeURIComponent(target)}`;
+  }, [target]);
+
   useEffect(() => {
     let active = true;
     let recovering = initialMode === "update";
@@ -87,7 +141,7 @@ function AuthPage() {
     });
     void supabase.auth
       .getSession()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (!active) return;
         if (recovering) {
           setChecking(false);
@@ -96,7 +150,8 @@ function AuthPage() {
             setFormError("This reset link has expired. Request a new one below.");
           }
         } else if (data.session) {
-          window.location.href = target;
+          await finishSignIn();
+          setChecking(false);
         } else {
           setChecking(false);
         }
@@ -111,7 +166,51 @@ function AuthPage() {
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, [initialMode, target]);
+  }, [initialMode, target, finishSignIn]);
+
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
+
+  function changeMode(nextMode: Mode) {
+    setAccepted(false);
+    setMode(nextMode);
+    setPhoneRecovery(false);
+    setOtp(null);
+    setCode("");
+    setFormError(null);
+    setNotice(null);
+    setPassword("");
+    setEmailCode(false);
+  }
+  async function resendCode() {
+    if (!otp || busy || cooldown) return;
+    setBusy(true);
+    setFormError(null);
+    try {
+      const result =
+        otp.type === "sms"
+          ? otp.recovery
+            ? await supabase.auth.signInWithOtp({
+                phone: otp.destination,
+                options: { shouldCreateUser: false },
+              })
+            : await supabase.auth.resend({ type: "sms", phone: otp.destination })
+          : await supabase.auth.signInWithOtp({
+              email: otp.destination,
+              options: { shouldCreateUser: false },
+            });
+      if (result.error) throw result.error;
+      setCooldown(60);
+      setNotice("A new code has been sent.");
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Could not send a new code.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // The avatar's reaction to the outcome is momentary; it relaxes back to the form.
   useEffect(() => {
@@ -153,6 +252,21 @@ function AuthPage() {
     }
   }
 
+  async function completeCode() {
+    if (otp?.recovery) {
+      const needsMfa = await needsSecondFactor();
+      setAccepted(false);
+      setOtp(null);
+      setCode("");
+      setNotice(null);
+      setPhoneRecovery(true);
+      if (needsMfa) setMfa(true);
+      else setMode("update");
+      return;
+    }
+    await finishSignIn();
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || social) return;
@@ -160,12 +274,72 @@ function AuthPage() {
     setFormError(null);
     setNotice(null);
     try {
+      if (otp) {
+        const result =
+          otp.type === "sms"
+            ? await supabase.auth.verifyOtp({ phone: otp.destination, token: code, type: "sms" })
+            : await supabase.auth.verifyOtp({ email: otp.destination, token: code, type: "email" });
+        if (result.error) throw result.error;
+        setOutcome("success");
+        setAccepted(true);
+        return;
+      }
+      if (mode === "signin" && method === "email" && emailCode) {
+        const destination = email.trim();
+        const { error } = await supabase.auth.signInWithOtp({
+          email: destination,
+          options: { shouldCreateUser: false },
+        });
+        if (error) throw error;
+        setOtp({ destination, type: "email" });
+        setCooldown(60);
+        setCode("");
+        setNotice("Check your email for your sign-in code.");
+        return;
+      }
+      if ((mode === "signin" || mode === "signup") && method === "phone") {
+        const destination = normalizePhone(phone);
+        if (mode === "signup") {
+          const { error } = await supabase.auth.signUp({ phone: destination, password });
+          if (error) throw error;
+          setOtp({ destination, type: "sms" });
+          setCode("");
+          setCooldown(60);
+          setNotice("Check your phone for a code to confirm your number.");
+          return;
+        }
+        const { error } = await supabase.auth.signInWithPassword({ phone: destination, password });
+        if (error) throw error;
+        await finishSignIn();
+        return;
+      }
       if (mode === "update") {
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
         setPassword("");
         toast.success("Password updated");
+        if (phoneRecovery) {
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+          setPhoneRecovery(false);
+          setMode("signin");
+          setNotice("Password updated. Sign in with your phone number and new password.");
+          return;
+        }
         void navigate({ to: "/auth-callback", search: { next: target }, replace: true });
+        return;
+      }
+      if (mode === "reset" && method === "phone") {
+        const destination = normalizePhone(phone);
+        const { error } = await supabase.auth.signInWithOtp({
+          phone: destination,
+          options: { shouldCreateUser: false },
+        });
+        if (error) throw error;
+        setOtp({ destination, type: "sms", recovery: true });
+        setCode("");
+        setCooldown(60);
+        setNotice("Verify your phone number to choose a new password.");
         return;
       }
       if (mode === "reset") {
@@ -197,14 +371,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       }
-      if (target.startsWith("/.lovable/")) {
-        window.location.href = target;
-      } else if (target === "/home") {
-        // Let the callback decide between onboarding and the dashboard.
-        void navigate({ to: "/auth-callback", search: { next: target } });
-      } else {
-        void navigate({ to: target });
-      }
+      await finishSignIn();
     } catch (err) {
       const message = err instanceof Error ? err.message : "We couldn't sign you in. Try again.";
       setFormError(message);
@@ -242,23 +409,29 @@ function AuthPage() {
           </div>
         )}
         <h1 className={cn("text-3xl font-semibold", mode === "reset" ? "mt-6" : "mt-5")}>
-          {mode === "signin"
-            ? "Welcome back"
-            : mode === "signup"
-              ? "Create your account"
-              : mode === "update"
-                ? "Choose a new password"
-                : "Reset your password"}
+          {mfa || emailMfa
+            ? "Verify your sign-in"
+            : otp
+              ? "Check your code"
+              : mode === "signin"
+                ? "Welcome back"
+                : mode === "signup"
+                  ? "Create your account"
+                  : mode === "update"
+                    ? "Choose a new password"
+                    : "Reset your password"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {mode === "update"
             ? "Enter a new password to finish resetting your account."
             : mode === "reset"
-              ? "We'll email you a link to set a new password."
+              ? method === "phone"
+                ? "We’ll text you a code to verify your number and reset your password."
+                : "We'll email you a link to set a new password."
               : "Your private answers stay yours. Groups only ever see whether a plan works."}
         </p>
 
-        {mode === "signin" || mode === "signup" ? (
+        {!mfa && !emailMfa && !otp && (mode === "signin" || mode === "signup") ? (
           <>
             <div className="mt-7">
               <SocialButtons
@@ -269,7 +442,7 @@ function AuthPage() {
             </div>
             <div className="my-6 flex items-center gap-3">
               <span className="h-px flex-1 bg-border" />
-              <span className="text-xs text-muted-foreground">or sign in with email</span>
+              <span className="text-xs text-muted-foreground">or continue with</span>
               <span className="h-px flex-1 bg-border" />
             </div>
           </>
@@ -285,102 +458,270 @@ function AuthPage() {
             {formError}
           </p>
         ) : null}
-        <form
-          aria-describedby={formError ? "auth-error" : undefined}
-          onSubmit={submit}
-          className={mode === "reset" ? "mt-8 space-y-4" : "space-y-4"}
-        >
-          {mode !== "update" ? (
-            <label className="block text-sm font-medium">
-              Email
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setPulse((n) => n + 1);
-                  setLook(caretLook(e.target));
-                  setOutcome(null);
-                }}
-                onSelect={(e) => setLook(caretLook(e.currentTarget))}
-                onFocus={(e) => {
-                  setFocus("email");
-                  setLook(caretLook(e.currentTarget));
-                }}
-                onBlur={() => setFocus(null)}
-                className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none transition-colors focus:border-primary/60"
-              />
-            </label>
-          ) : null}
-          {mode !== "reset" && (
-            <label className="block text-sm font-medium">
-              Password
-              <input
-                type="password"
-                required
-                minLength={6}
-                autoComplete={
-                  mode === "signup" || mode === "update" ? "new-password" : "current-password"
+        {emailMfa ? (
+          <div className="mt-6">
+            <EmailSecondFactor
+              onComplete={() => finishSignIn()}
+              onCancel={() => {
+                void supabase.auth.signOut().then(({ error }) => {
+                  if (error) setFormError(error.message);
+                  else {
+                    setEmailMfa(false);
+                    setPassword("");
+                  }
+                });
+              }}
+            />
+          </div>
+        ) : mfa ? (
+          <div className="mt-6">
+            <SecondFactor
+              onComplete={() => {
+                if (phoneRecovery) {
+                  setMfa(false);
+                  setMode("update");
+                  return;
                 }
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setPulse((n) => n + 1);
-                  setOutcome(null);
-                }}
-                onFocus={() => setFocus("password")}
-                onBlur={() => setFocus(null)}
-                className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none transition-colors focus:border-primary/60"
-              />
-            </label>
-          )}
-          <Button
-            type="submit"
-            loading={busy}
-            disabled={Boolean(social)}
-            orb="connecting"
-            className="w-full py-3.5"
-          >
-            {mode === "signin"
-              ? "Log in"
-              : mode === "signup"
-                ? "Create account"
-                : mode === "update"
-                  ? "Save new password"
-                  : "Send reset link"}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-sm text-muted-foreground">
-          {(mode === "signin" || mode === "signup") && (
-            <button
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-              className="inline-flex min-h-11 items-center underline underline-offset-4 transition-colors hover:text-foreground"
+                return finishSignIn();
+              }}
+              onCancel={() => {
+                void supabase.auth.signOut().then(({ error }) => {
+                  if (error) {
+                    setFormError(error.message);
+                    return;
+                  }
+                  setMfa(false);
+                  setPhoneRecovery(false);
+                  setMode("signin");
+                  setPassword("");
+                  setNotice(null);
+                });
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            {!otp && (mode === "signin" || mode === "signup" || mode === "reset") && (
+              <div
+                role="group"
+                aria-label={mode === "reset" ? "Recovery method" : "Sign-in method"}
+                className="relative mb-5 flex rounded-2xl bg-secondary p-1"
+              >
+                {/* One pill that slides between options, so the switch reads as
+                    a single physical control rather than two buttons swapping fills. */}
+                <span
+                  aria-hidden="true"
+                  className="segment-thumb absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl bg-card shadow-sm"
+                  data-side={method === "phone" ? "end" : undefined}
+                />
+                {(["email", "phone"] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={method === value}
+                    disabled={busy || !!social}
+                    onClick={() => {
+                      setMethod(value);
+                      setPassword("");
+                      setFormError(null);
+                      setNotice(null);
+                    }}
+                    className={cn(
+                      "tap-target relative flex-1 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors",
+                      method === value && "text-foreground",
+                    )}
+                  >
+                    {value === "email" ? "Email" : "Phone number"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <VerificationFeedback
+              accepted={accepted}
+              onComplete={completeCode}
+              className={otp ? "min-h-56" : undefined}
             >
-              {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Log in"}
-            </button>
-          )}
-          {mode !== "update" ? (
-            <div>
+              <form
+                aria-describedby={formError ? "auth-error" : undefined}
+                onSubmit={submit}
+                className={mode === "reset" ? "mt-8 space-y-4" : "space-y-4"}
+              >
+                {otp ? (
+                  <div className="auth-step">
+                    <p className="mb-4 break-words text-sm text-muted-foreground">
+                      Enter the code sent to {otp.destination}.
+                    </p>
+                    <CodeInput
+                      value={code}
+                      onChange={setCode}
+                      error={!!formError}
+                      errorId="auth-error"
+                      disabled={busy}
+                    />
+                  </div>
+                ) : (mode === "signin" || mode === "signup" || mode === "reset") &&
+                  method === "phone" ? (
+                  <label className="auth-step block text-sm font-medium">
+                    Phone number
+                    <input
+                      type="tel"
+                      required
+                      autoComplete="tel"
+                      placeholder="+1 415 555 2671"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      aria-describedby="phone-hint"
+                      className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none focus:border-primary/60"
+                    />
+                    <span id="phone-hint" className="mt-2 block text-xs text-muted-foreground">
+                      Include your country code. SMS charges may apply.
+                    </span>
+                  </label>
+                ) : mode !== "update" ? (
+                  <label className="block text-sm font-medium">
+                    Email
+                    <input
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setPulse((n) => n + 1);
+                        setLook(caretLook(e.target));
+                        setOutcome(null);
+                      }}
+                      onSelect={(e) => setLook(caretLook(e.currentTarget))}
+                      onFocus={(e) => {
+                        setFocus("email");
+                        setLook(caretLook(e.currentTarget));
+                      }}
+                      onBlur={() => setFocus(null)}
+                      className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none transition-colors focus:border-primary/60"
+                    />
+                  </label>
+                ) : null}
+                {!otp &&
+                  mode !== "reset" &&
+                  !(mode === "signin" && method === "email" && emailCode) && (
+                    <label className="block text-sm font-medium">
+                      Password
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        autoComplete={
+                          mode === "signup" || mode === "update"
+                            ? "new-password"
+                            : "current-password"
+                        }
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setPulse((n) => n + 1);
+                          setOutcome(null);
+                        }}
+                        onFocus={() => setFocus("password")}
+                        onBlur={() => setFocus(null)}
+                        className="mt-1.5 w-full rounded-2xl border border-input bg-card px-3.5 py-3 outline-none transition-colors focus:border-primary/60"
+                      />
+                    </label>
+                  )}
+                <Button
+                  type="submit"
+                  loading={busy}
+                  disabled={Boolean(social)}
+                  orb="connecting"
+                  className="w-full py-3.5"
+                >
+                  {otp
+                    ? "Verify code"
+                    : mode === "signin" && method === "email" && emailCode
+                      ? "Send email code"
+                      : mode === "signin"
+                        ? "Log in"
+                        : mode === "signup"
+                          ? "Create account"
+                          : mode === "update"
+                            ? "Save new password"
+                            : method === "phone"
+                              ? "Send recovery code"
+                              : "Send reset link"}
+                </Button>
+              </form>
+            </VerificationFeedback>
+            {otp && !accepted && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  variant="ghost"
+                  disabled={busy || cooldown > 0}
+                  onClick={() => void resendCode()}
+                >
+                  {cooldown ? `Send again in ${cooldown}s` : "Send a new code"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => {
+                    setOtp(null);
+                    setCode("");
+                    setNotice(null);
+                    setFormError(null);
+                  }}
+                >
+                  Change details
+                </Button>
+              </div>
+            )}
+            {!otp && !accepted && mode === "signin" && method === "email" && (
               <button
-                onClick={() => setMode(mode === "reset" ? "signin" : "reset")}
+                disabled={busy || !!social}
+                type="button"
+                className="tap-target mt-3 text-sm underline underline-offset-4"
+                onClick={() => {
+                  setEmailCode((v) => !v);
+                  setPassword("");
+                  setFormError(null);
+                }}
+              >
+                {emailCode ? "Use your password instead" : "Email me a sign-in code"}
+              </button>
+            )}
+          </>
+        )}
+
+        {!mfa && !emailMfa && !accepted && (
+          <div className="mt-4 text-sm text-muted-foreground">
+            {(mode === "signin" || mode === "signup") && (
+              <button
+                disabled={busy || !!social}
+                onClick={() => changeMode(mode === "signin" ? "signup" : "signin")}
                 className="inline-flex min-h-11 items-center underline underline-offset-4 transition-colors hover:text-foreground"
               >
-                {mode === "reset" ? "Back to log in" : "Forgot your password?"}
+                {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Log in"}
               </button>
+            )}
+            {mode !== "update" ? (
+              <div>
+                <button
+                  disabled={busy || !!social}
+                  onClick={() => changeMode(mode === "reset" ? "signin" : "reset")}
+                  className="inline-flex min-h-11 items-center underline underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  {mode === "reset" ? "Back to log in" : "Forgot your password?"}
+                </button>
+              </div>
+            ) : null}
+            <div>
+              <Link
+                to="/demo"
+                className="inline-flex min-h-11 items-center underline underline-offset-4 transition-colors hover:text-foreground"
+              >
+                Just looking? Try the demo without an account
+              </Link>
             </div>
-          ) : null}
-          <div>
-            <Link
-              to="/demo"
-              className="inline-flex min-h-11 items-center underline underline-offset-4 transition-colors hover:text-foreground"
-            >
-              Just looking? Try the demo without an account
-            </Link>
           </div>
-        </div>
+        )}
 
         {mode === "signup" && (
           <p className="mt-6 text-xs text-muted-foreground">

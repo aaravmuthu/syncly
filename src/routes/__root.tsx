@@ -1,3 +1,4 @@
+import { CookieConsent } from "@/components/quorum/CookieConsent";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Link,
@@ -178,6 +179,7 @@ function RootComponent() {
             still allowing layout animations that convey real information. */}
         <MotionConfig reducedMotion="user">
           <Outlet />
+          <CookieConsent />
           <Toaster
             position="top-center"
             richColors

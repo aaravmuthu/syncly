@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:rls": "RUN_RLS_TESTS=1 vitest run src/tests/rls-policies.test.ts"
+    "test:rls": "RUN_RLS_TESTS=1 vitest run src/tests/rls-policies.test.ts",
+    "test:auth": "vitest run src/tests/auth-security.test.ts src/tests/email-mfa.test.ts src/tests/email-mfa-server.test.ts src/tests/mfa-database.test.ts src/tests/cookie-consent.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.44",
@@ -100,7 +101,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@electric-sql/pglite": "^0.5.8"
   },
   "overrides": {
     "seroval": "^1.6.0",
