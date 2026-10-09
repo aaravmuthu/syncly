@@ -165,7 +165,9 @@ function ErrorFace({ error, life }: { error: InlineError; life: number }) {
       {titleClipped ? (
         <p className="font-semibold tracking-[-0.006em] text-foreground">{error.title}</p>
       ) : null}
-      {error.description ? <p className="text-pretty text-muted-foreground">{error.description}</p> : null}
+      {error.description ? (
+        <p className="text-pretty text-muted-foreground">{error.description}</p>
+      ) : null}
       {error.action ? (
         <button
           type="button"
