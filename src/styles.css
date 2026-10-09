@@ -1603,6 +1603,13 @@
     transition: none;
   }
 }
+/* Below lg the headline is page text above the spheres (index.tsx), so
+   short phones need extra height to keep it, the scene and the copy apart. */
+@media (max-width: 1023.98px) {
+  .orbit-hero {
+    min-height: 720px;
+  }
+}
 
 /* Landing → demo warp (components/quorum/landing/warp.ts): a glossy evergreen
    sphere that fills the screen, then opens a hole from the same point. */
