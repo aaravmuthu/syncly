@@ -188,7 +188,7 @@ export function RadarPage() {
   // queries alone -- was tearing down and recreating every marker and
   // re-running fitBounds() (an animated camera recenter) each time, whether
   // or not anything actually changed. That's what made Radar feel laggy.
-  const { people, zones, places, hasPins } = useMemo(() => {
+  const { people, zones, places } = useMemo(() => {
     const teensList = (hub.data?.teens ?? []) as TeenCard[];
     const people: MapPerson[] = [];
     const zones: MapZone[] = [];
@@ -290,7 +290,7 @@ export function RadarPage() {
       });
     }
 
-    return { people, zones, places, hasPins: people.length > 0 || zones.length > 0 };
+    return { people, zones, places };
   }, [hub.data, mine.data, friendPins.data, alias, focus.lat, focus.lon, focus.label]);
 
   return (
@@ -306,7 +306,7 @@ export function RadarPage() {
     // preference -- the Mapbox style is always dark-v11, so a
     // light-adaptive control or a light RadarSheet card would wash out
     // against it or clash with it outright.
-    <div className="dark fixed inset-0 overflow-hidden bg-background">
+    <div className="dark radar-viewport fixed inset-0 overflow-hidden bg-background">
       {loading ? (
         <div className="relative h-full w-full">
           <Skeleton className="h-full w-full rounded-none" />
@@ -317,7 +317,7 @@ export function RadarPage() {
             className="absolute inset-0 justify-center"
           />
         </div>
-      ) : hasPins ? (
+      ) : (
         <SquadMap
           people={people}
           zones={zones}
@@ -331,13 +331,6 @@ export function RadarPage() {
               : navigate({ to: "/messages", search: { peer: p.id } })
           }
         />
-      ) : (
-        <div className="flex h-full items-center justify-center p-6">
-          <Empty
-            title="No live pins yet"
-            body="Turn on location sharing in Settings, or link a family account to see live pins here."
-          />
-        </div>
       )}
 
       {!loading ? <RadarSheet teens={teens} mine={mine.data ?? null} /> : null}
@@ -372,11 +365,13 @@ function RadarSheet({ teens, mine }: { teens: TeenCard[]; mine: MyRadarData | nu
       // enough overshoot to feel bouncy for a safety-relevant status sheet.
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
       className={cn(
-        "glass-pill pointer-events-auto absolute z-10 overflow-hidden",
+        "radar-live-sheet glass-pill pointer-events-auto absolute z-10 overflow-hidden",
         // Collapsed: a compact, auto-width chip centered in the inset-x-3
         // zone -- deliberately NOT the same full-bar shape as the tab bar
         // below it. Expanded: the full-width panel, unchanged.
-        open ? "inset-x-3 rounded-3xl" : "inset-x-3 mx-auto w-fit rounded-full",
+        open
+          ? "inset-x-3 rounded-2xl md:left-auto md:right-4 md:w-80"
+          : "inset-x-3 mx-auto w-fit rounded-full",
       )}
       style={{
         // Anchored at var(--chrome-bottom) (styles.css) whether collapsed or

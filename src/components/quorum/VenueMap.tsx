@@ -20,10 +20,13 @@ export function VenueMap({
   venues,
   onSelect,
   mapClassName,
+  nearbyPlaces = true,
 }: {
   venues: MapVenue[];
   onSelect?: (id: string) => void;
   mapClassName?: string;
+  /** Public approval links keep basemap POIs without requiring a signed-in lookup. */
+  nearbyPlaces?: boolean;
 }) {
   const fetchToken = useServerFn(getMapToken);
   const token = useQuery({
@@ -52,6 +55,7 @@ export function VenueMap({
           <Suspense fallback={<Skeleton className="h-64 rounded-2xl" />}>
             <Inner
               token={token.data}
+              nearbyPlaces={nearbyPlaces}
               venues={venues}
               onSelect={onSelect}
               className={mapClassName}

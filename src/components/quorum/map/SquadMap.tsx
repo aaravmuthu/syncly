@@ -45,7 +45,7 @@ export function SquadMap({
 
   const hasPins =
     data.people.length > 0 || (data.places?.length ?? 0) > 0 || (data.zones?.length ?? 0) > 0;
-  if (!hasPins) return null;
+  if (!hasPins && compact) return null;
   if (token.isLoading) return <Skeleton className={className ?? "h-80 rounded-surface"} />;
   if (token.isError || !token.data) return null;
 
