@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/quorum/toast";
 import { cn } from "@/lib/utils";
 import { GuardianSyncCard } from "@/components/quorum/guardian/GuardianSyncCard";
+import { exportAccountData } from "@/lib/quorum/account.functions";
 import { LEGAL } from "@/lib/legal";
 
 export const Route = createFileRoute("/_authenticated/_app/settings/account")({
@@ -58,6 +59,21 @@ function AccountPage() {
       setPasswordForm({ next: "", confirm: "" });
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const downloadData = useMutation({
+    mutationFn: useServerFn(exportAccountData),
+    onSuccess: (data) => {
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+      );
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `syncly-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+    onError: (e: Error) => toast.error("Couldn't export your data", { description: e.message }),
   });
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -195,18 +211,20 @@ function AccountPage() {
         </ul>
         <Button
           variant="outline"
-          onClick={() => {
-            const blob = new Blob([JSON.stringify(me.data, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `syncly-data-${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
+          loading={downloadData.isPending}
+          onClick={() => downloadData.mutate({})}
         >
           <Download className="size-4" aria-hidden /> Download my data
         </Button>
+        <p className="text-xs text-muted-foreground">
+          Includes your profile, private planning answers, authored messages and owned records.
+          Uploaded file contents, backups and provider logs are excluded.
+        </p>
+        {downloadData.isError && (
+          <p role="alert" className="text-sm text-destructive">
+            {downloadData.error.message}
+          </p>
+        )}
       </Card>
 
       {/* Danger zone — pulled well clear of routine settings with its own
@@ -237,11 +255,13 @@ function AccountPage() {
       >
         <div className="space-y-4">
           <ul className="space-y-1.5 rounded-2xl border border-destructive/30 bg-destructive/[0.04] px-4 py-3 text-sm text-muted-foreground">
-            <li>The action attempts to remove your sign-in account and associated profile.</li>
-            <li>Associated records can prevent deletion from succeeding.</li>
+            <li>Removes your sign-in account, profile and linked personal database records.</li>
             <li>
-              Shared plans, messages, location records and uploaded files are not all guaranteed to
-              be erased.
+              Shared groups and plans transfer to another member, or are removed if nobody remains.
+            </li>
+            <li>
+              Your uploaded avatars, chat images and voice notes are removed. Shared text content,
+              provider logs and backups may remain.
             </li>
             <li>
               For help or a data-deletion request, email{" "}

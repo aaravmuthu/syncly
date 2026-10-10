@@ -18,10 +18,12 @@ import { Route as DemoRouteImport } from './routes/demo'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SubprocessorsRouteImport } from './routes/subprocessors'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/_app/route'
+import { Route as AuthenticatedAgreementRouteImport } from './routes/_authenticated/agreement'
 import { Route as AuthenticatedFamilyPlusRouteImport } from './routes/_authenticated/family-plus'
 import { Route as AuthenticatedGuardianRouteImport } from './routes/_authenticated/guardian'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -88,6 +90,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubprocessorsRoute = SubprocessorsRouteImport.update({
+  id: '/subprocessors',
+  path: '/subprocessors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -107,6 +114,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   } as any)
 const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
   id: '/_app',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAgreementRoute = AuthenticatedAgreementRouteImport.update({
+  id: '/agreement',
+  path: '/agreement',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFamilyPlusRoute = AuthenticatedFamilyPlusRouteImport.update({
@@ -237,9 +249,11 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/subprocessors': typeof SubprocessorsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/agreement': typeof AuthenticatedAgreementRoute
   '/family-plus': typeof AuthenticatedFamilyPlusRoute
   '/guardian': typeof AuthenticatedGuardianRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -271,9 +285,11 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/subprocessors': typeof SubprocessorsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/agreement': typeof AuthenticatedAgreementRoute
   '/family-plus': typeof AuthenticatedFamilyPlusRoute
   '/guardian': typeof AuthenticatedGuardianRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -307,10 +323,12 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/subprocessors': typeof SubprocessorsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteRouteWithChildren
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/agreement': typeof AuthenticatedAgreementRoute
   '/_authenticated/family-plus': typeof AuthenticatedFamilyPlusRoute
   '/_authenticated/guardian': typeof AuthenticatedGuardianRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -344,9 +362,11 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/privacy'
     | '/sitemap.xml'
+    | '/subprocessors'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/agreement'
     | '/family-plus'
     | '/guardian'
     | '/onboarding'
@@ -378,9 +398,11 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/privacy'
     | '/sitemap.xml'
+    | '/subprocessors'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/agreement'
     | '/family-plus'
     | '/guardian'
     | '/onboarding'
@@ -413,10 +435,12 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/privacy'
     | '/sitemap.xml'
+    | '/subprocessors'
     | '/terms'
     | '/_authenticated/_app'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/agreement'
     | '/_authenticated/family-plus'
     | '/_authenticated/guardian'
     | '/_authenticated/onboarding'
@@ -450,6 +474,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SubprocessorsRoute: typeof SubprocessorsRoute
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
@@ -524,6 +549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/subprocessors': {
+      id: '/subprocessors'
+      path: '/subprocessors'
+      fullPath: '/subprocessors'
+      preLoaderRoute: typeof SubprocessorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -550,6 +582,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedAppRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agreement': {
+      id: '/_authenticated/agreement'
+      path: '/agreement'
+      fullPath: '/agreement'
+      preLoaderRoute: typeof AuthenticatedAgreementRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/family-plus': {
@@ -743,6 +782,7 @@ const AuthenticatedAppRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRouteRoute: typeof AuthenticatedAppRouteRouteWithChildren
+  AuthenticatedAgreementRoute: typeof AuthenticatedAgreementRoute
   AuthenticatedFamilyPlusRoute: typeof AuthenticatedFamilyPlusRoute
   AuthenticatedGuardianRoute: typeof AuthenticatedGuardianRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
@@ -750,6 +790,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRouteRoute: AuthenticatedAppRouteRouteWithChildren,
+  AuthenticatedAgreementRoute: AuthenticatedAgreementRoute,
   AuthenticatedFamilyPlusRoute: AuthenticatedFamilyPlusRoute,
   AuthenticatedGuardianRoute: AuthenticatedGuardianRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
@@ -768,6 +809,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SubprocessorsRoute: SubprocessorsRoute,
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:

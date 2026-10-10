@@ -78,6 +78,7 @@ function AuthPage() {
     recovery?: boolean;
   } | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [code, setCode] = useState("");
   const [emailMfa, setEmailMfa] = useState(false);
   const [phoneRecovery, setPhoneRecovery] = useState(false);
@@ -236,6 +237,10 @@ function AuthPage() {
             : "idle";
 
   async function signInWith(provider: "google") {
+    if (mode === "signup" && !termsAccepted) {
+      setFormError("Please accept the Terms of Service before creating an account.");
+      return;
+    }
     setSocial(provider);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -276,6 +281,8 @@ function AuthPage() {
     setFormError(null);
     setNotice(null);
     try {
+      if (mode === "signup" && !otp && !termsAccepted)
+        throw new Error("Please accept the Terms of Service before creating an account.");
       if (otp) {
         const result =
           otp.type === "sms"
@@ -736,17 +743,25 @@ function AuthPage() {
         )}
 
         {mode === "signup" && (
-          <p className="mt-6 text-xs text-muted-foreground">
-            By creating an account, you agree to Syncly's{" "}
-            <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
-              Privacy Policy
-            </Link>
-            .
-          </p>
+          <label className="mt-6 flex items-start gap-3 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-1 size-4 shrink-0 accent-primary"
+            />
+            <span>
+              I agree to Syncly's{" "}
+              <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
+                Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
         )}
       </div>
     </div>

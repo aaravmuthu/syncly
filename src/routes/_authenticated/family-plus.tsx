@@ -233,7 +233,8 @@ function FamilyPlusPage() {
                   </DynamicButton>
                   <p className="text-center text-xs text-muted-foreground">
                     No credit card needed. Founding families get {FAMILY_PLUS.foundingTrialMonths}{" "}
-                    months free, then {priceLabel(interval)}.
+                    months free. The trial ends automatically and does not renew or charge you. Paid
+                    plans, when available, require a separate purchase.
                   </p>
                 </>
               ) : (
@@ -437,7 +438,7 @@ function TrialReceipt({
             <ReceiptRow label="Plan" value={FAMILY_PLUS.name} />
             <ReceiptRow label="Billing" value={interval === "year" ? "Yearly" : "Monthly"} />
             <ReceiptRow label="Free trial" value={`${FAMILY_PLUS.foundingTrialMonths} months`} />
-            <ReceiptRow label="Then" value={priceLabel(interval)} />
+            <ReceiptRow label="Auto-renewal" value="Off · no automatic charge" />
             {rule}
             <ReceiptRow label="Due today" value="$0.00" strong />
             <ReceiptRow label="Card on file" value="None" />
