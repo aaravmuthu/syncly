@@ -62,15 +62,6 @@
     },
     {
       "name": "@babel/code-frame",
-      "version": "7.27.1",
-      "license": "MIT",
-      "licenseFiles": [
-        "LICENSE"
-      ],
-      "reviewRequired": false
-    },
-    {
-      "name": "@babel/code-frame",
       "version": "7.29.7",
       "license": "MIT",
       "licenseFiles": [
@@ -549,7 +540,7 @@
     },
     {
       "name": "@lovable.dev/vite-tanstack-config",
-      "version": "2.23.1",
+      "version": "2.25.3",
       "license": "MIT",
       "licenseFiles": [],
       "reviewRequired": true
@@ -1335,6 +1326,15 @@
       "reviewRequired": false
     },
     {
+      "name": "@tanstack/history",
+      "version": "1.162.4",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "reviewRequired": false
+    },
+    {
       "name": "@tanstack/query-core",
       "version": "5.101.4",
       "license": "MIT",
@@ -1354,7 +1354,7 @@
     },
     {
       "name": "@tanstack/react-router",
-      "version": "1.170.18",
+      "version": "1.170.41",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1363,7 +1363,7 @@
     },
     {
       "name": "@tanstack/react-start-client",
-      "version": "1.168.16",
+      "version": "1.168.39",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1372,7 +1372,7 @@
     },
     {
       "name": "@tanstack/react-start-rsc",
-      "version": "0.1.33",
+      "version": "0.1.59",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1381,7 +1381,7 @@
     },
     {
       "name": "@tanstack/react-start-server",
-      "version": "1.167.22",
+      "version": "1.167.46",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1390,7 +1390,7 @@
     },
     {
       "name": "@tanstack/react-start",
-      "version": "1.168.34",
+      "version": "1.168.60",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1399,7 +1399,7 @@
     },
     {
       "name": "@tanstack/react-store",
-      "version": "0.9.3",
+      "version": "0.11.2",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1416,6 +1416,15 @@
       "reviewRequired": false
     },
     {
+      "name": "@tanstack/router-core",
+      "version": "1.171.34",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "reviewRequired": false
+    },
+    {
       "name": "@tanstack/router-generator",
       "version": "1.167.21",
       "license": "MIT",
@@ -1425,8 +1434,26 @@
       "reviewRequired": false
     },
     {
+      "name": "@tanstack/router-generator",
+      "version": "1.167.40",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "reviewRequired": false
+    },
+    {
+      "name": "@tanstack/router-generator",
+      "version": "1.167.40",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "reviewRequired": false
+    },
+    {
       "name": "@tanstack/router-plugin",
-      "version": "1.168.23",
+      "version": "1.168.42",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1443,8 +1470,17 @@
       "reviewRequired": false
     },
     {
+      "name": "@tanstack/router-utils",
+      "version": "1.162.3",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "reviewRequired": false
+    },
+    {
       "name": "@tanstack/start-client-core",
-      "version": "1.170.14",
+      "version": "1.170.34",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1462,7 +1498,7 @@
     },
     {
       "name": "@tanstack/start-plugin-core",
-      "version": "1.171.25",
+      "version": "1.171.49",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1471,7 +1507,7 @@
     },
     {
       "name": "@tanstack/start-server-core",
-      "version": "1.169.17",
+      "version": "1.169.39",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1480,7 +1516,7 @@
     },
     {
       "name": "@tanstack/start-storage-context",
-      "version": "1.167.17",
+      "version": "1.167.36",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -1489,7 +1525,7 @@
     },
     {
       "name": "@tanstack/store",
-      "version": "0.9.3",
+      "version": "0.11.2",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -4089,6 +4125,15 @@
       "reviewRequired": false
     },
     {
+      "name": "picomatch",
+      "version": "4.0.7",
+      "license": "MIT",
+      "licenseFiles": [
+        "LICENSE"
+      ],
+      "reviewRequired": false
+    },
+    {
       "name": "pkce-challenge",
       "version": "5.0.1",
       "license": "MIT",
@@ -5200,7 +5245,7 @@
     },
     {
       "name": "zod",
-      "version": "4.4.3",
+      "version": "4.6.5",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
@@ -5209,7 +5254,7 @@
     },
     {
       "name": "zod",
-      "version": "4.4.3",
+      "version": "4.6.5",
       "license": "MIT",
       "licenseFiles": [
         "LICENSE"
