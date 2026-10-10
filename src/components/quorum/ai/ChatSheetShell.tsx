@@ -148,6 +148,7 @@ export function ChatSheetShell<T extends BaseTurn>({
 
         {pending ? (
           <AiActivity
+            sync
             state={pendingState}
             label={pendingLabel}
             className="mr-auto w-fit rounded-2xl border border-border px-3.5 py-2.5"

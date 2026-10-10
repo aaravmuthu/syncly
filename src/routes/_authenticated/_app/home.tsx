@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { openAskSyncly } from "@/components/quorum/ai/ask-event";
+import { openPlanBuilder } from "@/components/quorum/ai/plan-builder-event";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -222,7 +222,7 @@ export function HomePage() {
             <Button
               variant="glass"
               className="h-14 flex-[2] text-base text-primary"
-              onClick={openAskSyncly}
+              onClick={() => openPlanBuilder()}
             >
               <Sparkles className="h-5 w-5" /> Magic AI plan
             </Button>
