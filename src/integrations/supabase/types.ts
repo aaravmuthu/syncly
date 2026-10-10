@@ -14,6 +14,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      my_profile: {
+        Args: Record<PropertyKey, never>;
+        Returns: Database["public"]["Tables"]["profiles"]["Row"][];
+      };
       graphql: {
         Args: {
           extensions?: Json;

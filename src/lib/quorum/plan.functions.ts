@@ -159,7 +159,7 @@ export const uploadAvatar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ dataUrl: v.dataUrl, ext: v.text(10) }))
   .handler(async ({ data, context }) => {
-    const { userId, supabase } = context;
+    const { userId } = context;
     const { parseImageUpload } = await import("./upload-safety.server");
     const { bytes, contentType, ext } = parseImageUpload(data.dataUrl);
 
@@ -175,7 +175,8 @@ export const uploadAvatar = createServerFn({ method: "POST" })
     if (signErr || !signed)
       throw signErr ? dbError(signErr, "uploadAvatar") : new Error("Could not read image back");
 
-    const { error } = await supabase
+    // user_id is private; scope this write to the authenticated caller on the trusted client.
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({ avatar_url: signed.signedUrl })
       .eq("user_id", userId);
