@@ -24,7 +24,7 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { useServerFn } from "@tanstack/react-start";
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
 import { GlassIconButton, GlassPill, Skeleton } from "@/components/quorum/ui";
