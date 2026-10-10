@@ -40,6 +40,7 @@ import { FriendProvider } from "@/lib/quorum/nicknames";
 import { FriendProfileSheet } from "./friend/FriendProfileSheet";
 import { PageTransition } from "./interactions/PageTransition";
 import { AskSynclySheet } from "./ai/AskSynclySheet";
+import { PlanBuilderSheet } from "./ai/PlanBuilderSheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -282,6 +283,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <ContextSwitcher />
                 <ThemeToggle />
                 <AskSynclySheet />
+                <PlanBuilderSheet />
                 <Link
                   to="/activity"
                   aria-label={unread > 0 ? `Activity, ${unread} unread` : "Activity"}

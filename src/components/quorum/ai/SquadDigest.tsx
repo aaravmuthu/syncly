@@ -18,7 +18,7 @@ export function SquadDigestCard() {
   if (q.isPending) {
     return (
       <Card>
-        <AiActivity state="composing" label="Writing your squad digest…" />
+        <AiActivity sync state="composing" label="Writing your squad digest…" />
         <Skeleton className="mt-3 h-3 w-full" />
         <Skeleton className="mt-2 h-3 w-4/5" />
       </Card>

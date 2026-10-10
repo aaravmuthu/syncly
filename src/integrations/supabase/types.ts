@@ -1255,6 +1255,7 @@ export type Database = {
           food_vibe: string | null;
           group_id: string;
           id: string;
+          itinerary: Json | null;
           location_area: string | null;
           notes: string | null;
           search_radius_miles: number | null;
@@ -1277,6 +1278,7 @@ export type Database = {
           food_vibe?: string | null;
           group_id: string;
           id?: string;
+          itinerary?: Json | null;
           location_area?: string | null;
           notes?: string | null;
           search_radius_miles?: number | null;
@@ -1299,6 +1301,7 @@ export type Database = {
           food_vibe?: string | null;
           group_id?: string;
           id?: string;
+          itinerary?: Json | null;
           location_area?: string | null;
           notes?: string | null;
           search_radius_miles?: number | null;

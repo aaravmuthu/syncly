@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { CarpoolShield } from "@/components/quorum/guardian/CarpoolShield";
 import { PlanInsights } from "@/components/quorum/PlanInsights";
+import { ItineraryCard } from "@/components/quorum/ItineraryCard";
 import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
 import { CompromiseNote, PlanBGuardian } from "@/components/quorum/PlanAiInsights";
 import { useCompromiseSummaries } from "@/components/quorum/useCompromiseSummaries";
@@ -450,6 +451,8 @@ function PlanPage() {
             </DynamicButton>
           </Card>
         )}
+
+        <ItineraryCard raw={data.plan.itinerary} />
 
         {editing && !ended ? (
           <div className="mt-4">

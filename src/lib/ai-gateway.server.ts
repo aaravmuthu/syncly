@@ -75,6 +75,7 @@ type AiTier = "strong" | "light";
  */
 const FEATURE_TIER = {
   magic_plan_draft: "strong",
+  itinerary_draft: "strong",
   ai_compromise: "strong",
   plan_concierge: "strong",
   ask_syncly: "strong",
