@@ -6,6 +6,7 @@
 // a network error or a bad response returns null/[] instead of throwing.
 
 import { milesToDriveMinutes, haversineMiles, priceLevelFor, type ZipLocation } from "./location";
+import { mergeMapPois, poiLabel } from "./map-poi";
 import type { OptionSeed, PlanCategory } from "./types";
 
 export type PlaceSuggestion = {
@@ -200,7 +201,7 @@ const fromSearchBox = (f: SearchBoxFeature, i: number): MapSearchResult => ({
   id: f.properties.mapbox_id ?? `sb-${i}`,
   name: f.properties.name ?? "Place",
   detail: shortAddress(f.properties) || f.properties.full_address || "",
-  category: f.properties.poi_category?.[0] ?? null,
+  category: f.properties.poi_category?.length ? poiLabel(f.properties.poi_category) : null,
   lat: f.geometry.coordinates[1],
   lon: f.geometry.coordinates[0],
 });
@@ -267,16 +268,7 @@ export async function searchMapPlacesServer(
   };
 
   const [a, b] = await Promise.all([searchBox().catch(() => []), places().catch(() => [])]);
-  const seen = new Set<string>();
-  const out: MapSearchResult[] = [];
-  for (const r of [...a, ...b]) {
-    if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) continue;
-    const key = `${r.name}|${r.lat.toFixed(4)}|${r.lon.toFixed(4)}`.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(r);
-  }
-  return out.slice(0, limit);
+  return mergeMapPois([...a, ...b], limit);
 }
 
 // -------------------------------------------------------------- venue search
@@ -285,12 +277,13 @@ const GEOAPIFY_CATEGORIES: Record<PlanCategory, string> = {
   dinner:
     "catering.restaurant,catering.fast_food,catering.cafe,catering.restaurant.pizza,catering.fast_food.burger",
   hangout: "catering.cafe,entertainment,leisure.park,leisure",
-  concert: "entertainment.culture,entertainment.nightclub,adult.nightclub",
+  concert: "entertainment.culture,adult.nightclub",
   trip: "tourism.attraction,tourism.sights,natural",
   party: "entertainment,catering.bar,entertainment.bowling_alley",
   movie: "entertainment.cinema",
-  shopping: "commercial.shopping_mall,commercial.marketplace",
-  sports: "sport.sports_centre,leisure.playground,sport.stadium",
+  shopping:
+    "commercial.shopping_mall,commercial.marketplace,commercial.supermarket,commercial.clothing",
+  sports: "sport.sports_centre,sport.fitness,leisure.playground,sport.stadium",
   daytrip: "tourism.attraction,leisure.park,natural",
   roadtrip: "tourism.attraction,tourism.sights",
   custom: "entertainment,catering.restaurant,leisure.park",
@@ -417,11 +410,15 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
       `&bias=proximity:${q.origin.lon},${q.origin.lat}` +
       (name ? `&name=${encodeURIComponent(name)}` : "") +
       `&limit=40&apiKey=${encodeURIComponent(key)}`;
-    let res = await fetch(build(categories), { headers: { Accept: "application/json" } });
+    let res = await fetch(build(categories), {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
     if (!res.ok && categories !== GEOAPIFY_CATEGORIES.custom) {
       // An unsupported category list must not blank the picker — retry broad.
       res = await fetch(build(GEOAPIFY_CATEGORIES.custom), {
         headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
       });
     }
     if (!res.ok) {
@@ -432,7 +429,12 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
     const city = q.origin.label.split(",")[0]?.trim() || "Nearby";
 
     const seeds = (json.features ?? [])
-      .filter((f) => f.properties.name)
+      .filter(
+        (f) =>
+          f.properties.name &&
+          Number.isFinite(f.properties.lat) &&
+          Number.isFinite(f.properties.lon),
+      )
       .map((f) => {
         const p = f.properties;
         const cats = p.categories ?? [];
@@ -454,10 +456,7 @@ export async function searchVenuesGeoapify(q: VenueSearch): Promise<OptionSeed[]
           start: q.category === "dinner" ? "18:30" : "18:00",
           end: q.category === "dinner" ? "20:30" : "21:00",
           location: `${p.city ?? city} · ${distanceMiles} mi`,
-          tags: [
-            ...cats.map((c) => c.split(".").pop()!).slice(0, 5),
-            outdoor ? "outdoor" : "indoor",
-          ],
+          tags: [poiLabel(cats), outdoor ? "outdoor" : "indoor"],
           dietaryFriendly: dietaryFrom(p.datasource?.raw, cats),
           style: outdoor ? "outdoor" : cats.join(" ").includes("catering") ? "sit-down" : "venue",
           requiresDriving: distanceMiles > 1.2,
@@ -526,5 +525,105 @@ export async function reverseZipServer(lat: number, lon: number): Promise<string
     return zip && /^\d{5}$/.test(zip) ? zip : null;
   } catch {
     return null;
+  }
+}
+
+// Viewport browsing deliberately uses the existing Geoapify provider, not Search Box.
+const viewportCache = new Map<string, { expires: number; places: import("./map-poi").MapPoi[] }>();
+const viewportPending = new Map<string, Promise<import("./map-poi").MapPoi[]>>();
+export async function nearbyMapPlacesServer(q: {
+  bounds: import("./map-poi").PoiBounds;
+  zoom: number;
+  category?: import("./map-poi").PoiCategory;
+}): Promise<import("./map-poi").MapPoi[]> {
+  const { POI_CATEGORIES, mergeMapPois, poiLabel, poiLimit } = await import("./map-poi");
+  if (!geoapifyKey()) throw new Error("Nearby places are unavailable.");
+  const { west, south, east, north } = q.bounds;
+  if (west >= east || south >= north || east - west > 8 || north - south > 8 || q.zoom < 10)
+    return [];
+  const bucket = q.zoom < 12 ? 10 : q.zoom < 14 ? 12 : 14;
+  const cacheKey = JSON.stringify([west, south, east, north, bucket, q.category]);
+  const cached = viewportCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) return cached.places;
+  const pending = viewportPending.get(cacheKey);
+  if (pending) return pending;
+  const request = (async () => {
+    const groups = q.category
+      ? [POI_CATEGORIES[q.category]]
+      : bucket === 10
+        ? [POI_CATEGORIES.sights, `${POI_CATEGORIES.parks},${POI_CATEGORIES.hotels}`]
+        : [
+            `${POI_CATEGORIES.food},${POI_CATEGORIES.coffee},${POI_CATEGORIES.dessert}`,
+            `${POI_CATEGORIES.shops},${POI_CATEGORIES.gas},${POI_CATEGORIES.hotels}`,
+            `${POI_CATEGORIES.parks},${POI_CATEGORIES.schools},${POI_CATEGORIES.fitness},${POI_CATEGORIES.fun},${POI_CATEGORIES.sights}`,
+          ];
+    const center = { lat: (south + north) / 2, lon: (west + east) / 2 };
+    const batches = await Promise.all(
+      groups.map(async (categories) => {
+        const params = new URLSearchParams({
+          categories,
+          filter: `rect:${west},${south},${east},${north}`,
+          bias: `proximity:${center.lon},${center.lat}`,
+          limit: String(q.category ? 180 : 80),
+          apiKey: geoapifyKey(),
+        });
+        const res = await fetch(`https://api.geoapify.com/v2/places?${params}`, {
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!res.ok) throw new Error("Nearby places could not be loaded.");
+        const json = (await res.json()) as { features?: GeoapifyFeature[] };
+        return (json.features ?? []).flatMap((f) => {
+          const p = f.properties;
+          const raw = p.datasource?.raw;
+          if (
+            !p.name?.trim() ||
+            raw?.["disused"] === "yes" ||
+            raw?.["abandoned"] === "yes" ||
+            raw?.["shop"] === "vacant"
+          )
+            return [];
+          const cats = p.categories ?? [];
+          const important = cats.some((c) =>
+            /tourism|shopping_mall|park|university|museum|hotel/.test(c),
+          );
+          return [
+            {
+              id: p.place_id ?? `geo-${p.lon}-${p.lat}-${p.name}`,
+              name: p.name,
+              detail:
+                [p.address_line1 !== p.name ? p.address_line1 : "", p.address_line2]
+                  .filter(Boolean)
+                  .join(", ") ||
+                p.formatted ||
+                "",
+              category: poiLabel(cats),
+              lat: p.lat,
+              lon: p.lon,
+              importance: (important ? 6 : 0) + Math.max(0, 2 - haversineMiles(center, p) / 3),
+              ...(typeof raw?.["website"] === "string" ? { website: raw["website"] } : {}),
+              ...(typeof raw?.["opening_hours"] === "string"
+                ? { openingHours: raw["opening_hours"] }
+                : {}),
+            },
+          ];
+        });
+      }),
+    );
+    const places = mergeMapPois(batches.flat(), poiLimit(q.zoom));
+    // Failed responses never enter the cache. Busy shops refresh sooner than wide-area landmarks.
+    for (const [key, value] of viewportCache)
+      if (value.expires <= Date.now()) viewportCache.delete(key);
+    if (viewportCache.size >= 150) viewportCache.delete(viewportCache.keys().next().value!);
+    viewportCache.set(cacheKey, {
+      places,
+      expires: Date.now() + (bucket === 10 ? 600000 : 300000),
+    });
+    return places;
+  })();
+  viewportPending.set(cacheKey, request);
+  try {
+    return await request;
+  } finally {
+    viewportPending.delete(cacheKey);
   }
 }

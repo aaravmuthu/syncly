@@ -4,6 +4,9 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Skeleton } from "@/components/quorum/ui";
 import { cn } from "@/lib/utils";
 import { pinSpan } from "@/lib/safe-dom";
+import { useMemo } from "react";
+import { useMapPois } from "./map/useMapPois";
+import { MapPlacePanel } from "./map/MapPlacePanel";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 export type MapVenue = {
@@ -25,11 +28,13 @@ export default function VenueMapInner({
   venues,
   onSelect,
   className,
+  nearbyPlaces = true,
 }: {
   token: string;
   venues: MapVenue[];
   onSelect?: (id: string) => void;
   className?: string;
+  nearbyPlaces?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -41,6 +46,21 @@ export default function VenueMapInner({
   // Only the first venue seeds the initial centre; keeping it out of the deps
   // stops the map from being torn down on every re-render.
   const seed = venues[0];
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+  const excluded = useMemo(
+    () =>
+      venues.map((v) => ({
+        id: v.id,
+        name: v.title,
+        detail: "",
+        category: null,
+        lat: v.lat,
+        lon: v.lon,
+      })),
+    [venues],
+  );
+  const poi = useMapPois(map, ready, undefined, excluded, undefined, nearbyPlaces);
 
   useEffect(() => {
     if (!container.current || !token || !seed) return;
@@ -57,6 +77,7 @@ export default function VenueMapInner({
         cooperativeGestures: true,
       });
       m.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
+      m.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
       map.current = m;
       m.on("load", () => {
         if (alive) setReady(true);
@@ -83,8 +104,11 @@ export default function VenueMapInner({
   // selecting one spot never tears down or hides the rest of the pins.
   useEffect(() => {
     const m = map.current;
-    if (!m || !ready || venues.length === 0) return;
-    const key = venues.map((v) => v.id).join("|");
+    if (!m || !ready) return;
+    const key = venues
+      .map((v) => `${v.id}:${v.lat}:${v.lon}:${v.title}:${v.rank}:${v.kind}:${v.initials}`)
+      .join("|");
+    const firstFit = idKey.current === null;
     if (key === idKey.current) return;
     idKey.current = key;
 
@@ -132,7 +156,7 @@ export default function VenueMapInner({
           }
         }
         el.setAttribute("aria-label", v.title);
-        el.addEventListener("click", () => onSelect?.(v.id));
+        el.addEventListener("click", () => onSelectRef.current?.(v.id));
         const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([v.lon, v.lat])
           .setPopup(new mapboxgl.Popup({ offset: 18, closeButton: false }).setText(v.title))
@@ -141,11 +165,12 @@ export default function VenueMapInner({
         bounds.extend([v.lon, v.lat]);
       });
 
-      if (!bounds.isEmpty()) m.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 400 });
+      if (firstFit && !bounds.isEmpty())
+        m.fitBounds(bounds, { padding: 56, maxZoom: 14, duration: 400 });
     } catch {
       /* a bad coordinate must never take the page down */
     }
-  }, [venues, onSelect, ready]);
+  }, [venues, ready]);
 
   // Highlights the selected pin and gently pans to it, without rebuilding
   // or hiding the rest of the markers.
@@ -155,16 +180,38 @@ export default function VenueMapInner({
     const selectedVenue = venues.find((v) => v.selected);
     markers.current.forEach(({ el }, id) => {
       el.classList.toggle("q-map-pin-active", id === selectedVenue?.id);
+      el.setAttribute("aria-pressed", String(id === selectedVenue?.id));
+      el.style.zIndex = id === selectedVenue?.id ? "3" : "1";
     });
     if (selectedVenue) {
       m.easeTo({ center: [selectedVenue.lon, selectedVenue.lat], duration: 400 });
     }
   }, [venues, ready]);
 
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.current?.resize());
+    if (container.current) observer.observe(container.current);
+    return () => observer.disconnect();
+  }, []);
+
   const shellClass = className ?? "h-64 w-full rounded-2xl sm:h-80";
   return (
-    <div className={cn("relative overflow-hidden", shellClass)}>
+    <div className={cn("syncly-map syncly-map-compact relative overflow-hidden", shellClass)}>
       <div ref={container} className="h-full w-full" />
+      {nearbyPlaces ? (
+        <MapPlacePanel
+          places={poi.pois}
+          selected={poi.selected}
+          onSelect={(p) => {
+            poi.setSelected(p);
+            if (p) map.current?.easeTo({ center: [p.lon, p.lat], zoom: 15, duration: 350 });
+          }}
+          loading={poi.loading}
+          error={poi.error}
+          onRetry={poi.retry}
+          compact
+        />
+      ) : null}
       {/* Mapbox's own style/tile load takes a beat after mount — cover the
           empty container so that gap doesn't read as broken/frozen. */}
       {!ready ? (

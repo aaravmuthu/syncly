@@ -8,6 +8,7 @@ import { Avatar } from "./Avatar";
 import { Button, Pill } from "./ui";
 import { statusTone, statusToneClasses } from "./status-tone";
 import { cn } from "@/lib/utils";
+import { validPoint } from "@/lib/quorum/map-poi";
 import { getMapToken } from "@/lib/quorum/location.functions";
 import { getPlanWeather } from "@/lib/quorum/insight.functions";
 import { describeWeather } from "@/lib/quorum/weather";
@@ -364,10 +365,11 @@ export function MapThumb({
     queryFn: useServerFn(getMapToken),
     staleTime: 60 * 60 * 1000,
   });
-  const hasPoint = typeof lat === "number" && typeof lon === "number";
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const hasPoint = typeof lat === "number" && typeof lon === "number" && validPoint({ lat, lon });
   const src =
     hasPoint && token.data
-      ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+6366f1(${lon},${lat})/${lon},${lat},13,0/320x200@2x?access_token=${token.data}`
+      ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+55deb0(${lon},${lat})/${lon},${lat},13,0/320x200@2x?access_token=${token.data}`
       : null;
 
   return (
@@ -377,16 +379,20 @@ export function MapThumb({
         className,
       )}
     >
-      {src ? (
+      {src && failedSrc !== src ? (
         <img
           src={src}
           alt={label ? `Map of ${label}` : "Location map"}
           className="h-full w-full object-cover"
+          width={320}
+          height={200}
+          decoding="async"
+          onError={() => setFailedSrc(src)}
           loading="lazy"
         />
       ) : (
         <div
-          className="grid h-full w-full place-items-center bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--primary)_22%,transparent),transparent_60%)] text-muted-foreground"
+          className="grid h-full w-full place-items-center bg-secondary text-muted-foreground"
           aria-hidden
         >
           <MapPin className="size-6" />

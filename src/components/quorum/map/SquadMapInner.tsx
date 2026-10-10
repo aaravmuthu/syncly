@@ -17,12 +17,14 @@ import {
   Route as RouteIcon,
   Search,
   Shield,
+  SlidersHorizontal,
   ShoppingBag,
   Sparkles,
   Trees,
   UtensilsCrossed,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { circlePolygon, midpointOf, type MapPerson, type SquadMapData } from "./types";
 import { GlassIconButton, GlassPill, Skeleton } from "@/components/quorum/ui";
@@ -30,6 +32,9 @@ import { cn } from "@/lib/utils";
 import { searchMapPlaces } from "@/lib/quorum/location.functions";
 import type { MapSearchResult } from "@/lib/quorum/places.server";
 import { pinSpan, safeImageUrl } from "@/lib/safe-dom";
+import { useMapPois } from "./useMapPois";
+import { MapPlacePanel } from "./MapPlacePanel";
+import type { PoiCategory } from "@/lib/quorum/map-poi";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 // The map renders full-viewport, behind AppShell's floating top bar and
@@ -46,7 +51,6 @@ import { AiActivity } from "@/components/quorum/ai/AiActivity";
 // ergonomic constraint (a mouse reaches anywhere equally), so it keeps the
 // original compact top placement. Each offset stacks on the previous one
 // with a consistent ~0.75rem gap so the whole dock reads as one group.
-const MAP_BOTTOM_CLEAR_SHEET = "bottom-[var(--chrome-bottom)]";
 const MAP_CONTROLS_POSITION =
   "bottom-[calc(var(--chrome-bottom)+3.75rem)] md:bottom-auto md:top-[calc(var(--chrome-top)+3.5rem)]";
 const MAP_SEARCH_POSITION =
@@ -64,13 +68,20 @@ type Props = SquadMapData & {
   onPing?: (person: MapPerson) => void;
 };
 
-/** One-tap "what's around here" searches; each drops up to ten pins at the map's centre. */
+/** Viewport filters; the shared POI layer refreshes as the map moves. */
 const NEARBY = [
-  { label: "Food", category: "restaurant", icon: UtensilsCrossed },
+  { label: "Food", category: "food", icon: UtensilsCrossed },
   { label: "Coffee", category: "coffee", icon: Coffee },
-  { label: "Parks", category: "park", icon: Trees },
-  { label: "Fun", category: "entertainment", icon: Sparkles },
-  { label: "Shops", category: "shopping", icon: ShoppingBag },
+  { label: "Parks", category: "parks", icon: Trees },
+  { label: "Fun", category: "fun", icon: Sparkles },
+  { label: "Shops", category: "shops", icon: ShoppingBag },
+  { label: "Dessert", category: "dessert", icon: Coffee },
+  { label: "Grocery", category: "grocery", icon: ShoppingBag },
+  { label: "Gyms", category: "fitness", icon: PersonStanding },
+  { label: "Schools", category: "schools", icon: Building2 },
+  { label: "Gas", category: "gas", icon: Car },
+  { label: "Hotels", category: "hotels", icon: Building2 },
+  { label: "Sights", category: "sights", icon: MapPin },
 ] as const;
 
 const RING_MILES = [3.5, 7, 10.5]; // 5 / 10 / 15 minute drive at ~42 mph
@@ -154,6 +165,8 @@ export default function SquadMapInner({
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [tilted, setTilted] = useState(false);
+  const [showTools, setShowTools] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [showRoutes, setShowRoutes] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showList, setShowList] = useState(false);
@@ -161,7 +174,23 @@ export default function SquadMapInner({
   const [results, setResults] = useState<MapSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [found, setFound] = useState<MapSearchResult[]>([]);
-  const [nearby, setNearby] = useState<string | null>(null);
+  const [nearby, setNearby] = useState<PoiCategory | null>(null);
+  const [cameraRevision, setCameraRevision] = useState(0);
+  const initialFit = useRef(false);
+  const excluded = useMemo(
+    () =>
+      places.map((p) => ({
+        id: p.id,
+        name: p.title,
+        detail: p.subtitle ?? "",
+        category: null,
+        lat: p.lat,
+        lon: p.lon,
+      })),
+    [places],
+  );
+  const poi = useMapPois(map, ready, nearby ?? undefined, excluded, found);
+  const selectPoi = poi.setSelected;
   const search = useServerFn(searchMapPlaces);
 
   const squadMatches = useMemo(() => {
@@ -176,7 +205,8 @@ export default function SquadMapInner({
     [people, showMidpoint],
   );
 
-  const seed = people[0] ?? places[0] ?? zones[0] ?? null;
+  const hasLocation = people.length > 0 || places.length > 0 || zones.length > 0;
+  const seed = people[0] ?? places[0] ?? zones[0] ?? { lat: 39.5, lon: -98.35 };
 
   // ---- map bootstrap -------------------------------------------------------
   useEffect(() => {
@@ -188,7 +218,7 @@ export default function SquadMapInner({
         container: container.current,
         style: "mapbox://styles/mapbox/dark-v11",
         center: [seed.lon, seed.lat],
-        zoom: 12,
+        zoom: hasLocation ? 12 : 3,
         pitch: 0,
         attributionControl: false,
         // cooperativeGestures (two fingers to pan) stops a map from hijacking
@@ -198,6 +228,7 @@ export default function SquadMapInner({
         // with, and it would only add friction to a one-handed map screen.
         cooperativeGestures: compact,
       });
+      m.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
       map.current = m;
       m.on("load", () => {
         if (!alive) return;
@@ -284,7 +315,12 @@ export default function SquadMapInner({
       window.requestAnimationFrame(() => map.current?.resize());
     };
     window.addEventListener("syncly:tab-visible", resizeWhenVisible);
-    return () => window.removeEventListener("syncly:tab-visible", resizeWhenVisible);
+    const observer = new ResizeObserver(() => map.current?.resize());
+    if (container.current) observer.observe(container.current);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("syncly:tab-visible", resizeWhenVisible);
+    };
   }, []);
 
   // ---- geometry layers -----------------------------------------------------
@@ -357,6 +393,7 @@ export default function SquadMapInner({
         const el = document.createElement("button");
         el.type = "button";
         el.className = "q-avatar-pin";
+        el.dataset.personId = p.id;
         el.style.setProperty("--halo", halo);
         el.setAttribute("aria-label", p.name);
         // Movement status only -- battery moves to its own indicator below,
@@ -436,11 +473,53 @@ export default function SquadMapInner({
       add(el, mid.lat, mid.lon);
     }
 
-    if (!bounds.isEmpty()) {
+    if (!initialFit.current && !bounds.isEmpty()) {
+      initialFit.current = true;
       m.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 600 });
     }
     return () => markers.forEach((mk) => mk.remove());
-  }, [ready, people, places, mid]);
+  }, [ready, people, places, mid, cameraRevision]);
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const regroup = () => setCameraRevision((v) => v + 1);
+    m.on("zoomend", regroup);
+    return () => {
+      m.off("zoomend", regroup);
+    };
+  }, [ready]);
+
+  useEffect(() => {
+    container.current?.querySelectorAll<HTMLButtonElement>(".q-avatar-pin").forEach((el) => {
+      const active = el.dataset.personId === selected;
+      el.classList.toggle("q-avatar-pin-selected", active);
+      el.setAttribute("aria-pressed", String(active));
+    });
+  }, [selected, cameraRevision, people, ready]);
+
+  const locate = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error("Location is unavailable in this browser.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        map.current?.easeTo({
+          center: [position.coords.longitude, position.coords.latitude],
+          zoom: 15,
+          duration: 450,
+        });
+      },
+      () => {
+        setLocating(false);
+        toast.error("Could not find your location. Check your browser location permission.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+    );
+  }, []);
 
   const recenter = useCallback(() => {
     const m = map.current;
@@ -458,24 +537,26 @@ export default function SquadMapInner({
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
+    if (q.length < 2 || !open) {
       setResults([]);
       setSearching(false);
       return;
     }
     let live = true;
+    const controller = new AbortController();
     setSearching(true);
     const t = window.setTimeout(() => {
-      void search({ data: { query: q, proximity: centre(), limit: 8 } })
+      void search({ data: { query: q, proximity: centre(), limit: 8 }, signal: controller.signal })
         .then((r) => live && setResults(r))
         .catch(() => live && setResults([]))
         .finally(() => live && setSearching(false));
     }, 250);
     return () => {
       live = false;
+      controller.abort();
       window.clearTimeout(t);
     };
-  }, [query, search, centre]);
+  }, [query, search, centre, open]);
 
   const showFound = useCallback((list: MapSearchResult[]) => {
     const m = map.current;
@@ -498,11 +579,12 @@ export default function SquadMapInner({
   const pickResult = useCallback(
     (r: MapSearchResult) => {
       setNearby(null);
+      selectPoi(r);
       setQuery(r.name);
       setOpen(false);
       showFound([r]);
     },
-    [showFound],
+    [showFound, selectPoi],
   );
 
   const pickPerson = useCallback((p: MapPerson) => {
@@ -514,46 +596,23 @@ export default function SquadMapInner({
 
   const browseNearby = useCallback(
     (kind: (typeof NEARBY)[number]) => {
-      if (nearby === kind.label) {
-        setNearby(null);
-        setFound([]);
-        return;
-      }
-      setNearby(kind.label);
+      setNearby((current) => (current === kind.category ? null : kind.category));
+      setFound([]);
+      selectPoi(null);
       setQuery("");
       setOpen(false);
-      void search({ data: { category: kind.category, proximity: centre(), limit: 10 } })
-        .then((r) => showFound(r))
-        .catch(() => setNearby(null));
     },
-    [nearby, search, centre, showFound],
+    [selectPoi],
   );
 
   const clearSearch = useCallback(() => {
     setQuery("");
     setResults([]);
     setFound([]);
+    selectPoi(null);
     setNearby(null);
     setOpen(false);
-  }, []);
-
-  // Pins for search results and "nearby" browsing, separate from the squad's own pins.
-  useEffect(() => {
-    const m = map.current;
-    if (!m || !ready) return;
-    const markers = found.map((r) => {
-      const el = document.createElement("button");
-      el.type = "button";
-      el.className = "q-place-pin";
-      el.setAttribute("aria-label", r.name);
-      el.append(pinSpan("q-place-dot"), pinSpan("q-place-label", r.name));
-      el.addEventListener("click", () =>
-        m.easeTo({ center: [r.lon, r.lat], zoom: 16, duration: 500, essential: true }),
-      );
-      return new mapboxgl.Marker({ element: el }).setLngLat([r.lon, r.lat]).addTo(m);
-    });
-    return () => markers.forEach((mk) => mk.remove());
-  }, [ready, found]);
+  }, [selectPoi]);
 
   const toggleTilt = useCallback(() => {
     const m = map.current;
@@ -571,7 +630,13 @@ export default function SquadMapInner({
   const focus = people.find((p) => p.id === selected) ?? null;
 
   return (
-    <div className={cn("relative overflow-hidden rounded-surface", className)}>
+    <div
+      className={cn(
+        "syncly-map relative overflow-hidden rounded-surface",
+        compact && "syncly-map-compact",
+        className,
+      )}
+    >
       <div ref={container} className="h-full w-full" />
 
       {/* Mapbox's own style/tile load (after the chunk is already downloaded
@@ -595,7 +660,9 @@ export default function SquadMapInner({
       <div
         className={cn(
           "pointer-events-none absolute inset-x-3 z-10 flex items-center gap-2",
-          compact ? "top-3 flex-col" : cn("flex-col-reverse md:flex-col", MAP_SEARCH_POSITION),
+          compact
+            ? "top-3 flex-col"
+            : cn("map-search-dock flex-col md:flex-col", MAP_SEARCH_POSITION),
         )}
       >
         <GlassPill
@@ -611,7 +678,10 @@ export default function SquadMapInner({
             }}
             onFocus={() => setOpen(true)}
             onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false);
+              if (e.key === "Escape") {
+                setOpen(false);
+                e.currentTarget.blur();
+              }
               if (e.key === "Enter") {
                 e.preventDefault();
                 if (squadMatches[0]) pickPerson(squadMatches[0]);
@@ -646,7 +716,7 @@ export default function SquadMapInner({
         {open && query.trim().length >= 2 ? (
           <div
             className={cn(
-              "glass-pill pointer-events-auto w-full max-w-md overflow-y-auto overscroll-contain rounded-3xl p-1.5",
+              "map-search-results glass-pill pointer-events-auto w-full max-w-md overflow-y-auto overscroll-contain rounded-3xl p-1.5",
               compact ? "max-h-44" : "max-h-[40dvh]",
             )}
           >
@@ -694,10 +764,10 @@ export default function SquadMapInner({
                 key={k.label}
                 type="button"
                 onClick={() => browseNearby(k)}
-                aria-pressed={nearby === k.label}
+                aria-pressed={nearby === k.category}
                 className={cn(
                   "glass-pill tap-target inline-flex items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold",
-                  nearby === k.label && "ring-2 ring-primary/70",
+                  nearby === k.category && "ring-2 ring-primary/70",
                 )}
               >
                 <k.icon className="h-3.5 w-3.5" aria-hidden />
@@ -708,44 +778,68 @@ export default function SquadMapInner({
         )}
       </div>
 
-      {/* Control dock: horizontal row on mobile, vertical rail on desktop. In the embedded
-          card it sits in the bottom-right corner, clear of the search. */}
+      {/* Primary actions stay thumb reachable; secondary tools expand on mobile. */}
       <div
         className={cn(
-          "absolute right-3 z-10 flex max-w-[calc(100%-1.5rem)] gap-2",
-          compact ? "bottom-3 flex-col" : cn("flex-row md:flex-col", MAP_CONTROLS_POSITION),
+          "map-action-dock absolute right-3 z-10 flex gap-2",
+          compact ? "bottom-16 flex-col" : cn("flex-row md:flex-col", MAP_CONTROLS_POSITION),
         )}
       >
-        <GlassIconButton label="Recenter camera" onClick={recenter} icon={Crosshair} />
+        <GlassIconButton label="Recenter squad" onClick={recenter} icon={Crosshair} />
         <GlassIconButton
-          label="3D view tilt"
-          onClick={toggleTilt}
-          icon={Building2}
-          active={tilted}
+          label={locating ? "Finding location" : "My location"}
+          onClick={locate}
+          icon={locating ? Loader2 : Navigation}
         />
-        {compact ? null : (
-          <>
-            <GlassIconButton
-              label="Toggle routes"
-              onClick={() => setShowRoutes((v) => !v)}
-              icon={RouteIcon}
-              active={showRoutes}
-            />
-            <GlassIconButton
-              label="Toggle safe zones"
-              onClick={() => setShowZones((v) => !v)}
-              icon={Shield}
-              active={showZones}
-            />
-            <GlassIconButton
-              label={showList ? "Hide list view" : "Show list view"}
-              onClick={() => setShowList((v) => !v)}
-              icon={List}
-              active={showList}
-              expanded={showList}
-            />
-          </>
-        )}
+        {!compact ? (
+          <GlassIconButton
+            label="Map options"
+            onClick={() => setShowTools((v) => !v)}
+            icon={SlidersHorizontal}
+            expanded={showTools}
+            className="md:hidden"
+          />
+        ) : null}
+        <div
+          className={cn(
+            "gap-2",
+            compact
+              ? "flex flex-col"
+              : showTools
+                ? "map-tool-menu flex md:contents"
+                : "hidden md:contents",
+          )}
+        >
+          <GlassIconButton
+            label="3D view tilt"
+            onClick={toggleTilt}
+            icon={Building2}
+            active={tilted}
+          />
+          {!compact ? (
+            <>
+              <GlassIconButton
+                label="Toggle routes"
+                onClick={() => setShowRoutes((v) => !v)}
+                icon={RouteIcon}
+                active={showRoutes}
+              />
+              <GlassIconButton
+                label="Toggle safe zones"
+                onClick={() => setShowZones((v) => !v)}
+                icon={Shield}
+                active={showZones}
+              />
+              <GlassIconButton
+                label={showList ? "Hide squad list" : "Show squad list"}
+                onClick={() => setShowList((v) => !v)}
+                icon={List}
+                active={showList}
+                expanded={showList}
+              />
+            </>
+          ) : null}
+        </div>
       </div>
 
       {/* List-view fallback: always-legible regardless of zoom or clustering.
@@ -754,7 +848,7 @@ export default function SquadMapInner({
         <div
           className={cn(
             "glass-pill absolute inset-x-3 z-10 flex flex-col overflow-hidden rounded-3xl md:right-auto md:w-80",
-            MAP_LIST_POSITION,
+            compact ? "top-16 bottom-3" : MAP_LIST_POSITION,
           )}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -808,6 +902,26 @@ export default function SquadMapInner({
         </div>
       ) : null}
 
+      {!focus ? (
+        <MapPlacePanel
+          places={poi.pois}
+          selected={poi.selected}
+          onSelect={(p) => {
+            selectPoi(p);
+            if (p)
+              map.current?.easeTo({
+                center: [p.lon, p.lat],
+                zoom: Math.max(15, map.current.getZoom()),
+                duration: 350,
+              });
+          }}
+          loading={poi.loading}
+          error={poi.error}
+          onRetry={poi.retry}
+          compact={compact}
+        />
+      ) : null}
+
       {/* Tap-to-focus mini card -- sits above the collapsed RadarSheet pill
           (radar.tsx) rather than the raw bottom-nav clearance, since both
           can be visible over the map at once. */}
@@ -815,7 +929,9 @@ export default function SquadMapInner({
         <div
           className={cn(
             "glass-pill absolute inset-x-3 mx-auto max-w-sm rounded-3xl p-4",
-            MAP_BOTTOM_CLEAR_SHEET,
+            compact
+              ? "bottom-3 z-20"
+              : "bottom-[calc(var(--chrome-bottom)+7rem)] z-20 md:bottom-[var(--chrome-bottom)] md:left-3 md:right-auto",
           )}
         >
           <div className="flex items-start gap-3">

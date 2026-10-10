@@ -71,3 +71,33 @@ export const reverseZip = createServerFn({ method: "POST" })
     const { reverseZipServer } = await import("./places.server");
     return reverseZipServer(data.lat, data.lon);
   });
+
+/** Authenticated, bounded viewport lookup shared by all interactive map screens. */
+export const nearbyMapPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      bounds: z.object({ west: v.lon, east: v.lon, south: v.lat, north: v.lat }),
+      zoom: z.number().min(0).max(24),
+      category: z
+        .enum([
+          "food",
+          "coffee",
+          "dessert",
+          "shops",
+          "grocery",
+          "fitness",
+          "parks",
+          "schools",
+          "fun",
+          "gas",
+          "hotels",
+          "sights",
+        ])
+        .optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { nearbyMapPlacesServer } = await import("./places.server");
+    return nearbyMapPlacesServer(data);
+  });
