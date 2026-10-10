@@ -12,6 +12,7 @@ import { AiActivity } from "@/components/quorum/ai/AiActivity";
 // direct deep link. Resets on a full page reload, which is fine: that's
 // effectively a new session anyway.
 let initialRouteUserId: string | null = null;
+let verifiedSessionToken: string | null = null;
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -27,8 +28,22 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
     }
 
-    if (await needsAccountVerification()) {
-      throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
+    // Only re-check verification when the session token changes: once a session
+    // passes, later tab switches skip the network round-trip. The server
+    // (requireSupabaseAuth) still enforces MFA on every data call, so a
+    // transient failure here falls through instead of showing an error screen.
+    const token = data.session?.access_token ?? null;
+    if (token !== verifiedSessionToken) {
+      let needs = false;
+      try {
+        needs = await needsAccountVerification();
+        if (!needs) verifiedSessionToken = token;
+      } catch {
+        needs = false;
+      }
+      if (needs) {
+        throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
+      }
     }
 
     if (initialRouteUserId !== user.id && location.pathname === "/home") {
