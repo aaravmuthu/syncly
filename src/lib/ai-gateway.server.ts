@@ -236,7 +236,11 @@ function chainMiddleware(
               }
             : params;
         try {
-          return await providerModel(c.step, c.apiKey).doGenerate(callParams);
+          const result = await providerModel(c.step, c.apiKey).doGenerate(callParams);
+          // Failures alone can't tell "Groq answered" from "Groq was skipped",
+          // so a fallback that saves the call says so too.
+          if (i > 0) void logAiServed(feature, c.label, ordered[0]!.label);
+          return result;
         } catch (error) {
           lastError = error;
           if (!shouldTryNext(error)) throw error;
@@ -303,6 +307,21 @@ function isQuotaError(error: unknown): boolean {
       APICallError.isInstance(e) &&
       (e.statusCode === 429 || /quota|resource_exhausted/i.test(e.message)),
   );
+}
+
+/** A row saying which fallback answered after `first` failed. Best-effort, like logAiEvent. */
+async function logAiServed(feature: string, model: string, first: string): Promise<void> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("ai_quota_events").insert({
+      feature,
+      model,
+      error_type: "served",
+      message: `Answered after ${first} failed`,
+    });
+  } catch {
+    /* logging is best-effort only */
+  }
 }
 
 /** One row in `ai_quota_events`. Never throws -- logging is best-effort only. */
