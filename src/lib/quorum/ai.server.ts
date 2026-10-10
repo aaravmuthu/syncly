@@ -3,7 +3,7 @@
 // deterministic, non-AI result instead of an error.
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
-import { lovableAiModel, recordAiFailure } from "@/lib/ai-gateway.server";
+import { aiModel, recordAiFailure } from "@/lib/ai-gateway.server";
 import { CATEGORIES, type PlanCategory, type ScoreBreakdown } from "./types";
 import type { Forecast } from "./weather";
 
@@ -136,7 +136,7 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
 
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("magic_plan_draft"),
       output: Output.object({ schema: DraftSchema }),
       prompt: instructions,
     });
@@ -147,7 +147,10 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
       return coerceDraft(extractJson(error.text), prompt);
     }
     try {
-      const { text } = await generateText({ model: lovableAiModel(), prompt: instructions });
+      const { text } = await generateText({
+        model: aiModel("magic_plan_draft"),
+        prompt: instructions,
+      });
       return coerceDraft(extractJson(text), prompt);
     } catch (retryError) {
       void recordAiFailure("magic_plan_draft", retryError);
@@ -205,7 +208,7 @@ export async function summarizeCompromises(
 
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("compromise_summaries"),
       output: Output.object({ schema: SummarySchema }),
       prompt: [
         "You explain why a group activity option works, for a privacy-first planning app.",
@@ -294,7 +297,7 @@ export async function writePlanBPitch(input: {
 
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("plan_b_pitch"),
       output: Output.object({ schema: PlanBSchema }),
       prompt: [
         "Write a two-sentence weather warning for a group plan, friendly and direct.",
@@ -421,7 +424,7 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
   if (!fallback.needed) return fallback;
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("ai_compromise"),
       output: Output.object({ schema: CompromiseSchema }),
       prompt: [
         "You resolve scheduling conflicts for a privacy-first group planning app.",
