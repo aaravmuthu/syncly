@@ -43,7 +43,7 @@ import {
 } from "@/lib/quorum/plan.functions";
 import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
 import { directionsUrl } from "@/lib/quorum/vibes";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { VenueDetailModal, type VenueDetail } from "@/components/quorum/VenueDetailModal";
 import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { haptic } from "@/lib/quorum/haptics";

@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { GuardianShell } from "@/components/quorum/GuardianShell";
 import { Avatar } from "@/components/quorum/Avatar";
 import { Button, Card, Empty, Field, Pill, Skeleton, inputClass } from "@/components/quorum/ui";
@@ -100,7 +100,7 @@ function GuardianHub() {
     onError: (e: unknown) => {
       haptic("warn");
       if (isPlusRequiredError(e)) {
-        toast("Linking another teen needs Family Plus", {
+        toast.error("Linking another teen needs Family Plus", {
           description: plusErrorText(e),
           action: {
             label: "See Family Plus",
@@ -343,7 +343,7 @@ function TeenPanel({ teen, maxZones }: { teen: TeenCard; maxZones: number }) {
       haptic("warn");
       if (isPlusRequiredError(e)) {
         refresh();
-        toast("You've used your free safe zones", {
+        toast.error("You've used your free safe zones", {
           description: plusErrorText(e),
           action: {
             label: "See Family Plus",

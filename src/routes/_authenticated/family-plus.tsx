@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { GuardianShell } from "@/components/quorum/GuardianShell";
 import { Card, Pill, Skeleton } from "@/components/quorum/ui";
 import { DynamicButton } from "@/components/quorum/DynamicButton";

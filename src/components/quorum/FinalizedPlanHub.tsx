@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Pill } from "./ui";
 import { downloadIcs, googleCalendarUrl, planSummaryText } from "@/lib/quorum/calendar";
 import { estimateCost, formatRange } from "@/lib/quorum/cost";

@@ -2,7 +2,7 @@ import { MobileActions } from "./MobileActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Field, inputClass } from "./ui";
 import { updateGroupLook, uploadGroupImage } from "@/lib/quorum/group.functions";
 import { COVER_THEMES, GROUP_EMOJI, GROUP_PRESET_IMAGES, coverTheme } from "@/lib/quorum/covers";

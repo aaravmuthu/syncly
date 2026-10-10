@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { Sparkles, Rocket, PencilLine, MapPin } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { TimePicker } from "./TimePicker";
 import { Button, Card, Field, Skeleton, inputClass } from "./ui";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";

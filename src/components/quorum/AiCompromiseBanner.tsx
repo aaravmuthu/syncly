@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Pill } from "./ui";
 import { prettyTime } from "./time-format";
 import { applyAiCompromise, getAiCompromise } from "@/lib/quorum/ai.functions";
