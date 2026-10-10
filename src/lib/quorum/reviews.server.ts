@@ -2,7 +2,7 @@
 // for a venue. Degrades to a deterministic fallback when AI is unavailable.
 import { generateText, Output } from "ai";
 import { z } from "zod";
-import { lovableAiModel } from "@/lib/ai-gateway.server";
+import { aiModel } from "@/lib/ai-gateway.server";
 
 export type VenueReview = { author: string; rating: number; text: string };
 export type VenueInsight = {
@@ -55,7 +55,7 @@ export async function generateVenueInsight(input: {
 }): Promise<VenueInsight> {
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("venue_insight"),
       output: Output.object({ schema: Schema }),
       prompt: [
         "You write short, realistic community-style highlights for a local venue in a group planning app.",

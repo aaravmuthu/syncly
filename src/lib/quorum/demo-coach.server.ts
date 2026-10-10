@@ -4,7 +4,7 @@
 // are rate limited per visitor and overall, and any hiccup or odd answer
 // falls back to the client's own template line.
 import { generateText } from "ai";
-import { lovableAiModel, recordAiFailure } from "@/lib/ai-gateway.server";
+import { aiModel, recordAiFailure } from "@/lib/ai-gateway.server";
 import { DEMO_GROUP } from "./demo-group";
 import type { CoachFacts } from "./demo-coach";
 
@@ -97,7 +97,7 @@ export async function coachLine(facts: CoachFacts, visitor: string): Promise<str
 
   try {
     const { text } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("demo_coach"),
       prompt: promptFor(facts),
       abortSignal: AbortSignal.timeout(CALL_TIMEOUT_MS),
     });
