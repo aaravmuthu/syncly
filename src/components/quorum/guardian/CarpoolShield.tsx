@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Car } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Field, Pill, inputClass } from "@/components/quorum/ui";
 import { markRideLeaving, saveVehicleDetails } from "@/lib/quorum/guardian.functions";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
@@ -41,6 +41,7 @@ export function CarpoolShield({
 
   const saveDetails = useMutation({
     mutationFn: useServerFn(saveVehicleDetails),
+    onError: (e: Error) => toast.error("Couldn't save car details", { description: e.message }),
     onSuccess: () => {
       setOpenId(null);
       refresh();
@@ -49,6 +50,7 @@ export function CarpoolShield({
   });
   const leaving = useMutation({
     mutationFn: useServerFn(markRideLeaving),
+    onError: (e: Error) => toast.error("Couldn't notify parents", { description: e.message }),
     onSuccess: () => {
       refresh();
       toast.success("Parents notified you're on the way");

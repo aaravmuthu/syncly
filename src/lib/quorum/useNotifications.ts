@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
+import { showInlineFeedback } from "./inline-error";
 import { supabase } from "@/integrations/supabase/client";
 import { listNotifications, markNotificationsRead } from "./insight.functions";
 import { showPush } from "./push";
@@ -41,7 +41,11 @@ export function useNotifications() {
           if (row.type === "location_share") {
             // showPush only fires when the tab is backgrounded — surface an
             // in-app toast too, since this is exactly when you're on radar.
-            toast.success(row.title, { description: row.body ?? undefined, icon: "📍" });
+            showInlineFeedback(row.title, {
+              tone: "info",
+              description: row.body ?? undefined,
+              anchor: null,
+            });
             void qc.invalidateQueries({ queryKey: ["friend-pins"] });
             void qc.invalidateQueries({ queryKey: ["share-peers"] });
             void qc.invalidateQueries({ queryKey: ["guardian-hub"] });

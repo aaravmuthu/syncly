@@ -336,8 +336,10 @@ export function DirectChat({
     });
     try {
       await react({ data: { messageId, emoji } });
-    } catch {
-      toast.error("Couldn't update that reaction");
+    } catch (e) {
+      toast.error("Couldn't update that reaction", {
+        description: e instanceof Error ? e.message : "Please try adding the reaction again.",
+      });
       void qc.invalidateQueries({ queryKey: key });
     }
   }
@@ -346,14 +348,18 @@ export function DirectChat({
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       return toast.error("Location isn't available on this device");
     }
+    let locationReason = "Allow location access in your browser settings and try again.";
     const pos = await new Promise<GeolocationPosition | null>((resolve) =>
       navigator.geolocation.getCurrentPosition(
         (p) => resolve(p),
-        () => resolve(null),
+        (error) => {
+          locationReason = error.message || locationReason;
+          resolve(null);
+        },
         { enableHighAccuracy: true, timeout: 8000 },
       ),
     );
-    if (!pos) return toast.error("Couldn't read your location");
+    if (!pos) return toast.error("Couldn't read your location", { description: locationReason });
     submit({
       threadId,
       kind: "location",
@@ -395,8 +401,13 @@ export function DirectChat({
       recorderRef.current = rec;
       setRecording(true);
       haptic("select");
-    } catch {
-      toast.error("Microphone access is blocked");
+    } catch (e) {
+      toast.error("Voice recording unavailable", {
+        description:
+          e instanceof Error
+            ? e.message
+            : "Allow microphone access in your browser settings and try again.",
+      });
     }
   }
 
@@ -682,8 +693,13 @@ function DmRow({
       onSelect: () => {
         navigator.clipboard
           .writeText(body)
-          .then(() => toast("Copied"))
-          .catch(() => toast.error("Couldn't copy that"));
+          .then(() => toast.success("Copied"))
+          .catch((e: unknown) =>
+            toast.error("Couldn't copy that", {
+              description:
+                e instanceof Error ? e.message : "Select the message text and copy it manually.",
+            }),
+          );
       },
     });
   }

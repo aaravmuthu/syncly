@@ -11,7 +11,6 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { MotionConfig } from "motion/react";
-import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -184,12 +183,6 @@ function RootComponent() {
           <Outlet />
           <CookieConsent />
           <InlineErrorLayer />
-          <Toaster
-            position="top-center"
-            richColors
-            closeButton
-            offset={{ top: "calc(env(safe-area-inset-top, 0px) + 1rem)" }}
-          />
         </MotionConfig>
       </ThemeProvider>
     </QueryClientProvider>

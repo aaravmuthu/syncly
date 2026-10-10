@@ -1,17 +1,16 @@
 import type { ReactNode } from "react";
 
 /**
- * Errors live on the control that caused them, not in a popup. Every press is
- * remembered; when an error comes back, the pressed button itself turns into
- * the error for a moment and the reason hangs just under it
- * (InlineErrorLayer renders both).
+ * Shared outcome store. Controls are remembered for pointer, keyboard and form
+ * actions; the root feedback layer animates the result and shows its reason.
  */
 
 export type InlineErrorAction = { label: ReactNode; onClick: () => void };
 
 export type InlineError = {
   id: number;
-  anchor: HTMLElement;
+  anchor: HTMLElement | null;
+  tone: "success" | "error" | "info";
   title: ReactNode;
   description?: ReactNode;
   action?: InlineErrorAction;
@@ -106,16 +105,21 @@ function liveAnchor(explicit?: HTMLElement | null): HTMLElement | null {
   return r.width > 0 && r.height > 0 ? el : null;
 }
 
-/** Returns false when there's no live control to attach the error to. */
-export function showInlineError(
+/** Outcomes follow the pressed control; detached controls use the outcome stage. */
+export function showInlineFeedback(
   title: ReactNode,
-  opts: { description?: ReactNode; action?: InlineErrorAction; anchor?: HTMLElement | null } = {},
-): number | false {
-  const anchor = liveAnchor(opts.anchor);
-  if (!anchor) return false;
+  opts: {
+    description?: ReactNode;
+    action?: InlineErrorAction;
+    anchor?: HTMLElement | null;
+    tone?: InlineError["tone"];
+  } = {},
+): number {
+  const anchor = opts.anchor === null ? null : liveAnchor(opts.anchor);
   current = {
     id: nextId++,
     anchor,
+    tone: opts.tone ?? "error",
     title,
     description: opts.description,
     action: opts.action,
@@ -124,6 +128,8 @@ export function showInlineError(
   emit();
   return current.id;
 }
+
+export const showInlineError = showInlineFeedback;
 
 export function clearInlineError(id?: number) {
   if (!current || (id !== undefined && current.id !== id)) return;

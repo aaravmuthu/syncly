@@ -1,25 +1,25 @@
 import type { ReactNode } from "react";
-import { toast as sonner, type ExternalToast } from "sonner";
-import { showInlineError } from "./inline-error";
+import type { ExternalToast } from "sonner";
+import { clearInlineError, showInlineFeedback, type InlineError } from "./inline-error";
 
-type ErrorData = Pick<ExternalToast, "description"> & {
+type FeedbackData = Pick<ExternalToast, "description" | "icon" | "id"> & {
   action?: { label: ReactNode; onClick: () => void };
 };
 
-/**
- * Sonner, except errors and "not available" notices never pop up: they land
- * on the button that was pressed (see inline-error.ts). Only an error with no
- * control behind it falls back to a plain, uncolored toast.
- */
-function error(message: ReactNode, data?: ErrorData) {
+function feedback(tone: InlineError["tone"], message: ReactNode, data?: FeedbackData) {
   const description =
     typeof data?.description === "function" ? data.description() : data?.description;
-  const id = showInlineError(message, { description, action: data?.action });
-  return id === false ? sonner(message, data) : id;
+  return showInlineFeedback(message, { tone, description, action: data?.action });
 }
 
-export const toast: typeof sonner = Object.assign(
-  ((message, data) => sonner(message, data)) as typeof sonner,
-  sonner,
-  { error, warning: error },
+/** One site-wide outcome path. No success/error banners, including fallbacks. */
+export const toast = Object.assign(
+  (message: ReactNode, data?: FeedbackData) => feedback("info", message, data),
+  {
+    success: (message: ReactNode, data?: FeedbackData) => feedback("success", message, data),
+    error: (message: ReactNode, data?: FeedbackData) => feedback("error", message, data),
+    warning: (message: ReactNode, data?: FeedbackData) => feedback("error", message, data),
+    info: (message: ReactNode, data?: FeedbackData) => feedback("info", message, data),
+    dismiss: (id?: number) => clearInlineError(id),
+  },
 );
