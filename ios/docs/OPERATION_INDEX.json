@@ -1,0 +1,978 @@
+[
+  {
+    "function": "getEmailSecurity",
+    "source": "src/lib/email-mfa.functions.ts",
+    "line": 6,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getEmailSecurity",
+    "auth": "First-factor-safe JWT; operation-specific enrollment/disable gates"
+  },
+  {
+    "function": "sendEmailSecondFactor",
+    "source": "src/lib/email-mfa.functions.ts",
+    "line": 12,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/sendEmailSecondFactor",
+    "auth": "First-factor-safe JWT; operation-specific enrollment/disable gates"
+  },
+  {
+    "function": "verifyEmailSecondFactor",
+    "source": "src/lib/email-mfa.functions.ts",
+    "line": 19,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/verifyEmailSecondFactor",
+    "auth": "First-factor-safe JWT; operation-specific enrollment/disable gates"
+  },
+  {
+    "function": "acceptTerms",
+    "source": "src/lib/quorum/account.functions.ts",
+    "line": 7,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/acceptTerms",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "exportAccountData",
+    "source": "src/lib/quorum/account.functions.ts",
+    "line": 22,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/exportAccountData",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "magicPlanDraft",
+    "source": "src/lib/quorum/ai.functions.ts",
+    "line": 28,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/magicPlanDraft",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getCompromiseSummaries",
+    "source": "src/lib/quorum/ai.functions.ts",
+    "line": 82,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getCompromiseSummaries",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getPlanBSuggestion",
+    "source": "src/lib/quorum/ai.functions.ts",
+    "line": 106,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getPlanBSuggestion",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getAiCompromise",
+    "source": "src/lib/quorum/ai.functions.ts",
+    "line": 130,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getAiCompromise",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "applyAiCompromise",
+    "source": "src/lib/quorum/ai.functions.ts",
+    "line": 155,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/applyAiCompromise",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "askPlanConcierge",
+    "source": "src/lib/quorum/aiplus.functions.ts",
+    "line": 61,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/askPlanConcierge",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getSquadDigest",
+    "source": "src/lib/quorum/aiplus.functions.ts",
+    "line": 149,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getSquadDigest",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "vibeSearchSpots",
+    "source": "src/lib/quorum/aiplus.functions.ts",
+    "line": 268,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/vibeSearchSpots",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getGuardianAiSummary",
+    "source": "src/lib/quorum/aiplus.functions.ts",
+    "line": 370,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getGuardianAiSummary",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "askSyncly",
+    "source": "src/lib/quorum/aiplus.functions.ts",
+    "line": 464,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/askSyncly",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getApproval",
+    "source": "src/lib/quorum/approval.functions.ts",
+    "line": 20,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getApproval",
+    "auth": "Use capability route above, excluded from blanket dispatcher"
+  },
+  {
+    "function": "respondToApproval",
+    "source": "src/lib/quorum/approval.functions.ts",
+    "line": 77,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/respondToApproval",
+    "auth": "Use capability route above, excluded from blanket dispatcher"
+  },
+  {
+    "function": "getParentSummary",
+    "source": "src/lib/quorum/approval.functions.ts",
+    "line": 213,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getParentSummary",
+    "auth": "Use capability route above, excluded from blanket dispatcher"
+  },
+  {
+    "function": "parentRespondToPlan",
+    "source": "src/lib/quorum/approval.functions.ts",
+    "line": 405,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/parentRespondToPlan",
+    "auth": "Use capability route above, excluded from blanket dispatcher"
+  },
+  {
+    "function": "listMessages",
+    "source": "src/lib/quorum/chat.functions.ts",
+    "line": 7,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listMessages",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "sendMessage",
+    "source": "src/lib/quorum/chat.functions.ts",
+    "line": 52,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/sendMessage",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "markRead",
+    "source": "src/lib/quorum/chat.functions.ts",
+    "line": 88,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/markRead",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "uploadChatImage",
+    "source": "src/lib/quorum/chat.functions.ts",
+    "line": 105,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/uploadChatImage",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "postRideUpdate",
+    "source": "src/lib/quorum/chat.functions.ts",
+    "line": 127,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/postRideUpdate",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getPlanConflicts",
+    "source": "src/lib/quorum/conflict.functions.ts",
+    "line": 16,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getPlanConflicts",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "flagConflict",
+    "source": "src/lib/quorum/conflict.functions.ts",
+    "line": 51,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/flagConflict",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "runConflictSweep",
+    "source": "src/lib/quorum/conflict.functions.ts",
+    "line": 122,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/runConflictSweep",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "castResolutionVote",
+    "source": "src/lib/quorum/conflict.functions.ts",
+    "line": 138,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/castResolutionVote",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "confirmAttendance",
+    "source": "src/lib/quorum/conflict.functions.ts",
+    "line": 206,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/confirmAttendance",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "openThread",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 9,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/openThread",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listInbox",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 38,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listInbox",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getThread",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 157,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getThread",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "sendDirect",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 241,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/sendDirect",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "markThreadRead",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 288,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/markThreadRead",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "toggleReaction",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 306,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/toggleReaction",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listContacts",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 337,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listContacts",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "uploadVoiceNote",
+    "source": "src/lib/quorum/dm.functions.ts",
+    "line": 389,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/uploadVoiceNote",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMyFamilyPlan",
+    "source": "src/lib/quorum/family-plan.functions.ts",
+    "line": 6,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMyFamilyPlan",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "startFamilyPlus",
+    "source": "src/lib/quorum/family-plan.functions.ts",
+    "line": 14,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/startFamilyPlus",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "cancelFamilyPlus",
+    "source": "src/lib/quorum/family-plan.functions.ts",
+    "line": 23,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/cancelFamilyPlus",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getFriendProfile",
+    "source": "src/lib/quorum/friend.functions.ts",
+    "line": 8,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getFriendProfile",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getNicknames",
+    "source": "src/lib/quorum/friend.functions.ts",
+    "line": 17,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getNicknames",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "setNickname",
+    "source": "src/lib/quorum/friend.functions.ts",
+    "line": 25,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/setNickname",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "setContactGhost",
+    "source": "src/lib/quorum/friend.functions.ts",
+    "line": 34,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/setContactGhost",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "requestLocation",
+    "source": "src/lib/quorum/friend.functions.ts",
+    "line": 43,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/requestLocation",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "leaveGroup",
+    "source": "src/lib/quorum/group.functions.ts",
+    "line": 7,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/leaveGroup",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "transferGroupOwnership",
+    "source": "src/lib/quorum/group.functions.ts",
+    "line": 64,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/transferGroupOwnership",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "deleteGroup",
+    "source": "src/lib/quorum/group.functions.ts",
+    "line": 112,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/deleteGroup",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "updateGroupLook",
+    "source": "src/lib/quorum/group.functions.ts",
+    "line": 137,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/updateGroupLook",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "uploadGroupImage",
+    "source": "src/lib/quorum/group.functions.ts",
+    "line": 172,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/uploadGroupImage",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMySyncCode",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 8,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMySyncCode",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "linkTeen",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 16,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/linkTeen",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMyLinkRequests",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 25,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMyLinkRequests",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "answerLinkRequest",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 33,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/answerLinkRequest",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "unlinkGuardian",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 42,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/unlinkGuardian",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMyGuardians",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 73,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMyGuardians",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getGuardianHub",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 87,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getGuardianHub",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "setLocationSharing",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 97,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/setLocationSharing",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "pushLocation",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 110,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/pushLocation",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "addSafeZone",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 162,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/addSafeZone",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "removeSafeZone",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 194,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/removeSafeZone",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "decidePlanApproval",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 203,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/decidePlanApproval",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "askForCheckin",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 218,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/askForCheckin",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "respondToCheckin",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 227,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/respondToCheckin",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMyCheckins",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 238,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMyCheckins",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "sendDelay",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 252,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/sendDelay",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "raiseSos",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 261,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/raiseSos",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "markRideLeaving",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 284,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/markRideLeaving",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "saveVehicleDetails",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 293,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/saveVehicleDetails",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "markAlertsRead",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 318,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/markAlertsRead",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMyRadar",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 332,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMyRadar",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "arrivedSafely",
+    "source": "src/lib/quorum/guardian.functions.ts",
+    "line": 392,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/arrivedSafely",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getAvailabilityHeatmap",
+    "source": "src/lib/quorum/insight.functions.ts",
+    "line": 13,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getAvailabilityHeatmap",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getPlanWeather",
+    "source": "src/lib/quorum/insight.functions.ts",
+    "line": 57,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getPlanWeather",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listNotifications",
+    "source": "src/lib/quorum/insight.functions.ts",
+    "line": 116,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listNotifications",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "markNotificationsRead",
+    "source": "src/lib/quorum/insight.functions.ts",
+    "line": 127,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/markNotificationsRead",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getGroupMemory",
+    "source": "src/lib/quorum/insight.functions.ts",
+    "line": 149,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getGroupMemory",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "startItinerary",
+    "source": "src/lib/quorum/itinerary.functions.ts",
+    "line": 30,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/startItinerary",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "scoutItineraryStop",
+    "source": "src/lib/quorum/itinerary.functions.ts",
+    "line": 107,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/scoutItineraryStop",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "itineraryForecast",
+    "source": "src/lib/quorum/itinerary.functions.ts",
+    "line": 168,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/itineraryForecast",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "launchItinerary",
+    "source": "src/lib/quorum/itinerary.functions.ts",
+    "line": 194,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/launchItinerary",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "geocodeZip",
+    "source": "src/lib/quorum/location.functions.ts",
+    "line": 12,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/geocodeZip",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "suggestPlaces",
+    "source": "src/lib/quorum/location.functions.ts",
+    "line": 21,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/suggestPlaces",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "searchMapPlaces",
+    "source": "src/lib/quorum/location.functions.ts",
+    "line": 39,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/searchMapPlaces",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "reverseZip",
+    "source": "src/lib/quorum/location.functions.ts",
+    "line": 67,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/reverseZip",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "nearbyMapPlaces",
+    "source": "src/lib/quorum/location.functions.ts",
+    "line": 76,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/nearbyMapPlaces",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getMe",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 15,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getMe",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "saveProfile",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 65,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/saveProfile",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "uploadAvatar",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 158,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/uploadAvatar",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "deleteAccount",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 192,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/deleteAccount",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listGroups",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 211,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listGroups",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "createGroup",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 277,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/createGroup",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "joinGroup",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 321,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/joinGroup",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getGroup",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 358,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getGroup",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listPlans",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 404,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listPlans",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getDashboard",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 423,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getDashboard",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listActivity",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 553,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listActivity",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "createPlan",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 586,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/createPlan",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getPlan",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 667,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getPlan",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "submitConstraints",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 749,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/submitConstraints",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "generateRecommendations",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 810,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/generateRecommendations",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "castVote",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 829,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/castVote",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "finalizePlan",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 863,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/finalizePlan",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "requestParentApproval",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 930,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/requestParentApproval",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getSummaryShareLink",
+    "source": "src/lib/quorum/plan.functions.ts",
+    "line": 993,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getSummaryShareLink",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getPlanDefaults",
+    "source": "src/lib/quorum/planner.functions.ts",
+    "line": 37,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getPlanDefaults",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "previewFairPointVenues",
+    "source": "src/lib/quorum/planner.functions.ts",
+    "line": 143,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/previewFairPointVenues",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "launchAiPlan",
+    "source": "src/lib/quorum/planner.functions.ts",
+    "line": 226,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/launchAiPlan",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getVenueInsight",
+    "source": "src/lib/quorum/reviews.functions.ts",
+    "line": 8,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getVenueInsight",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getFriendPins",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 8,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getFriendPins",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getSharePeers",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 16,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getSharePeers",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "getSharingState",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 24,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/getSharingState",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "shareLocationWith",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 32,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/shareLocationWith",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "stopSharingWith",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 43,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/stopSharingWith",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "stopWatchingFriend",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 52,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/stopWatchingFriend",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "setGhostMode",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 61,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/setGhostMode",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "nudgeFriendPin",
+    "source": "src/lib/quorum/sharing.functions.ts",
+    "line": 70,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/nudgeFriendPin",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "browseSpots",
+    "source": "src/lib/quorum/spots.functions.ts",
+    "line": 40,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/browseSpots",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "addSpotToPlan",
+    "source": "src/lib/quorum/spots.functions.ts",
+    "line": 172,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/addSpotToPlan",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "saveSpot",
+    "source": "src/lib/quorum/spots.functions.ts",
+    "line": 245,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/saveSpot",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "unsaveSpot",
+    "source": "src/lib/quorum/spots.functions.ts",
+    "line": 281,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/unsaveSpot",
+    "auth": "JWT + handler authorization / side effects"
+  },
+  {
+    "function": "listSavedSpots",
+    "source": "src/lib/quorum/spots.functions.ts",
+    "line": 298,
+    "method": "POST",
+    "path": "/api/ios/v1/operations/listSavedSpots",
+    "auth": "JWT + handler authorization / side effects"
+  }
+]

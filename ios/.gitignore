@@ -1,0 +1,10 @@
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xcresult
+*.app/
+*.ipa
+.env*
+*.local.xcconfig
+.DS_Store

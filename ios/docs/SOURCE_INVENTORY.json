@@ -1,0 +1,1531 @@
+{
+  "baseline": "bbef9eb12836b59fce0f29ed03b8c84524719826",
+  "date": "2026-10-10",
+  "files": [
+    {
+      "path": "src/routes/README.md",
+      "sha256": "28c820e43532ff0f18287b97768dd27a2817bcb6612e608697d646f3b20cd56a",
+      "lines": 21
+    },
+    {
+      "path": "src/routes/[.]lovable.oauth.consent.tsx",
+      "sha256": "4e488c7306d0ed5564e95b44053e4e0ef655cc224ba3a1842e053b566ad64650",
+      "lines": 113
+    },
+    {
+      "path": "src/routes/[.mcp]/invoke-tool/$tool.ts",
+      "sha256": "b03a93ec85a825b62f6f682f77761ce38011e48777c8b7db10625e88d79db484",
+      "lines": 19
+    },
+    {
+      "path": "src/routes/[.mcp]/list-tools.ts",
+      "sha256": "4422149dde63eed11e62093a190edf2185b74ffeb5638dfb9161a740b947d5d0",
+      "lines": 19
+    },
+    {
+      "path": "src/routes/[.well-known]/oauth-protected-resource.ts",
+      "sha256": "6c27da6ba40e461119fd65b63d77fa21833b434d0c21f06077d685606b4a6fef",
+      "lines": 18
+    },
+    {
+      "path": "src/routes/__root.tsx",
+      "sha256": "0ee325de9aebb48c3f46b2354316226ba210c0071adf75333de35375f96ccfdf",
+      "lines": 191
+    },
+    {
+      "path": "src/routes/_authenticated/_app/activity.tsx",
+      "sha256": "6381e14e77fea94783646a610d373ae3bd1b7b8db17923ec0cd2df8c4db483fe",
+      "lines": 406
+    },
+    {
+      "path": "src/routes/_authenticated/_app/groups.$groupId.tsx",
+      "sha256": "59d3b619c806162f9f1a6b3b5db55c4b45b2cb440d25634a06d30099fef72932",
+      "lines": 415
+    },
+    {
+      "path": "src/routes/_authenticated/_app/groups.index.tsx",
+      "sha256": "093f4cd4e9840282c149eea39165506a8e5eba8ee23dfb8f8036642baadd0d64",
+      "lines": 266
+    },
+    {
+      "path": "src/routes/_authenticated/_app/home.tsx",
+      "sha256": "9f561e802e459acc9d9fd3149f6407985c7926759f6b3083ed09fd3faad2add3",
+      "lines": 414
+    },
+    {
+      "path": "src/routes/_authenticated/_app/messages.tsx",
+      "sha256": "a89b84ef71d444c0d59e7ecb9ace3b0eadce8517d92e4f7d2cf9ab7c53777cc2",
+      "lines": 465
+    },
+    {
+      "path": "src/routes/_authenticated/_app/plans.$planId.tsx",
+      "sha256": "05d81aee641214415e25a25e02a06ea317f7d1c7dbab13be231eda83807bc6ad",
+      "lines": 1012
+    },
+    {
+      "path": "src/routes/_authenticated/_app/plans.index.tsx",
+      "sha256": "eca2fe81c6f31c9e9fb50e79ed2d60f703d6d8c8a8320acec7f148db478a2e27",
+      "lines": 519
+    },
+    {
+      "path": "src/routes/_authenticated/_app/radar.tsx",
+      "sha256": "ec9e04533c7e36d08416bb5e855576e58cf69120b577d97869e95bf2c8339ed0",
+      "lines": 618
+    },
+    {
+      "path": "src/routes/_authenticated/_app/rls-check.tsx",
+      "sha256": "26a237b32f24883b02f7c0f8492808dcbdbd717aa6afa948af3df777c57741d7",
+      "lines": 92
+    },
+    {
+      "path": "src/routes/_authenticated/_app/route.tsx",
+      "sha256": "2ea2fa28b11941d73ee10eb2e2c1414682c06523523d271ee165196ff17443d6",
+      "lines": 16
+    },
+    {
+      "path": "src/routes/_authenticated/_app/settings.account.tsx",
+      "sha256": "9a458bc36819f56fd76487a77705e4caec73d26236b3314717b8e428f6dee0c4",
+      "lines": 295
+    },
+    {
+      "path": "src/routes/_authenticated/_app/settings.index.tsx",
+      "sha256": "e0746ae164600a31e5aef85bc3832da250ed01812147a11768c5f6865f706980",
+      "lines": 350
+    },
+    {
+      "path": "src/routes/_authenticated/_app/settings.info.tsx",
+      "sha256": "fbb9e65c596d15b0f0565035cb969aff0e8e543a77fac23eaee2560b6acd9a76",
+      "lines": 113
+    },
+    {
+      "path": "src/routes/_authenticated/_app/settings.planning.tsx",
+      "sha256": "c7a59ba49c47ed318d44260364eff45f18157b8a3aa9de359b2e52757edd596c",
+      "lines": 164
+    },
+    {
+      "path": "src/routes/_authenticated/_app/settings.profile.tsx",
+      "sha256": "1db209d4103037067fee7eb03098557c6f194a06e763572bf2ef912c363d8da5",
+      "lines": 308
+    },
+    {
+      "path": "src/routes/_authenticated/agreement.tsx",
+      "sha256": "1e881cc141fa87316be40e56942a5b05964ea6b6344909bb2c62c69a6953224a",
+      "lines": 86
+    },
+    {
+      "path": "src/routes/_authenticated/family-plus.tsx",
+      "sha256": "fa8564bf24ca20732a367d9a7c6992b65ca446c719846f0ff1480c692a5fd451",
+      "lines": 494
+    },
+    {
+      "path": "src/routes/_authenticated/guardian.tsx",
+      "sha256": "ff942091a06624886d5272bbf2d63812731a52de92c36526f1b093b22d7a8e94",
+      "lines": 792
+    },
+    {
+      "path": "src/routes/_authenticated/onboarding.tsx",
+      "sha256": "15eca465bd20f6ed1da962abd047decbcf096f3d42d1cce3e7e404e7d90b5c0a",
+      "lines": 552
+    },
+    {
+      "path": "src/routes/_authenticated/route.tsx",
+      "sha256": "857d8ebddca354051ea802cde9b8fe74608e2fbd4548cc6b28763bf1c8560884",
+      "lines": 89
+    },
+    {
+      "path": "src/routes/accessibility.tsx",
+      "sha256": "fa78eab269f316d577a4dd138e47986a990451543a2751cab89b70cf64a9c672",
+      "lines": 110
+    },
+    {
+      "path": "src/routes/approve.$token.tsx",
+      "sha256": "e0f06335a601179ac64054257964fdd782013c4394b11082cb9f698ccbf8ee77",
+      "lines": 190
+    },
+    {
+      "path": "src/routes/auth-callback.tsx",
+      "sha256": "e0b0654759eb36f898d5cd22a33431fe9568cda33fa77d456cd5d5623dd7de44",
+      "lines": 87
+    },
+    {
+      "path": "src/routes/auth.tsx",
+      "sha256": "3107104679a8095438af92791bb8c0a149ed33581bc5f3fe2580904923ba9ef1",
+      "lines": 769
+    },
+    {
+      "path": "src/routes/demo.tsx",
+      "sha256": "5bfd777254495d52a8af0a5a7abb807b2417573f22c3cf4962660288625422ca",
+      "lines": 1011
+    },
+    {
+      "path": "src/routes/index.tsx",
+      "sha256": "3401fa0b21b3f598d6a0afe00b8632403c2d5edef4feae0e9de35c94d29c1d54",
+      "lines": 517
+    },
+    {
+      "path": "src/routes/join.$code.tsx",
+      "sha256": "6be392864a01c6464619c7221764a138f9e36a4b9197e2f622338cc870d78a39",
+      "lines": 94
+    },
+    {
+      "path": "src/routes/mcp.ts",
+      "sha256": "015ee546b020cfaca50d6b5bd59ed2ab6d7944f67b24fff05fe50f211e9954ab",
+      "lines": 18
+    },
+    {
+      "path": "src/routes/privacy.tsx",
+      "sha256": "b2233776b007ee5006a5c5ca9b314dd5645e4d5697fe7fe17e444aba758fdbee",
+      "lines": 367
+    },
+    {
+      "path": "src/routes/sitemap[.]xml.ts",
+      "sha256": "d74eddaf74e485b6ba122443b6e7adbc76e9734b426424661c9f7fde388742ad",
+      "lines": 53
+    },
+    {
+      "path": "src/routes/subprocessors.tsx",
+      "sha256": "769372bf11e849e7c6307588b4ebe3fc2540e05f6ea9dac0c9bccd4901fbd1a1",
+      "lines": 120
+    },
+    {
+      "path": "src/routes/terms.tsx",
+      "sha256": "fa6ed7f498a2fc6f9c0d079452e336b0e6a79db7efd19a9e2b22796be26777e9",
+      "lines": 325
+    },
+    {
+      "path": "src/lib/quorum/account-data.server.ts",
+      "sha256": "af09ff11aaf7fd2ca9591f013184e48238424b737ad0f104991bc26af29030ee",
+      "lines": 83
+    },
+    {
+      "path": "src/lib/quorum/account-storage.server.ts",
+      "sha256": "7f2d76c4ec929db1611bd9953be2f08e302e6173b4bfe9cf974f4adf9b7aacf0",
+      "lines": 31
+    },
+    {
+      "path": "src/lib/quorum/account.functions.ts",
+      "sha256": "cf1574409b28e04e5e41cb91746d778c009ce4478e8d255e356e55d5bce8c98d",
+      "lines": 45
+    },
+    {
+      "path": "src/lib/quorum/ai.functions.ts",
+      "sha256": "8a1ceebc65f7afa80574aeef3ea722c3ec66cd46b33f369410b7ef5e639e49a5",
+      "lines": 217
+    },
+    {
+      "path": "src/lib/quorum/ai.server.ts",
+      "sha256": "0fe93fa6b078caca52e0b64da0a482e7a7185bd37d9072d3116cd624535cc46c",
+      "lines": 637
+    },
+    {
+      "path": "src/lib/quorum/aiplus.functions.ts",
+      "sha256": "5c4767c4a6dd77fa3109ff3abe12a5198f2b3f1f8aad5ba31b2a7d9d4d6612fc",
+      "lines": 607
+    },
+    {
+      "path": "src/lib/quorum/aiplus.server.ts",
+      "sha256": "f18f57522b952787176c65391ea0f0fa6b826ab19a1dcfab5fa46ae79fc63cc9",
+      "lines": 545
+    },
+    {
+      "path": "src/lib/quorum/approval.functions.ts",
+      "sha256": "4b73ddf137e9f4ff317778b86a02513135fb8cda4b2042af36602eff1530b3d3",
+      "lines": 455
+    },
+    {
+      "path": "src/lib/quorum/availability.ts",
+      "sha256": "1541eb51d0481ec0893ab89184b54a50d4e0db11b3dac58677e49926b7ae309b",
+      "lines": 57
+    },
+    {
+      "path": "src/lib/quorum/calendar.ts",
+      "sha256": "7ee9309eb733239fd4f2fb7c0aff2be7b98f274c5edc7ec05d16ec0971c26e77",
+      "lines": 135
+    },
+    {
+      "path": "src/lib/quorum/catalog.ts",
+      "sha256": "cce9e9cffe7a22ed5f40755c56b263058323b4d3536825bb318841a4a02abd05",
+      "lines": 335
+    },
+    {
+      "path": "src/lib/quorum/chat-unread.ts",
+      "sha256": "bbdc08b540448c5a0852a3335e6bdb95cbcc1e79344d4869550d3efd7de8cded",
+      "lines": 10
+    },
+    {
+      "path": "src/lib/quorum/chat.functions.ts",
+      "sha256": "99f027a228b465d7410128b6be98ab86d0555e5fff63bf0cf5bd45230017c8aa",
+      "lines": 150
+    },
+    {
+      "path": "src/lib/quorum/chat.server.ts",
+      "sha256": "def7b2fd3e00f3c3131e143f7303797804162c2a979cd00766e2b77667aa1896",
+      "lines": 26
+    },
+    {
+      "path": "src/lib/quorum/compromise.server.ts",
+      "sha256": "82ad5ddde2f8eee898e4cbe7234a877df42d5aa44b6f728fac262aedd793f338",
+      "lines": 212
+    },
+    {
+      "path": "src/lib/quorum/conflict.functions.ts",
+      "sha256": "643cbad2032433cb48d6d6d426dea3ef4a0fdc939d7aa7a9252be56a9b6bbaaf",
+      "lines": 220
+    },
+    {
+      "path": "src/lib/quorum/conflict.server.ts",
+      "sha256": "63274d9b5b9514d3824beb94aeb08c381d384a6fb5be275000fa468209e759e2",
+      "lines": 310
+    },
+    {
+      "path": "src/lib/quorum/cost.ts",
+      "sha256": "6d7be5856f2999ce1973ff7da1232a1371e2f96343b24a572c492dfafb4c812a",
+      "lines": 85
+    },
+    {
+      "path": "src/lib/quorum/covers.ts",
+      "sha256": "665d3b895ce5298c627fc1e95a0e6ce288d588c354438525214644e82df10556",
+      "lines": 64
+    },
+    {
+      "path": "src/lib/quorum/demo-coach.functions.ts",
+      "sha256": "05c6c092e52b3307a1bdb546a7b6f08be91a62e11c857c06a89af691073208f3",
+      "lines": 43
+    },
+    {
+      "path": "src/lib/quorum/demo-coach.server.ts",
+      "sha256": "f492722043b1d924c22f1dd44afc1be539c39e67ffe7aab04760699ad06a20c9",
+      "lines": 125
+    },
+    {
+      "path": "src/lib/quorum/demo-coach.ts",
+      "sha256": "966357b7ead48de31aed3d80e00f44a4630a71351fe8d6baf2d4c591d3376e3a",
+      "lines": 235
+    },
+    {
+      "path": "src/lib/quorum/demo-group.ts",
+      "sha256": "d8cb59ce777dfef1c9def206089eee2d35a32df74a0e8c68c4a3ce49ab481a40",
+      "lines": 82
+    },
+    {
+      "path": "src/lib/quorum/dm.functions.ts",
+      "sha256": "66bd3ac8f357d09bbdb1e426cf7df14aab2960960a8cf87319cf14bd0f9cc774",
+      "lines": 410
+    },
+    {
+      "path": "src/lib/quorum/dm.server.ts",
+      "sha256": "264bc195f950a98cb7db20765d1081d38ab0ac8acd73a414793722cc15213e59",
+      "lines": 59
+    },
+    {
+      "path": "src/lib/quorum/engine.ts",
+      "sha256": "41fcbf45acfab049d1d943e8a462c053ef389bcf6ed577bcc4646debe9721e4e",
+      "lines": 315
+    },
+    {
+      "path": "src/lib/quorum/estcost.ts",
+      "sha256": "f3581dd6bc55e18c6ab63d74e4095c1a5df5131a283ae52502aebb0ea1974e1f",
+      "lines": 43
+    },
+    {
+      "path": "src/lib/quorum/fairpoint.server.ts",
+      "sha256": "2cc9fa0573c1dd65dac8f8c6bd4bcc8c97223b17dc176ca3a3ba85107fb3dae1",
+      "lines": 181
+    },
+    {
+      "path": "src/lib/quorum/family-plan.functions.ts",
+      "sha256": "1fd67de6dea3fe2a4a5ffaec3420fe739339a0f1c0844a9c6936e927f2fe3fe9",
+      "lines": 29
+    },
+    {
+      "path": "src/lib/quorum/family-plan.server.ts",
+      "sha256": "8e19f4938ba295bd1ba9b5f4a3304f67cd7542410e58f0ce45d5b6682a966089",
+      "lines": 223
+    },
+    {
+      "path": "src/lib/quorum/family-plan.ts",
+      "sha256": "84fdcded29863397d9570b3854411baaa7789f0eee64d02bfe0ef48a5a6cfeb3",
+      "lines": 66
+    },
+    {
+      "path": "src/lib/quorum/file-sniff.ts",
+      "sha256": "f0a767573ffb633378dfc23c29af87cbfc647634ae93484d336ec269040c76b2",
+      "lines": 39
+    },
+    {
+      "path": "src/lib/quorum/friend.functions.ts",
+      "sha256": "160a1b9ec431bc4369c4b6b1037ce8e235d3fbff0560bdd5ec090d18f8078305",
+      "lines": 50
+    },
+    {
+      "path": "src/lib/quorum/friend.server.ts",
+      "sha256": "ec382f6d0a4ccd271df6950ae47bb1f88d06e34d9ea7b825adfd79ac9c213c93",
+      "lines": 313
+    },
+    {
+      "path": "src/lib/quorum/friend.ts",
+      "sha256": "a52ab59d6c9f5d5fec2e332c5e0f8409180d4972917475f7728f3695cb6cb2fb",
+      "lines": 60
+    },
+    {
+      "path": "src/lib/quorum/friends-context.ts",
+      "sha256": "9aa16cafc081e9a0726834bc66ee61bdfea936349a245e518aff35409fb33acf",
+      "lines": 27
+    },
+    {
+      "path": "src/lib/quorum/group.functions.ts",
+      "sha256": "8b8e7d454afaf037f4c16bad089a48ac5bbf448f2f2444aca691fd9622d70efe",
+      "lines": 191
+    },
+    {
+      "path": "src/lib/quorum/group.server.ts",
+      "sha256": "d485795585fa4f94080e8a6174f0bdd732c0c7066f6135e8fe90fbbd15e05ea9",
+      "lines": 19
+    },
+    {
+      "path": "src/lib/quorum/guardian.functions.ts",
+      "sha256": "05af7cbab0f09aa02bcb35a5cc89fcde1016adfc4e4dc82f434afc91600240d8",
+      "lines": 433
+    },
+    {
+      "path": "src/lib/quorum/guardian.server.ts",
+      "sha256": "4ea219dca28ead863837251e43b4f8e7253c2e534443cae3b0940e158357920a",
+      "lines": 975
+    },
+    {
+      "path": "src/lib/quorum/guardian.types.ts",
+      "sha256": "cb4a948eba5a191374d26d951528d76ab08a9604d1cce68798e9b2f3d3f70fea",
+      "lines": 88
+    },
+    {
+      "path": "src/lib/quorum/haptics.ts",
+      "sha256": "aedd780485b2a8d870539f18c7a88d3d6b697e671113f7ccadf48147057c50cc",
+      "lines": 41
+    },
+    {
+      "path": "src/lib/quorum/hardfilter.ts",
+      "sha256": "2dc3db293bd8d27058b9c1ccb720801cc7d4773ba192c9d2c0efac0add52cc84",
+      "lines": 99
+    },
+    {
+      "path": "src/lib/quorum/icons.ts",
+      "sha256": "d08cdd165604baffeb448d40575073e597f54839ad0c7908e3dc8c681320a5c7",
+      "lines": 35
+    },
+    {
+      "path": "src/lib/quorum/inline-error.ts",
+      "sha256": "213fd711c5efe3d4e631807cd4f67072b2cf749b138cfca1daa1a913d9fec579",
+      "lines": 147
+    },
+    {
+      "path": "src/lib/quorum/insight.functions.ts",
+      "sha256": "765f12e4e8e361dfd3f18bde85bb21661d6d2c41964858780d495109010aab28",
+      "lines": 163
+    },
+    {
+      "path": "src/lib/quorum/invite.ts",
+      "sha256": "2a0dbc3df9ec1edeea977691955279693d789bc859840df52bf8b5719e69e4d9",
+      "lines": 67
+    },
+    {
+      "path": "src/lib/quorum/itinerary.functions.ts",
+      "sha256": "5f07c24e8297d5ac4621e1fc15454791b686d3ba30a52a0244d3a713d101b3ee",
+      "lines": 268
+    },
+    {
+      "path": "src/lib/quorum/itinerary.ts",
+      "sha256": "e67e69d6417e32e80398dbfd2e8bf9c9c078a82c166c024859c2fd02387feda7",
+      "lines": 290
+    },
+    {
+      "path": "src/lib/quorum/location.functions.ts",
+      "sha256": "fce3dcb170ccbdc73a9056bd875316c4cdd5332bf118532ccf8c443aa862f1ee",
+      "lines": 103
+    },
+    {
+      "path": "src/lib/quorum/location.server.ts",
+      "sha256": "727de59cb387f4fb7788c78ac6acd94c161f49fe9a1f72a2c0301d36b18b2826",
+      "lines": 45
+    },
+    {
+      "path": "src/lib/quorum/location.ts",
+      "sha256": "e8e8d286f06d925c93cbc0b2abdca6a568d543e6fd2c11387ce008adc4dccd2f",
+      "lines": 134
+    },
+    {
+      "path": "src/lib/quorum/map-poi.ts",
+      "sha256": "1fe21e4d2cd098f3116e36d75e0a2c2db9de75eafb75aaadfb18db14ebe2f918",
+      "lines": 94
+    },
+    {
+      "path": "src/lib/quorum/me.ts",
+      "sha256": "0267d89bca7f041e34b4d7d4732117e600309fe92848e52f6e4631d2f0a1d27d",
+      "lines": 8
+    },
+    {
+      "path": "src/lib/quorum/memory.server.ts",
+      "sha256": "d18fd58aea6996e1c45ec9023c94e1a284b8113aa3e7fcbc74283cf1e1d98be3",
+      "lines": 71
+    },
+    {
+      "path": "src/lib/quorum/names.ts",
+      "sha256": "fb204e181b95badcf824ebc86b4e5a3a5c1ad3e7ce0a581c4d50a392e5d98e1c",
+      "lines": 13
+    },
+    {
+      "path": "src/lib/quorum/nicknames.tsx",
+      "sha256": "3bf4b323b269d6523a4aa2da526e32cd3a7de2eb019027d82f7338e3de6c4310",
+      "lines": 40
+    },
+    {
+      "path": "src/lib/quorum/notify.server.ts",
+      "sha256": "3684191a4ac2d3f679f9e30532062d566d4c622207923c2a532f52d5b5eb483b",
+      "lines": 82
+    },
+    {
+      "path": "src/lib/quorum/places.server.ts",
+      "sha256": "8233e37fd0578b56a7359eea8d4221400d8806a6262d82361de937ee695aa05a",
+      "lines": 629
+    },
+    {
+      "path": "src/lib/quorum/plan-lifecycle.server.ts",
+      "sha256": "60d4aff81721c51a5d27df843d388f050bde6defce9b0b74610be936a8957e9d",
+      "lines": 69
+    },
+    {
+      "path": "src/lib/quorum/plan-time.ts",
+      "sha256": "ae3132393e852d5d62275dd6af3b652e4d638ba474161094d5906cc24a64ca5f",
+      "lines": 109
+    },
+    {
+      "path": "src/lib/quorum/plan.functions.ts",
+      "sha256": "42b0bee883e6d6ac8686a2dce89bdd9566074b12fef42381b9e7d7978e322587",
+      "lines": 1001
+    },
+    {
+      "path": "src/lib/quorum/planner.functions.ts",
+      "sha256": "332a0cea03561009da2160a13041260999c2be1adab7fb0e63136904ebd732e4",
+      "lines": 351
+    },
+    {
+      "path": "src/lib/quorum/push.ts",
+      "sha256": "ad2b67505cb7322617f4e8373b11d3162ae8b5741d8efc58afae2ae085f56e02",
+      "lines": 32
+    },
+    {
+      "path": "src/lib/quorum/pwa.ts",
+      "sha256": "cbd1c5d8da13e95f96e2d46db6a4a7cda416a7cae8757b6b1ced6b78c4682473",
+      "lines": 83
+    },
+    {
+      "path": "src/lib/quorum/questionnaires.ts",
+      "sha256": "202e03aee06d39cb4ec049aa26eb5a025ae9401cb622b9d225f1ff45ca5f4bb3",
+      "lines": 272
+    },
+    {
+      "path": "src/lib/quorum/recommend.server.ts",
+      "sha256": "ef1f598ee4d4158b2eaabf970f0447b87303338f9d0aae265c099937438fdddc",
+      "lines": 351
+    },
+    {
+      "path": "src/lib/quorum/reviews.functions.ts",
+      "sha256": "2a7de739c9136a55b76b4deffbee499122274c55d36285e815fe43b6b12fce69",
+      "lines": 30
+    },
+    {
+      "path": "src/lib/quorum/reviews.server.ts",
+      "sha256": "827a86f699259fa1551e2f40618e1528a846978cebc53417d0fd27dc39aef655",
+      "lines": 93
+    },
+    {
+      "path": "src/lib/quorum/rlscheck.functions.ts",
+      "sha256": "ac8a4637a5ab14cd394332e0c9cac5ef9fcd89efdb08013b3ffbf4f9c7639f9c",
+      "lines": 30
+    },
+    {
+      "path": "src/lib/quorum/rlscheck.server.ts",
+      "sha256": "05e17903f6dfc7a21525b770d839a3225480009e27a752a0c9c9ccb7e91d85e3",
+      "lines": 177
+    },
+    {
+      "path": "src/lib/quorum/safe-upload.ts",
+      "sha256": "18e81a1e7aa3e6f4fa3fb6f3d08314cf9502a5626800792ad1c17b323c5687d7",
+      "lines": 74
+    },
+    {
+      "path": "src/lib/quorum/schemas.ts",
+      "sha256": "48c9bf9ec39f5ba89cbbc2c95faae9ebf49a0dff74e1ed05bfbfe41a5a942eb9",
+      "lines": 193
+    },
+    {
+      "path": "src/lib/quorum/sharing.functions.ts",
+      "sha256": "89d5dad7a2f8033d3cd3c4139932bbf7287a69d317867c7217a7b76d288b1e5f",
+      "lines": 77
+    },
+    {
+      "path": "src/lib/quorum/sharing.server.ts",
+      "sha256": "ab7d28ddb0e34bb3b5dd4b83531ed9bab11ebd9123c39dcca62d17b1b5fcbc32",
+      "lines": 398
+    },
+    {
+      "path": "src/lib/quorum/sharing.ts",
+      "sha256": "df95ed3d5016351cd7563165d80784fd65399355485033bb9f46cfc6c8fee1e1",
+      "lines": 136
+    },
+    {
+      "path": "src/lib/quorum/spotTabs.ts",
+      "sha256": "ada0ca3fb742f7183bce03892f18037fcec792c789f09d91fb6a0a93f8b34adf",
+      "lines": 96
+    },
+    {
+      "path": "src/lib/quorum/spots.functions.ts",
+      "sha256": "93ecc97b491a241a622e29e0f2cbc993b7e00b94183f1c191fcb06796504d42b",
+      "lines": 340
+    },
+    {
+      "path": "src/lib/quorum/summary-link.server.ts",
+      "sha256": "110924a36010d8b19349067e8dc3e129220ace5dbc0350858202b47f321403bf",
+      "lines": 39
+    },
+    {
+      "path": "src/lib/quorum/toast.ts",
+      "sha256": "d80624725cc4455272f7e1572921dd85395752e16ff37c32430a9ba95491705e",
+      "lines": 25
+    },
+    {
+      "path": "src/lib/quorum/types.ts",
+      "sha256": "e5a9db7cf73bb066cbd6711fd596493e88ecacc4e1407f4c10a018e5b55c1634",
+      "lines": 234
+    },
+    {
+      "path": "src/lib/quorum/upload-safety.server.ts",
+      "sha256": "6e917279ee63e65fd6c666f79ba0b508f25dbd25cd533b33c1c5b2a505a29bce",
+      "lines": 69
+    },
+    {
+      "path": "src/lib/quorum/useChatUnread.ts",
+      "sha256": "bd06c97c8f937a33d6586efe1eba2a70012c28bbdfae86964ed3fecfe7ea45d1",
+      "lines": 64
+    },
+    {
+      "path": "src/lib/quorum/useNotifications.ts",
+      "sha256": "7b748dc6552fe52b3561de27b90d0bf4a2e63e02f359c2ceacb9617a35e861a8",
+      "lines": 74
+    },
+    {
+      "path": "src/lib/quorum/venuePhotos.ts",
+      "sha256": "b71fa0db6ba7e719eebe624fd3b969858dff491c6f26fb99a0d35e2e42d53179",
+      "lines": 123
+    },
+    {
+      "path": "src/lib/quorum/vibes.ts",
+      "sha256": "29c5e2966306164b598fde9f02b72de9065300da3db602b1a31e12f1e301d661",
+      "lines": 89
+    },
+    {
+      "path": "src/lib/quorum/weather.server.ts",
+      "sha256": "8cbcceb8748e50bb03e2d96202b749d01978aafca142dcab524e107b3e832b8f",
+      "lines": 76
+    },
+    {
+      "path": "src/lib/quorum/weather.ts",
+      "sha256": "36881a104ac4b575751b3f19d2fddfd23427591031863ca434effbe7f03da318",
+      "lines": 109
+    },
+    {
+      "path": "src/components/quorum/AddressPicker.tsx",
+      "sha256": "10fb822c30dffcd12a90b61134a4be32f712b4a8fd91fbef9fa7566215adb560",
+      "lines": 280
+    },
+    {
+      "path": "src/components/quorum/AiCompromiseBanner.tsx",
+      "sha256": "06126525c65867c32201a5ca725fd76201e3e503c1850537aa37fb261177808d",
+      "lines": 84
+    },
+    {
+      "path": "src/components/quorum/AppShell.tsx",
+      "sha256": "c2d44850348fdf6c6e47e388f3d568f2ba60c272196cb0da74195e34d5cfde49",
+      "lines": 614
+    },
+    {
+      "path": "src/components/quorum/Avatar.tsx",
+      "sha256": "bcf200ba150f0f076c690ebf9ff4fe0975c6f70f6eb817c4b90edb5306546dd0",
+      "lines": 48
+    },
+    {
+      "path": "src/components/quorum/ChatDrawer.tsx",
+      "sha256": "25e999bdcc27da861fc6c8903804da53c1ca5d8481a8bea6da3306adb3c7b060",
+      "lines": 83
+    },
+    {
+      "path": "src/components/quorum/ConflictCard.tsx",
+      "sha256": "b1bfc609ccb287ff36a461421de992d931a1951669fe2c9c101dd17a208875ea",
+      "lines": 121
+    },
+    {
+      "path": "src/components/quorum/ConstraintForm.tsx",
+      "sha256": "b3f67d5015c1d3468d4788aab6c7ca3b23b1826821b386543a9494210a975a4a",
+      "lines": 300
+    },
+    {
+      "path": "src/components/quorum/ContextSwitcher.tsx",
+      "sha256": "ed53e5fc4e36df3625e3050a83969c8bb7d3d325b05a61a784b728ffdda49ec8",
+      "lines": 68
+    },
+    {
+      "path": "src/components/quorum/CookieConsent.tsx",
+      "sha256": "330bf5354eb486785bd51e1b8626bc0b48895dba9778eacd93d48c2fc345167f",
+      "lines": 167
+    },
+    {
+      "path": "src/components/quorum/CreateGroupModal.tsx",
+      "sha256": "20b868d4b3575a3bcc1e007f374b5c57e1e4b03b4e829ddead79be14cf8d7c01",
+      "lines": 248
+    },
+    {
+      "path": "src/components/quorum/CreatePlanPanel.tsx",
+      "sha256": "9b8a3ef384b296d4f1a7be3b8e8b1e81e4b35dd6d697d5378571115cb5e0259b",
+      "lines": 501
+    },
+    {
+      "path": "src/components/quorum/DashboardParts.tsx",
+      "sha256": "dc97a1ffa969bdf08e0c25e23d3e245bc58e3de8ec755bb3ff78b7ef29efaa7a",
+      "lines": 539
+    },
+    {
+      "path": "src/components/quorum/DynamicButton.tsx",
+      "sha256": "a25992f3e0b2bc7e7e66e89ac97c12a9d16ac369cfa38ff8598df8459a609f28",
+      "lines": 243
+    },
+    {
+      "path": "src/components/quorum/ErrorBoundary.tsx",
+      "sha256": "19159c543817179c8f092a093cf8bf070b4580864160a157eca559193d5f93d0",
+      "lines": 26
+    },
+    {
+      "path": "src/components/quorum/FairPointVenues.tsx",
+      "sha256": "2a97b38f833486b6a76d4ba65abf04415a32fc8492e5d3a636f1cc6187a04a5d",
+      "lines": 80
+    },
+    {
+      "path": "src/components/quorum/FinalizedPlanHub.tsx",
+      "sha256": "2dcfbfb88b7bc3fcafc077df7112433fe0f9b0a33d6a3d993c413423132816d6",
+      "lines": 178
+    },
+    {
+      "path": "src/components/quorum/FindMySquad.tsx",
+      "sha256": "3b365d3903f075688fd9c674ccdbdbe55decc9797924d503ca9ff1969e9e579f",
+      "lines": 202
+    },
+    {
+      "path": "src/components/quorum/GlowButton.tsx",
+      "sha256": "919f3d739a8b5e1820d4075b09b34dd300041593f27f3d4e6652ace3b1268b0c",
+      "lines": 66
+    },
+    {
+      "path": "src/components/quorum/GroupAppearance.tsx",
+      "sha256": "a7ce55ae7f5694c8f095d3c1ff3c76f12c406df86845b27a1b5976482882af9d",
+      "lines": 198
+    },
+    {
+      "path": "src/components/quorum/GroupSettings.tsx",
+      "sha256": "863bb3d6796893e99feac4b0e83049eeaef74332670c9674e551da5f1cce3c13",
+      "lines": 242
+    },
+    {
+      "path": "src/components/quorum/GuardianShell.tsx",
+      "sha256": "b2bb683c6844382b6cce8cdadf96822c1a5caaeb4dfdf2c696f0fbedcee59357",
+      "lines": 146
+    },
+    {
+      "path": "src/components/quorum/HoldToConfirmButton.tsx",
+      "sha256": "bb78a0988f82a9ab212c95e70ab0a75c7117f35140ef0930c9fc3bb4e9335d6b",
+      "lines": 273
+    },
+    {
+      "path": "src/components/quorum/InlineErrorLayer.tsx",
+      "sha256": "3c25fa9f5ba49637e5cfd212047434fc540fa157572197eeabc1f968e96ebe9b",
+      "lines": 314
+    },
+    {
+      "path": "src/components/quorum/InstallPrompt.tsx",
+      "sha256": "55cba3ab7082cba49bc3e91c1a36d5f85d253402083341ee37901538ec1dc439",
+      "lines": 83
+    },
+    {
+      "path": "src/components/quorum/InviteCard.tsx",
+      "sha256": "dbeb0ebf9e4a5bbbf9d64bd599f4fee6836e938b3472bee423d129ddfe75ca4e",
+      "lines": 88
+    },
+    {
+      "path": "src/components/quorum/ItineraryCard.tsx",
+      "sha256": "175c3486d6ab1ab7a372bc51c344267a037c2a59bf5388911b9efd0143978fa5",
+      "lines": 35
+    },
+    {
+      "path": "src/components/quorum/JoinGroupModal.tsx",
+      "sha256": "df51ecea6228d6a0e06fe092015d72392192521fe94a61003017f49b0e449891",
+      "lines": 71
+    },
+    {
+      "path": "src/components/quorum/LegalLayout.tsx",
+      "sha256": "71cd008deddbbd65f3e51195f7ad232d62141fedec694685908f6c9d93af62cb",
+      "lines": 164
+    },
+    {
+      "path": "src/components/quorum/ListControls.tsx",
+      "sha256": "0559c22e37474f0b5f9ebd60a3efc1669b38b7983128695695d68cc6f1e4a828",
+      "lines": 85
+    },
+    {
+      "path": "src/components/quorum/LiveActivityCard.tsx",
+      "sha256": "a3d2285ea81be6a86c75733a26ad0c1d9b10f4ef4eff725665d699c4f22e7032",
+      "lines": 172
+    },
+    {
+      "path": "src/components/quorum/Logo.tsx",
+      "sha256": "11eb0ebd4dcb11a2f3e3f1518648fa400c8759f30b796bd6e87e9a8b180dd779",
+      "lines": 282
+    },
+    {
+      "path": "src/components/quorum/MagicPlanBox.tsx",
+      "sha256": "69762bef668abe87d8c2176cca62b7b8f61db04bd1643a8d0ed94bbd9cd047bc",
+      "lines": 121
+    },
+    {
+      "path": "src/components/quorum/MobileActions.tsx",
+      "sha256": "151107ccf68ab1672503724789252fbbf1032fc9b69b10a874f08c44be616b2f",
+      "lines": 53
+    },
+    {
+      "path": "src/components/quorum/Modal.tsx",
+      "sha256": "9732643482005bfccabba2e778b842374127cb7ae2d3bde8f54a3095fbd52ad2",
+      "lines": 66
+    },
+    {
+      "path": "src/components/quorum/MouseSpotlight.tsx",
+      "sha256": "55cadf69e999e55e3f4892f1ef75022db7eb812c86a8b2a34938b2bdefce6e39",
+      "lines": 42
+    },
+    {
+      "path": "src/components/quorum/ParentSummaryView.tsx",
+      "sha256": "035b4d8fd4cd2d05a0e5a82dea1bdcb820ff61e08c3293548ea32bed7e9f0ae7",
+      "lines": 299
+    },
+    {
+      "path": "src/components/quorum/PlaceAutocomplete.tsx",
+      "sha256": "4b6a284df9a167baac31e7d2a449fa4fe2a25a091fd7e32aa6a267c776704b18",
+      "lines": 266
+    },
+    {
+      "path": "src/components/quorum/PlanAiInsights.tsx",
+      "sha256": "0848a2ecb977c7612d44f8bfc0827d85e9bcf4df9ea87d63333f1bc2bd14ac47",
+      "lines": 74
+    },
+    {
+      "path": "src/components/quorum/PlanInsights.tsx",
+      "sha256": "49ba5ffc3b993ba49e5deefaca2b8240b0b096b26daa9bf98de31dd11acf3a32",
+      "lines": 162
+    },
+    {
+      "path": "src/components/quorum/PlanWizard.tsx",
+      "sha256": "1137f71af85d21ef0c7b0947e042d623307969a4d627579f876f0a92baece51a",
+      "lines": 514
+    },
+    {
+      "path": "src/components/quorum/QrCode.tsx",
+      "sha256": "73dff1c16a696d0b3afb56d7cb8278a1dc1181de0f410fdd37b7e58265e81259",
+      "lines": 43
+    },
+    {
+      "path": "src/components/quorum/QuickResponse.tsx",
+      "sha256": "572c260626f26d895335d3f62b09cb3f49c8c12acc42495ddee4e0fe49df3f19",
+      "lines": 259
+    },
+    {
+      "path": "src/components/quorum/ReceiptPrinter.tsx",
+      "sha256": "e2ef79ebf125d1e7cbd778499cd234e200e139f1cc6734a077ac04e319459316",
+      "lines": 325
+    },
+    {
+      "path": "src/components/quorum/SocialButtons.tsx",
+      "sha256": "0d22b34cd8df8ef5f412406ecbac071ea8742ccef9c436cfcc57bfd001d03a15",
+      "lines": 41
+    },
+    {
+      "path": "src/components/quorum/SpotBrowser.tsx",
+      "sha256": "963dfd66667398643787adfe34f561c973d4b9d2ebbd6a5be62dc842b1dcdf71",
+      "lines": 590
+    },
+    {
+      "path": "src/components/quorum/SquadChat.tsx",
+      "sha256": "e047d91b29c7cc05097d275c03e544a0adc864eed3c65a0dcaa70c002f72f0a8",
+      "lines": 717
+    },
+    {
+      "path": "src/components/quorum/TimePicker.tsx",
+      "sha256": "d52bc7694c9c50212a376a3dd4309666ffd21b0a44ae5b730f5617f9f5647d61",
+      "lines": 137
+    },
+    {
+      "path": "src/components/quorum/TrendingPills.tsx",
+      "sha256": "734edace14555db0ff8f5a4d3bb019efa82cc9f0069e602196e7d893f73c24f6",
+      "lines": 29
+    },
+    {
+      "path": "src/components/quorum/VenueDetailModal.tsx",
+      "sha256": "2070c26d2c244784add0a66d5086a68e1bb30736bc01f74f3cc323ac47ce7b20",
+      "lines": 160
+    },
+    {
+      "path": "src/components/quorum/VenueMap.tsx",
+      "sha256": "15cf2a8f8dce63e1e639f192fa15fd5baed49253c79fad67f6451476c3f5a36a",
+      "lines": 68
+    },
+    {
+      "path": "src/components/quorum/VenueMapInner.tsx",
+      "sha256": "5da843ace2dd898a062b4db5fe2701b335f655892fa82815de1932b71779e75d",
+      "lines": 230
+    },
+    {
+      "path": "src/components/quorum/Wordmark.tsx",
+      "sha256": "c6dcb6de9e0515655eafca26a4aa8e13ad3cad93c23b9bbb2a3cc72fbed8715b",
+      "lines": 27
+    },
+    {
+      "path": "src/components/quorum/WorksWithMarquee.tsx",
+      "sha256": "b5496eae64714f9cfe64bc26119eeda525fba9666bbf6cbf7494a64dec45316d",
+      "lines": 30
+    },
+    {
+      "path": "src/components/quorum/ai/AiActivity.tsx",
+      "sha256": "2f115ecf47b458cdba4e6c7d831f07e68f6ba276d9012868c53e5b85f34cb1e1",
+      "lines": 49
+    },
+    {
+      "path": "src/components/quorum/ai/AiGlyph.tsx",
+      "sha256": "6c9af380d19dcfdffe1f1337a6909847aea916f60f2d7012a710918cabc90142",
+      "lines": 16
+    },
+    {
+      "path": "src/components/quorum/ai/AskSynclySheet.tsx",
+      "sha256": "b0085b132d33d33a876d87bdb151e777a63bd5c637ffdcb2841c2a74d8a99060",
+      "lines": 137
+    },
+    {
+      "path": "src/components/quorum/ai/ChatSheetShell.tsx",
+      "sha256": "a2ef90afe266ec48cbd46dc0edf3c0dd4a96ea05ebd32d7af31817d71c12c204",
+      "lines": 183
+    },
+    {
+      "path": "src/components/quorum/ai/ConciergeSheet.tsx",
+      "sha256": "0dd9c4f569b3b632933f2569dfe53325bad289f30c70ab62f81b8eb8a0d72511",
+      "lines": 217
+    },
+    {
+      "path": "src/components/quorum/ai/GuardianAiSummary.tsx",
+      "sha256": "a55a4f30bc5ab6a835087fc94777606a384a26ed338180261860f8beac190b2e",
+      "lines": 60
+    },
+    {
+      "path": "src/components/quorum/ai/ItineraryTimeline.tsx",
+      "sha256": "ff9e8e1c18b24d9744fd283a5120c7e5428fe1d879249ad78c2f443710cceaa5",
+      "lines": 205
+    },
+    {
+      "path": "src/components/quorum/ai/PlanBuilderSheet.tsx",
+      "sha256": "563efcc76f3c72dca61d200b6b4e1f397321ffd31a635dc2f99ea63cd65ac505",
+      "lines": 643
+    },
+    {
+      "path": "src/components/quorum/ai/SquadDigest.tsx",
+      "sha256": "323be8a3e8b4e2ac6f4f502ce39b12923a3ec24750b59f250e328485d84202eb",
+      "lines": 61
+    },
+    {
+      "path": "src/components/quorum/ai/VibeSearch.tsx",
+      "sha256": "4f2e41f0c01d69bc65d3bd21b74b9d6828b6b3818b4a381b487082bef70cbf24",
+      "lines": 151
+    },
+    {
+      "path": "src/components/quorum/ai/ask-event.ts",
+      "sha256": "8a5d4b330745c44872611defa9d7b2885df9927d22340e5fa1363ee3c2d1b347",
+      "lines": 6
+    },
+    {
+      "path": "src/components/quorum/ai/plan-builder-event.ts",
+      "sha256": "31ee5b61949909cbdfdc513ce1038c31392143ca94894620947d1fe0e0a199dc",
+      "lines": 15
+    },
+    {
+      "path": "src/components/quorum/auth/AccountSecurity.tsx",
+      "sha256": "394518db3eda8437fff6a680aab8fa0d0ca34f8a689a81a1c658e5cbf8b417fd",
+      "lines": 207
+    },
+    {
+      "path": "src/components/quorum/auth/CodeInput.tsx",
+      "sha256": "b72bbec457853af5b4aa5c8bc0bd20e489066ac89a086326f64cbae89490feb3",
+      "lines": 534
+    },
+    {
+      "path": "src/components/quorum/auth/EmailSecondFactor.tsx",
+      "sha256": "68e3a535635d1f4ebba7383996dca9c8fcff3979d8ece28afef0eabaafba66a6",
+      "lines": 120
+    },
+    {
+      "path": "src/components/quorum/auth/SecondFactor.tsx",
+      "sha256": "414f69279f9a10402803ccd99378538faea2f637efdf3cea4771776298999e82",
+      "lines": 226
+    },
+    {
+      "path": "src/components/quorum/auth/SyncAvatar.tsx",
+      "sha256": "7a155dfbc349c77bbec00292bf88f4287bf3fda8fbeca8ac991dc301e3bacb67",
+      "lines": 878
+    },
+    {
+      "path": "src/components/quorum/auth/SyncSay.tsx",
+      "sha256": "3d3c8b67f549bb5436109e5caf37b150e06d03c82fcfa92418c203787ccc920e",
+      "lines": 33
+    },
+    {
+      "path": "src/components/quorum/auth/VerificationFeedback.tsx",
+      "sha256": "eb17993c50d2656459e283b6a08840767743c200bca29cdb37147908ac152568",
+      "lines": 130
+    },
+    {
+      "path": "src/components/quorum/auth/caret-look.ts",
+      "sha256": "9fdb5c2096ad01f42175717e68532c4ca6f6b2ad83b49958ba3088c11cb6fe91",
+      "lines": 12
+    },
+    {
+      "path": "src/components/quorum/auth/gaze-point.ts",
+      "sha256": "9e11b5eb1bb4f9fba5b95eb342a3982796c3352c4c2cb71ff248e8c6542881eb",
+      "lines": 39
+    },
+    {
+      "path": "src/components/quorum/auth/useAvatarFollow.ts",
+      "sha256": "5f8681a57834bfec35e549eb3d04b4c220ca3d861a5d2bde41e2c66110ecf49d",
+      "lines": 76
+    },
+    {
+      "path": "src/components/quorum/auth/verification-context.ts",
+      "sha256": "9fe61f3c8447eaec14d96927093d07a7dac21c4244c36da5084d07ddd4209b58",
+      "lines": 6
+    },
+    {
+      "path": "src/components/quorum/chat/Composer.tsx",
+      "sha256": "ab5434cb1b0e00f650acc797e185dd688052b0538afdbf71613638cdc4b6fb36",
+      "lines": 139
+    },
+    {
+      "path": "src/components/quorum/chat/GroupInfoSheet.tsx",
+      "sha256": "1347fb1e9a3434ef0cdffdf4538795086b85bceea3917ce7f94cccfc2f438afe",
+      "lines": 153
+    },
+    {
+      "path": "src/components/quorum/chat/MessageBubble.tsx",
+      "sha256": "906b7d9e5a0ec08c819cf2533eee67dee77e4a55e08827b949b3c9ef3a546102",
+      "lines": 338
+    },
+    {
+      "path": "src/components/quorum/chat/ThreadParts.tsx",
+      "sha256": "86c97d20f368a6e8377bcdca56a05515837c357864a14f941b66586e062e900a",
+      "lines": 127
+    },
+    {
+      "path": "src/components/quorum/chat/layout.ts",
+      "sha256": "02b9ffe5c0e8f1cea8c44aa8684fa83213ef6323043411ee70150fd2ec97d0b3",
+      "lines": 69
+    },
+    {
+      "path": "src/components/quorum/chat/motion.ts",
+      "sha256": "6ebc61c2cce9bb2d36c4a7dec3003ed21cda2610b5fa6174834a689b6492be0d",
+      "lines": 23
+    },
+    {
+      "path": "src/components/quorum/chat/useChatScroll.ts",
+      "sha256": "1bd066eccb9975c44de65d6f2ed97897b35d0f353cc84d1e22d6b516021032e2",
+      "lines": 77
+    },
+    {
+      "path": "src/components/quorum/chat/useLongPress.ts",
+      "sha256": "0b8f8b9abed7e27ae3c2c8204ca904eb593842c8cf90529746ed5baf68388014",
+      "lines": 53
+    },
+    {
+      "path": "src/components/quorum/chat/usePendingMessages.ts",
+      "sha256": "498241cf94b4a8ec8911e812be16767e4bc0bb1b5e101f4882241f3c7b91f2b4",
+      "lines": 102
+    },
+    {
+      "path": "src/components/quorum/dashboard-format.ts",
+      "sha256": "3d7672c61a0f33ee6dd6c5596edb392d77f67c3e13229b3c792eb7d67487c654",
+      "lines": 36
+    },
+    {
+      "path": "src/components/quorum/demo/DemoCoach.tsx",
+      "sha256": "12cc9356b0acd6dbb6f3604192e45273e9b0c826e20282dddf3fb221e40e41d7",
+      "lines": 250
+    },
+    {
+      "path": "src/components/quorum/demo/DemoWalkthrough.tsx",
+      "sha256": "f06e7c0689e079344bd05f2e514f6157a51958f7b18e8a66e55b7b0756286b82",
+      "lines": 885
+    },
+    {
+      "path": "src/components/quorum/demo/SyncGuide.tsx",
+      "sha256": "389b9de6054ae0215f1c1789f4256532bdb9f701fd1356f50b233740d0ba438a",
+      "lines": 149
+    },
+    {
+      "path": "src/components/quorum/directions.ts",
+      "sha256": "782a905b69af2eb19435c1e8b894dd444908661a8ef1d4378e8ac1bee35b2161",
+      "lines": 12
+    },
+    {
+      "path": "src/components/quorum/dm/ChatSheet.tsx",
+      "sha256": "34117c230db511da95445e2ea08c93852daef96f57da076d4d4de5e31d051b40",
+      "lines": 41
+    },
+    {
+      "path": "src/components/quorum/dm/DirectChat.tsx",
+      "sha256": "367fb4cb8eb8eaef022225b2f5ed5cbb7be50908f005f0a9654381b3257da14c",
+      "lines": 825
+    },
+    {
+      "path": "src/components/quorum/friend/FriendProfileSheet.tsx",
+      "sha256": "7b39c15481536bbdfa9724920c9b783971c778ff3d4e8c60b264f30fdb7867f9",
+      "lines": 536
+    },
+    {
+      "path": "src/components/quorum/guardian/CarpoolShield.tsx",
+      "sha256": "a470bc2aa668d037adeb173b6ff4c8f3ed8a9b5f677b0b97d429be9b5ebb15b2",
+      "lines": 166
+    },
+    {
+      "path": "src/components/quorum/guardian/GuardianSyncCard.tsx",
+      "sha256": "dc070a2073d474d5b08f1fdb9621b20ec8958dc647c488c67fe214a2f9b8bbf7",
+      "lines": 282
+    },
+    {
+      "path": "src/components/quorum/guardian/TeenRadarMap.tsx",
+      "sha256": "a16da50b642912116c2450a9075b1eec96b8e2ec424389899b8cbb6126ffd42e",
+      "lines": 78
+    },
+    {
+      "path": "src/components/quorum/guardian/TeenSafetyBar.tsx",
+      "sha256": "66546e9ca9dd473a374630293d32a872715bffd36d253f1c9bfcc8f01da184d1",
+      "lines": 257
+    },
+    {
+      "path": "src/components/quorum/interactions/LongPress.tsx",
+      "sha256": "846e9ba3f41bdd707859e32d3b300ceff241c90599d4a1bb4bed23166d6d0de5",
+      "lines": 125
+    },
+    {
+      "path": "src/components/quorum/interactions/Magnetic.tsx",
+      "sha256": "bc1db369cd2bbf2f49a0d6ffb0995c8dd1ab78bc1c4540c5709461f0dd11cdca",
+      "lines": 59
+    },
+    {
+      "path": "src/components/quorum/interactions/PageTransition.tsx",
+      "sha256": "c5e3a23471bda5620a8173d47b2afd2bcabbec41ba9f4e1c94989644e013d157",
+      "lines": 10
+    },
+    {
+      "path": "src/components/quorum/interactions/PullToRefresh.tsx",
+      "sha256": "bc47698f193f82f2d07c03488ab14084e8424fc2da2643d4448a68c0abed295a",
+      "lines": 195
+    },
+    {
+      "path": "src/components/quorum/interactions/PushEnter.tsx",
+      "sha256": "0286250f6bc112fad3d0262f1b5171c329b804fc7e048da51a1d4c58c8c4d7ce",
+      "lines": 25
+    },
+    {
+      "path": "src/components/quorum/interactions/Reveal.tsx",
+      "sha256": "2c324bc51eeed8cf0e66d60552ad13f7cc7518c8c52f30af5454064c46bcbc46",
+      "lines": 99
+    },
+    {
+      "path": "src/components/quorum/interactions/Spotlight.tsx",
+      "sha256": "8a03a6e764d2a5a9f14aaff94db758c5d9296b03faa1c9ed9bfa598f1dd7c9f7",
+      "lines": 80
+    },
+    {
+      "path": "src/components/quorum/interactions/SpringTooltip.tsx",
+      "sha256": "8585e60d3a21b03a8d2fbd9668aa2aa2b88e2ceed48e0eeb1a96e944bf5f68a5",
+      "lines": 54
+    },
+    {
+      "path": "src/components/quorum/interactions/SwipeBack.tsx",
+      "sha256": "cdd163c8a28b8ac787cfb2aeeabdc6543f4fbcd39b606d600cf38fa052ef2985",
+      "lines": 86
+    },
+    {
+      "path": "src/components/quorum/interactions/SwipeRow.tsx",
+      "sha256": "a336da23c106b9b21e4d0ad4833039696312ca1af8a6c903ad6caf83fa9305cf",
+      "lines": 129
+    },
+    {
+      "path": "src/components/quorum/interactions/index.ts",
+      "sha256": "b6e831aee74ff75b13aba0a1025e1e08567f4e3da9ad034c2388ee3aa85791e4",
+      "lines": 10
+    },
+    {
+      "path": "src/components/quorum/landing/SyncOrbit.tsx",
+      "sha256": "086378a0ea32e6a8fbd49077431e92c7721d822a1d2f77b976b9910e2e1a1cb4",
+      "lines": 212
+    },
+    {
+      "path": "src/components/quorum/landing/sync-orbit-engine.ts",
+      "sha256": "14c4041ad9b3331ba671796edcc8a503376af8766899226b6c9834fd3ed7d2fb",
+      "lines": 1151
+    },
+    {
+      "path": "src/components/quorum/landing/warp.ts",
+      "sha256": "db61e1386f0ab8bc5ed42705e28d69720685bc9afcdd9112973898f9fc65be43",
+      "lines": 95
+    },
+    {
+      "path": "src/components/quorum/last-context.ts",
+      "sha256": "5508c9181d2a4b46c8ddb9ee13344e4241e6d0a581089578f49fda4be3efdb14",
+      "lines": 8
+    },
+    {
+      "path": "src/components/quorum/map/MapPlacePanel.tsx",
+      "sha256": "91363a5f6c56492890e0e423e556da118f25c98f6d204753af2d706b303968fd",
+      "lines": 97
+    },
+    {
+      "path": "src/components/quorum/map/SquadMap.tsx",
+      "sha256": "5a321484681b3393319c5623e5dde0485ef0f307cc4e2bb68ec253560dcf699f",
+      "lines": 73
+    },
+    {
+      "path": "src/components/quorum/map/SquadMapInner.tsx",
+      "sha256": "376dbebf69f246ea3837bba71b1dbd4b2ddb097e88e2d04aebc192844ab35b9d",
+      "lines": 1021
+    },
+    {
+      "path": "src/components/quorum/map/types.ts",
+      "sha256": "890081ac054bce07ea3a48dd7376307015fd73d5a367c02cbc0d81cbd9e2bd99",
+      "lines": 81
+    },
+    {
+      "path": "src/components/quorum/map/useMapPois.ts",
+      "sha256": "f50bbb9db4acd277fb32109328a6b3c13e2490281c85709bc77c2dae41813c2b",
+      "lines": 276
+    },
+    {
+      "path": "src/components/quorum/settings/shared.tsx",
+      "sha256": "70eb141dcca88f24cf93ba004796861455c37fcb7bf78c042128838ec4c075d3",
+      "lines": 68
+    },
+    {
+      "path": "src/components/quorum/sharing/FindMyFriends.tsx",
+      "sha256": "13ad948e34e0b991c1cd8dfe5bcc952501a2986095a4ed016182aa929dd160d1",
+      "lines": 453
+    },
+    {
+      "path": "src/components/quorum/status-tone.ts",
+      "sha256": "e2f75a60d4b09e94d6de4b543ac19ff103752fbb421d2a098e794f7a6eda00b2",
+      "lines": 35
+    },
+    {
+      "path": "src/components/quorum/time-format.ts",
+      "sha256": "976fc34dbac646e1640b55b55094bf0c50b632086f41ed816aa1f711b14b1407",
+      "lines": 59
+    },
+    {
+      "path": "src/components/quorum/ui.tsx",
+      "sha256": "59326102f8767c9e7b3f232694a3812f5d49e2e5727da218c7766cadbc2290f6",
+      "lines": 254
+    },
+    {
+      "path": "src/components/quorum/useCompromiseSummaries.ts",
+      "sha256": "363aedd9d87c6b968a191ca0b3a8fe72d0092cf24ed000ded0b927b59db9ad1e",
+      "lines": 14
+    },
+    {
+      "path": "supabase/migrations/20260820000000_initial_schema.sql",
+      "sha256": "d17c34d2f6d1317a8b3a39fae57a2f85e7160f40fea23725c35d18519538a249",
+      "lines": 757
+    },
+    {
+      "path": "supabase/migrations/20260820000100_rls_policies.sql",
+      "sha256": "884b858afe7bff67b463618019b9f9a0de8b439f92f1ab7fc13d723bfa2bd5f2",
+      "lines": 172
+    },
+    {
+      "path": "supabase/migrations/20260820000200_rls_policies_2.sql",
+      "sha256": "80adcf0ed8e376a9671a288f566e2f1a6b9b75e29a26d05e2ed43d98a7776325",
+      "lines": 188
+    },
+    {
+      "path": "supabase/migrations/20260820000300_profiles_group_visibility.sql",
+      "sha256": "8e7a791a1b4713a1545601ba681591a837f00ebf4e744fc01d607745fc808930",
+      "lines": 85
+    },
+    {
+      "path": "supabase/migrations/20260820000400_rls_policies_messaging.sql",
+      "sha256": "99504a3d83e2a8fec2126255d604962d3d5a347553a9dffab69aed881357c7ee",
+      "lines": 295
+    },
+    {
+      "path": "supabase/migrations/20260820000500_rls_policies_safety_location.sql",
+      "sha256": "7c7888c50c642a325321f8594819eb10b48d8766ead47640cdaeea54c121d11c",
+      "lines": 137
+    },
+    {
+      "path": "supabase/migrations/20260820000600_rls_policies_plan_lifecycle.sql",
+      "sha256": "989f9a48761fd3e658d0abd92bcc2d620cc55916c5e75a9c111fb9840af0f8cb",
+      "lines": 223
+    },
+    {
+      "path": "supabase/migrations/20260820000700_rls_policies_notifications_approvals.sql",
+      "sha256": "e91caa5317279f9cb14b41e27ff04bf8fb24f77bb7e1598bb67c74fd3729ed85",
+      "lines": 186
+    },
+    {
+      "path": "supabase/migrations/20260821001905_920be390-9fe6-466f-8112-e8e5c2e73499.sql",
+      "sha256": "04bb54edc350ee8f6addd96e5f54d68e2722cdcac9bf8552c9ae14f0dbf7d474",
+      "lines": 28
+    },
+    {
+      "path": "supabase/migrations/20260821001943_2e4c5238-5a4f-4038-8c59-a0760d8996de.sql",
+      "sha256": "71c0be2ea60542ee09e5487fca424107d5cfba6c7cc1e187c021abd986e4fbf3",
+      "lines": 12
+    },
+    {
+      "path": "supabase/migrations/20260821002006_99a35de0-af5d-4155-8e20-d473abc5840d.sql",
+      "sha256": "5ce5c8015d4daafa0853dca01144e5c471d938bd27bc57e06001a959007f5683",
+      "lines": 7
+    },
+    {
+      "path": "supabase/migrations/20260822200000_group_members_unique_membership.sql",
+      "sha256": "1914157a20e92d16c67cae3446dccb39617bae024b1aa70e2c6af3dfa7275076",
+      "lines": 32
+    },
+    {
+      "path": "supabase/migrations/20260823000000_avatars_storage_bucket.sql",
+      "sha256": "c208c7d7e31f80fa65ac7af48f15bd16be6fa0a9a5f665bce2a6bcbcf5f8f86c",
+      "lines": 65
+    },
+    {
+      "path": "supabase/migrations/20260823010000_missing_upsert_unique_constraints.sql",
+      "sha256": "0f44eab9806720248d2ba40b667a3a8e0f49919403b797c31eb85d38e30128ff",
+      "lines": 60
+    },
+    {
+      "path": "supabase/migrations/20260902000000_enable_realtime_publication.sql",
+      "sha256": "b1d46a06e02ab9e7cca9bddf120d01eb7bb0aeb5fd5b86f9268d66632aabc09f",
+      "lines": 25
+    },
+    {
+      "path": "supabase/migrations/20260908190000_ai_quota_events.sql",
+      "sha256": "03697493e8a1a09ec76e71f25157fa5072f373fa2b769d51e9e5b15225ab4cc2",
+      "lines": 29
+    },
+    {
+      "path": "supabase/migrations/20260916000000_saved_places.sql",
+      "sha256": "0461db2490e0e9c0bfb91cedf03a7e395fe0777e5c0f57756fdbc8cec41be112",
+      "lines": 49
+    },
+    {
+      "path": "supabase/migrations/20260917000000_fix_recommendation_time_columns.sql",
+      "sha256": "9a8594ef026475dffd9aec4973fd027a3df0207c83b578b668fc45f527afdc4e",
+      "lines": 9
+    },
+    {
+      "path": "supabase/migrations/20260924000000_guardian_pairing_hardening.sql",
+      "sha256": "2bb625d98e726269ae8246e8a5a1dc51eaf709f766370b1650907a24a43a1b4f",
+      "lines": 33
+    },
+    {
+      "path": "supabase/migrations/20260925000000_guardian_link_requests.sql",
+      "sha256": "0397cb184347ce2c90e0f9216df97f2f56ae61babeb7354e0b6ffaa32ba8306e",
+      "lines": 23
+    },
+    {
+      "path": "supabase/migrations/20260928000000_approval_source_and_profile_guards.sql",
+      "sha256": "4ee3033c89903d74f6327aa31ee387a5fd590de3b158f329e69430b77b946ac7",
+      "lines": 75
+    },
+    {
+      "path": "supabase/migrations/20260928000100_server_only_approvals_and_plan_state.sql",
+      "sha256": "1b54690ed95803a9f60b70b2b942ea3a3074d298d2f007629e9a58b559f0ce18",
+      "lines": 71
+    },
+    {
+      "path": "supabase/migrations/20260928000200_grant_decided_via_select.sql",
+      "sha256": "a2f63600c2edb3c79fdc3fe8c0839eef07810c43b13f1485a65d36b6994b1f0d",
+      "lines": 4
+    },
+    {
+      "path": "supabase/migrations/20260928000300_ai_usage_quota.sql",
+      "sha256": "dedcf8191957250c338fa35549f2fdd635d2a2d16b07e74db2b136e3a3dd604d",
+      "lines": 41
+    },
+    {
+      "path": "supabase/migrations/20261003000000_strong_invite_codes.sql",
+      "sha256": "e5d59beb284d8675d0dd45f10ae5d3e096dbe567bc0838b304727850db62c506",
+      "lines": 7
+    },
+    {
+      "path": "supabase/migrations/20261004000000_planner_privacy.sql",
+      "sha256": "810b9f0bb8480e1e509f6c93121f3d705f6c3e3446ff7cf3f148f677a3159fe5",
+      "lines": 36
+    },
+    {
+      "path": "supabase/migrations/20261009000000_location_sharing_opt_in.sql",
+      "sha256": "9d93cc439c2d38e39188c0a752b5a30d227ab0b1e80c9ba595e3b53ed0cf12ea",
+      "lines": 2
+    },
+    {
+      "path": "supabase/migrations/20261009010000_require_verified_mfa.sql",
+      "sha256": "abf467040479b8ae543a3f4dd06ad05f64d378cbe0c6d5856c8cafbb71d73099",
+      "lines": 165
+    },
+    {
+      "path": "supabase/migrations/20261009020000_account_deletion.sql",
+      "sha256": "5956a8b90129b1fc551bd05ce5f280a9c1b9fd74bc9150e18541206df601785e",
+      "lines": 124
+    },
+    {
+      "path": "supabase/migrations/20261010000000_family_plans.sql",
+      "sha256": "cbbf8b76922f8d6e6cb7779b1ffb6f4e9ff36cdd4c312e891b5416f7f8b6d206",
+      "lines": 29
+    },
+    {
+      "path": "supabase/migrations/20261011000000_plan_itinerary.sql",
+      "sha256": "e35f8dd25a4b65b61fbd2c84ea00826ad8562e90ed517df02e8aab96f0214791",
+      "lines": 17
+    },
+    {
+      "path": "supabase/migrations/20261012000000_ai_events_served.sql",
+      "sha256": "7291bc9770293a843d765d95e2126ac95f7bd21c315618a546868dce4b9c4554",
+      "lines": 12
+    },
+    {
+      "path": "src/tests/account-data.test.ts",
+      "sha256": "d31ffa9cf6cbfd7e8a22cae1a0ea0e54eaf74fe9cf23aa1528f5d632ba26b4d4",
+      "lines": 117
+    },
+    {
+      "path": "src/tests/action-feedback.test.ts",
+      "sha256": "32334546e6e360fc602325f7c4669abeaee2ea28d3dc79a0d99129ed50eb8d36",
+      "lines": 100
+    },
+    {
+      "path": "src/tests/ai-data-processing.test.ts",
+      "sha256": "33ff359b25e8d04d45ae470b412b8ca6411648dedb3796b0bdf65f4a7db77738",
+      "lines": 13
+    },
+    {
+      "path": "src/tests/auth-security.test.ts",
+      "sha256": "ce6c15f4811a7777681c1eea1873bbea96b44aa893c1146b7adef1864f53a206",
+      "lines": 36
+    },
+    {
+      "path": "src/tests/chat-unread.test.ts",
+      "sha256": "2eca40b153042870c78c79fe485947d3756da2cc17f632af56aa8a7842258bf4",
+      "lines": 20
+    },
+    {
+      "path": "src/tests/cookie-consent.test.ts",
+      "sha256": "584d663583f626e82a60dabf36ff928696187331bb0bb0559b091f8b4821d78d",
+      "lines": 35
+    },
+    {
+      "path": "src/tests/email-mfa-server.test.ts",
+      "sha256": "2abe70a892d0633f6da5d0c1bd77323272047e04a154a021f8674d724e7de6c6",
+      "lines": 125
+    },
+    {
+      "path": "src/tests/email-mfa.test.ts",
+      "sha256": "ddab0ccf28a5cf06bad057606b8516255b2a89133c2c43cad32a971c97c58159",
+      "lines": 49
+    },
+    {
+      "path": "src/tests/map-poi.test.ts",
+      "sha256": "c8a546fe71139700fcccaef0d75e4fa6971b8e1ae73c5743edd13daa2e058b14",
+      "lines": 125
+    },
+    {
+      "path": "src/tests/mfa-database.test.ts",
+      "sha256": "8bf5888110c2e04b56613cc01eeedbbc88314c8ec69f1751ddf4208c24acc910",
+      "lines": 240
+    },
+    {
+      "path": "src/tests/plan-expiry.test.ts",
+      "sha256": "f86c2a9fdaa9605a7b0941b5ab2922935497909e97f9651ff534d89e3f2367c0",
+      "lines": 62
+    },
+    {
+      "path": "src/tests/plan-write-guards.test.ts",
+      "sha256": "e278b7e3f4222d57383d7e2c2f0c767090efbf3ff50cd5ec0681c765d654f473",
+      "lines": 49
+    },
+    {
+      "path": "src/tests/planning-regressions.test.ts",
+      "sha256": "9dd04db3decce68c8cb39773ec5987c457e6d83d605f2aa230bf9a76b81f0f4d",
+      "lines": 88
+    },
+    {
+      "path": "src/tests/rls-policies.test.ts",
+      "sha256": "02091084e1a0431504edd3fd84dd5ec97e7cd2c881601491dbd4f80bfb14c8d7",
+      "lines": 141
+    },
+    {
+      "path": "src/tests/service-worker.test.ts",
+      "sha256": "0d51bdbad41f8efd16612eae2b257ef24f2936b0e210a5107534b7900a5ce24e",
+      "lines": 93
+    },
+    {
+      "path": "src/tests/supabase-dev-env.test.ts",
+      "sha256": "415208fc6b14b24c8cf039cc4b92e855eb78a9d806ec2bdc477345b65840e45c",
+      "lines": 34
+    },
+    {
+      "path": "src/tests/tab-navigation.test.ts",
+      "sha256": "3b5ce5c3f03b7e96eb14944f4c714d05b4bc9c4ebda69c04d549b152651713b5",
+      "lines": 31
+    },
+    {
+      "path": "src/styles.css",
+      "sha256": "b3117959fc1b1b5bb8f978ec680344914e38594c2f47622c2581153cfbe6a35b",
+      "lines": 2011
+    },
+    {
+      "path": "src/lib/brand.ts",
+      "sha256": "f1cd45064ff666b2a402760ac2d4dc17a4414de062381c13972c8baa6fa04c5c",
+      "lines": 10
+    },
+    {
+      "path": "docs/authentication-setup.md",
+      "sha256": "5da1e958c3b0da9829f34987b657f8efbcd0affe573a8ec2b95f21b59dda01d8",
+      "lines": 55
+    },
+    {
+      "path": "src/lib/email-mfa.functions.ts",
+      "sha256": "a6c1a5f17c6d838a54d6d66ead0b4723bf51542c1d0f3f875c7c5cff5bc3fce3",
+      "lines": 27
+    },
+    {
+      "path": "src/lib/email-mfa.server.ts",
+      "sha256": "60040d818250676277be494b7c3f787085ae537b3d3f26a3189954bf8fdffc55",
+      "lines": 133
+    },
+    {
+      "path": "src/lib/cookie-consent.ts",
+      "sha256": "1f66241288c444291a0d0fafda7a77bd9f40e6e7453f5191bc34a0a636648949",
+      "lines": 56
+    },
+    {
+      "path": "src/lib/auth-security.ts",
+      "sha256": "1838fcd20773888e4c147485036d44232bd7da9abdfdbb364e85fe9ad533d928",
+      "lines": 27
+    }
+  ]
+}
