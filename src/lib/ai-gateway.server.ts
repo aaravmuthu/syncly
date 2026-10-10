@@ -183,16 +183,14 @@ function cooldownMs(error: unknown): number {
   return /per ?day|daily/i.test(error.message) ? 60 * 60_000 : 60_000;
 }
 
-/** Errors that mean "this model or key can't take the call", not "the call itself is bad". */
+/**
+ * Any API error moves the call on, not just quota/auth/outage: models differ
+ * in what they accept (Groq's strict JSON schema mode can 400 where Gemini
+ * doesn't), so a rejection from one says nothing about the next. Aborts and
+ * local errors still stop the chain.
+ */
 function shouldTryNext(error: unknown): boolean {
-  if (!APICallError.isInstance(error)) return false;
-  const status = error.statusCode ?? 0;
-  return (
-    error.isRetryable ||
-    isKeyOrModelError(error) ||
-    [408, 409, 429].includes(status) ||
-    status >= 500
-  );
+  return APICallError.isInstance(error);
 }
 
 /** A revoked/invalid key or a retired model. Gemini reports a bad key as a 400, not a 401. */
