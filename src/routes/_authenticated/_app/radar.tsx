@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { haptic } from "@/lib/quorum/haptics";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/quorum/Avatar";
@@ -324,7 +324,7 @@ export function RadarPage() {
           places={places}
           className="h-full w-full rounded-none"
           onProfile={(p) => (p.id === "me" || p.id === "chat-focus-pin" ? null : openFriend(p.id))}
-          onPing={(p) => toast(`Nudge sent to ${p.name}`)}
+          onPing={(p) => toast.success(`Nudge sent to ${p.name}`)}
           onMessage={(p) =>
             p.id === "me"
               ? toast("That's you 🙂")
@@ -551,7 +551,7 @@ function MyRadar({ data }: { data: MyRadarData }) {
     } else if (!nearest && zoneRef.current) {
       const left = data.zones.find((z) => z.id === zoneRef.current);
       zoneRef.current = null;
-      if (left) toast(`Left ${left.label}`);
+      if (left) toast.success(`Left ${left.label}`);
     }
     await ping({
       data: {

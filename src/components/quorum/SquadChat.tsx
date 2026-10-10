@@ -542,8 +542,13 @@ function SquadRow({
         onSelect: () => {
           navigator.clipboard
             .writeText(body)
-            .then(() => toast("Copied"))
-            .catch(() => toast.error("Couldn't copy that"));
+            .then(() => toast.success("Copied"))
+            .catch((e: unknown) =>
+              toast.error("Couldn't copy that", {
+                description:
+                  e instanceof Error ? e.message : "Select the message text and copy it manually.",
+              }),
+            );
         },
       });
     }

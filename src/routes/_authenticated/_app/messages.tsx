@@ -95,7 +95,11 @@ export function MessagesPage() {
         setThread(r.threadId);
         void navigate({ to: "/messages", search: { thread: r.threadId }, replace: true });
       })
-      .catch(() => toast.error("Couldn't open that chat"));
+      .catch((e: unknown) =>
+        toast.error("Couldn't open that chat", {
+          description: e instanceof Error ? e.message : "Please try opening the chat again.",
+        }),
+      );
     return () => {
       alive = false;
     };
@@ -139,8 +143,10 @@ export function MessagesPage() {
     try {
       const r = await open({ data: { peerId } });
       setThread(r.threadId);
-    } catch {
-      toast.error("Couldn't start that chat");
+    } catch (e) {
+      toast.error("Couldn't start that chat", {
+        description: e instanceof Error ? e.message : "Please try selecting this person again.",
+      });
     }
   }
 

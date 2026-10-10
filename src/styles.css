@@ -1655,87 +1655,25 @@ html[data-keyboard-open="true"] .floating-chat-ride-actions {
   }
 }
 
-/* Inline errors (InlineErrorLayer): the pressed button nudges and wears a
-   tinted face that names the problem; the reason rises out of it on glass. */
-[data-inline-error] {
-  animation: inline-error-nudge 440ms var(--ease-out);
+/* Shared control outcomes: color and symbol both explain the result. */
+.action-outcome-face,
+.action-outcome-symbol {
+  --outcome-color: var(--primary);
+  background: color-mix(in oklab, var(--outcome-color) 14%, var(--card));
+  color: var(--outcome-color);
+  border: 1.5px solid color-mix(in oklab, var(--outcome-color) 45%, transparent);
 }
-/* A decaying shake, like a password field refusing a guess. */
-@keyframes inline-error-nudge {
-  14% {
-    translate: -5px 0;
-  }
-  32% {
-    translate: 4px 0;
-  }
-  50% {
-    translate: -2.5px 0;
-  }
-  68% {
-    translate: 1.25px 0;
-  }
-  84% {
-    translate: -0.5px 0;
-  }
+.action-outcome-face[data-tone="error"],
+.action-outcome-symbol[data-tone="error"] {
+  --outcome-color: var(--destructive);
 }
-.inline-error-face {
-  background:
-    linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--destructive) 6%, transparent),
-      transparent 60%
-    ),
-    color-mix(in oklab, var(--destructive) 12%, var(--card));
-  color: var(--destructive);
-  box-shadow:
-    inset 0 0 0 1.5px color-mix(in oklab, var(--destructive) 42%, transparent),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.14),
-    0 10px 26px -14px color-mix(in oklab, var(--destructive) 75%, transparent);
+.action-outcome-face[data-tone="success"],
+.action-outcome-symbol[data-tone="success"] {
+  --outcome-color: var(--success);
 }
-.inline-error-timer {
-  background: color-mix(in oklab, var(--destructive) 45%, transparent);
-}
-.inline-error-caption,
-.inline-error-arrow {
-  background: color-mix(in oklab, var(--card) 84%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid color-mix(in oklab, var(--destructive) 20%, transparent);
-}
-.inline-error-caption {
-  box-shadow:
-    inset 0 1px 0 0 oklch(1 0 0 / 0.08),
-    0 12px 32px -14px color-mix(in oklab, var(--foreground) 32%, transparent);
-}
-/* Only the half of the rotated square outside the caption shows, so the
-   glass doesn't double up where they overlap. */
-.inline-error-arrow {
-  rotate: 45deg;
-}
-.inline-error-arrow[data-side="top"] {
-  top: -5.5px;
-  border-right: 0;
-  border-bottom: 0;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-}
-.inline-error-arrow[data-side="bottom"] {
-  bottom: -5.5px;
-  border-left: 0;
-  border-top: 0;
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-inline-error] {
-    animation: none;
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .inline-error-caption,
-  .inline-error-arrow {
-    background: var(--card);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
+.action-outcome-caption {
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px -12px color-mix(in oklab, var(--foreground) 25%, transparent);
 }
 
 /* Segmented control thumb: transform-only slide that retargets mid-flight. */

@@ -38,8 +38,13 @@ export function ChatDrawer({ groupId, planId }: { groupId: string; planId: strin
                   try {
                     await ride({ data: { groupId, planId, status: r.status, seats: r.seats } });
                     toast.success("Ride status shared in chat");
-                  } catch {
-                    toast.error("Could not post your ride status");
+                  } catch (e) {
+                    toast.error("Could not post your ride status", {
+                      description:
+                        e instanceof Error
+                          ? e.message
+                          : "Please try sharing your ride status again.",
+                    });
                   }
                 }}
                 className="tap-target rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-caption text-white/75 hover:border-emerald-400/40 hover:bg-emerald-400/10"

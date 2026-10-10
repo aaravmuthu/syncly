@@ -17,7 +17,7 @@ import {
   SpotlightCard,
   SwipeRow,
 } from "@/components/quorum/interactions";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 
 export const Route = createFileRoute("/_authenticated/_app/activity")({
   loader: ({ context }) => {
