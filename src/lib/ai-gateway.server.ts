@@ -277,6 +277,11 @@ function chainMiddleware(
  * can degrade.
  */
 export function aiModel(feature: AiFeature) {
+  if (process.env["AI_DATA_PROCESSING_APPROVED"] !== "true") {
+    throw new Error(
+      "AI assistance is unavailable until provider data-processing terms have been verified. Please use the standard planning tools.",
+    );
+  }
   const tier = FEATURE_TIER[feature];
   const candidates = candidatesFor(tier);
   const first = candidates[0];

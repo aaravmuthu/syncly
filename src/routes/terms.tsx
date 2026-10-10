@@ -33,6 +33,7 @@ const TOC = [
   { id: "location-safety", label: "Location accuracy & safety disclaimer" },
   { id: "content", label: "Your content" },
   { id: "third-party", label: "Third-party services" },
+  { id: "billing", label: "Trials & cancellation" },
   { id: "disclaimers", label: "Disclaimers" },
   { id: "liability", label: "Limitation of liability" },
   { id: "indemnification", label: "Indemnification" },
@@ -216,9 +217,9 @@ function TermsPage() {
         <p>
           You retain ownership of the messages, plan details, photos, and other content you submit
           to Syncly ("Your Content"). You grant us a limited license to host, store, reproduce, and
-          display Your Content solely to operate and improve the Service (for example, showing your
-          plan to your group, or your location to your guardian). You're responsible for Your
-          Content and confirm you have the rights to share it.
+          display Your Content solely to operate the Service (for example, showing your plan to your
+          group, or your location to your guardian). You're responsible for Your Content and confirm
+          you have the rights to share it.
         </p>
       </Section>
 
@@ -226,10 +227,25 @@ function TermsPage() {
         <p>
           Syncly relies on third-party services to operate, including Supabase (authentication and
           data storage), mapping and place-search providers, Google for optional sign-in, and Google
-          Gemini or the Lovable AI gateway for AI assistance. The Privacy Policy describes
+          Gemini, Groq or the Lovable AI gateway for AI assistance. The Privacy Policy describes
           information shared with these providers. Your use of third-party services may also be
           subject to their own terms. We're not responsible for the availability or accuracy of
           third-party services.
+        </p>
+      </Section>
+
+      <Section id="billing" title="Family Plus trials & cancellation">
+        <p>
+          The founding-family trial is free for six months, requires no payment details and ends
+          automatically. It does not automatically renew or convert to a paid subscription.
+          Displayed monthly and yearly prices describe planned paid options; billing is not
+          currently connected. A paid purchase will require separate agreement to the price, billing
+          interval and renewal terms before any charge.
+        </p>
+        <p>
+          You can cancel online from Family hub → Family Plus. Cancellation leaves Plus features
+          available until the displayed end date, after which free-plan limits apply. No support
+          email or phone call is required to cancel.
         </p>
       </Section>
 
@@ -245,6 +261,14 @@ function TermsPage() {
       </Section>
 
       <Section id="liability" title="10. Limitation of liability">
+        <p>
+          To the extent permitted by applicable law, our total liability arising from the Service is
+          limited to the greater of US $100 or the amount you paid us for the Service in the twelve
+          months before the event giving rise to the claim. To the extent permitted by law, we are
+          not liable for indirect, incidental, special or consequential damages, including lost
+          profits or loss of data. These limits do not apply to fraud, willful misconduct or
+          liability that cannot lawfully be limited.
+        </p>
         <p>
           The disclaimers and limitations in these Terms apply only to the extent permitted by
           applicable law. Nothing in these Terms excludes liability or limits rights that cannot

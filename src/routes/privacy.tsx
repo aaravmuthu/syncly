@@ -30,6 +30,8 @@ const TOC = [
   { id: "info-we-collect", label: "Information we collect" },
   { id: "how-we-use", label: "How we use information" },
   { id: "how-we-share", label: "How we share information" },
+  { id: "providers", label: "Service providers" },
+  { id: "cookies", label: "Cookies & browser storage" },
   { id: "minors", label: "Minors, teens & guardians" },
   { id: "retention", label: "Data retention" },
   { id: "your-choices", label: "Your choices & rights" },
@@ -175,12 +177,20 @@ function PrivacyPage() {
               "Mapbox handles maps, place searches and geocoding; queries and relevant coordinates or addresses may be sent to it.",
               "Geoapify provides venue search when configured. OpenStreetMap's Nominatim service is used for some place, ZIP-code and reverse-geocoding lookups.",
               "Open-Meteo receives coordinates and date information for weather forecasts.",
-              "Google Gemini, or the Lovable AI gateway when used as a fallback, processes AI prompts and relevant planning context. Structured scoring explanations use aggregate facts, but prompts, conversations and plan notes can contain personal information you enter. Do not include information you do not want processed by an AI provider.",
-              "Google processes authentication information if you choose Google sign-in.",
+              "Google Gemini, Groq, or the Lovable AI gateway when used as a fallback, processes AI prompts and relevant planning context. Structured scoring explanations use aggregate facts, but prompts, conversations and plan notes can contain personal information you enter. Do not include information you do not want processed by an AI provider.",
+              "Google processes authentication information if you choose Google sign-in. Google Fonts receives browser requests to deliver the fonts used on the website.",
+              "Resend delivers email verification codes when configured and receives the destination email address and the verification message.",
               "Hosting and infrastructure providers process the requests needed to operate the Service.",
             ]}
           />
         </SubSection>
+        <p>
+          See the{" "}
+          <Link to="/subprocessors" className="underline underline-offset-4">
+            service provider register
+          </Link>{" "}
+          for processing purposes and business data-processing inquiries.
+        </p>
         <SubSection title="Legal requests">
           <p>
             We may disclose information when required by applicable law or valid legal process, or
@@ -241,7 +251,7 @@ function PrivacyPage() {
             "Account, profile, message, plan, guardian and notification records are stored to support the Service. These records do not currently have a general automatic expiry period.",
             "Location updates are stored as history. They are not automatically deleted after a plan ends or after a fixed number of hours or days. Stopping sharing, using Ghost Mode or unlinking does not delete that history.",
             "Pairing codes and link requests expire for use, and time-limited location shares expire for access. Expiry of access is separate from deletion of historical records.",
-            "Account deletion is described below. Uploaded files, backups and provider logs require separate consideration and are not covered by a verified all-data deletion deadline.",
+            "Account deletion is described below. Backups and provider logs require separate consideration and are not covered by a verified all-data deletion deadline.",
           ]}
         />
       </Section>
@@ -256,6 +266,12 @@ function PrivacyPage() {
           ]}
         />
         <p>
+          Download your profile, private planning answers, authored messages and owned records in
+          Settings → Account → Download my data. The export excludes uploaded file contents,
+          provider logs, backups and other people’s private records. Contact us for additional
+          access requests.
+        </p>
+        <p>
           To request access, correction, deletion or other data assistance, contact <ContactEmail />
           . We may need information to verify that a request concerns your account. Depending on
           applicable law, you may have additional privacy rights.
@@ -264,18 +280,19 @@ function PrivacyPage() {
 
       <Section id="delete" title="8. Deleting your account & data">
         <p>
-          Settings → Account includes a Delete my account control. It attempts to remove your
-          authentication account; associated database records can prevent that action from
-          succeeding. If it fails, or you want help removing your data, contact <ContactEmail />
-          from the email address associated with your account.
+          Settings → Account includes a Delete my account control. It removes your authentication
+          account and profile, with linked personal database records removed through database
+          deletion rules. Shared groups and plans transfer to another member, or are removed when no
+          members remain. Shared messages can remain with their author cleared. If deletion fails,
+          contact <ContactEmail /> from your account’s email address.
         </p>
         <p>
-          Account removal is not a verified erasure of every message, shared plan, guardian record,
-          location record or uploaded file. Some linked records are removed with a deleted profile,
-          while other records and stored files require separate handling. We do not promise that all
-          associated data is deleted or de-identified within a specific period. Copies retained by
-          other users or service providers may also remain. Contact us for a data-deletion request
-          or questions about what remains.
+          Account removal also removes your uploaded avatars, chat images and voice notes from
+          Syncly’s upload storage. Personal location history and linked personal records are removed
+          with a deleted profile. Shared text messages and plans may remain for other members. We do
+          not promise that all associated data is deleted or de-identified within a specific period.
+          Copies retained by other users or service providers may also remain. Contact us for a
+          data-deletion request or questions about what remains.
         </p>
       </Section>
 
@@ -287,6 +304,25 @@ function PrivacyPage() {
           six months; you can update them below.
         </p>
         <CookieSettingsButton />
+      </Section>
+
+      <Section id="providers" title="AI processing & service providers">
+        <p>
+          Syncly uses AI providers to generate responses to requests, rather than running a
+          model-training pipeline on user content. AI requests are disabled by default until the
+          operator confirms that every configured provider and fallback has appropriate
+          data-processing terms excluding training on submitted user content. Provider use and
+          retention of submitted data depend on the provider, account tier and configured terms. We
+          do not promise that every provider excludes training without verified contractual
+          settings. Avoid entering sensitive information in AI prompts.
+        </p>
+        <p>
+          Our{" "}
+          <Link to="/subprocessors" className="underline underline-offset-4">
+            service provider register
+          </Link>{" "}
+          describes these integrations.
+        </p>
       </Section>
 
       <Section id="security" title="9. Security">

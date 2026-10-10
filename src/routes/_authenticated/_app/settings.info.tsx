@@ -77,6 +77,7 @@ function InfoPage() {
         <div className="mt-1 divide-y divide-border">
           <LinkRow icon={Lock} label="Privacy Policy" to="/privacy" />
           <LinkRow icon={Info} label="Terms of Service" to="/terms" />
+          <LinkRow icon={Lock} label="Service providers" to="/subprocessors" />
           <LinkRow
             icon={Mail}
             label="Contact support"

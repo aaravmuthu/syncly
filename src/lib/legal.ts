@@ -3,5 +3,5 @@ export const LEGAL = {
   operators: "Arnav Magdum and Aarav Muthu",
   minimumAccountAge: 13,
   contactEmail: "syncly.web.support@gmail.com",
-  effectiveDate: "October 4, 2026",
+  effectiveDate: "October 10, 2026",
 } as const;

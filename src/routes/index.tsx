@@ -385,6 +385,12 @@ function Landing() {
               Terms
             </Link>
             <Link
+              to="/subprocessors"
+              className="tap-target inline-flex items-center hover:text-foreground"
+            >
+              Service providers
+            </Link>
+            <Link
               to="/accessibility"
               className="tap-target inline-flex items-center transition-colors hover:text-foreground"
             >

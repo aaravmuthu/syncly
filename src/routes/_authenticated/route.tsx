@@ -1,3 +1,4 @@
+import { LEGAL } from "@/lib/legal";
 import { needsAccountVerification } from "@/lib/auth-security";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +30,13 @@ export const Route = createFileRoute("/_authenticated")({
 
     if (await needsAccountVerification()) {
       throw redirect({ to: "/auth", search: { next: location.href, mode: "signin" as const } });
+    }
+
+    if (
+      location.pathname !== "/agreement" &&
+      user.app_metadata?.terms_version !== LEGAL.effectiveDate
+    ) {
+      throw redirect({ to: "/agreement", search: { next: location.href } });
     }
 
     if (initialRouteUserId !== user.id && location.pathname === "/home") {

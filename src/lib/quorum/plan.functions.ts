@@ -197,6 +197,8 @@ export const deleteAccount = createServerFn({ method: "POST" })
       _user_id: context.userId,
     });
     if (prepError) throw dbError(prepError, "deleteAccount");
+    const { removeAccountUploads } = await import("./account-storage.server");
+    await removeAccountUploads(supabaseAdmin, context.userId);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
     if (error) throw dbError(error, "deleteAccount");
     return { ok: true as const };
