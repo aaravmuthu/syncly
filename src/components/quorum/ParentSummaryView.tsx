@@ -151,6 +151,7 @@ export function ParentSummaryView({ planId, sig }: { planId: string; sig: string
             {s.venue.lat != null && s.venue.lon != null ? (
               <div className="mt-3">
                 <VenueMap
+                  nearbyPlaces={false}
                   venues={[
                     {
                       id: "venue",

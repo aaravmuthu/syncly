@@ -71,6 +71,7 @@ export function TeenRadarMap({ teen }: { teen: TeenCard }) {
       zones={zones}
       places={places}
       showMidpoint={false}
+      compact
       className="h-72 w-full sm:h-80"
     />
   );
