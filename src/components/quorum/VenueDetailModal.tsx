@@ -82,6 +82,7 @@ export function VenueDetailModal({
 
         {insight.isLoading ? (
           <AiActivity
+            sync
             state="composing"
             label="Writing up what's good here…"
             className="rounded-2xl border border-border px-4 py-3"

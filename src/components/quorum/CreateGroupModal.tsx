@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Modal } from "./Modal";
 import { Button, Field, inputClass } from "./ui";
 import { createGroup } from "@/lib/quorum/plan.functions";

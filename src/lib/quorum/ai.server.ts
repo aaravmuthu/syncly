@@ -3,9 +3,16 @@
 // deterministic, non-AI result instead of an error.
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
-import { lovableAiModel, recordAiFailure } from "@/lib/ai-gateway.server";
+import { aiModel, recordAiFailure } from "@/lib/ai-gateway.server";
 import { CATEGORIES, type PlanCategory, type ScoreBreakdown } from "./types";
 import type { Forecast } from "./weather";
+import {
+  MAX_STOPS,
+  STOP_KIND_IDS,
+  STOP_KINDS,
+  type ItineraryDraft,
+  type StopKind,
+} from "./itinerary";
 
 const CATEGORY_IDS = CATEGORIES.map((c) => c.id) as [PlanCategory, ...PlanCategory[]];
 
@@ -136,7 +143,7 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
 
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("magic_plan_draft"),
       output: Output.object({ schema: DraftSchema }),
       prompt: instructions,
     });
@@ -147,7 +154,10 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
       return coerceDraft(extractJson(error.text), prompt);
     }
     try {
-      const { text } = await generateText({ model: lovableAiModel(), prompt: instructions });
+      const { text } = await generateText({
+        model: aiModel("magic_plan_draft"),
+        prompt: instructions,
+      });
       return coerceDraft(extractJson(text), prompt);
     } catch (retryError) {
       void recordAiFailure("magic_plan_draft", retryError);
@@ -205,7 +215,7 @@ export async function summarizeCompromises(
 
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("compromise_summaries"),
       output: Output.object({ schema: SummarySchema }),
       prompt: [
         "You explain why a group activity option works, for a privacy-first planning app.",
@@ -294,7 +304,7 @@ export async function writePlanBPitch(input: {
 
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("plan_b_pitch"),
       output: Output.object({ schema: PlanBSchema }),
       prompt: [
         "Write a two-sentence weather warning for a group plan, friendly and direct.",
@@ -421,7 +431,7 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
   if (!fallback.needed) return fallback;
   try {
     const { output } = await generateText({
-      model: lovableAiModel(),
+      model: aiModel("ai_compromise"),
       output: Output.object({ schema: CompromiseSchema }),
       prompt: [
         "You resolve scheduling conflicts for a privacy-first group planning app.",
@@ -465,5 +475,163 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
   } catch (error) {
     void recordAiFailure("ai_compromise", error);
     return fallback;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Itinerary drafting (Magic AI plan)                               */
+/* ------------------------------------------------------------------ */
+
+const ItinerarySchema = z.object({
+  title: z.string(),
+  vibe: z.string(),
+  date: z.string().nullable(),
+  start_time: z.string().nullable(),
+  budget_per_person: z.number().nullable(),
+  area: z.string().nullable(),
+  search_radius_miles: z.number().nullable(),
+  stops: z.array(
+    z.object({
+      kind: z.enum(STOP_KIND_IDS),
+      label: z.string(),
+      minutes: z.number(),
+      why: z.string(),
+    }),
+  ),
+  anchor_index: z.number(),
+  invite_message: z.string(),
+});
+
+/** Stop kinds a prompt plainly names, in the order it names them. */
+function heuristicStops(text: string): StopKind[] {
+  const hits: [number, StopKind][] = [];
+  const words: [RegExp, StopKind][] = [
+    [/\b(dinner|lunch|eat|food|restaurant|pho|sushi|tacos?|pizza)\b/, "restaurant"],
+    [/\b(burgers?|fast food|wings)\b/, "fast_food"],
+    [/\b(coffee|cafe|study)\b/, "cafe"],
+    [/\b(boba|bubble tea)\b/, "boba"],
+    [/\b(dessert|ice cream|froyo|gelato)\b/, "dessert"],
+    [/\bbowl(ing)?\b/, "bowling"],
+    [/\b(movie|film|cinema)\b/, "cinema"],
+    [/\barcade\b/, "arcade"],
+    [/\b(mini ?golf|putt)\b/, "mini_golf"],
+    [/\bescape room\b/, "escape_room"],
+    [/\btrampoline\b/, "trampoline"],
+    [/\b(skating|ice rink)\b/, "ice_skating"],
+    [/\bmuseum\b/, "museum"],
+    [/\b(show|play|musical|concert)\b/, "theater"],
+    [/\b(theme park|water park|six flags)\b/, "theme_park"],
+    [/\b(park|picnic)\b/, "park"],
+    [/\b(lake|beach)\b/, "lake"],
+    [/\b(mall|shopping)\b/, "mall"],
+  ];
+  for (const [re, kind] of words) {
+    const m = re.exec(text);
+    if (m && !hits.some(([, k]) => k === kind)) hits.push([m.index, kind]);
+  }
+  return hits
+    .sort((a, b) => a[0] - b[0])
+    .map(([, k]) => k)
+    .slice(0, MAX_STOPS);
+}
+
+/** Deterministic itinerary when AI is unavailable: the stops the prompt names, in order. */
+function heuristicItinerary(prompt: string, todayIso: string): ItineraryDraft {
+  const base = heuristicDraft(prompt);
+  const kinds = heuristicStops(prompt.toLowerCase());
+  const stops = (kinds.length ? kinds : (["restaurant"] as StopKind[])).map((kind, i) => ({
+    id: `s${i + 1}`,
+    kind,
+    label: STOP_KINDS[kind].label,
+    why: "",
+    minutes: STOP_KINDS[kind].minutes,
+  }));
+  return {
+    version: 1,
+    title: base.title,
+    vibe: "",
+    date: base.date ?? todayIso,
+    start: base.time ?? "18:30",
+    budgetPerPerson: base.maxSpendPerPerson,
+    anchor: 0,
+    stops,
+    invite: `${base.title} — answer privately and vote on spots in Syncly.`,
+    area: base.targetCityOrZip,
+    searchRadiusMiles: base.searchRadiusMiles,
+  };
+}
+
+function coerceItinerary(
+  raw: z.infer<typeof ItinerarySchema>,
+  prompt: string,
+  todayIso: string,
+): ItineraryDraft {
+  const base = heuristicItinerary(prompt, todayIso);
+  const stops = raw.stops
+    .filter((s) => (STOP_KIND_IDS as string[]).includes(s.kind))
+    .slice(0, MAX_STOPS)
+    .map((s, i) => {
+      const def = STOP_KINDS[s.kind];
+      const minutes = Number.isFinite(s.minutes) ? Math.round(s.minutes) : def.minutes;
+      return {
+        id: `s${i + 1}`,
+        kind: s.kind,
+        label: (s.label.trim() || def.label).slice(0, 40),
+        why: s.why.trim().slice(0, 160),
+        minutes: Math.min(Math.max(minutes, 15), 600),
+      };
+    });
+  if (!stops.length) return base;
+  const time = raw.start_time?.trim() ?? "";
+  const date = raw.date?.trim() ?? "";
+  const anchor = Math.round(raw.anchor_index);
+  const budget = raw.budget_per_person;
+  const radius = raw.search_radius_miles;
+  return {
+    version: 1,
+    title: raw.title.trim().slice(0, 80) || base.title,
+    vibe: raw.vibe.trim().slice(0, 200),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= todayIso ? date : base.date,
+    start: /^\d{1,2}:\d{2}/.test(time) ? time.slice(0, 5).padStart(5, "0") : base.start,
+    budgetPerPerson: budget != null && budget > 0 ? Math.round(budget) : base.budgetPerPerson,
+    anchor: anchor >= 0 && anchor < stops.length ? anchor : 0,
+    stops,
+    invite: raw.invite_message.trim().slice(0, 280) || base.invite,
+    area: raw.area?.trim() || base.area,
+    searchRadiusMiles: radius != null && radius > 0 ? Math.round(radius) : base.searchRadiusMiles,
+  };
+}
+
+/**
+ * Turns a casual request into a multi-stop night: which kinds of places, in
+ * what order, how long each, when it starts, and a ready invite line. Venues
+ * are looked up afterwards from real place data -- the model never names one.
+ */
+export async function draftItinerary(prompt: string, todayIso: string): Promise<ItineraryDraft> {
+  const kinds = STOP_KIND_IDS.map((k) => `${k} (${STOP_KINDS[k].label})`).join(", ");
+  try {
+    const { output } = await generateText({
+      model: aiModel("itinerary_draft"),
+      output: Output.object({ schema: ItinerarySchema }),
+      system: [
+        "You plan real hangouts for a group-planning app used mostly by high schoolers and their friends.",
+        "Turn the request into an ordered itinerary of 1-4 stops that flow naturally (e.g. food, then an activity, then dessert).",
+        "Only add stops the request asks for or clearly implies, plus at most one natural add-on (like dessert after dinner). Keep it doable in one outing.",
+        `Each stop's kind must be one of: ${kinds}.`,
+        'label is a short name for that stop ("Dinner", "Bowling", "Boba run"). minutes is a realistic stay.',
+        "why is one short, specific sentence on why that stop fits this group's night. No venue names -- real venues are looked up later.",
+        `Today is ${todayIso}. Resolve relative dates to YYYY-MM-DD; null if no day is implied. start_time is 24h HH:MM for the first stop, null if not implied.`,
+        "budget_per_person is the per-person dollar cap only when one is stated or implied. area is the US ZIP or city named, else null.",
+        "anchor_index is the stop the night is built around (the one the group should vote on).",
+        "title is a short friendly name (max ~6 words). vibe is one upbeat sentence describing the night.",
+        "invite_message is a casual text to the group (under 200 characters) saying what the plan is and asking them to answer privately and vote in Syncly. At most one emoji.",
+        "Never invent a person, a venue, or a budget that isn't implied.",
+      ].join(" "),
+      prompt: `Request: ${prompt}`,
+    });
+    return coerceItinerary(output, prompt, todayIso);
+  } catch (error) {
+    void recordAiFailure("itinerary_draft", error);
+    return heuristicItinerary(prompt, todayIso);
   }
 }

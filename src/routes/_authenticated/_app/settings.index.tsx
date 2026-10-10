@@ -12,6 +12,7 @@ import {
   Palette,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Sun,
   SunMoon,
   UserRound,
@@ -24,7 +25,7 @@ import { ToggleCard } from "@/components/quorum/settings/shared";
 import { getMe, saveProfile } from "@/lib/quorum/plan.functions";
 import { Avatar } from "@/components/quorum/Avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { useTheme, type ThemeChoice } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
@@ -191,6 +192,14 @@ function SettingsHub() {
           subtitle="Parent pairing, password, data & danger zone"
           to="/settings/account"
         />
+        {me.data?.account_type === "guardian" || me.data?.hasLinkedTeens ? (
+          <NavRow
+            icon={Sparkles}
+            title="Family Plus"
+            subtitle="Your plan, safe zones & history"
+            to="/family-plus"
+          />
+        ) : null}
         <NavRow
           icon={MapPinned}
           title="Planning defaults"

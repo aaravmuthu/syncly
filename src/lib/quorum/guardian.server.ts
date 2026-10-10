@@ -105,6 +105,9 @@ export async function linkTeenByCode(guardianProfileId: string, rawCode: string)
   }
   if (teen.id === guardianProfileId) throw new Error("That's your own code");
   if (teen.account_type === "guardian") throw new Error("That code belongs to a parent account");
+  // Before the code is burned, so a parent who needs Plus keeps a working code.
+  const { assertCanLinkTeen } = await import("./family-plan.server");
+  await assertCanLinkTeen(guardianProfileId, teen.id);
   await recordAttempt(true);
   // Single-use: burn the code so it can't link a second account.
   await db
@@ -436,9 +439,13 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
   const teenIds = teens.map((t) => t["id"] as string);
 
   const pendingRequests = await pendingLinkRequestsForGuardian(guardianProfileId);
+  const { guardianLimits } = await import("./family-plan.server");
+  const { tier: familyTier, limits } = await guardianLimits(guardianProfileId);
   if (!teenIds.length) {
-    return { teens: [] as TeenCard[], alerts: [], unreadAlerts: 0, pendingRequests };
+    return { teens: [] as TeenCard[], alerts: [], unreadAlerts: 0, pendingRequests, familyTier };
   }
+  // Alerts, check-ins and delays older than the plan's history window drop off.
+  const historySince = new Date(Date.now() - limits.historyHours * 3_600_000).toISOString();
 
   const [
     { data: pings },
@@ -469,18 +476,21 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
       .from("guardian_alerts")
       .select("id, teen_profile_id, plan_id, type, title, body, priority, read, created_at")
       .eq("guardian_profile_id", guardianProfileId)
+      .gte("created_at", historySince)
       .order("created_at", { ascending: false })
       .limit(40),
     db
       .from("checkin_requests")
       .select("id, teen_profile_id, status, note, lat, lon, place_label, created_at, responded_at")
       .eq("guardian_profile_id", guardianProfileId)
+      .gte("created_at", historySince)
       .order("created_at", { ascending: false })
       .limit(20),
     db
       .from("delay_pings")
       .select("id, profile_id, plan_id, reason, minutes, new_eta, created_at")
       .in("profile_id", teenIds)
+      .gte("created_at", historySince)
       .order("created_at", { ascending: false })
       .limit(20),
   ]);
@@ -747,6 +757,7 @@ export async function buildGuardianDashboard(guardianProfileId: string) {
     })),
     unreadAlerts: (alerts ?? []).filter((a) => !a.read).length,
     pendingRequests,
+    familyTier,
   };
 }
 

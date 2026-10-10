@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion, useMotionValue, useTransform, animate, useReducedMotion } from "motion/react";
-import { RefreshCw } from "lucide-react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useTransform,
+  animate,
+  useReducedMotion,
+} from "motion/react";
+import { CircleAlert, RefreshCw } from "lucide-react";
 import { ThinkingOrb } from "thinking-orbs";
-import { toast } from "sonner";
 import { haptic } from "@/lib/quorum/haptics";
 
 const MAX = 110;
@@ -26,6 +32,12 @@ export function PullToRefresh({
   }, [onRefresh]);
   const y = useMotionValue(0);
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!failed) return;
+    const t = window.setTimeout(() => setFailed(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [failed]);
   const refreshing = useRef(false);
   const startX = useRef(0);
   const startY = useRef<number | null>(null);
@@ -98,10 +110,12 @@ export function PullToRefresh({
         setBusy(true);
         haptic("success");
         settle(56);
+        setFailed(false);
         try {
           await refresh.current();
         } catch {
-          toast.error("Couldn't refresh. Check your connection and try again.");
+          haptic("warn");
+          if (mounted) setFailed(true);
         } finally {
           refreshing.current = false;
           if (mounted) {
@@ -157,7 +171,25 @@ export function PullToRefresh({
         </motion.span>
       </motion.div>
 
-      <motion.div style={{ y }}>{children}</motion.div>
+      <motion.div style={{ y }}>
+        {/* A failed refresh says so where the pull happened, not in a popup. */}
+        <AnimatePresence initial={false}>
+          {failed ? (
+            <motion.p
+              role="alert"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              className="flex items-center justify-center gap-1.5 overflow-hidden text-caption font-medium text-destructive"
+            >
+              <CircleAlert className="size-3.5 shrink-0" />
+              <span className="py-2">Couldn't refresh. Check your connection and pull again.</span>
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
+        {children}
+      </motion.div>
     </div>
   );
 }

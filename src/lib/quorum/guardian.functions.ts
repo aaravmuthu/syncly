@@ -175,6 +175,8 @@ export const addSafeZone = createServerFn({ method: "POST" })
     const me = await resolveMyProfileId(context.supabase);
     const { assertLinked } = await import("./guardian.server");
     await assertLinked(me, data.teenProfileId);
+    const { assertCanAddSafeZone } = await import("./family-plan.server");
+    await assertCanAddSafeZone(data.teenProfileId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("safe_zones").insert({
       teen_profile_id: data.teenProfileId,

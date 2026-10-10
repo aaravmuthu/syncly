@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Modal } from "./Modal";
 import { Button, inputClass } from "./ui";
 import { isValidCode, normalizeCode } from "@/lib/quorum/invite";

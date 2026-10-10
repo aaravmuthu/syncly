@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Check, Copy, Link2, MessageSquare } from "lucide-react";
 import { Avatar } from "@/components/quorum/Avatar";
 import { QrCode } from "@/components/quorum/QrCode";

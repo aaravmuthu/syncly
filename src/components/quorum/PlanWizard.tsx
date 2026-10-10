@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Trophy, Utensils } from "lucide-react";
 import { ThinkingOrb } from "thinking-orbs";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Skeleton } from "./ui";
 import { FairVenueCard } from "./FairPointVenues";
 import { VenueMap, type MapVenue } from "./VenueMap";

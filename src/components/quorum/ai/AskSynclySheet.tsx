@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { ASK_EVENT } from "./ask-event";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button, Card, Pill } from "@/components/quorum/ui";
 import {
   askSyncly,
@@ -12,7 +12,7 @@ import {
   type SynclyAction,
   type SynclyPlanRef,
 } from "@/lib/quorum/aiplus.functions";
-import { launchAiPlan } from "@/lib/quorum/planner.functions";
+import { openPlanBuilder } from "./plan-builder-event";
 import { ChatSheetShell } from "./ChatSheetShell";
 import { AiGlyph } from "./AiGlyph";
 
@@ -22,11 +22,9 @@ const STARTERS = [
   "Plan a movie night with my squad this weekend",
 ];
 
-type LaunchedPlan = { planId: string; title: string };
 type Turn = ConciergeTurn & {
   planRef?: SynclyPlanRef;
   action?: SynclyAction;
-  launched?: LaunchedPlan;
 };
 
 /**
@@ -34,9 +32,9 @@ type Turn = ConciergeTurn & {
  * header). Unlike Plan Concierge, this sees a summary across every group the
  * member is in, not one plan. Same propose-then-confirm contract as the
  * concierge's actions: Ask Syncly only ever proposes a group + a restated
- * request via create_plan; nothing is created until an explicit tap here
- * calls the same already-authorized launchAiPlan a manual "Launch Plan"
- * button would.
+ * request via create_plan; nothing is created until the member taps "Build
+ * it with Sync", reviews the itinerary in the plan builder, and launches it
+ * there themselves.
  */
 export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu" }) {
   const [open, setOpen] = useState(false);
@@ -49,7 +47,6 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
     return () => window.removeEventListener(ASK_EVENT, onAsk);
   }, [trigger]);
   const [turns, setTurns] = useState<Turn[]>([]);
-  const qc = useQueryClient();
 
   const askFn = useServerFn(askSyncly);
   const ask = useMutation({
@@ -67,42 +64,9 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
     },
   });
 
-  const runLaunch = useServerFn(launchAiPlan);
-  const [launchingAt, setLaunchingAt] = useState<number | null>(null);
-
-  const confirmCreatePlan = async (index: number, action: SynclyAction) => {
-    setLaunchingAt(index);
-    try {
-      const result = (await runLaunch({
-        data: {
-          groupId: action.groupId,
-          prompt: action.prompt,
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        },
-      })) as {
-        planId: string;
-        title: string;
-        optionCount: number;
-      };
-      toast.success("Plan launched", {
-        description: result.optionCount
-          ? `${result.optionCount} fair-point options ready in ${action.groupName}.`
-          : `Created in ${action.groupName} — everyone answers privately next.`,
-      });
-      void qc.invalidateQueries({ queryKey: ["dashboard"] });
-      void qc.invalidateQueries({ queryKey: ["group", action.groupId] });
-      setTurns((prev) =>
-        prev.map((t, i) =>
-          i === index ? { ...t, launched: { planId: result.planId, title: result.title } } : t,
-        ),
-      );
-    } catch (e) {
-      toast.error("Couldn't launch that plan", {
-        description: e instanceof Error ? e.message : "Try rephrasing it.",
-      });
-    } finally {
-      setLaunchingAt(null);
-    }
+  const buildPlan = (action: SynclyAction) => {
+    setOpen(false);
+    openPlanBuilder({ prompt: action.prompt, groupId: action.groupId, autoStart: true });
   };
 
   const send = (text: string) => {
@@ -138,19 +102,7 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
         pendingState="searching"
         pendingLabel="Looking through your squads…"
         onSend={send}
-        renderTurnExtra={(t, i) => {
-          if (t.launched) {
-            return (
-              <Link
-                to="/plans/$planId"
-                params={{ planId: t.launched.planId }}
-                onClick={() => setOpen(false)}
-                className="mr-auto mt-1.5 inline-flex max-w-[90%] items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1.5 text-xs font-semibold hover:bg-secondary"
-              >
-                View {t.launched.title} →
-              </Link>
-            );
-          }
+        renderTurnExtra={(t) => {
           if (t.action?.type === "create_plan") {
             return (
               <Card className="mr-auto mt-2 max-w-[90%] border-primary/40 bg-primary/5 p-3">
@@ -158,13 +110,8 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
                   <AiGlyph className="size-3.5" /> Suggested plan
                 </Pill>
                 <p className="mt-2 text-sm font-medium">{actionLabel(t.action)}</p>
-                <Button
-                  className="mt-2 h-9 px-3 text-xs"
-                  loading={launchingAt === i}
-                  orb="shaping"
-                  onClick={() => confirmCreatePlan(i, t.action!)}
-                >
-                  Launch it in {t.action.groupName}
+                <Button className="mt-2 h-9 px-3 text-xs" onClick={() => buildPlan(t.action!)}>
+                  Build it with Sync
                 </Button>
               </Card>
             );

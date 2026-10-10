@@ -4,7 +4,7 @@ import { EmailSecondFactor } from "@/components/quorum/auth/EmailSecondFactor";
 import { getEmailSecurity } from "@/lib/email-mfa.functions";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BRAND } from "@/lib/brand";

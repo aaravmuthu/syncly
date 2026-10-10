@@ -23,7 +23,7 @@ export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: strin
   if (q.isPending) {
     return (
       <Card>
-        <AiActivity state="composing" label="Summarizing tonight…" />
+        <AiActivity sync state="composing" label="Summarizing tonight…" />
         <Skeleton className="mt-3 h-3 w-full" />
         <Skeleton className="mt-2 h-3 w-3/4" />
       </Card>

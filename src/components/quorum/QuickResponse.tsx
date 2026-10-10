@@ -14,7 +14,7 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Modal } from "./Modal";
 import { CONFLICT_REASONS, confirmAttendance, flagConflict } from "@/lib/quorum/conflict.functions";
 import { haptic } from "@/lib/quorum/haptics";

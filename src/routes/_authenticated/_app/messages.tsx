@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronRight, MessageCircle, Search, UserPlus } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/quorum/Avatar";

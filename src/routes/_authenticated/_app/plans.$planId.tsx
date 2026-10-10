@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/quorum/AppShell";
 import { CarpoolShield } from "@/components/quorum/guardian/CarpoolShield";
 import { PlanInsights } from "@/components/quorum/PlanInsights";
+import { ItineraryCard } from "@/components/quorum/ItineraryCard";
 import { AiCompromiseBanner } from "@/components/quorum/AiCompromiseBanner";
 import { CompromiseNote, PlanBGuardian } from "@/components/quorum/PlanAiInsights";
 import { useCompromiseSummaries } from "@/components/quorum/useCompromiseSummaries";
@@ -43,7 +44,7 @@ import {
 } from "@/lib/quorum/plan.functions";
 import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
 import { directionsUrl } from "@/lib/quorum/vibes";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { VenueDetailModal, type VenueDetail } from "@/components/quorum/VenueDetailModal";
 import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
 import { haptic } from "@/lib/quorum/haptics";
@@ -450,6 +451,8 @@ function PlanPage() {
             </DynamicButton>
           </Card>
         )}
+
+        <ItineraryCard raw={data.plan.itinerary} />
 
         {editing && !ended ? (
           <div className="mt-4">

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/quorum/toast";
 import { Button } from "./ui";
 import { QuickResponse } from "./QuickResponse";
 import { castResolutionVote } from "@/lib/quorum/conflict.functions";

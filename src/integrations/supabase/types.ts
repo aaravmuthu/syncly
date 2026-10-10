@@ -409,6 +409,53 @@ export type Database = {
           },
         ];
       };
+      family_plans: {
+        Row: {
+          billing_interval: string;
+          canceled_at: string | null;
+          created_at: string;
+          current_period_end: string;
+          profile_id: string;
+          source: string;
+          status: string;
+          tier: string;
+          trial_used_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          billing_interval: string;
+          canceled_at?: string | null;
+          created_at?: string;
+          current_period_end: string;
+          profile_id: string;
+          source?: string;
+          status: string;
+          tier?: string;
+          trial_used_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          billing_interval?: string;
+          canceled_at?: string | null;
+          created_at?: string;
+          current_period_end?: string;
+          profile_id?: string;
+          source?: string;
+          status?: string;
+          tier?: string;
+          trial_used_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "family_plans_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       geofence_events: {
         Row: {
           created_at: string;
@@ -1208,6 +1255,7 @@ export type Database = {
           food_vibe: string | null;
           group_id: string;
           id: string;
+          itinerary: Json | null;
           location_area: string | null;
           notes: string | null;
           search_radius_miles: number | null;
@@ -1230,6 +1278,7 @@ export type Database = {
           food_vibe?: string | null;
           group_id: string;
           id?: string;
+          itinerary?: Json | null;
           location_area?: string | null;
           notes?: string | null;
           search_radius_miles?: number | null;
@@ -1252,6 +1301,7 @@ export type Database = {
           food_vibe?: string | null;
           group_id?: string;
           id?: string;
+          itinerary?: Json | null;
           location_area?: string | null;
           notes?: string | null;
           search_radius_miles?: number | null;

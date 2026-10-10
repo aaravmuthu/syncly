@@ -3,20 +3,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
-import { Sparkles, Rocket, PencilLine, MapPin } from "lucide-react";
-import { toast } from "sonner";
+import { Sparkles, PencilLine, MapPin } from "lucide-react";
+import { toast } from "@/lib/quorum/toast";
 import { TimePicker } from "./TimePicker";
 import { Button, Card, Field, Skeleton, inputClass } from "./ui";
 import { PlaceAutocomplete } from "./PlaceAutocomplete";
 import { VenueMap, type MapVenue } from "./VenueMap";
 import { FairVenueCard } from "./FairPointVenues";
 import { AiActivity } from "./ai/AiActivity";
+import { openPlanBuilder } from "./ai/plan-builder-event";
 import { createPlan } from "@/lib/quorum/plan.functions";
-import {
-  getPlanDefaults,
-  launchAiPlan,
-  previewFairPointVenues,
-} from "@/lib/quorum/planner.functions";
+import { getPlanDefaults, previewFairPointVenues } from "@/lib/quorum/planner.functions";
 import { CATEGORIES, type PlanCategory } from "@/lib/quorum/types";
 import { RADIUS_OPTIONS, VIBES } from "@/lib/quorum/vibes";
 import { inviteLink, shareOrCopy } from "@/lib/quorum/invite";
@@ -154,23 +151,6 @@ export function CreatePlanPanel({
     ];
   }, [defaults.data, venues.data, picked]);
 
-  const launch = useMutation({
-    mutationFn: useServerFn(launchAiPlan),
-    onSuccess: (raw) => {
-      const r = raw as { planId: string; optionCount: number; inviteCode: string | null };
-      void qc.invalidateQueries({ queryKey: ["group", groupId] });
-      void qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Plan launched", {
-        description: `Invite your group to answer privately · share code ${r.inviteCode ?? inviteCode}`,
-      });
-      void navigate({ to: "/plans/$planId", params: { planId: r.planId } });
-    },
-    onError: (e: unknown) =>
-      toast.error("Could not launch that plan", {
-        description: e instanceof Error ? e.message : "Try rephrasing it.",
-      }),
-  });
-
   const create = useMutation({
     mutationFn: useServerFn(createPlan),
     onSuccess: (plan) => {
@@ -242,25 +222,12 @@ export function CreatePlanPanel({
         <div className="mt-3 flex flex-wrap gap-2">
           <DynamicButton
             width="full"
-            icon={<Rocket aria-hidden />}
+            icon={<Sparkles aria-hidden />}
             className="flex-1"
-            loading={launch.isPending}
-            orb="shaping"
             disabled={!prompt.trim()}
-            onClick={() =>
-              launch.mutate({
-                data: {
-                  groupId,
-                  prompt,
-                  useDefaults: useSaved,
-                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  estCostMin: estCost?.min ?? null,
-                  estCostMax: estCost?.max ?? null,
-                },
-              })
-            }
+            onClick={() => openPlanBuilder({ prompt: prompt.trim(), groupId, autoStart: true })}
           >
-            {launch.isPending ? "Building your plan…" : "Launch plan now"}
+            Build it with Sync
           </DynamicButton>
           <Button
             variant="outline"
