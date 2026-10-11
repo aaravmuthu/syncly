@@ -138,3 +138,13 @@ SOURCE_INVENTORY.json records the baseline source file paths/hashes/line counts 
 ## M0 acceptance evidence — October 10, 2026
 
 Debug simulator build and serial Swift Testing run passed: seven test functions, thirteen parameterized invocations. Release simulator build also passed. Compiler logs contain zero warnings/errors. Installed and launched on iPhone 18 Pro; visually inspected Home, Groups, Plans, Radar, Messages and Settings in both appearances. Captures are in screenshots/m0-*.png. Settings persistence is covered by a test; full assistive-technology/iPad interaction testing remains M7. Backend privacy regression passed 38 cases on dummy local fixtures, with separate TypeScript validation; no hosted migration or API is deployed. M0 finishes here; M1 is not started.
+
+## Feature integration checkpoint — October 10, 2026
+
+Native Auth/Groups/Plans/Messages/Radar/Settings/Family screens, shared inline controls, Supabase Keychain auth, Realtime, safe uploads, MapKit, camera/Safari adapters, deep links and APNs plumbing are implemented. They use a shared actor service protocol and cancellable observable resource models. This replaces the shell without claiming M1–M7 live acceptance. Demo is isolated in memory; Debug `--demo` never initializes live clients. It uses exact TS-derived catalog/member fixtures and the ported scoring engine.
+
+Domain fixtures now cover 120 scoring cases, 20 cost cases, itinerary timeline/distance/cost behavior and nullable serialization, plus calendar/expiry/availability helpers. Auth tests assert no protected service access on verification failure, independent email-factor requirements, native/email MFA gates and the deployment gate. Family tests require teen approval before a sample link and verify unlink/check-in closure.
+
+User tokens stay in SDK Keychain storage. All protected operation traffic uses an explicit Bearer token and ordinary versioned API; no internal TanStack URL is called. The backend operation registry is allowlisted and excludes internal endpoints and public capability handlers. Runtime smoke evidence and production-build limits are in BACKEND_GAP.md.
+
+The unchecked M1–M7 boxes above remain acceptance gates. FEATURE_PARITY.md is the granular checklist; a screen existing or a mock succeeding does not complete its hosted, device or accessibility verification.

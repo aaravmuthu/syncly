@@ -1,8 +1,12 @@
-# Versioned native API gap — M0 contract draft
+# Versioned native API contract and deployment gap
 
 ## Deployment status and transport
 
-No endpoint below exists on origin/main. feat/ios-api currently contains only the tested profile-column privacy prerequisite; it has not deployed that migration. Implement these public routes on that branch, separate from native commits. The app’s configured base is `https://syncly.website/api/ios/v1`. M0 is offline and does not call it.
+The separate `feat/ios-api` branch now implements `/api/ios/v1/operations/$operation` with an explicit operation registry. It reuses compiled existing server-function validators, JWT/MFA middleware and request context. The privacy migration and API are **not deployed or verified on the hosted service**. `SYNCLY_LIVE_DATA_ENABLED = NO` gates native protected data. Supabase authentication is real; deployment failure remains an inline error rather than a pretend successful session.
+
+Transport regressions cover Bearer enforcement, unsupported operations/methods, object-only JSON, exact media type, streamed upload limits, safe provider/database errors, finite outputs and no-store envelopes. A compiled Vite route smoke test returned 401 for missing/tampered Bearer, 405 for GET and 404 for an internal operation. No real account happy path was exercised. TypeScript checking passed. Full Vite production bundling exhausted 1 GB and 1.5 GB heaps on this machine; production build acceptance is outstanding.
+
+Public approval capability handlers remain excluded from the authenticated operation registry. Native Universal Links open the existing token-scoped approval page in Safari. APNs register/unregister routes are documented below but remain unimplemented.
 
 All operation routes use POST and `Content-Type: application/json`, including reads, to avoid putting private input in query strings. Endpoint: `/api/ios/v1/operations/<exportedFunctionName>`. Request body is exactly the existing function's validated data object, without the TanStack `{data: ...}` invocation wrapper. Empty input is `{}`. Response is `{ "data": <the existing function's JSON result> }`. Existing camelCase DTO keys and database snake_case keys remain unchanged; dates are ISO strings, absent optionals may be omitted, explicit null stays null. Do not serialize Infinity; family tier and finite/free-limit DTOs are authoritative instead of shipping the raw PLUS_LIMITS constant.
 
@@ -92,9 +96,9 @@ Full profile RPC `my_profile()` is a separate PostgREST endpoint `/rest/v1/rpc/m
 
 Port pure availability/cost/engine/hardfilter/time/calendar/Haversine/midpoint/itinerary math with TS fixtures. A pure Swift engine only receives demo/self/explicitly shareable inputs; having a local engine does not authorize fetching everyone else's constraints.
 
-## Swift implementation plan
+## Swift implementation
 
-M1 introduces AuthService with live Supabase SPM + Keychain storage and a mock; APIService actor uses URLSession, validated HTTPS config, Codable endpoint-specific DTOs, safe error mapping, cancellation and current-session Bearer injection. Feature protocols (GroupService, PlanService, ChatService, LocationService, AIService, GuardianService) each get deterministic actor mocks, including expired/MFA/offline/provider-failure cases. Preview/demo DI never creates a live client. M0 deliberately contains no live request path or pretended auth success. No UserDefaults session serialization, service-role key, internal TanStack URL, optional telemetry SDK or token logging.
+The app uses `AuthService` and `SynclyService` protocols, a Keychain-backed Supabase SDK client and a URLSession operation actor. Feature views use cancellable observable resource models. Demo has a separate in-memory actor; Debug `--demo` launch does not initialize a live SDK client, and entering demo stops and releases live refresh clients without deleting the user's saved session. The pure scoring engine only receives sample/self inputs; it never fetches peer constraints. SDK Auth, Realtime and Apple platform APIs are native. The existing public approval page and legal pages use Safari.
 
 Internal RLS self-check and the web demo coach are excluded from the native API. Native demo coaching uses local mock data; it must not send requests to the optional web demo endpoint. Mapbox browser-token delivery is also excluded because native maps use MapKit.
 
@@ -230,3 +234,7 @@ For every row: request JSON is the object accepted by the exact input validator 
 ## Acceptance gates for backend API milestones
 
 Verified JWT/first-factor/capability distinction, same zod bounds/unknown-key stripping, same ownership/MFA/guardian checks, no private peer values, same quota/expiry/side effects, upload bytes+ownership validation, explicit finite JSON models, idempotent launch/delete semantics, inline field errors, and integration fixtures for success/401/403/422/429/503. Build and test web changes on feat/ios-api; push and leave merging to the user. No hosted database, provider delivery, quota spending or deployment is authorized by a local mock passing.
+
+### Withheld mutations
+
+The registry deliberately excludes `addSpotToPlan`, `castResolutionVote`, and `applyAiCompromise`. The contract inventory above describes the source functions, not permission to expose them. Independent server hard-constraint feasibility and refreshed safety checks after time changes must be verified before these native operations are added. Requests for withheld operations return 404.

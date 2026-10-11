@@ -8,7 +8,13 @@
 6. **Existing native MFA accounts:** phone sign-up is hidden, but already-enrolled native MFA factors remain load-bearing. Support their legitimate Supabase challenge flow or a clear supported recovery path; never bypass required AAL2 because native UI omits phone sign-up.
 7. **Receipt/reviews:** venue reviews in reviews.server.ts are AI-generated community-style content. No dedicated expense-ledger/receipt or user-review table appears in committed schema. Match displayed receipt/cost-estimate/share behavior without inventing persistence or representing AI reviews as verified user reviews.
 8. **Universal Links / Google / APNs:** Apple Team ID, entitlements/provisioning, hosted AASA and Supabase allowed callback URLs need owner configuration. Simulator M0 needs none. APNs delivery/device token storage do not exist; document and implement separately. No billing or purchases.
-9. **App icon / fonts:** M7 must flatten supplied icon alpha to opaque; use system typography until a bundled font's license is verified. No custom font is bundled in M0.
+9. **App icon / fonts:** The supplied SVG has now been rasterized into an opaque 1024 px native icon. System typography is used; no unlicensed font is bundled.
 10. **Full QA:** M0 screenshots test only current native shell and appearance. Accessibility Inspector/VoiceOver, Dynamic Type extremes, iPad and all live feature flows remain later acceptance work.
 
 User clarified native SwiftUI/Apple-style app only; web landing/marketing/sphere hero omitted. Original /Users/aaravmuthu/syncly leftovers were preserved; native work is in /Users/aaravmuthu/syncly-ios.
+
+## Current integration gaps
+
+The native screens are implemented beyond M0. The API registry and transport exist on the separate backend branch, with transport tests and compiled-route unauthorized smoke checks. They are not deployed; full production Vite bundling exceeded the tested 1 GB/1.5 GB Node heaps on this Mac. Hosted happy paths and cross-account authorization must be verified in staging.
+
+FEATURE_PARITY.md records remaining native subflows and physical-device/accessibility QA. Of particular concern, existing addSpotToPlan feasibility and castResolutionVote safety checks need a backend review before exposing those paths natively. Preserve private constraints; do not solve this by querying peer answers. The M0 comments above are historical and do not describe current screen coverage.
