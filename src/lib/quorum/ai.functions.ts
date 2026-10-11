@@ -4,7 +4,6 @@ import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MagicDraft } from "./ai.server";
 import type { PlanCategory } from "./types";
-import { dbError } from "@/lib/db-error";
 
 export type MagicPlanResult = MagicDraft & {
   /** Resolved 5-digit ZIP for the plan, when the prompt gave a usable place. */
@@ -38,7 +37,7 @@ export const magicPlanDraft = createServerFn({ method: "POST" })
     const today = new Date().toISOString().slice(0, 10);
     const draft = await parseMagicPrompt(prompt, today);
 
-    const { normalizeZip, queryVenuesNear } = await import("./location");
+    const { normalizeZip } = await import("./location");
     const { geocodeZipServer } = await import("./location.server");
     const { searchVenuesGeoapify, suggestPlacesServer, reverseZipServer } =
       await import("./places.server");
@@ -62,7 +61,7 @@ export const magicPlanDraft = createServerFn({ method: "POST" })
         limit: 6,
       };
       const live = await searchVenuesGeoapify(query);
-      const seeds = live.length ? live : queryVenuesNear(query);
+      const seeds = live;
       candidates = seeds.slice(0, 6).map((v) => ({
         title: v.title,
         subtitle: v.subtitle,
@@ -151,67 +150,41 @@ export const getAiCompromise = createServerFn({ method: "POST" })
     return writeCompromise(facts);
   });
 
-/** Host-only: applies the suggested start time and/or option to the plan. */
+/** Host-only actions use the same finalization guards as the manual flow. */
 export const applyAiCompromise = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ planId: v.id, startTime: v.optText(40), recommendationId: v.optId }))
+  .inputValidator(
+    z.object({
+      planId: v.id,
+      startTime: z
+        .string()
+        .regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
+        .nullish(),
+      recommendationId: v.optId,
+      timeZone: v.timeZone.optional(),
+    }),
+  )
   .handler(async ({ data, context }) => {
     const { data: isOwner } = await context.supabase.rpc("is_plan_owner", {
       _plan_id: data.planId,
     });
     if (!isOwner) throw new Error("Only the host can apply a compromise");
-
-    const { data: plan, error: readError } = await context.supabase
-      .from("plans")
-      .select("window_start, window_end")
-      .eq("id", data.planId)
-      .maybeSingle();
-    if (readError) throw dbError(readError, "applyAiCompromise");
-    if (!plan) throw new Error("Plan not found");
-
-    const patch: {
-      window_start?: string;
-      window_end?: string;
-      selected_recommendation_id?: string;
-      status?: "finalized";
-    } = {};
-    if (data.startTime && plan.window_start) {
-      const start = new Date(plan.window_start);
-      const original = start.getTime();
-      start.setHours(Number(data.startTime.slice(0, 2)), Number(data.startTime.slice(3, 5)), 0, 0);
-      patch.window_start = start.toISOString();
-      // Keep the same duration so the window stays coherent.
-      if (plan.window_end) {
-        const end = new Date(plan.window_end);
-        patch.window_end = new Date(end.getTime() + (start.getTime() - original)).toISOString();
-      }
+    if (!data.startTime && !data.recommendationId) throw new Error("Choose a change first");
+    const { lockPlanSelection, retimePlan } = await import("./plan-actions.server");
+    let optionsReady = true;
+    if (data.startTime) {
+      // A retime replaces the shortlist; never finalize an id from the old window.
+      optionsReady = (await retimePlan(data.planId, data.startTime, data.timeZone)).optionsReady;
+    } else if (data.recommendationId) {
+      await lockPlanSelection(data.planId, data.recommendationId);
     }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    if (data.recommendationId) {
-      const { data: option } = await supabaseAdmin
-        .from("recommendations")
-        .select("id")
-        .eq("id", data.recommendationId)
-        .eq("plan_id", data.planId)
-        .maybeSingle();
-      if (!option) throw new Error("That option isn't on this plan");
-      patch.selected_recommendation_id = data.recommendationId;
-      patch.status = "finalized";
-    }
-    if (Object.keys(patch).length) {
-      // Status and the selected option are server-managed; the host check
-      // above is what authorizes this write.
-      const { error } = await supabaseAdmin.from("plans").update(patch).eq("id", data.planId);
-      if (error) throw dbError(error, "applyAiCompromise");
-    }
-
     const { notifyPlanParticipants } = await import("./notify.server");
     await notifyPlanParticipants(data.planId, {
       type: "compromise_applied",
-      title: "The host applied an AI compromise",
+      title: data.startTime ? "The plan time changed" : "The plan is locked in",
       body: data.startTime
-        ? `New start time: ${data.startTime}`
-        : "The group's pick was locked in.",
+        ? "Review the updated options before voting again."
+        : "Check the plan hub for details.",
     });
-    return { ok: true };
+    return { ok: true, optionsReady, requiresNewVote: Boolean(data.startTime) };
   });

@@ -1262,6 +1262,7 @@ export type Database = {
           selected_recommendation_id: string | null;
           status: Database["public"]["Enums"]["plan_status"];
           supervision_note: string | null;
+          time_zone: string | null;
           title: string;
           updated_at: string;
           window_end: string | null;
@@ -1285,6 +1286,7 @@ export type Database = {
           selected_recommendation_id?: string | null;
           status?: Database["public"]["Enums"]["plan_status"];
           supervision_note?: string | null;
+          time_zone?: string | null;
           title: string;
           updated_at?: string;
           window_end?: string | null;
@@ -1308,6 +1310,7 @@ export type Database = {
           selected_recommendation_id?: string | null;
           status?: Database["public"]["Enums"]["plan_status"];
           supervision_note?: string | null;
+          time_zone?: string | null;
           title?: string;
           updated_at?: string;
           window_end?: string | null;
@@ -1802,6 +1805,22 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      lock_checked_plan: {
+        Args: { _plan_id: string; _recommendation_id: string; _transport?: Json };
+        Returns: undefined;
+      };
+      retime_checked_plan: {
+        Args: {
+          _plan_id: string;
+          _expected_start: string;
+          _start: string;
+          _end: string | null;
+          _itinerary: Json | null;
+          _time_zone: string;
+        };
+        Returns: undefined;
+      };
+
       email_mfa_status: { Args: { _user_id: string; _session_id: string }; Returns: Json };
       reserve_email_mfa_challenge: {
         Args: {

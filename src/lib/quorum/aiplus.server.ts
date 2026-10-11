@@ -3,7 +3,7 @@
 // Every helper degrades to a deterministic result when the model is unavailable.
 import { generateText, NoObjectGeneratedError, Output, tool } from "ai";
 import { z } from "zod";
-import { aiModel, recordAiFailure } from "@/lib/ai-gateway.server";
+import { aiModel, aiGenerationOptions, recordAiFailure } from "@/lib/ai-gateway.server";
 
 /** One chat turn exchanged with the concierge. */
 export type ConciergeTurn = { role: "user" | "assistant"; content: string };
@@ -154,6 +154,7 @@ export async function conciergeReply(
   try {
     const result = await generateText({
       model: aiModel("plan_concierge"),
+      ...aiGenerationOptions("plan_concierge"),
       system: CONCIERGE_SYSTEM,
       prompt,
       tools: conciergeTools,
@@ -210,6 +211,7 @@ export async function writeSquadDigest(facts: {
   try {
     const { output } = await generateText({
       model: aiModel("squad_digest"),
+      ...aiGenerationOptions("squad_digest"),
       output: Output.object({ schema: SquadDigestSchema }),
       system: [
         "You write a short weekly recap for a group-plans app.",
@@ -298,6 +300,7 @@ export async function rankByVibe(
   try {
     const { output } = await generateText({
       model: aiModel("vibe_search"),
+      ...aiGenerationOptions("vibe_search"),
       output: Output.object({ schema: VibeRankSchema }),
       system: [
         "You match local venues to a natural-language vibe request for a group hangout.",
@@ -397,6 +400,7 @@ export async function writeGuardianSummary(facts: {
   try {
     const { output } = await generateText({
       model: aiModel("guardian_summary"),
+      ...aiGenerationOptions("guardian_summary"),
       output: Output.object({ schema: GuardianSummarySchema }),
       system: [
         "You write a calm, plain-language evening summary for a parent about their teen's plans.",
@@ -520,6 +524,7 @@ export async function synclyReply(
   try {
     const result = await generateText({
       model: aiModel("ask_syncly"),
+      ...aiGenerationOptions("ask_syncly"),
       system: SYNCLY_SYSTEM,
       prompt,
       tools: synclyTools,

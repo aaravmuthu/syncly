@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { Sparkles } from "lucide-react";
-import { Card, Skeleton } from "@/components/quorum/ui";
+import { Button, Card, Skeleton } from "@/components/quorum/ui";
 import { AiActivity } from "./AiActivity";
 import { getSquadDigest, type SquadDigest as Digest } from "@/lib/quorum/aiplus.functions";
 
 /** AI recap of the week plus a "next best plan" nudge, for the home screen. */
 export function SquadDigestCard() {
+  const reduce = useReducedMotion();
   const fetchDigest = useServerFn(getSquadDigest);
   const q = useQuery({
     queryKey: ["squad-digest"],
@@ -25,7 +26,17 @@ export function SquadDigestCard() {
     );
   }
   const d = q.data;
-  if (!d) return null;
+  if (!d)
+    return (
+      <Card>
+        <p role="alert" className="text-sm">
+          The summary could not be loaded.
+        </p>
+        <Button className="mt-2" onClick={() => void q.refetch()}>
+          Retry summary
+        </Button>
+      </Card>
+    );
 
   return (
     <Card className="border-primary/25 ring-1 ring-primary/10">
@@ -33,12 +44,15 @@ export function SquadDigestCard() {
         <Sparkles className="h-4 w-4 text-primary" aria-hidden />
         <h2 className="text-sm font-semibold">Your squad digest</h2>
       </div>
+      {!d.aiGenerated ? (
+        <p className="mt-2 text-caption text-muted-foreground">Basic summary · AI is unavailable</p>
+      ) : null}
       <p className="mt-2 text-base font-semibold tracking-tight">{d.headline}</p>
       <ul className="mt-2 space-y-1.5">
         {d.bullets.map((b, i) => (
           <motion.li
             key={b}
-            initial={{ opacity: 0, x: -6 }}
+            initial={reduce ? false : { opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: "spring", stiffness: 320, damping: 28, delay: i * 0.06 }}
             className="flex gap-2 text-sm text-muted-foreground"

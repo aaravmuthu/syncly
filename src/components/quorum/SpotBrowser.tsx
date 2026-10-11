@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "@/lib/quorum/toast";
 import { Link } from "@tanstack/react-router";
 import { Bookmark, Check, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,12 +21,7 @@ import {
 } from "@/lib/quorum/spots.functions";
 import type { VibeSearchSpot } from "@/lib/quorum/aiplus.functions";
 import { VenueDetailModal } from "@/components/quorum/VenueDetailModal";
-import {
-  googleReviewsUrl,
-  venuePhoto,
-  venuePhotoSrcSet,
-  venueStats,
-} from "@/lib/quorum/venuePhotos";
+import { googleReviewsUrl, venuePhoto, venuePhotoSrcSet } from "@/lib/quorum/venuePhotos";
 import { AiActivity } from "@/components/quorum/ai/AiActivity";
 import { firstName } from "@/lib/quorum/names";
 import { DynamicButton } from "@/components/quorum/DynamicButton";
@@ -102,8 +98,13 @@ export function SpotBrowser({
     mutationFn: (vars: { planId: string; spot: BrowseSpot }) => addFn({ data: vars }),
     onSuccess: (_r, vars) => {
       setAdded((prev) => [...prev, vars.spot.key]);
+      toast.success("Spot checked and added", {
+        description: "Options were refreshed. The group can vote again.",
+      });
       onAdded?.();
     },
+    onError: (error: Error) =>
+      toast.error("That spot could not be added", { description: error.message }),
   });
 
   const handleVibePick = (s: VibeSearchSpot) => {
@@ -209,6 +210,11 @@ export function SpotBrowser({
         </div>
       ) : null}
 
+      {add.isError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {add.error.message}
+        </p>
+      ) : null}
       {view === "browse" && data?.needsHome ? (
         <div className="rounded-2xl bg-warning/15 px-3 py-2 text-sm">
           Add your home address to see exact distances.{" "}
@@ -330,13 +336,13 @@ export function SpotBrowser({
                       srcSet={venuePhotoSrcSet(s)}
                       sizes="(max-width: 767px) calc(100vw - 4rem), 700px"
                       decoding="async"
-                      alt={`${s.title} — ${s.cuisine ?? s.subtitle}`}
+                      alt={`Illustrative photo for ${s.cuisine ?? s.subtitle ?? "this category"}`}
                       loading="lazy"
                       className="h-28 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                     />
                     <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-2">
-                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
-                        {venueStats(s.key).ratingLabel}
+                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white">
+                        Illustrative photo
                       </span>
                       <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
                         {s.priceLevel}

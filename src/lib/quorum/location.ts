@@ -6,8 +6,7 @@
  * formula — no maps key, no billing, no third-party SDK.
  */
 
-import { optionsForCategory } from "./catalog";
-import type { OptionSeed, PlanCategory } from "./types";
+import type { PlanCategory } from "./types";
 
 export type GeoPoint = { lat: number; lon: number };
 
@@ -43,29 +42,6 @@ export function normalizeZip(zip: string | null | undefined): string | null {
   return isValidZip(z) ? z : null;
 }
 
-/** Deterministic 0..1 hash so the same venue always lands in the same spot. */
-function hash01(seed: string, salt: number): number {
-  let h = 2166136261 ^ salt;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 10000) / 10000;
-}
-
-const STREETS = [
-  "Main St",
-  "Preston Rd",
-  "Legacy Dr",
-  "Oak Ave",
-  "Riverside Pkwy",
-  "Market Sq",
-  "Elm St",
-  "Northgate Blvd",
-  "Cedar Ln",
-  "Commerce St",
-];
-
 export function priceLevelFor(costMax: number): "$" | "$$" | "$$$" | "$$$$" {
   if (costMax <= 15) return "$";
   if (costMax <= 35) return "$$";
@@ -82,53 +58,3 @@ export type VenueQuery = {
   maxBudget?: number | null;
   limit?: number;
 };
-
-/**
- * Local venue query layer. Anchors the seeded catalog around the caller's ZIP
- * code and returns real, distance-aware venue metadata.
- */
-export function queryVenuesNear(q: VenueQuery): OptionSeed[] {
-  const { origin } = q;
-  const city = origin.label.split(",")[0]?.trim() || "Nearby";
-
-  const pool = optionsForCategory(q.category);
-
-  const placed = pool.map((o) => {
-    // Spread each venue on a deterministic bearing/distance around the ZIP.
-    const bearing = hash01(o.key + origin.zip, 7) * Math.PI * 2;
-    const spread = 0.6 + hash01(o.key, 13) * 11.5; // 0.6 – 12.1 miles
-    const miles = o.category.includes("trip") ? spread * 9 : spread;
-    const dLat = (miles / 69) * Math.cos(bearing);
-    const dLon = (miles / (69 * Math.cos(rad(origin.lat)) || 69)) * Math.sin(bearing);
-    const point = { lat: origin.lat + dLat, lon: origin.lon + dLon };
-    const distanceMiles = Math.round(haversineMiles(origin, point) * 10) / 10;
-
-    const venue: OptionSeed = {
-      ...o,
-      lat: point.lat,
-      lon: point.lon,
-      distanceMiles,
-      travelMinutes: milesToDriveMinutes(distanceMiles),
-      address: `${100 + Math.round(hash01(o.key, 29) * 8800)} ${
-        STREETS[Math.floor(hash01(o.key, 31) * STREETS.length)]!
-      }, ${city}`,
-      priceLevel: priceLevelFor(o.costMax),
-      rating: Math.round((3.7 + hash01(o.key, 41) * 1.2) * 10) / 10,
-      location: `${city} · ${distanceMiles} mi`,
-    };
-    return venue;
-  });
-
-  const filtered = placed.filter((v) => {
-    if (q.maxRadiusMiles != null && v.distanceMiles != null && v.distanceMiles > q.maxRadiusMiles) {
-      return false;
-    }
-    if (q.maxBudget != null && v.costMin > q.maxBudget) return false;
-    return true;
-  });
-
-  const result = (filtered.length ? filtered : placed).sort(
-    (a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0),
-  );
-  return result.slice(0, q.limit ?? 12);
-}

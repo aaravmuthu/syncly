@@ -164,7 +164,10 @@ export type OptionSeed = {
   category: PlanCategory[];
   costMin: number;
   costMax: number;
+  /** Complete outings use the upper estimate for their all-in budget check. */
+  costForBudget?: number;
   travelMinutes: number;
+  durationMinutes?: number;
   start: string;
   end: string;
   location: string;
@@ -221,6 +224,10 @@ export type ScoreBreakdown = {
     curfewOk: boolean;
     curfewNote?: string | null;
   };
+  itinerary?: import("./itinerary").Itinerary;
+  itineraryDurationMinutes?: number;
+  /** Public candidate facts retained for a fresh server-side check at lock-in. */
+  optionSeed?: OptionSeed;
   venue?: {
     address?: string;
     distanceMiles?: number;

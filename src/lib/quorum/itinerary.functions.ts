@@ -33,7 +33,8 @@ export const startItinerary = createServerFn({ method: "POST" })
     z.object({
       prompt: v.reqText(2000),
       groupId: v.optId,
-      timeZone: z.string().max(64).optional(),
+      timeZone: v.timeZone.optional(),
+      current: itinerarySchema.optional(),
     }),
   )
   .handler(
@@ -58,7 +59,11 @@ export const startItinerary = createServerFn({ method: "POST" })
       await assertAiQuota(context.userId, "itinerary_draft");
       const tz = data.timeZone && isValidTimeZone(data.timeZone) ? data.timeZone : "UTC";
       const { draftItinerary } = await import("./ai.server");
-      const draft = await draftItinerary(prompt, zonedDateKey(new Date().toISOString(), tz));
+      const draft = await draftItinerary(
+        prompt,
+        zonedDateKey(new Date().toISOString(), tz),
+        data.current,
+      );
 
       const { normalizeZip } = await import("./location");
       const { geocodeZipServer } = await import("./location.server");
@@ -157,6 +162,8 @@ export const scoutItineraryStop = createServerFn({ method: "POST" })
         lon: s.lon,
         costMin: s.costMin,
         costMax: s.costMax,
+        openHours: s.openHours ?? null,
+        dietaryFriendly: s.dietaryFriendly,
         rating: s.rating != null ? Math.min(Math.max(s.rating, 0), 5) : null,
       });
       if (venues.length === 3) break;
@@ -196,15 +203,15 @@ export const launchItinerary = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       groupId: v.id,
-      timeZone: z.string().max(64).optional(),
+      timeZone: v.timeZone.optional(),
       itinerary: itinerarySchema,
     }),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const it = data.itinerary;
+    let it = data.itinerary;
     if (it.anchor >= it.stops.length) throw new Error("Pick which stop the group votes on");
-    if (it.stops.some((s) => s.pick >= Math.max(s.options.length, 1))) {
+    if (it.stops.some((s) => s.options.length === 0 || s.pick >= s.options.length)) {
       throw new Error("Every stop needs a pick");
     }
     const { data: me } = await supabase.rpc("my_profile_id");
@@ -214,6 +221,9 @@ export const launchItinerary = createServerFn({ method: "POST" })
       .select("profile_id")
       .eq("group_id", data.groupId);
     if (!members?.length) throw new Error("Forbidden");
+
+    const { verifyLiveItinerary } = await import("./itinerary-verification.server");
+    it = itinerarySchema.parse(await verifyLiveItinerary(it));
 
     const tz = data.timeZone && isValidTimeZone(data.timeZone) ? data.timeZone : "UTC";
     const { totalMinutes } = timeline(it);
@@ -231,6 +241,7 @@ export const launchItinerary = createServerFn({ method: "POST" })
         created_by: me,
         title: it.title,
         category: STOP_KINDS[anchor.kind].planCategory,
+        time_zone: tz,
         window_start: windowStart,
         window_end: windowEnd,
         location_area: it.zip,

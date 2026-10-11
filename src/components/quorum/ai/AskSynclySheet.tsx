@@ -13,6 +13,7 @@ import {
   type SynclyPlanRef,
 } from "@/lib/quorum/aiplus.functions";
 import { openPlanBuilder } from "./plan-builder-event";
+import { recentAiHistory } from "@/lib/quorum/ai-chat";
 import { ChatSheetShell } from "./ChatSheetShell";
 import { AiGlyph } from "./AiGlyph";
 
@@ -48,16 +49,18 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
   }, [trigger]);
   const [turns, setTurns] = useState<Turn[]>([]);
 
+  const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
   const askFn = useServerFn(askSyncly);
   const ask = useMutation({
-    mutationFn: (question: string) => askFn({ data: { question, history: turns } }),
+    mutationFn: (question: string) =>
+      askFn({ data: { question, history: recentAiHistory(turns) } }),
     onSuccess: (r) =>
       setTurns((prev) => [
         ...prev,
         { role: "assistant", content: r.answer, planRef: r.planRef, action: r.action },
       ]),
-    onError: (e: unknown) => {
-      setTurns((prev) => prev.slice(0, -1));
+    onError: (e: unknown, question: string) => {
+      setFailedQuestion(question);
       toast.error("Ask Syncly couldn't answer", {
         description: e instanceof Error ? e.message : "Please try again.",
       });
@@ -70,6 +73,7 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
   };
 
   const send = (text: string) => {
+    setFailedQuestion(null);
     setTurns((prev) => [...prev, { role: "user", content: text }]);
     ask.mutate(text);
   };
@@ -102,6 +106,18 @@ export function AskSynclySheet({ trigger = "icon" }: { trigger?: "icon" | "menu"
         pendingState="searching"
         pendingLabel="Looking through your squads…"
         onSend={send}
+        errorMessage={
+          failedQuestion ? "The question could not be answered. You can retry it." : undefined
+        }
+        onRetry={
+          failedQuestion
+            ? () => {
+                const question = failedQuestion;
+                setFailedQuestion(null);
+                ask.mutate(question);
+              }
+            : undefined
+        }
         renderTurnExtra={(t) => {
           if (t.action?.type === "create_plan") {
             return (

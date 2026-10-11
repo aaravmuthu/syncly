@@ -1,16 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Modal } from "@/components/quorum/Modal";
-import { Pill, Skeleton } from "@/components/quorum/ui";
 import { getVenueInsight } from "@/lib/quorum/reviews.functions";
-import {
-  googleReviewsUrl,
-  venuePhoto,
-  venuePhotoSrcSet,
-  venueStats,
-} from "@/lib/quorum/venuePhotos";
+import { googleReviewsUrl, venuePhoto, venuePhotoSrcSet } from "@/lib/quorum/venuePhotos";
 import { directionsUrl } from "@/lib/quorum/vibes";
-import { AiActivity } from "@/components/quorum/ai/AiActivity";
 
 export type VenueDetail = {
   key: string;
@@ -52,7 +45,6 @@ export function VenueDetailModal({
   });
 
   if (!venue) return null;
-  const stats = venueStats(venue.key || venue.title);
   const data = insight.data;
 
   return (
@@ -64,14 +56,11 @@ export function VenueDetailModal({
             srcSet={venuePhotoSrcSet(venue)}
             sizes="(max-width: 511px) calc(100vw - 2.5rem), 470px"
             decoding="async"
-            alt={`${venue.title} — ${venue.cuisine ?? venue.subtitle ?? "venue"}`}
+            alt={`Illustrative photo for ${venue.cuisine ?? venue.subtitle ?? "this category"}`}
             loading="lazy"
             className="h-40 w-full object-cover"
           />
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-3">
-            <span className="rounded-full bg-white/15 px-2 py-1 text-caption font-semibold text-white backdrop-blur">
-              {stats.ratingLabel}
-            </span>
             <span className="rounded-full bg-white/15 px-2 py-1 text-caption font-semibold text-white backdrop-blur">
               {venue.priceLevel ?? "$$"}
             </span>
@@ -80,54 +69,22 @@ export function VenueDetailModal({
 
         <p className="text-sm text-muted-foreground">{venue.address ?? venue.subtitle}</p>
 
-        {insight.isLoading ? (
-          <AiActivity
-            sync
-            state="composing"
-            label="Writing up what's good here…"
-            className="rounded-2xl border border-border px-4 py-3"
-          />
-        ) : data ? (
-          <div className="space-y-3">
-            {data.popularDishes.length ? (
-              <div>
-                <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">
-                  Popular picks
-                </p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {data.popularDishes.map((d) => (
-                    <Pill key={d} tone="accent">
-                      {d}
-                    </Pill>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {data.vibes.length ? (
-              <div className="flex flex-wrap gap-1.5">
-                {data.vibes.map((v) => (
-                  <Pill key={v}>{v}</Pill>
-                ))}
-              </div>
-            ) : null}
-
-            <div className="space-y-2">
-              {data.reviews.map((r) => (
-                <div key={r.author + r.text} className="rounded-2xl border border-border p-3">
-                  <p className="text-xs font-semibold">
-                    {r.author} · ★ {r.rating.toFixed(1)}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">{r.text}</p>
-                </div>
+        <p className="text-caption text-muted-foreground">
+          Illustrative photo. Prices and venue details should be confirmed before you go.
+        </p>
+        {data ? (
+          <div>
+            <h3 className="text-sm font-semibold">Before you go</h3>
+            <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+              {data.checks.map((check) => (
+                <li key={check}>{check}</li>
               ))}
-            </div>
-            <p className="text-caption text-muted-foreground">
-              {data.aiGenerated
-                ? "AI summary of what people say about spots like this — check Google for verified reviews."
-                : "Sample highlights — check Google for verified reviews."}
-            </p>
+            </ul>
           </div>
+        ) : insight.isError ? (
+          <p role="alert" className="text-sm">
+            Venue details are unavailable. Check the venue directly.
+          </p>
         ) : null}
 
         <div className="flex flex-wrap gap-2">
@@ -138,7 +95,7 @@ export function VenueDetailModal({
             rel="noopener noreferrer"
             className="inline-flex items-center rounded-xl border border-border px-3 py-2 text-xs font-medium hover:bg-secondary"
           >
-            Read 100+ reviews on Google Maps →
+            Check reviews on Google Maps →
           </a>
           <a
             href={directionsUrl({

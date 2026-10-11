@@ -4,7 +4,7 @@ import * as v from "./schemas";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { VenueInsight } from "./reviews.server";
 
-/** AI dish highlights, vibe tags and community-style reviews for one venue. */
+/** Factual checks to make before visiting a venue. */
 export const getVenueInsight = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -16,9 +16,7 @@ export const getVenueInsight = createServerFn({ method: "POST" })
       priceLevel: v.optText(20),
     }),
   )
-  .handler(async ({ data, context }): Promise<VenueInsight> => {
-    const { assertAiQuota } = await import("@/lib/ai-quota.server");
-    await assertAiQuota(context.userId, "venue_insight");
+  .handler(async ({ data }): Promise<VenueInsight> => {
     const { generateVenueInsight } = await import("./reviews.server");
     return generateVenueInsight({
       name: data.name,

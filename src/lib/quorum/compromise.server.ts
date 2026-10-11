@@ -107,13 +107,7 @@ export async function buildPlanBSuggestion(
         r.id !== current.id &&
         r.feasible &&
         !isOutdoorOption({ title: r.title, tags: (r.tags as string[] | null) ?? [] }),
-    ) ??
-    ctx.recs.find(
-      (r) =>
-        r.id !== current.id &&
-        !isOutdoorOption({ title: r.title, tags: (r.tags as string[] | null) ?? [] }),
-    ) ??
-    null;
+    ) ?? null;
 
   const { assertAiQuota } = await import("@/lib/ai-quota.server");
   await assertAiQuota(userId, "plan_b_pitch");
@@ -203,6 +197,7 @@ export async function buildConflictFacts(planId: string) {
       votes: (votes ?? []).filter((v) => v.recommendation_id === r.id).length,
       costMin: (r as { cost_min?: number | null }).cost_min ?? null,
       costMax: (r as { cost_max?: number | null }).cost_max ?? null,
+      feasible: Boolean(r.feasible),
     })),
     weather,
     dietaryNeeds: ctx.dietaryNeeds,

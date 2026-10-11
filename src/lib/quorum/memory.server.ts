@@ -8,6 +8,7 @@ export async function refreshGroupMemory(groupId: string) {
     .from("plans")
     .select("id, category, location_area, selected_recommendation_id")
     .eq("group_id", groupId)
+    .eq("status", "completed")
     .order("created_at", { ascending: false })
     .limit(40);
   if (!plans?.length) return;
@@ -32,12 +33,17 @@ export async function refreshGroupMemory(groupId: string) {
   const chosenIds = plans.map((p) => p.selected_recommendation_id).filter(Boolean) as string[];
   let avg_spend_min: number | null = null;
   let avg_spend_max: number | null = null;
+  let typicalTravelMinutes: number | null = null;
   const favorite_places: { title: string; count: number }[] = [];
   if (chosenIds.length) {
     const { data: recs } = await supabaseAdmin
       .from("recommendations")
       .select("title, cost_min, cost_max, travel_minutes")
       .in("id", chosenIds);
+    const travel = (recs ?? []).map((r) => r.travel_minutes).filter((v): v is number => v != null);
+    typicalTravelMinutes = travel.length
+      ? Math.round(travel.reduce((a, b) => a + b, 0) / travel.length)
+      : null;
     const mins = (recs ?? []).map((r) => Number(r.cost_min ?? 0));
     const maxes = (recs ?? []).map((r) => Number(r.cost_max ?? 0));
     if (mins.length) {
@@ -54,7 +60,6 @@ export async function refreshGroupMemory(groupId: string) {
     );
   }
 
-  const travelSource = plans.length;
   await supabaseAdmin.from("group_preferences").upsert(
     {
       group_id: groupId,
@@ -63,7 +68,7 @@ export async function refreshGroupMemory(groupId: string) {
       common_locations: common_locations as never,
       avg_spend_min,
       avg_spend_max,
-      typical_travel_minutes: travelSource ? 25 : null,
+      typical_travel_minutes: typicalTravelMinutes,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "group_id" },

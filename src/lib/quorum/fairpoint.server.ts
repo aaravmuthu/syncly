@@ -163,15 +163,26 @@ export function curfewWarnings(
   members: MemberBase[],
   endTime: string | null | undefined,
   drives: MemberDrive[],
+  startTime?: string,
+  durationMinutes?: number,
 ): CurfewWarning[] {
   if (!endTime) return [];
-  const end = toMin(endTime);
+  const start = startTime ? toMin(startTime) : null;
+  const rawEnd = toMin(endTime);
+  const end =
+    start != null && durationMinutes != null
+      ? start + durationMinutes
+      : start != null && rawEnd < start
+        ? rawEnd + 1440
+        : rawEnd;
   const out: CurfewWarning[] = [];
   for (const m of members) {
     if (!m.curfew) continue;
     const drive = drives.find((d) => d.profileId === m.profileId)?.minutes ?? 0;
     const home = end + drive;
-    if (home > toMin(m.curfew)) {
+    const curfew =
+      toMin(m.curfew) + (start != null && start >= 720 && toMin(m.curfew) < 360 ? 1440 : 0);
+    if (home > curfew) {
       out.push({ name: m.name, curfew: fmt(toMin(m.curfew)), wrapsAt: fmt(home) });
     }
   }

@@ -46,7 +46,7 @@ import { categoryMeta, type ScoreBreakdown } from "@/lib/quorum/types";
 import { directionsUrl } from "@/lib/quorum/vibes";
 import { toast } from "@/lib/quorum/toast";
 import { VenueDetailModal, type VenueDetail } from "@/components/quorum/VenueDetailModal";
-import { venuePhoto, venueStats } from "@/lib/quorum/venuePhotos";
+import { venuePhoto } from "@/lib/quorum/venuePhotos";
 import { haptic } from "@/lib/quorum/haptics";
 import { SwipeBack } from "@/components/quorum/interactions";
 import { firstName } from "@/lib/quorum/names";
@@ -482,7 +482,15 @@ function PlanPage() {
               loading={generate.isPending}
               orb="searching"
               className={`shrink-0${ended ? " hidden" : ""}`}
-              onClick={() => generate.mutate({ data: { planId, shuffle } })}
+              onClick={() =>
+                generate.mutate({
+                  data: {
+                    planId,
+                    shuffle,
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  },
+                })
+              }
             >
               {generate.isPending ? "Finding fair spots…" : "Find options"}
             </DynamicButton>
@@ -644,7 +652,7 @@ function PlanPage() {
                               category: r.category,
                               kind: b.venue?.kind ?? null,
                             })}
-                            alt={`${r.title} — ${b.venue?.cuisine ?? r.category}`}
+                            alt={`Illustrative photo for ${b.venue?.cuisine ?? r.category}`}
                             loading="lazy"
                             className="h-32 w-full object-cover transition active:scale-[0.98] hover:scale-[1.02]"
                           />
@@ -656,7 +664,7 @@ function PlanPage() {
                                   {b.venue.rating}
                                 </>
                               ) : (
-                                venueStats(r.id).ratingLabel
+                                "Rating not verified"
                               )}
                             </span>
                             <span className="rounded-full bg-white/15 px-2 py-0.5 text-caption font-semibold text-white backdrop-blur">
@@ -905,7 +913,13 @@ function PlanPage() {
                 onClick={() => {
                   const next = shuffle + 1;
                   setShuffle(next);
-                  generate.mutate({ data: { planId, shuffle: next } });
+                  generate.mutate({
+                    data: {
+                      planId,
+                      shuffle: next,
+                      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    },
+                  });
                 }}
               >
                 <Shuffle className="size-4" aria-hidden /> Shuffle · load 3 different options
