@@ -1,0 +1,78 @@
+[
+  {
+    "id": "m1",
+    "name": "Maya",
+    "emoji": "\ud83c\udf3f",
+    "sacrificeLoad": 0.6,
+    "constraints": {
+      "maxSpend": 20,
+      "dietary": [
+        "vegetarian"
+      ],
+      "likedTags": [
+        "cozy",
+        "indoor"
+      ],
+      "maxTravelMinutes": 20,
+      "needsRide": true,
+      "latestEnd": "21:30",
+      "parentApprovalRequired": true
+    }
+  },
+  {
+    "id": "m2",
+    "name": "Dev",
+    "emoji": "\ud83c\udfa7",
+    "sacrificeLoad": 0.1,
+    "constraints": {
+      "maxSpend": 45,
+      "likedTags": [
+        "games",
+        "active"
+      ],
+      "maxTravelMinutes": 35,
+      "canDrive": true,
+      "seats": 3,
+      "latestEnd": "23:00"
+    }
+  },
+  {
+    "id": "m3",
+    "name": "Sofia",
+    "emoji": "\ud83d\udcda",
+    "sacrificeLoad": 0.3,
+    "constraints": {
+      "maxSpend": 30,
+      "dietary": [
+        "gluten-free"
+      ],
+      "likedTags": [
+        "group",
+        "indoor"
+      ],
+      "dislikedTags": [
+        "late-night"
+      ],
+      "maxTravelMinutes": 25,
+      "needsRide": true,
+      "latestEnd": "22:00"
+    }
+  },
+  {
+    "id": "m4",
+    "name": "Theo",
+    "emoji": "\ud83c\udfc0",
+    "sacrificeLoad": 0.2,
+    "constraints": {
+      "maxSpend": 25,
+      "likedTags": [
+        "active",
+        "outdoor"
+      ],
+      "maxTravelMinutes": 30,
+      "canDrive": true,
+      "seats": 4,
+      "latestEnd": "22:30"
+    }
+  }
+]

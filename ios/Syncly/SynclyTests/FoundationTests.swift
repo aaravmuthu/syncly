@@ -54,4 +54,14 @@ struct FoundationTests {
     @Test func bundledConfigurationLoads() throws {
         _ = try AppConfiguration.load()
     }
+    @Test func serverTimestampFractionsPreserveCalendarDate() throws {
+        #expect(WireDate.parse("2026-05-04T12:00:00.123456+00:00") != nil)
+        #expect(WireDate.parse("2026-05-04T12:00:00Z") != nil)
+        #expect(WireDate.parse("not a timestamp") == nil)
+        let zone=try #require(TimeZone(secondsFromGMT:0))
+        let result=CalendarExport.dates(date:"2026-05-04T12:00:00.123456+00:00",start:"19:00",end:"21:00",timeZone:zone,now:Date(timeIntervalSince1970:0))
+        #expect(result.0 == WireDate.parse("2026-05-04T19:00:00Z"))
+        #expect(result.1 == WireDate.parse("2026-05-04T21:00:00Z"))
+    }
+
 }

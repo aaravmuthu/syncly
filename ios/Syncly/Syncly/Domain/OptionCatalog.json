@@ -1,0 +1,542 @@
+[
+  {
+    "key": "topgolf",
+    "title": "TopGolf",
+    "subtitle": "Bays, food, and everyone can play badly together",
+    "category": [
+      "hangout",
+      "sports",
+      "party"
+    ],
+    "costMin": 24,
+    "costMax": 32,
+    "travelMinutes": 12,
+    "start": "18:30",
+    "end": "21:30",
+    "location": "Main Event District",
+    "tags": [
+      "active",
+      "outdoor",
+      "games",
+      "group"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "gluten-free"
+    ],
+    "style": "casual",
+    "requiresDriving": true
+  },
+  {
+    "key": "bowling",
+    "title": "Pinstack Bowling",
+    "subtitle": "Two lanes, shoes included, easy on the wallet",
+    "category": [
+      "hangout",
+      "sports",
+      "party"
+    ],
+    "costMin": 16,
+    "costMax": 24,
+    "travelMinutes": 9,
+    "start": "18:00",
+    "end": "21:00",
+    "location": "Legacy Center",
+    "tags": [
+      "active",
+      "indoor",
+      "games",
+      "group"
+    ],
+    "dietaryFriendly": [
+      "vegetarian"
+    ],
+    "style": "casual",
+    "requiresDriving": true
+  },
+  {
+    "key": "ramen",
+    "title": "Kokoro Ramen",
+    "subtitle": "Fast, warm, vegetarian broth available",
+    "category": [
+      "dinner"
+    ],
+    "costMin": 14,
+    "costMax": 22,
+    "travelMinutes": 8,
+    "start": "18:00",
+    "end": "20:00",
+    "location": "Downtown",
+    "tags": [
+      "asian",
+      "japanese",
+      "noodles",
+      "cozy"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "nut-free"
+    ],
+    "style": "casual",
+    "requiresDriving": false
+  },
+  {
+    "key": "taco",
+    "title": "Vera's Taqueria",
+    "subtitle": "Cheap, quick, and open late",
+    "category": [
+      "dinner",
+      "hangout"
+    ],
+    "costMin": 9,
+    "costMax": 16,
+    "travelMinutes": 6,
+    "start": "17:30",
+    "end": "19:30",
+    "location": "5th & Oak",
+    "tags": [
+      "mexican",
+      "casual",
+      "late-night"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "gluten-free",
+      "halal"
+    ],
+    "style": "fast food",
+    "requiresDriving": false
+  },
+  {
+    "key": "italian",
+    "title": "Nonna Rosa",
+    "subtitle": "Sit-down pasta, good for a real occasion",
+    "category": [
+      "dinner"
+    ],
+    "costMin": 28,
+    "costMax": 44,
+    "travelMinutes": 18,
+    "start": "19:00",
+    "end": "21:30",
+    "location": "Riverwalk",
+    "tags": [
+      "italian",
+      "pasta",
+      "date-night"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "gluten-free"
+    ],
+    "style": "sit-down",
+    "requiresDriving": true
+  },
+  {
+    "key": "korean-bbq",
+    "title": "Ssam Korean BBQ",
+    "subtitle": "All-you-can-eat, loud and fun",
+    "category": [
+      "dinner",
+      "party"
+    ],
+    "costMin": 30,
+    "costMax": 42,
+    "travelMinutes": 22,
+    "start": "19:00",
+    "end": "21:45",
+    "location": "North Plaza",
+    "tags": [
+      "korean",
+      "asian",
+      "bbq",
+      "group"
+    ],
+    "dietaryFriendly": [
+      "gluten-free"
+    ],
+    "style": "sit-down",
+    "requiresDriving": true
+  },
+  {
+    "key": "pizza-park",
+    "title": "Slice Shop + Riverside Park",
+    "subtitle": "Pizza to-go and a walk, basically free",
+    "category": [
+      "dinner",
+      "hangout"
+    ],
+    "costMin": 7,
+    "costMax": 13,
+    "travelMinutes": 5,
+    "start": "17:30",
+    "end": "19:30",
+    "location": "Riverside",
+    "tags": [
+      "pizza",
+      "outdoor",
+      "chill",
+      "cheap"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan"
+    ],
+    "style": "fast food",
+    "requiresDriving": false
+  },
+  {
+    "key": "dessert",
+    "title": "Milk & Honey Dessert Bar",
+    "subtitle": "Late enough to fit after anything",
+    "category": [
+      "dinner",
+      "hangout",
+      "movie"
+    ],
+    "costMin": 8,
+    "costMax": 14,
+    "travelMinutes": 7,
+    "start": "20:00",
+    "end": "21:30",
+    "location": "Market Square",
+    "tags": [
+      "dessert",
+      "cafe",
+      "chill"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "gluten-free",
+      "nut-free"
+    ],
+    "style": "dessert",
+    "requiresDriving": false
+  },
+  {
+    "key": "cafe",
+    "title": "Foxglove Cafe",
+    "subtitle": "Quiet corner tables, nothing over $12",
+    "category": [
+      "hangout",
+      "dinner"
+    ],
+    "costMin": 6,
+    "costMax": 12,
+    "travelMinutes": 6,
+    "start": "16:00",
+    "end": "18:30",
+    "location": "Old Town",
+    "tags": [
+      "cafe",
+      "quiet",
+      "cheap",
+      "indoor"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "gluten-free"
+    ],
+    "style": "cafe",
+    "requiresDriving": false
+  },
+  {
+    "key": "movie",
+    "title": "Cinema 12 \u2014 evening show",
+    "subtitle": "Reserved seats, out before curfew",
+    "category": [
+      "movie",
+      "hangout"
+    ],
+    "costMin": 13,
+    "costMax": 20,
+    "travelMinutes": 11,
+    "start": "18:45",
+    "end": "21:00",
+    "location": "Northgate",
+    "tags": [
+      "movie",
+      "indoor",
+      "chill"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "gluten-free",
+      "halal"
+    ],
+    "style": "venue",
+    "requiresDriving": true
+  },
+  {
+    "key": "arcade",
+    "title": "Quarterback Arcade",
+    "subtitle": "Pay-per-play, no minimum",
+    "category": [
+      "hangout",
+      "party",
+      "sports"
+    ],
+    "costMin": 10,
+    "costMax": 20,
+    "travelMinutes": 10,
+    "start": "17:00",
+    "end": "20:30",
+    "location": "Midtown",
+    "tags": [
+      "games",
+      "indoor",
+      "cheap",
+      "group"
+    ],
+    "dietaryFriendly": [
+      "vegetarian"
+    ],
+    "style": "casual",
+    "requiresDriving": false
+  },
+  {
+    "key": "concert-local",
+    "title": "The Vault \u2014 local showcase",
+    "subtitle": "All-ages, standing room, early set",
+    "category": [
+      "concert"
+    ],
+    "costMin": 18,
+    "costMax": 28,
+    "travelMinutes": 15,
+    "start": "19:00",
+    "end": "22:00",
+    "location": "Warehouse District",
+    "tags": [
+      "music",
+      "indie",
+      "all-ages"
+    ],
+    "dietaryFriendly": [],
+    "style": "venue",
+    "requiresDriving": true
+  },
+  {
+    "key": "concert-arena",
+    "title": "Arena Tour Night",
+    "subtitle": "Big show, big price, late finish",
+    "category": [
+      "concert"
+    ],
+    "costMin": 78,
+    "costMax": 140,
+    "travelMinutes": 34,
+    "start": "19:30",
+    "end": "23:15",
+    "location": "Metro Arena",
+    "tags": [
+      "music",
+      "pop",
+      "arena"
+    ],
+    "dietaryFriendly": [],
+    "style": "venue",
+    "requiresDriving": true
+  },
+  {
+    "key": "amphitheater",
+    "title": "Riverside Amphitheater",
+    "subtitle": "Lawn seats, cheaper tier available",
+    "category": [
+      "concert",
+      "daytrip"
+    ],
+    "costMin": 32,
+    "costMax": 55,
+    "travelMinutes": 24,
+    "start": "18:30",
+    "end": "22:00",
+    "location": "Riverside",
+    "tags": [
+      "music",
+      "outdoor",
+      "lawn"
+    ],
+    "dietaryFriendly": [
+      "vegetarian"
+    ],
+    "style": "venue",
+    "requiresDriving": true
+  },
+  {
+    "key": "beach-weekend",
+    "title": "Gulf Shore \u2014 3 nights",
+    "subtitle": "Shared condo, drive down Friday",
+    "category": [
+      "trip",
+      "roadtrip"
+    ],
+    "costMin": 210,
+    "costMax": 340,
+    "travelMinutes": 320,
+    "start": "08:00",
+    "end": "20:00",
+    "location": "Gulf Coast",
+    "tags": [
+      "beach",
+      "warm",
+      "swimming",
+      "relaxed"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan"
+    ],
+    "style": "trip",
+    "requiresDriving": true
+  },
+  {
+    "key": "mountain-cabin",
+    "title": "Ridge Cabin \u2014 2 nights",
+    "subtitle": "Hiking, cooking in, one car",
+    "category": [
+      "trip",
+      "roadtrip"
+    ],
+    "costMin": 140,
+    "costMax": 220,
+    "travelMinutes": 240,
+    "start": "09:00",
+    "end": "18:00",
+    "location": "Blue Ridge",
+    "tags": [
+      "mountains",
+      "nature",
+      "hiking",
+      "quiet"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "gluten-free"
+    ],
+    "style": "trip",
+    "requiresDriving": true
+  },
+  {
+    "key": "city-weekend",
+    "title": "City Weekend \u2014 2 nights",
+    "subtitle": "Train in, museums, street food",
+    "category": [
+      "trip",
+      "daytrip"
+    ],
+    "costMin": 180,
+    "costMax": 300,
+    "travelMinutes": 150,
+    "start": "08:30",
+    "end": "21:00",
+    "location": "Metro Center",
+    "tags": [
+      "city",
+      "museums",
+      "food",
+      "walkable"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "halal",
+      "gluten-free"
+    ],
+    "style": "trip",
+    "requiresDriving": false
+  },
+  {
+    "key": "lake-day",
+    "title": "Lakeside Day Trip",
+    "subtitle": "Pack lunch, back before dark",
+    "category": [
+      "daytrip",
+      "hangout",
+      "roadtrip"
+    ],
+    "costMin": 12,
+    "costMax": 25,
+    "travelMinutes": 55,
+    "start": "10:00",
+    "end": "17:00",
+    "location": "Lake Verde",
+    "tags": [
+      "nature",
+      "outdoor",
+      "cheap",
+      "swimming"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "gluten-free",
+      "halal",
+      "nut-free"
+    ],
+    "style": "outdoor",
+    "requiresDriving": true
+  },
+  {
+    "key": "thrift-crawl",
+    "title": "Thrift Crawl + Boba",
+    "subtitle": "Four shops, spend what you want",
+    "category": [
+      "shopping",
+      "hangout"
+    ],
+    "costMin": 10,
+    "costMax": 35,
+    "travelMinutes": 13,
+    "start": "13:00",
+    "end": "17:00",
+    "location": "Old Town",
+    "tags": [
+      "shopping",
+      "walkable",
+      "cheap"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan"
+    ],
+    "style": "casual",
+    "requiresDriving": false
+  },
+  {
+    "key": "house-party",
+    "title": "Backyard Hangout",
+    "subtitle": "Someone hosts, everyone brings one thing",
+    "category": [
+      "party",
+      "hangout",
+      "custom"
+    ],
+    "costMin": 0,
+    "costMax": 10,
+    "travelMinutes": 8,
+    "start": "18:00",
+    "end": "22:00",
+    "location": "Someone's place",
+    "tags": [
+      "chill",
+      "outdoor",
+      "cheap",
+      "group"
+    ],
+    "dietaryFriendly": [
+      "vegetarian",
+      "vegan",
+      "gluten-free",
+      "halal",
+      "nut-free"
+    ],
+    "style": "casual",
+    "requiresDriving": false
+  }
+]

@@ -56,5 +56,24 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>website.syncly.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>syncly</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Share your location with approved people when you choose to use Radar or send it in a message.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Record a voice note when you choose to attach one to a direct message.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan a Syncly group invite QR code.</string>
+	<key>SYNCLY_LIVE_DATA_ENABLED</key>
+	<string>$(SYNCLY_LIVE_DATA_ENABLED)</string>
 </dict>
 </plist>
