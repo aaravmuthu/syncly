@@ -45,6 +45,7 @@ import { Route as AuthenticatedAppSettingsAccountRouteImport } from './routes/_a
 import { Route as AuthenticatedAppSettingsInfoRouteImport } from './routes/_authenticated/_app/settings.info'
 import { Route as AuthenticatedAppSettingsPlanningRouteImport } from './routes/_authenticated/_app/settings.planning'
 import { Route as AuthenticatedAppSettingsProfileRouteImport } from './routes/_authenticated/_app/settings.profile'
+import { Route as ApiIosV1OperationsOperationRouteImport } from './routes/api/ios/v1/operations/$operation'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -239,6 +240,12 @@ const AuthenticatedAppSettingsProfileRoute =
     path: '/settings/profile',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiIosV1OperationsOperationRoute =
+  ApiIosV1OperationsOperationRouteImport.update({
+    id: '/api/ios/v1/operations/$operation',
+    path: '/api/ios/v1/operations/$operation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/groups/': typeof AuthenticatedAppGroupsIndexRoute
   '/plans/': typeof AuthenticatedAppPlansIndexRoute
   '/settings/': typeof AuthenticatedAppSettingsIndexRoute
+  '/api/ios/v1/operations/$operation': typeof ApiIosV1OperationsOperationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -311,6 +319,7 @@ export interface FileRoutesByTo {
   '/groups': typeof AuthenticatedAppGroupsIndexRoute
   '/plans': typeof AuthenticatedAppPlansIndexRoute
   '/settings': typeof AuthenticatedAppSettingsIndexRoute
+  '/api/ios/v1/operations/$operation': typeof ApiIosV1OperationsOperationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -350,6 +359,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/groups/': typeof AuthenticatedAppGroupsIndexRoute
   '/_authenticated/_app/plans/': typeof AuthenticatedAppPlansIndexRoute
   '/_authenticated/_app/settings/': typeof AuthenticatedAppSettingsIndexRoute
+  '/api/ios/v1/operations/$operation': typeof ApiIosV1OperationsOperationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -388,6 +398,7 @@ export interface FileRouteTypes {
     | '/groups/'
     | '/plans/'
     | '/settings/'
+    | '/api/ios/v1/operations/$operation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/plans'
     | '/settings'
+    | '/api/ios/v1/operations/$operation'
   id:
     | '__root__'
     | '/'
@@ -462,6 +474,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/groups/'
     | '/_authenticated/_app/plans/'
     | '/_authenticated/_app/settings/'
+    | '/api/ios/v1/operations/$operation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -482,6 +495,7 @@ export interface RootRouteChildren {
   JoinCodeRoute: typeof JoinCodeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiIosV1OperationsOperationRoute: typeof ApiIosV1OperationsOperationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -738,6 +752,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsProfileRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/ios/v1/operations/$operation': {
+      id: '/api/ios/v1/operations/$operation'
+      path: '/api/ios/v1/operations/$operation'
+      fullPath: '/api/ios/v1/operations/$operation'
+      preLoaderRoute: typeof ApiIosV1OperationsOperationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -818,6 +839,7 @@ const rootRouteChildren: RootRouteChildren = {
   JoinCodeRoute: JoinCodeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiIosV1OperationsOperationRoute: ApiIosV1OperationsOperationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
