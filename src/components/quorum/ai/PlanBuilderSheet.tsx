@@ -107,7 +107,7 @@ export function PlanBuilderSheet() {
   }, [groupId, groupList]);
 
   const build = useCallback(
-    async (text: string, forGroup: string | null) => {
+    async (text: string, forGroup: string | null, previous?: Itinerary) => {
       const id = ++run.current;
       const alive = () => run.current === id;
       window.clearTimeout(moodTimer.current);
@@ -123,6 +123,7 @@ export function PlanBuilderSheet() {
         const res = await startFn({
           data: {
             prompt: text,
+            current: previous,
             groupId: forGroup,
             timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           },
@@ -133,7 +134,8 @@ export function PlanBuilderSheet() {
         if (res.fairCount > 1) say(`Found the fair middle for ${res.fairCount} of you`);
       } catch (e) {
         if (!alive()) return;
-        setPhase("compose");
+        setPhase(previous ? "review" : "compose");
+        if (previous) setIt(previous);
         setMood("oops");
         toast.error("Sync couldn't plan that", {
           description: e instanceof Error ? e.message : "Try describing it again.",
@@ -151,7 +153,14 @@ export function PlanBuilderSheet() {
         areaLabel: origin?.label ?? null,
         zip: origin?.zip ?? null,
         anchor: draft.anchor,
-        stops: draft.stops.map((s) => ({ ...s, options: [], pick: 0 })),
+        stops: draft.stops.map((s) => {
+          const old = previous?.stops.find((p) => p.id === s.id && p.kind === s.kind);
+          const keep =
+            old &&
+            !draft.rescoutStopIds?.includes(s.id) &&
+            previous?.budgetPerPerson === draft.budgetPerPerson;
+          return { ...s, options: keep ? old.options : [], pick: keep ? old.pick : 0 };
+        }),
         invite: draft.invite,
         weather: null,
       };
@@ -166,12 +175,27 @@ export function PlanBuilderSheet() {
         return;
       }
 
+      if (previous && draft.aiGenerated === false) {
+        setIt(previous);
+        setStatus({});
+        setPhase("review");
+        setMood("oops");
+        say("AI is unavailable. Your previous plan is kept — edit it directly or retry.");
+        return;
+      }
       setMood("curious");
       let near = origin;
       const used: string[] = [];
       const city = origin.label.split(",")[0] ?? origin.label;
       for (const [i, stop] of shell.stops.entries()) {
         if (!alive()) return;
+        if (stop.options.length) {
+          const venue = stop.options[stop.pick];
+          if (venue) near = { ...near, lat: venue.lat, lon: venue.lon };
+          used.push(...stop.options.map((o) => o.key));
+          setStatus((s) => ({ ...s, [stop.id]: "done" }));
+          continue;
+        }
         setStatus((s) => ({ ...s, [stop.id]: "scouting" }));
         say(`Scouting ${STOP_KINDS[stop.kind].label.toLowerCase()} near ${city}…`);
         let options: Itinerary["stops"][number]["options"] = [];
@@ -222,7 +246,11 @@ export function PlanBuilderSheet() {
       setStatus({});
       setPhase("review");
       flash("celebrate", "smile", 1600);
-      say("Here's your night — tap a spot to swap it");
+      say(
+        draft.aiGenerated === false
+          ? "Basic draft — check the date, time and stops before launching."
+          : "Here's your night — tap a spot to swap it",
+      );
     },
     [startFn, scoutFn, forecastFn, say, flash],
   );
@@ -265,14 +293,16 @@ export function PlanBuilderSheet() {
     const c = change.trim();
     if (!c) return;
     setTweak("");
-    void build(`${prompt.trim()}. Change: ${c}`, groupId);
+    void build(c, groupId, it ?? undefined);
   };
 
   const launch = async () => {
     if (!it || !groupId) return;
-    const kept = it.stops.filter((s) => s.options.length);
-    if (!kept.length) {
-      toast.error("No spots to launch", { description: "Rebuild or try a different area." });
+    const kept = it.stops;
+    if (kept.some((s) => !s.options.length)) {
+      toast.error("Some stops need a spot", {
+        description: "Find a venue or remove the unresolved stop before launching.",
+      });
       return;
     }
     const anchorId = it.stops[it.anchor]?.id;
@@ -313,7 +343,7 @@ export function PlanBuilderSheet() {
   const edit = (fn: (cur: Itinerary) => Itinerary) => setIt((cur) => (cur ? fn(cur) : cur));
   const timed = it ? timeline(it) : null;
   const cost = it ? costRange(it) : null;
-  const overBudget = Boolean(it?.budgetPerPerson && cost && cost.min > it.budgetPerPerson);
+  const overBudget = Boolean(it?.budgetPerPerson != null && cost && cost.max > it.budgetPerPerson);
   const outdoorRisk = Boolean(
     it?.weather?.outdoorRisk && it.stops.some((s) => OUTDOOR.includes(s.kind)),
   );

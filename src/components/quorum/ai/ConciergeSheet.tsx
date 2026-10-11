@@ -13,6 +13,7 @@ import {
 import { castVote } from "@/lib/quorum/plan.functions";
 import { applyAiCompromise } from "@/lib/quorum/ai.functions";
 import { sendMessage } from "@/lib/quorum/chat.functions";
+import { recentAiHistory } from "@/lib/quorum/ai-chat";
 import { ChatSheetShell } from "./ChatSheetShell";
 import { AiGlyph } from "./AiGlyph";
 
@@ -49,13 +50,15 @@ export function ConciergeSheet({
   useEffect(() => setMounted(true), []);
 
   const qc = useQueryClient();
+  const [failedQuestion, setFailedQuestion] = useState<string | null>(null);
   const askFn = useServerFn(askPlanConcierge);
   const ask = useMutation({
-    mutationFn: (question: string) => askFn({ data: { planId, question, history: turns } }),
+    mutationFn: (question: string) =>
+      askFn({ data: { planId, question, history: recentAiHistory(turns) } }),
     onSuccess: (r) =>
       setTurns((prev) => [...prev, { role: "assistant", content: r.answer, action: r.action }]),
-    onError: (e: unknown) => {
-      setTurns((prev) => prev.slice(0, -1));
+    onError: (e: unknown, question: string) => {
+      setFailedQuestion(question);
       toast.error("The concierge couldn't answer", {
         description: e instanceof Error ? e.message : "Please try again.",
       });
@@ -76,11 +79,22 @@ export function ConciergeSheet({
           toast.success(`Voted for ${action.recommendationTitle}`);
           void qc.invalidateQueries({ queryKey: ["plan", planId] });
           break;
-        case "change_time":
-          await runCompromise({ data: { planId, startTime: action.newStartTime } });
-          toast.success(`Start time changed to ${action.newStartTime}`);
+        case "change_time": {
+          const result = await runCompromise({
+            data: {
+              planId,
+              startTime: action.newStartTime,
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
+          });
+          toast.success(`Start time changed to ${action.newStartTime}`, {
+            description: result.optionsReady
+              ? "Review the refreshed options and vote again."
+              : "The old choices were cleared. Collect answers or refresh options to continue.",
+          });
           void qc.invalidateQueries({ queryKey: ["plan", planId] });
           break;
+        }
         case "select_option":
           await runCompromise({ data: { planId, recommendationId: action.recommendationId } });
           toast.success(`${action.recommendationTitle} locked in`, {
@@ -104,6 +118,7 @@ export function ConciergeSheet({
   };
 
   const send = (text: string) => {
+    setFailedQuestion(null);
     setTurns((prev) => [...prev, { role: "user", content: text }]);
     ask.mutate(text);
   };
@@ -141,6 +156,18 @@ export function ConciergeSheet({
         pendingState="composing"
         pendingLabel="Writing an answer…"
         onSend={send}
+        errorMessage={
+          failedQuestion ? "The question could not be answered. You can retry it." : undefined
+        }
+        onRetry={
+          failedQuestion
+            ? () => {
+                const question = failedQuestion;
+                setFailedQuestion(null);
+                ask.mutate(question);
+              }
+            : undefined
+        }
         renderTurnExtra={(t, i) =>
           t.action ? (
             <ActionCard

@@ -3,7 +3,7 @@
 // deterministic, non-AI result instead of an error.
 import { generateText, NoObjectGeneratedError, Output } from "ai";
 import { z } from "zod";
-import { aiModel, recordAiFailure } from "@/lib/ai-gateway.server";
+import { aiModel, aiGenerationOptions, recordAiFailure } from "@/lib/ai-gateway.server";
 import { CATEGORIES, type PlanCategory, type ScoreBreakdown } from "./types";
 import type { Forecast } from "./weather";
 import {
@@ -113,7 +113,7 @@ function coerceDraft(raw: unknown, prompt: string): MagicDraft {
       ? (cat as PlanCategory)
       : base.category,
     date: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null,
-    time: time && /^\d{1,2}:\d{2}/.test(time) ? time.slice(0, 5).padStart(5, "0") : null,
+    time: time && /^(?:[01]?\d|2[0-3]):[0-5]\d$/.test(time) ? time.padStart(5, "0") : null,
     budgetTier: tier === "low" || tier === "medium" || tier === "high" ? tier : null,
     maxSpendPerPerson:
       num(
@@ -144,6 +144,7 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
   try {
     const { output } = await generateText({
       model: aiModel("magic_plan_draft"),
+      ...aiGenerationOptions("magic_plan_draft"),
       output: Output.object({ schema: DraftSchema }),
       prompt: instructions,
     });
@@ -153,16 +154,8 @@ export async function parseMagicPrompt(prompt: string, todayIso: string): Promis
     if (NoObjectGeneratedError.isInstance(error)) {
       return coerceDraft(extractJson(error.text), prompt);
     }
-    try {
-      const { text } = await generateText({
-        model: aiModel("magic_plan_draft"),
-        prompt: instructions,
-      });
-      return coerceDraft(extractJson(text), prompt);
-    } catch (retryError) {
-      void recordAiFailure("magic_plan_draft", retryError);
-      return heuristicDraft(prompt);
-    }
+    void recordAiFailure("magic_plan_draft", error);
+    return heuristicDraft(prompt);
   }
 }
 
@@ -196,15 +189,9 @@ const SummarySchema = z.object({
 });
 
 function fallbackSummary(f: CompromiseFacts): string {
-  const budget =
-    f.tightestBudget != null
-      ? `the group's tightest $${f.tightestBudget} cap`
-      : "everyone's budget";
-  const travel =
-    f.tightestTravelMinutes != null ? `${f.tightestTravelMinutes} min` : `${f.travelMinutes} min`;
   return f.feasible
-    ? `${f.score}% group match — fits ${budget} at $${f.costMin}–${f.costMax} per person and keeps drive time near ${travel} for everyone.`
-    : `${f.score}% group match — ${f.blockedCount} of ${f.memberCount} still have a hard conflict here, usually budget or curfew.`;
+    ? `${f.score}% group match — estimated $${f.costMin}–${f.costMax} per person. This option meets everyone's requirements.`
+    : `${f.score}% group match — this option does not meet every requirement. Refresh the options or review your own private answers.`;
 }
 
 export async function summarizeCompromises(
@@ -216,13 +203,14 @@ export async function summarizeCompromises(
   try {
     const { output } = await generateText({
       model: aiModel("compromise_summaries"),
+      ...aiGenerationOptions("compromise_summaries"),
       output: Output.object({ schema: SummarySchema }),
       prompt: [
         "You explain why a group activity option works, for a privacy-first planning app.",
         "Write exactly two short sentences per option, under 240 characters total.",
         "Start with the match percentage, e.g. '94% group match — ...'.",
         "PRIVACY RULE: never name a person and never attribute a constraint to an individual.",
-        "Talk about the group as a whole ('the tightest $25 budget in the group', 'everyone stays under 12 minutes of driving').",
+        "Use only public option facts and pass/fail outcomes. Never reveal a private budget cap, curfew, dietary answer, or travel limit.",
         "Be concrete with the numbers provided. If the option is not feasible, say plainly what still blocks it.",
         'Reply with ONLY JSON: {"items":[{"id":string,"summary":string}]} — one entry per option below.',
         "",
@@ -237,9 +225,6 @@ export async function summarizeCompromises(
             distance_miles: f.distanceMiles,
             group_size: f.memberCount,
             members_blocked: f.blockedCount,
-            tightest_budget_cap: f.tightestBudget,
-            tightest_travel_limit_minutes: f.tightestTravelMinutes,
-            dietary_needs_in_group: f.dietaryNeeds,
             fit_scores: {
               budget: f.breakdown.budgetFit,
               schedule: f.breakdown.scheduleFit,
@@ -305,6 +290,7 @@ export async function writePlanBPitch(input: {
   try {
     const { output } = await generateText({
       model: aiModel("plan_b_pitch"),
+      ...aiGenerationOptions("plan_b_pitch"),
       output: Output.object({ schema: PlanBSchema }),
       prompt: [
         "Write a two-sentence weather warning for a group plan, friendly and direct.",
@@ -353,6 +339,7 @@ export type ConflictFacts = {
     id: string;
     costMin: number | null;
     costMax: number | null;
+    feasible: boolean;
   }[];
   /** Forecast for the top option's location/date, when available. */
   weather: { summary: string; precipProbability: number | null; alert: boolean } | null;
@@ -373,55 +360,39 @@ export type CompromisePlan = {
 const CompromiseSchema = z.object({
   headline: z.string(),
   detail: z.string(),
-  suggested_start: z.string().nullable(),
 });
 
-const clock = (mins: number) => {
-  const m = ((Math.round(mins) % 1440) + 1440) % 1440;
-  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-};
-const asMins = (t: string | null) =>
-  t ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5)) : null;
-
 /** Deterministic compromise used when AI is unavailable or unusable. */
-function heuristicCompromise(f: ConflictFacts): CompromisePlan {
-  const start = asMins(f.startTime);
-  const end = asMins(f.endTime);
-  const curfew = asMins(f.earliestCurfew);
-  const drive = f.longestDriveMinutes ?? 20;
-  let suggestedStart: string | null = null;
-  if (start != null && end != null && curfew != null && end + drive > curfew) {
-    const shift = end + drive - curfew;
-    suggestedStart = clock(Math.max(start - shift, 15 * 60));
-  }
-  const leader = [...f.voteSplit].sort((a, b) => b.votes - a.votes)[0] ?? null;
-  const tie =
-    f.voteSplit.filter((v) => v.votes === (leader?.votes ?? 0)).length > 1 &&
-    (leader?.votes ?? 0) > 0;
+export function heuristicCompromise(f: ConflictFacts): CompromisePlan {
+  const leader = [...f.voteSplit].sort((a, b) => b.votes - a.votes)[0];
+  const tie = Boolean(
+    leader?.votes && f.voteSplit.filter((v) => v.votes === leader.votes).length > 1,
+  );
   const overBudget =
     f.tightestBudget != null && f.topCostMax != null && f.topCostMax > f.tightestBudget;
-
-  const headline = suggestedStart
-    ? `Shift the start to ${clock(asMins(suggestedStart)!)} so everyone clears curfew`
-    : tie
-      ? "The vote is split — lock the fairest option to break the tie"
-      : overBudget
-        ? "Pick the cheaper option so the tightest budget in the group still works"
-        : "This plan already works for everyone";
-
+  const timingConflict = f.curfewBreachCount > 0;
+  const needed = tie || overBudget || timingConflict;
+  const safe = f.voteSplit
+    .filter(
+      (v) => v.feasible && (!overBudget || (v.costMax != null && v.costMax <= f.tightestBudget!)),
+    )
+    .sort((a, b) => b.votes - a.votes || (a.costMax ?? Infinity) - (b.costMax ?? Infinity))[0];
+  const proposed = !timingConflict && (tie || overBudget) ? safe : null;
   return {
-    needed: Boolean(suggestedStart || tie || overBudget),
-    headline,
-    detail: suggestedStart
-      ? `Ending earlier leaves ${drive} minutes of drive time before the earliest curfew in the group.`
-      : tie
-        ? "Two options are tied. The fairest drive-time option keeps everyone's travel even."
-        : overBudget
-          ? `The top pick runs up to $${f.topCostMax} per person, above the group's tightest cap of $${f.tightestBudget}.`
-          : "No budget, curfew, or travel conflicts are open right now.",
-    suggestedStart,
-    suggestedRecommendationId: tie || overBudget ? (leader?.id ?? null) : null,
-    suggestedRecommendationTitle: tie || overBudget ? (leader?.title ?? null) : null,
+    needed,
+    headline: !needed
+      ? "This plan meets the current requirements"
+      : proposed
+        ? `Consider ${proposed.title}`
+        : "This outing needs another look",
+    detail: proposed
+      ? "This available option meets the group’s requirements."
+      : needed
+        ? "Refresh the options or review your own private answers. A change must be checked before the plan is locked in."
+        : "No timing or budget conflict was found in the current options.",
+    suggestedStart: null,
+    suggestedRecommendationId: proposed?.id ?? null,
+    suggestedRecommendationTitle: proposed?.title ?? null,
   };
 }
 
@@ -432,45 +403,24 @@ export async function writeCompromise(f: ConflictFacts): Promise<CompromisePlan>
   try {
     const { output } = await generateText({
       model: aiModel("ai_compromise"),
+      ...aiGenerationOptions("ai_compromise"),
       output: Output.object({ schema: CompromiseSchema }),
       prompt: [
-        "You resolve scheduling conflicts for a privacy-first group planning app.",
-        "PRIVACY RULE: never name a person; talk about the group ('the earliest curfew in the group').",
-        "Propose ONE concrete compromise that satisfies budget, curfew and travel limits together.",
-        "You're also given each option's cost range and votes together — weigh cost against how many",
-        "people already voted for it, not just vote count alone, and weigh the forecast (when given)",
-        "as a real reason to favor a different time or option, same as budget or curfew.",
-        "headline: under 90 characters, action-first. detail: one sentence explaining the trade-off.",
-        "suggested_start: 24h HH:MM start time, or null when the timing is already fine.",
-        "",
+        "Explain this already checked proposal in plain language. Do not propose a different time or venue.",
+        "Never reveal an individual's budget, curfew, diet, or travel limit. Never claim all constraints pass when no validated proposal exists.",
+        "headline: under 90 characters. detail: one short sentence.",
         JSON.stringify({
           plan: f.planTitle,
-          category: f.category,
-          group_size: f.memberCount,
-          current_start: f.startTime,
-          current_end: f.endTime,
-          earliest_curfew_in_group: f.earliestCurfew,
-          members_breaching_curfew: f.curfewBreachCount,
-          tightest_budget_cap: f.tightestBudget,
-          top_option_cost: [f.topCostMin, f.topCostMax],
-          vote_split: f.voteSplit.map((v) => ({
-            option: v.title,
-            votes: v.votes,
-            cost: [v.costMin, v.costMax],
-          })),
-          forecast: f.weather,
-          dietary_needs_in_group: f.dietaryNeeds,
-          longest_drive_minutes: f.longestDriveMinutes,
-          travel_limit_minutes: f.travelLimitMinutes,
+          proposed_option: fallback.suggestedRecommendationTitle,
+          needs_new_options: !fallback.suggestedRecommendationId,
+          explanation: fallback.detail,
         }),
       ].join("\n"),
     });
-    const start = output.suggested_start?.trim() || null;
     return {
       ...fallback,
       headline: output.headline.trim() || fallback.headline,
       detail: output.detail.trim() || fallback.detail,
-      suggestedStart: /^\d{2}:\d{2}$/.test(start ?? "") ? start : fallback.suggestedStart,
     };
   } catch (error) {
     void recordAiFailure("ai_compromise", error);
@@ -500,6 +450,7 @@ const ItinerarySchema = z.object({
   ),
   anchor_index: z.number(),
   invite_message: z.string(),
+  rescout_stop_ids: z.array(z.string()),
 });
 
 /** Stop kinds a prompt plainly names, in the order it names them. */
@@ -550,7 +501,7 @@ function heuristicItinerary(prompt: string, todayIso: string): ItineraryDraft {
     version: 1,
     title: base.title,
     vibe: "",
-    date: base.date ?? todayIso,
+    date: base.date,
     start: base.time ?? "18:30",
     budgetPerPerson: base.maxSpendPerPerson,
     anchor: 0,
@@ -592,8 +543,8 @@ function coerceItinerary(
     title: raw.title.trim().slice(0, 80) || base.title,
     vibe: raw.vibe.trim().slice(0, 200),
     date: /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= todayIso ? date : base.date,
-    start: /^\d{1,2}:\d{2}/.test(time) ? time.slice(0, 5).padStart(5, "0") : base.start,
-    budgetPerPerson: budget != null && budget > 0 ? Math.round(budget) : base.budgetPerPerson,
+    start: /^(?:[01]?\d|2[0-3]):[0-5]\d$/.test(time) ? time.padStart(5, "0") : base.start,
+    budgetPerPerson: budget != null && budget >= 0 ? Math.round(budget) : base.budgetPerPerson,
     anchor: anchor >= 0 && anchor < stops.length ? anchor : 0,
     stops,
     invite: raw.invite_message.trim().slice(0, 280) || base.invite,
@@ -607,11 +558,16 @@ function coerceItinerary(
  * what order, how long each, when it starts, and a ready invite line. Venues
  * are looked up afterwards from real place data -- the model never names one.
  */
-export async function draftItinerary(prompt: string, todayIso: string): Promise<ItineraryDraft> {
+export async function draftItinerary(
+  prompt: string,
+  todayIso: string,
+  current?: import("./itinerary").Itinerary,
+): Promise<ItineraryDraft> {
   const kinds = STOP_KIND_IDS.map((k) => `${k} (${STOP_KINDS[k].label})`).join(", ");
   try {
     const { output } = await generateText({
       model: aiModel("itinerary_draft"),
+      ...aiGenerationOptions("itinerary_draft"),
       output: Output.object({ schema: ItinerarySchema }),
       system: [
         "You plan real hangouts for a group-planning app used mostly by high schoolers and their friends.",
@@ -622,16 +578,42 @@ export async function draftItinerary(prompt: string, todayIso: string): Promise<
         "why is one short, specific sentence on why that stop fits this group's night. No venue names -- real venues are looked up later.",
         `Today is ${todayIso}. Resolve relative dates to YYYY-MM-DD; null if no day is implied. start_time is 24h HH:MM for the first stop, null if not implied.`,
         "budget_per_person is the per-person dollar cap only when one is stated or implied. area is the US ZIP or city named, else null.",
+        "rescout_stop_ids is an empty array for a new itinerary. For revisions, list current stop ids whose venues should be replaced. Preserve the other stops and all accepted edits.",
         "anchor_index is the stop the night is built around (the one the group should vote on).",
         "title is a short friendly name (max ~6 words). vibe is one upbeat sentence describing the night.",
         "invite_message is a casual text to the group (under 200 characters) saying what the plan is and asking them to answer privately and vote in Syncly. At most one emoji.",
         "Never invent a person, a venue, or a budget that isn't implied.",
       ].join(" "),
-      prompt: `Request: ${prompt}`,
+      prompt: current
+        ? JSON.stringify({
+            current_itinerary: current,
+            requested_change: prompt,
+            rules:
+              "Revise the current itinerary, retaining all previous edits and unaffected stops. rescout_stop_ids lists the current stop ids whose venue must change; empty for timing-only edits. Never revert an earlier change.",
+          })
+        : `Request: ${prompt}`,
     });
-    return coerceItinerary(output, prompt, todayIso);
+    const draft = coerceItinerary(output, prompt, todayIso);
+    const used = new Set<string>();
+    if (current)
+      draft.stops = draft.stops.map((stop) => {
+        const existing = current.stops.find((s) => s.kind === stop.kind && !used.has(s.id));
+        const id = existing?.id ?? `new-${stop.id}`;
+        used.add(id);
+        return { ...stop, id };
+      });
+    return { ...draft, aiGenerated: true, rescoutStopIds: output.rescout_stop_ids };
   } catch (error) {
     void recordAiFailure("itinerary_draft", error);
-    return heuristicItinerary(prompt, todayIso);
+    return current
+      ? {
+          ...current,
+          stops: current.stops.map(({ options: _options, pick: _pick, ...stop }) => stop),
+          area: current.zip ?? current.areaLabel,
+          searchRadiusMiles: null,
+          aiGenerated: false,
+          rescoutStopIds: [],
+        }
+      : { ...heuristicItinerary(prompt, todayIso), aiGenerated: false, rescoutStopIds: [] };
   }
 }

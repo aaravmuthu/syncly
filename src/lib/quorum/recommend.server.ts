@@ -1,19 +1,32 @@
 // Server-only. Reads private constraints with elevated access, aggregates them,
 // and writes back only group-safe results (scores, generic reasons, transport).
-import { optionsForCategory } from "./catalog";
-import { normalizeZip, queryVenuesNear } from "./location";
+import { normalizeZip } from "./location";
 import { geocodeZipServer } from "./location.server";
-import { buildTransportPlan, rankOptions, type MemberInput } from "./engine";
+import { buildTransportPlan, scoreOption, type MemberInput } from "./engine";
 import { isOutdoorOption, weatherPenalty, type Forecast } from "./weather";
 import { notifyPlanParticipants } from "./notify.server";
-import type { ConstraintPayload, PlanCategory, ScoreBreakdown } from "./types";
+import type { ConstraintPayload, OptionSeed, PlanCategory, ScoreBreakdown } from "./types";
+import {
+  applyPlanningWindow,
+  itineraryCandidates,
+  itineraryHoursFit,
+  scoreWholeItinerary,
+} from "./planning-candidates";
+import { zonedDateKey } from "./plan-time";
+import { pickOf } from "./itinerary";
 import { dbError } from "@/lib/db-error";
 
-export async function regenerateRecommendations(planId: string, shuffle = 0) {
+export async function regenerateRecommendations(
+  planId: string,
+  shuffle = 0,
+  addedOption?: OptionSeed,
+) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: plan } = await supabaseAdmin.from("plans").select("*").eq("id", planId).single();
   if (!plan) throw new Error("Plan not found");
+  if (plan.window_start && !plan.time_zone)
+    throw new Error("Ask the host to refresh the options once to save the plan’s timezone.");
 
   const { data: participants, error: participantsError } = await supabaseAdmin
     .from("plan_participants")
@@ -88,12 +101,23 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
 
   // Live venues from Geoapify when available; otherwise the ZIP-anchored
   // local layer; otherwise the seeded catalog. Never throws.
-  let options = optionsForCategory(plan.category as PlanCategory);
-  if (origin) {
+  const itineraryPool = itineraryCandidates(plan.itinerary, plan);
+  if (plan.itinerary && !itineraryPool.length)
+    throw new Error("Every itinerary stop needs a venue before generating options");
+  let options = itineraryPool.length ? itineraryPool.map((c) => c.option) : [];
+  if (origin && !itineraryPool.length) {
     const { searchVenuesGeoapify } = await import("./places.server");
     const live = await searchVenuesGeoapify({ origin, ...venueQuery });
-    options = live.length ? live : queryVenuesNear({ origin, ...venueQuery });
+    options = live;
   }
+  if (addedOption) {
+    if (plan.itinerary)
+      throw new Error("Swap venues in the itinerary builder so the whole outing can be checked.");
+    options = [...options.filter((o) => o.key !== addedOption.key), addedOption];
+  }
+
+  if (!options.length)
+    throw new Error("No live venues were found. Try a different area or widen the search.");
 
   // ---- Live weather (keyless, Open-Meteo) ---------------------------------
   let forecast: Forecast | null = null;
@@ -102,20 +126,52 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
     forecast = await fetchForecast(origin.lat, origin.lon, plan.window_start);
   }
 
-  const scored = rankOptions(options, members).map((r) => {
-    const outdoor = isOutdoorOption({
-      style: r.option.style,
-      tags: r.option.tags,
-      title: r.option.title,
+  if (!itineraryPool.length) options = options.map((o) => applyPlanningWindow(o, plan));
+  const scored = options
+    .map((option) => {
+      const candidate = itineraryPool.find((c) => c.option.key === option.key);
+      const routes = drivesTo(memberBases, option);
+      const locatedMembers = members.map((member) => {
+        const route = routes.find((d) => d.profileId === member.profileId);
+        return {
+          ...member,
+          ...(route ? { travelMinutes: route.minutes, returnTravelMinutes: route.minutes } : {}),
+        };
+      });
+      const scored = candidate
+        ? scoreWholeItinerary(option, candidate.itinerary, members, memberBases, hostRadius)
+        : scoreOption(option, locatedMembers);
+      return candidate
+        ? {
+            ...scored,
+            breakdown: {
+              ...scored.breakdown,
+              itinerary: candidate.itinerary,
+              itineraryDurationMinutes: candidate.option.durationMinutes,
+              cautions: [
+                ...scored.breakdown.cautions,
+                ...(candidate.itinerary.stops.some((s) => !pickOf(s)?.openHours)
+                  ? ["Some stop opening hours are unverified; confirm before leaving"]
+                  : []),
+              ],
+            },
+          }
+        : scored;
+    })
+    .map((r) => {
+      const outdoor = isOutdoorOption({
+        style: r.option.style,
+        tags: r.option.tags,
+        title: r.option.title,
+      });
+      const { multiplier, caution } = weatherPenalty(forecast, outdoor);
+      if (multiplier === 1 && !caution) return r;
+      const breakdown: ScoreBreakdown = {
+        ...r.breakdown,
+        cautions: caution ? [...r.breakdown.cautions, caution] : r.breakdown.cautions,
+      };
+      return { ...r, score: Math.round(r.score * multiplier), breakdown };
     });
-    const { multiplier, caution } = weatherPenalty(forecast, outdoor);
-    if (multiplier === 1 && !caution) return r;
-    const breakdown: ScoreBreakdown = {
-      ...r.breakdown,
-      cautions: caution ? [...r.breakdown.cautions, caution] : r.breakdown.cautions,
-    };
-    return { ...r, score: Math.round(r.score * multiplier), breakdown };
-  });
 
   const { applyVenueRequirements, isOpenDuring, fairnessScore, OPTION_LABELS } =
     await import("./hardfilter");
@@ -128,7 +184,13 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
   // Attach fair-point drive math to EVERY scored option before filtering.
   const enriched = scored.map((r) => {
     const drives = drivesTo(memberBases, { lat: r.option.lat, lon: r.option.lon });
-    const warnings = curfewWarnings(memberBases, r.option.end, drives);
+    const warnings = curfewWarnings(
+      memberBases,
+      r.option.end,
+      drives,
+      r.option.start,
+      r.option.durationMinutes,
+    );
     const mins = drives.map((d) => d.minutes);
     const avgMinutes = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : 0;
     const spreadMinutes = mins.length ? Math.max(...mins) - Math.min(...mins) : 0;
@@ -140,18 +202,27 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
       return cap == null || d.miles <= cap;
     });
     // (b) Curfew: round-trip travel + hangout must clear every curfew.
-    const curfewOk = warnings.length === 0;
+    const curfewOk = r.breakdown.itinerary ? r.feasible : warnings.length === 0;
     // (c) Operating hours during the planned window.
-    const hoursOk = isOpenDuring(
-      r.option.openHours,
-      r.option.start,
-      r.option.end,
-      plan.category as string,
-    );
+    const hoursOk = r.breakdown.itinerary
+      ? itineraryHoursFit(r.breakdown.itinerary)
+      : isOpenDuring(
+          r.option.openHours,
+          r.option.start,
+          r.option.end,
+          plan.category as string,
+          plan.window_start ? zonedDateKey(plan.window_start, plan.time_zone ?? "UTC") : undefined,
+        );
 
     const guarded = applyVenueRequirements(r, { distanceOk, curfewOk, hoursOk });
     const breakdown: ScoreBreakdown = {
       ...guarded.breakdown,
+      cautions: [
+        ...guarded.breakdown.cautions,
+        ...(!r.option.openHours && !r.breakdown.itinerary
+          ? ["Opening hours are estimated; check the venue before leaving"]
+          : []),
+      ],
       fair: {
         avgMinutes,
         spreadMinutes,
@@ -175,6 +246,10 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
       hoursOk,
     };
   });
+
+  if (addedOption && !enriched.find((r) => r.option.key === addedOption.key)?.feasible) {
+    throw new Error("That spot does not meet every member’s requirements. Choose another spot.");
+  }
 
   // Hard filter: only venues that satisfy every member's constraints.
   const strict = enriched.filter((r) => r.distanceOk && r.curfewOk && r.hoursOk && r.feasible);
@@ -216,13 +291,22 @@ export async function regenerateRecommendations(planId: string, shuffle = 0) {
     if (picked.length >= batch) break;
     take(r);
   }
+  if (addedOption && !picked.slice(0, batch).some((r) => r.option.key === addedOption.key)) {
+    const added = rotated.find((r) => r.option.key === addedOption.key);
+    if (added) picked[Math.min(batch - 1, picked.length)] = added;
+  }
 
   const keys: ("A" | "B" | "C")[] = ["A", "B", "C"];
   const withFair = picked.slice(0, batch).map((r, i) => {
     const key = keys[i]!;
     const breakdown: ScoreBreakdown = {
       ...r.breakdown,
-      optionLabel: { key, ...OPTION_LABELS[key] },
+      optionSeed: r.option,
+      optionLabel: {
+        key,
+        ...OPTION_LABELS[key],
+        ...(r.option.key === addedOption?.key ? { title: "Added by host" } : {}),
+      },
     };
     return { ...r, breakdown };
   });

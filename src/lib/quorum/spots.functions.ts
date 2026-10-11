@@ -175,53 +175,21 @@ export const addSpotToPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const { spot, planId } = data;
-
-    const { data: existing } = await supabase
-      .from("recommendations")
-      .select("id, rank, title")
-      .eq("plan_id", planId)
-      .order("rank", { ascending: false });
-    if ((existing ?? []).some((r) => r.title === spot.title)) {
-      return { ok: true, duplicate: true };
-    }
-    const nextRank = ((existing ?? [])[0]?.rank ?? 0) + 1;
-
-    const { error } = await supabase.from("recommendations").insert({
-      plan_id: planId,
-      title: spot.title,
-      subtitle: spot.subtitle,
+    const { data: owner } = await supabase.rpc("is_plan_owner", { _plan_id: planId });
+    if (!owner) throw new Error("Only the host can add an option");
+    const { assertPlanOpen } = await import("./plan-lifecycle.server");
+    await assertPlanOpen(planId);
+    const { searchVenuesGeoapify } = await import("./places.server");
+    const candidates = await searchVenuesGeoapify({
+      origin: { lat: spot.lat, lon: spot.lon, label: "Venue", zip: "" },
       category: spot.kind === "food" ? "dinner" : "hangout",
-      cost_min: spot.costMin,
-      cost_max: spot.costMax,
-      travel_minutes: spot.minutes,
-      location_name: spot.address ?? spot.subtitle,
-      address: spot.address,
-      lat: spot.lat,
-      lon: spot.lon,
-      tags: [spot.cuisine, spot.priceLevel].filter(Boolean) as string[],
-      score: 80,
-      feasible: true,
-      rank: nextRank,
-      breakdown: {
-        venue: {
-          kind: spot.kind,
-          cuisine: spot.cuisine,
-          priceLevel: spot.priceLevel,
-          milesFromHost: spot.miles,
-        },
-        source: "picked-by-host",
-      },
-    } as never);
-    if (error) throw dbError(error, "addSpotToPlan");
-
-    // The insert above only passes RLS for the plan's host; plan status is
-    // server-managed, so open voting through the service role.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
-      .from("plans")
-      .update({ status: "voting" })
-      .eq("id", planId)
-      .eq("status", "collecting");
+      maxRadiusMiles: 0.25,
+      limit: 14,
+    });
+    const source = candidates.find((c) => c.key === spot.key);
+    if (!source) throw new Error("That venue could not be verified. Refresh the search.");
+    const { regenerateRecommendations } = await import("./recommend.server");
+    await regenerateRecommendations(planId, 0, source);
     return { ok: true, duplicate: false };
   });
 

@@ -4,6 +4,8 @@
 // runtime, so a hand-crafted request can't smuggle in wrong types, oversized
 // strings, non-UUID ids, or javascript:/data: URLs that later get rendered.
 import { z } from "zod";
+import { isValidTimeZone } from "./plan-time";
+export const timeZone = z.string().max(64).refine(isValidTimeZone, "Choose a valid timezone");
 
 /** A database row id. Every table keys on uuid. */
 export const id = z.string().uuid();

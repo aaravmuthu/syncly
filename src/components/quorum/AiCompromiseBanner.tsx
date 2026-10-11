@@ -28,10 +28,24 @@ export function AiCompromiseBanner({
     staleTime: 60_000,
   });
 
+  const applyFn = useServerFn(applyAiCompromise);
   const apply = useMutation({
-    mutationFn: useServerFn(applyAiCompromise),
-    onSuccess: () => {
-      toast.success("Compromise applied", { description: "Everyone has been notified." });
+    mutationFn: (input: {
+      data: {
+        planId: string;
+        startTime?: string | null;
+        recommendationId?: string | null;
+        timeZone?: string;
+      };
+    }) => applyFn(input),
+    onSuccess: (r) => {
+      toast.success(r.requiresNewVote ? "Time updated" : "Compromise applied", {
+        description: r.requiresNewVote
+          ? r.optionsReady
+            ? "Review the refreshed options and vote again."
+            : "Collect answers or refresh options to continue."
+          : "Everyone has been notified.",
+      });
       void qc.invalidateQueries({ queryKey: ["plan", planId] });
       void qc.invalidateQueries({ queryKey: ["ai-compromise", planId] });
     },
@@ -57,7 +71,7 @@ export function AiCompromiseBanner({
       </div>
       <p className="mt-2 font-display text-base font-semibold">{c.headline}</p>
       <p className="mt-1 text-sm text-muted-foreground">{c.detail}</p>
-      {isHost ? (
+      {isHost && (c.suggestedStart || c.suggestedRecommendationId) ? (
         <Button
           className="mt-3"
           loading={apply.isPending}
@@ -66,6 +80,7 @@ export function AiCompromiseBanner({
             apply.mutate({
               data: {
                 planId,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 startTime: c.suggestedStart,
                 recommendationId: c.suggestedRecommendationId,
               },
@@ -76,7 +91,9 @@ export function AiCompromiseBanner({
         </Button>
       ) : (
         <p className="mt-3 text-xs text-muted-foreground">
-          Only the host can apply this compromise.
+          {isHost
+            ? "Refresh the options to find a change that works."
+            : "Ask the host to review the options."}
         </p>
       )}
     </Card>

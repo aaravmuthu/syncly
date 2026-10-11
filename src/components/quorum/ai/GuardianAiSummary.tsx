@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { ShieldCheck } from "lucide-react";
-import { Card, Skeleton } from "@/components/quorum/ui";
+import { Button, Card, Skeleton } from "@/components/quorum/ui";
 import {
   getGuardianAiSummary,
   type GuardianAiSummary as Summary,
@@ -12,6 +12,7 @@ import { AiGlyph } from "./AiGlyph";
 
 /** Plain-language AI evening summary for a parent about one linked teen. */
 export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: string | null }) {
+  const reduce = useReducedMotion();
   const fetchSummary = useServerFn(getGuardianAiSummary);
   const q = useQuery({
     queryKey: ["guardian-ai-summary", teenProfileId ?? "first"],
@@ -30,7 +31,17 @@ export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: strin
     );
   }
   const s = q.data;
-  if (!s) return null;
+  if (!s)
+    return (
+      <Card>
+        <p role="alert" className="text-sm">
+          The summary could not be loaded.
+        </p>
+        <Button className="mt-2" onClick={() => void q.refetch()}>
+          Retry summary
+        </Button>
+      </Card>
+    );
 
   return (
     <Card className="border-primary/25 ring-1 ring-primary/10">
@@ -38,13 +49,16 @@ export function GuardianAiSummaryCard({ teenProfileId }: { teenProfileId?: strin
         <AiGlyph className="h-4 w-4 text-primary" />
         <h2 className="text-sm font-semibold">Tonight, in plain language</h2>
       </div>
+      {!s.aiGenerated ? (
+        <p className="mt-2 text-caption text-muted-foreground">Basic summary · AI is unavailable</p>
+      ) : null}
       <p className="mt-2 text-sm leading-relaxed">{s.summary}</p>
       {s.watchouts.length ? (
         <ul className="mt-3 space-y-1.5">
           {s.watchouts.map((w, i) => (
             <motion.li
               key={w}
-              initial={{ opacity: 0, y: 6 }}
+              initial={reduce ? false : { opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 320, damping: 28, delay: i * 0.06 }}
               className="flex items-start gap-2 rounded-2xl border border-border bg-secondary/50 px-3 py-2 text-sm"

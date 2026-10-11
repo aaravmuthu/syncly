@@ -203,6 +203,7 @@ export function PlanWizard({
         groupId,
         title: spot ? `${vibe.emoji} ${spot.title}` : `${vibe.emoji} ${vibe.title}`,
         category: vibe.category,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         windowStart: localToInstant(date, startTime),
         windowEnd: localToInstant(date, endTime),
         zipCode: defaults.data?.fairPoint?.zip ?? null,

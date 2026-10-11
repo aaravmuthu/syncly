@@ -362,3 +362,12 @@ export async function recordAiFailure(feature: AiFeature, error: unknown): Promi
   );
   await logAiEvent(feature, `all ${FEATURE_TIER[feature]} models`, error);
 }
+
+/** One deadline covers the whole model/key failover chain. */
+export function aiGenerationOptions(feature: AiFeature) {
+  return {
+    abortSignal: AbortSignal.timeout(FEATURE_TIER[feature] === "strong" ? 25_000 : 15_000),
+    maxOutputTokens: FEATURE_TIER[feature] === "strong" ? 2500 : 1200,
+    maxRetries: 0,
+  };
+}

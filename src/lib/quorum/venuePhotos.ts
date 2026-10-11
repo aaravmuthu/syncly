@@ -105,17 +105,6 @@ function hash(str: string): number {
   return Math.abs(h);
 }
 
-export type VenueStats = { rating: number; reviewCount: number; ratingLabel: string };
-
-/** Stable, venue-specific preview rating shown before details load. */
-export function venueStats(key: string): VenueStats {
-  const h = hash(key || "venue");
-  const rating = Math.round((4.1 + (h % 9) / 10) * 10) / 10; // 4.1 – 4.9
-  const reviewCount = 60 + (h % 18) * 30; // 60 – 570
-  const rounded = Math.floor(reviewCount / 10) * 10;
-  return { rating, reviewCount, ratingLabel: `★ ${rating.toFixed(1)} (${rounded}+ reviews)` };
-}
-
 /** Google Maps search link that lands on the venue's reviews. */
 export function googleReviewsUrl(name: string, address?: string | null): string {
   const q = encodeURIComponent([name, address].filter(Boolean).join(" "));

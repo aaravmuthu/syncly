@@ -52,6 +52,7 @@ export function isOpenDuring(
   start: string | null | undefined,
   end: string | null | undefined,
   category: string,
+  date?: string,
 ): boolean {
   if (!start || !end) return true;
   const s = toMin(start);
@@ -62,18 +63,53 @@ export function isOpenDuring(
     const [ds, de] = DEFAULT_HOURS[category] ?? DEFAULT_HOURS["custom"]!;
     return s >= toMin(ds) && e <= toMin(de);
   }
-  const text = openHours.toLowerCase();
-  if (text.includes("24/7")) return true;
-  const ranges = [...text.matchAll(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/g)].map((m) => {
-    const from = Number(m[1]) * 60 + Number(m[2]);
-    let to = Number(m[3]) * 60 + Number(m[4]);
-    if (to <= from) to += 24 * 60; // crosses midnight
-    return [from, to] as const;
-  });
-  if (!ranges.length) return true;
-  return ranges.some(
-    ([from, to]) => (s >= from && e <= to) || (s + 24 * 60 >= from && e + 24 * 60 <= to),
-  );
+  const text = openHours.trim().toLowerCase();
+  if (text === "24/7") return true;
+  const weekdays = ["su", "mo", "tu", "we", "th", "fr", "sa"];
+  const weekday = date ? new Date(`${date}T12:00:00Z`).getUTCDay() : null;
+  // Day-specific strings cannot be verified without the outing's calendar day.
+  if (weekday == null && /\b(mo|tu|we|th|fr|sa|su)\b/.test(text)) return false;
+  let open = false;
+  for (const clause of text.split(";")) {
+    const days = clause
+      .trim()
+      .match(
+        /^((?:(?:mo|tu|we|th|fr|sa|su)(?:-(?:mo|tu|we|th|fr|sa|su))?)(?:,(?:mo|tu|we|th|fr|sa|su)(?:-(?:mo|tu|we|th|fr|sa|su))?)*)\s+/,
+      );
+    if (days && weekday != null) {
+      const allowed = new Set<number>();
+      for (const part of days[1].split(",")) {
+        const [from, to = from] = part.split("-");
+        let i = weekdays.indexOf(from);
+        const end = weekdays.indexOf(to);
+        for (let n = 0; n < 7; n++) {
+          allowed.add(i);
+          if (i === end) break;
+          i = (i + 1) % 7;
+        }
+      }
+      if (!allowed.has(weekday)) continue;
+    }
+    const hours = days ? clause.trim().slice(days[0].length) : clause.trim();
+    if (/^(off|closed)$/.test(hours)) {
+      open = false;
+      continue;
+    }
+    if (
+      !/^\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}(?:\s*,\s*\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})*$/.test(
+        hours,
+      )
+    )
+      return false;
+    const ranges = [...hours.matchAll(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/g)];
+    open ||= ranges.some((m) => {
+      const from = Number(m[1]) * 60 + Number(m[2]);
+      let to = Number(m[3]) * 60 + Number(m[4]);
+      if (to <= from) to += 1440;
+      return (s >= from && e <= to) || (s + 1440 >= from && e + 1440 <= to);
+    });
+  }
+  return open;
 }
 
 /**

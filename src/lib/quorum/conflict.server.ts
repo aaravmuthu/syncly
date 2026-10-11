@@ -208,7 +208,6 @@ export async function generateAlternatives(planId: string) {
 
   if ((kinds.has("budget") || kinds.has("distance")) && origin) {
     const { searchVenuesGeoapify } = await import("./places.server");
-    const { queryVenuesNear } = await import("./location");
     const query = {
       origin,
       category: plan.category as PlanCategory,
@@ -221,9 +220,7 @@ export async function generateAlternatives(planId: string) {
       limit: 6,
     };
     const live = await searchVenuesGeoapify(query);
-    const seeds = (live.length ? live : queryVenuesNear(query)).filter(
-      (v) => v.title !== base.title,
-    );
+    const seeds = live.filter((v) => v.title !== base.title);
 
     if (kinds.has("budget")) {
       const cheap = [...seeds].sort((a, b) => a.costMax - b.costMax)[0];

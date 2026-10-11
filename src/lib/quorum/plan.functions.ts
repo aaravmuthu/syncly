@@ -590,6 +590,7 @@ export const createPlan = createServerFn({ method: "POST" })
       groupId: v.id,
       title: v.reqText(120),
       category: v.planCategory,
+      timeZone: v.timeZone.optional(),
       windowStart: v.optTimeish,
       windowEnd: v.optTimeish,
       locationArea: v.optText(200),
@@ -612,6 +613,7 @@ export const createPlan = createServerFn({ method: "POST" })
         created_by: me,
         title: data.title.trim(),
         category: data.category,
+        time_zone: data.timeZone ?? "UTC",
         window_start: data.windowStart || null,
         window_end: data.windowEnd || null,
         location_area: data.zipCode?.trim() || data.locationArea || null,
@@ -809,13 +811,38 @@ export const submitConstraints = createServerFn({ method: "POST" })
 
 export const generateRecommendations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ planId: v.id, shuffle: v.amount(1_000_000).optional() }))
+  .inputValidator(
+    z.object({
+      planId: v.id,
+      shuffle: v.amount(1_000_000).optional(),
+      timeZone: v.timeZone.optional(),
+    }),
+  )
   .handler(async ({ data, context }) => {
     // Authorize as the user first — only a plan participant may run this.
     const { data: allowed } = await context.supabase.rpc("can_see_plan", { _plan_id: data.planId });
     if (!allowed) throw new Error("Forbidden");
     const { assertPlanOpen } = await import("./plan-lifecycle.server");
     await assertPlanOpen(data.planId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: plan } = await supabaseAdmin
+      .from("plans")
+      .select("time_zone")
+      .eq("id", data.planId)
+      .maybeSingle();
+    if (plan && !plan.time_zone && data.timeZone) {
+      const { data: owner } = await context.supabase.rpc("is_plan_owner", {
+        _plan_id: data.planId,
+      });
+      if (!owner)
+        throw new Error("Ask the host to refresh the options once to save the plan’s timezone.");
+      const { error } = await supabaseAdmin
+        .from("plans")
+        .update({ time_zone: data.timeZone })
+        .eq("id", data.planId)
+        .is("time_zone", null);
+      if (error) throw dbError(error, "generateRecommendations");
+    }
     // Private answers are read with elevated access ONLY inside the engine,
     // aggregated there, and never returned per person.
     const { regenerateRecommendations } = await import("./recommend.server");
@@ -871,23 +898,8 @@ export const finalizePlan = createServerFn({ method: "POST" })
     if (!allowed) throw new Error("Forbidden");
     // Plan status is server-managed (the user role can't write it), so the
     // lock-in goes through the service role once membership is confirmed.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: option } = await supabaseAdmin
-      .from("recommendations")
-      .select("id, feasible")
-      .eq("id", data.recommendationId)
-      .eq("plan_id", data.planId)
-      .maybeSingle();
-    if (!option) throw new Error("That option isn't on this plan");
-    if (!option.feasible)
-      throw new Error(
-        "This option does not meet every member's requirements. Refresh the options before locking it in.",
-      );
-    const { error } = await supabaseAdmin
-      .from("plans")
-      .update({ status: "finalized", selected_recommendation_id: data.recommendationId })
-      .eq("id", data.planId);
-    if (error) throw dbError(error, "finalizePlan");
+    const { lockPlanSelection } = await import("./plan-actions.server");
+    await lockPlanSelection(data.planId, data.recommendationId);
     await supabase.from("activity_events").insert({
       plan_id: data.planId,
       type: "plan_finalized",

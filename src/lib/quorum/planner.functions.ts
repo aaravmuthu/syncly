@@ -176,7 +176,7 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
       if (!origin) return { origin: null, venues: [] };
 
       const { searchVenuesGeoapify } = await import("./places.server");
-      const { queryVenuesNear, haversineMiles, priceLevelFor } = await import("./location");
+      const { haversineMiles, priceLevelFor } = await import("./location");
       const query = {
         origin,
         category: data.category,
@@ -186,7 +186,7 @@ export const previewFairPointVenues = createServerFn({ method: "POST" })
         limit: 24,
       };
       const live = await searchVenuesGeoapify(query);
-      const seeds = live.length ? live : queryVenuesNear(query);
+      const seeds = live;
 
       return {
         origin: { lat: origin.lat, lon: origin.lon, label: origin.label },
@@ -231,7 +231,7 @@ export const launchAiPlan = createServerFn({ method: "POST" })
       prompt: v.reqText(2000),
       useDefaults: z.boolean().optional(),
       /** The user's IANA zone; the AI draft's date + time are wall-clock there. */
-      timeZone: z.string().max(64).optional(),
+      timeZone: v.timeZone.optional(),
       estCostMin: v.optAmount(100_000),
       estCostMax: v.optAmount(100_000),
     }),
@@ -283,6 +283,7 @@ export const launchAiPlan = createServerFn({ method: "POST" })
         created_by: me,
         title: draft.title.slice(0, 80),
         category: draft.category,
+        time_zone: tz,
         window_start: windowStart,
         window_end: windowEnd,
         location_area: origin?.zip ?? draft.targetCityOrZip ?? null,

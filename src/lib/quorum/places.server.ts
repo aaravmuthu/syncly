@@ -334,10 +334,12 @@ function costBand(
 function dietaryFrom(raw: Record<string, unknown> | undefined, categories: string[]): string[] {
   const out = new Set<string>();
   const c = categories.join(" ");
-  if (raw?.["diet:vegetarian"] || c.includes("vegetarian")) out.add("vegetarian");
-  if (raw?.["diet:vegan"] || c.includes("vegan")) out.add("vegan");
-  if (raw?.["diet:halal"] || c.includes("halal")) out.add("halal");
-  if (raw?.["diet:gluten_free"] || c.includes("gluten_free")) out.add("gluten-free");
+  const supported = (key: string) =>
+    ["yes", "only", "designated"].includes(String(raw?.[key] ?? "").toLowerCase());
+  if (supported("diet:vegetarian") || c.includes("vegetarian")) out.add("vegetarian");
+  if (supported("diet:vegan") || c.includes("vegan")) out.add("vegan");
+  if (supported("diet:halal") || c.includes("halal")) out.add("halal");
+  if (supported("diet:gluten_free") || c.includes("gluten_free")) out.add("gluten-free");
   if (!c.includes("catering")) {
     // Non-food venues never block a dietary constraint.
     ["vegetarian", "vegan", "halal", "gluten-free", "nut-free"].forEach((d) => out.add(d));

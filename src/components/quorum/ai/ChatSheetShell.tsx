@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import type { OrbState } from "thinking-orbs";
 import { Modal } from "@/components/quorum/Modal";
 import { Button } from "@/components/quorum/ui";
+import { AI_QUESTION_LIMIT } from "@/lib/quorum/ai-chat";
 import { AiActivity } from "./AiActivity";
 
 export type BaseTurn = { role: "user" | "assistant"; content: string };
@@ -28,6 +29,8 @@ export function ChatSheetShell<T extends BaseTurn>({
   pendingLabel = "Thinking…",
   onSend,
   renderTurnExtra,
+  errorMessage,
+  onRetry,
 }: {
   open: boolean;
   onClose: () => void;
@@ -37,6 +40,8 @@ export function ChatSheetShell<T extends BaseTurn>({
   starters?: string[];
   turns: T[];
   pending: boolean;
+  errorMessage?: string;
+  onRetry?: () => void;
   /** What the assistant is actually doing while a reply is on its way. */
   pendingState?: OrbState;
   pendingLabel?: string;
@@ -62,7 +67,7 @@ export function ChatSheetShell<T extends BaseTurn>({
 
   const send = (text: string) => {
     const q = text.trim();
-    if (!q || pending) return;
+    if (!q || pending || q.length > AI_QUESTION_LIMIT) return;
     setInput("");
     onSend(q);
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -84,6 +89,7 @@ export function ChatSheetShell<T extends BaseTurn>({
         >
           <input
             enterKeyHint="send"
+            maxLength={AI_QUESTION_LIMIT}
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -102,6 +108,19 @@ export function ChatSheetShell<T extends BaseTurn>({
         </form>
       }
     >
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {turns.at(-1)?.role === "assistant" ? turns.at(-1)?.content : ""}
+      </p>
+      {errorMessage ? (
+        <div role="alert" className="mb-3 rounded-2xl border border-border p-3">
+          <p className="text-sm">{errorMessage}</p>
+          {onRetry ? (
+            <Button type="button" className="mt-2" onClick={onRetry} disabled={pending}>
+              Retry question
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       <div ref={scroller} className="max-h-[46dvh] space-y-3 overflow-y-auto pr-1">
         {turns.length === 0 ? (
           <div className="space-y-2">
@@ -128,7 +147,7 @@ export function ChatSheetShell<T extends BaseTurn>({
           {turns.map((t, i) => (
             <motion.div
               key={`${i}-${t.role}`}
-              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: "spring", stiffness: 360, damping: 28 }}
             >

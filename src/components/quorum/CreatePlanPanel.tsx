@@ -465,6 +465,7 @@ export function CreatePlanPanel({
                     groupId,
                     title,
                     category,
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     windowStart: date ? localToInstant(date, startTime) : null,
                     windowEnd: date ? localToInstant(date, endTime) : null,
                     zipCode: zip || null,

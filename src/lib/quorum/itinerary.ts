@@ -159,16 +159,20 @@ export const STOP_KIND_IDS = Object.keys(STOP_KINDS) as [StopKind, ...StopKind[]
 export const MAX_STOPS = 4;
 
 /** A real venue found for a stop. Public place data only, never anyone's home. */
-export const itineraryVenueSchema = z.object({
-  key: z.string().max(200),
-  title: z.string().max(120),
-  address: z.string().max(240).nullable(),
-  lat: z.number().min(-90).max(90),
-  lon: z.number().min(-180).max(180),
-  costMin: z.number().min(0).max(10_000),
-  costMax: z.number().min(0).max(10_000),
-  rating: z.number().min(0).max(5).nullable(),
-});
+export const itineraryVenueSchema = z
+  .object({
+    key: z.string().max(200),
+    title: z.string().max(120),
+    address: z.string().max(240).nullable(),
+    lat: z.number().min(-90).max(90),
+    lon: z.number().min(-180).max(180),
+    costMin: z.number().min(0).max(10_000),
+    costMax: z.number().min(0).max(10_000),
+    rating: z.number().min(0).max(5).nullable(),
+    openHours: z.string().max(500).nullable().optional(),
+    dietaryFriendly: z.array(z.string().max(40)).max(20).optional(),
+  })
+  .refine((v) => v.costMin <= v.costMax, "The minimum cost cannot exceed the maximum");
 export type ItineraryVenue = z.infer<typeof itineraryVenueSchema>;
 
 export const itineraryStopSchema = z.object({
@@ -184,31 +188,38 @@ export const itineraryStopSchema = z.object({
 });
 export type ItineraryStop = z.infer<typeof itineraryStopSchema>;
 
-export const itinerarySchema = z.object({
-  version: z.literal(1),
-  title: z.string().max(80),
-  vibe: z.string().max(200),
-  date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .nullable(),
-  /** Wall-clock "HH:MM" start of the first stop. */
-  start: z.string().regex(/^\d{2}:\d{2}$/),
-  budgetPerPerson: z.number().min(0).max(10_000).nullable(),
-  areaLabel: z.string().max(120).nullable(),
-  zip: z.string().max(10).nullable(),
-  /** The stop the group votes on through the normal private-answer flow. */
-  anchor: z
-    .number()
-    .int()
-    .min(0)
-    .max(MAX_STOPS - 1),
-  stops: z.array(itineraryStopSchema).min(1).max(MAX_STOPS),
-  invite: z.string().max(280),
-  weather: z
-    .object({ emoji: z.string().max(8), line: z.string().max(120), outdoorRisk: z.boolean() })
-    .nullable(),
-});
+export const itinerarySchema = z
+  .object({
+    version: z.literal(1),
+    title: z.string().max(80),
+    vibe: z.string().max(200),
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .refine((value) => {
+        const date = new Date(`${value}T12:00:00Z`);
+        return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+      }, "Choose a real calendar date")
+      .nullable(),
+    /** Wall-clock "HH:MM" start of the first stop. */
+    start: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+    budgetPerPerson: z.number().min(0).max(10_000).nullable(),
+    areaLabel: z.string().max(120).nullable(),
+    zip: z.string().max(10).nullable(),
+    /** The stop the group votes on through the normal private-answer flow. */
+    anchor: z
+      .number()
+      .int()
+      .min(0)
+      .max(MAX_STOPS - 1),
+    stops: z.array(itineraryStopSchema).min(1).max(MAX_STOPS),
+    invite: z.string().max(280),
+    weather: z
+      .object({ emoji: z.string().max(8), line: z.string().max(120), outdoorRisk: z.boolean() })
+      .nullable(),
+  })
+  .refine((it) => it.anchor < it.stops.length, "Choose a stop in the itinerary")
+  .refine((it) => timeline(it).totalMinutes < 1440, "Keep the outing under 24 hours");
 export type Itinerary = z.infer<typeof itinerarySchema>;
 
 /** What the AI drafts before any venue is looked up. */
@@ -217,6 +228,8 @@ export type ItineraryDraft = Omit<Itinerary, "stops" | "weather" | "areaLabel" |
   /** Place the model read from the request (ZIP or city), if any. */
   area: string | null;
   searchRadiusMiles: number | null;
+  aiGenerated?: boolean;
+  rescoutStopIds?: string[];
 };
 
 export type TimedStop = ItineraryStop & {
@@ -247,7 +260,7 @@ export const pickOf = (stop: Pick<ItineraryStop, "options" | "pick">) =>
  * Lays the stops end to end from `start`: each one lasts its `minutes`, and
  * the drive between two picks is the same estimate the venue engine uses.
  */
-export function timeline(it: Pick<Itinerary, "start" | "stops">): {
+export function timeline(it: { start: string; stops: ItineraryStop[] }): {
   stops: TimedStop[];
   end: string;
   totalMinutes: number;
@@ -273,7 +286,7 @@ export function timeline(it: Pick<Itinerary, "start" | "stops">): {
 }
 
 /** Per-person cost range across every stop's current pick. */
-export function costRange(it: Pick<Itinerary, "stops">): { min: number; max: number } {
+export function costRange(it: { stops: ItineraryStop[] }): { min: number; max: number } {
   return it.stops.reduce(
     (sum, stop) => {
       const v = pickOf(stop);

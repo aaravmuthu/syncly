@@ -19,6 +19,8 @@ export type MemberInput = {
   constraints: ConstraintPayload;
   /** How often this member has been the one compromising, 0..1. */
   sacrificeLoad?: number;
+  travelMinutes?: number;
+  returnTravelMinutes?: number;
 };
 
 export type ScoredOption = {
@@ -47,6 +49,8 @@ type MemberEval = {
 
 function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
   const c = m.constraints ?? {};
+  const travelMinutes = m.travelMinutes ?? option.travelMinutes;
+  const returnMinutes = m.returnTravelMinutes ?? Math.round(travelMinutes / 2);
   const hard: string[] = [];
   let softPoints = 0;
   let softMax = 0;
@@ -56,7 +60,7 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
   if (budgetCap != null) {
     // Uses the low end: an option is affordable if the cheapest realistic
     // version of it fits. Above the cap by any amount is a hard failure.
-    if (option.costMin > budgetCap) hard.push("budget");
+    if ((option.costForBudget ?? option.costMin) > budgetCap) hard.push("budget");
   }
   if (c.maxTicketPrice != null && option.style === "venue" && option.costMin > c.maxTicketPrice) {
     hard.push("budget");
@@ -70,7 +74,7 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
   }
 
   // ---- HARD: travel distance ---------------------------------------------
-  if (c.maxTravelMinutes != null && option.travelMinutes > c.maxTravelMinutes) {
+  if (c.maxTravelMinutes != null && travelMinutes > c.maxTravelMinutes) {
     // Small overshoot on a soft-ish preference is treated as hard only when
     // it is a stated maximum, which it is here.
     hard.push("travel");
@@ -87,13 +91,21 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
 
   // ---- HARD: schedule ------------------------------------------------------
   const optStart = toMinutes(option.start)!;
-  const optEnd = toMinutes(option.end)!;
+  const rawEnd = toMinutes(option.end)!;
+  const optEnd =
+    option.durationMinutes != null
+      ? optStart + option.durationMinutes
+      : rawEnd < optStart
+        ? rawEnd + 1440
+        : rawEnd;
+  const deadline = (value: number | null) =>
+    value != null && value < 360 && optStart >= 720 ? value + 1440 : value;
   const earliest = toMinutes(c.earliestStart);
-  const latest = toMinutes(c.latestEnd);
-  const returnBy = toMinutes(c.requiredReturnTime);
+  const latest = deadline(toMinutes(c.latestEnd));
+  const returnBy = deadline(toMinutes(c.requiredReturnTime));
   if (earliest != null && optStart < earliest) hard.push("schedule");
   if (latest != null && optEnd > latest) hard.push("schedule");
-  if (returnBy != null && optEnd + Math.round(option.travelMinutes / 2) > returnBy) {
+  if (returnBy != null && optEnd + returnMinutes > returnBy) {
     hard.push("curfew");
   }
 
@@ -106,8 +118,8 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
 
   // ---- HARD: parent conditions -------------------------------------------
   for (const cond of c.parentConditions ?? []) {
-    const home = parseHomeBy(cond);
-    if (home != null && optEnd + Math.round(option.travelMinutes / 2) > home) {
+    const home = deadline(parseHomeBy(cond));
+    if (home != null && optEnd + returnMinutes > home) {
       hard.push("condition");
     }
   }
@@ -143,7 +155,7 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
   // ---- SOFT: travel comfort -------------------------------------------------
   if (c.maxTravelMinutes != null) {
     softMax += 1.5;
-    softPoints += 1.5 * clamp01(1 - option.travelMinutes / Math.max(c.maxTravelMinutes, 1));
+    softPoints += 1.5 * clamp01(1 - travelMinutes / Math.max(c.maxTravelMinutes, 1));
   }
 
   // ---- SOFT: trip specifics -------------------------------------------------
@@ -176,11 +188,15 @@ export function parseHomeBy(text: string): number | null {
 
 function transportFeasible(option: OptionSeed, members: MemberInput[]) {
   if (!option.requiresDriving) return { ok: true, ratio: 1 };
-  const riders = members.filter((m) => m.constraints?.needsRide).length;
+  const riders = members.filter((m) => m.constraints?.needsRide && !m.constraints?.canDrive).length;
   const seats = members.reduce((acc, m) => {
     const c = m.constraints ?? {};
     if (!c.canDrive) return acc;
-    if (c.maxTravelMinutes != null && option.travelMinutes > c.maxTravelMinutes) return acc;
+    if (
+      c.maxTravelMinutes != null &&
+      (m.travelMinutes ?? option.travelMinutes) > c.maxTravelMinutes
+    )
+      return acc;
     return acc + Math.max(0, c.seats ?? 3);
   }, 0);
   if (riders === 0) return { ok: true, ratio: 1 };
@@ -295,13 +311,18 @@ export function rankOptions(options: OptionSeed[], members: MemberInput[]): Scor
 /** Builds a car-by-car plan that respects seats, distance and return times. */
 export function buildTransportPlan(
   option: OptionSeed,
-  members: { profileId: string; name: string; constraints: ConstraintPayload }[],
+  members: {
+    profileId: string;
+    name: string;
+    constraints: ConstraintPayload;
+    travelMinutes?: number;
+  }[],
 ) {
   const drivers = members.filter(
     (m) =>
       m.constraints?.canDrive &&
       (m.constraints.maxTravelMinutes == null ||
-        option.travelMinutes <= m.constraints.maxTravelMinutes),
+        (m.travelMinutes ?? option.travelMinutes) <= m.constraints.maxTravelMinutes),
   );
   const riders = members.filter((m) => m.constraints?.needsRide && !m.constraints?.canDrive);
   const cars: { label: string; driver: string; passengers: string[] }[] = [];
