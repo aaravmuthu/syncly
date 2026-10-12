@@ -426,6 +426,7 @@ export class SyncOrbit {
   private vel = new Float32Array(COUNT * 3);
   private sph = new Float32Array(COUNT * 4);
   private center = [0, 0.04, 0];
+  private departing: { index: number; position: number[] } | null = null;
   private pointer = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, active: false, moved: false };
   // Pointer velocity on the cluster's plane (world units/s), for flicking spheres.
   private swipe = { vx: 0, vy: 0, wx: 0, wy: 0, at: 0 };
@@ -764,6 +765,38 @@ export class SyncOrbit {
     if (!this.running && this.theme) this.render();
   }
 
+  /** Lend the frontmost green sphere to the scroll story, reversibly. */
+  handoff(take: boolean) {
+    if (!take) {
+      if (this.departing) {
+        this.pos.set(this.departing.position, this.departing.index * 3);
+        this.vel.fill(0, this.departing.index * 3, this.departing.index * 3 + 3);
+      }
+      this.departing = null;
+      if (!this.running) this.render();
+      return null;
+    }
+    if (!this.departing) {
+      let index = 0;
+      for (let i = 1; i < COUNT - 1; i++) {
+        if (this.pos[i * 3 + 2] < this.pos[index * 3 + 2]) index = i;
+      }
+      this.departing = {
+        index,
+        position: Array.from(this.pos.slice(index * 3, index * 3 + 3)),
+      };
+      if (!this.running) this.render();
+    }
+    const { index, position } = this.departing;
+    const depth = position[2] - CAMERA_Z;
+    const factor = this.cssWidth / (2 * this.halfW);
+    return {
+      x: 0.5 + position[0] / depth / (2 * this.halfW),
+      y: 0.5 - ((position[1] / depth + this.lift) * factor) / this.cssHeight,
+      r: RADII[index] / Math.sqrt(depth * depth - RADII[index] ** 2) / (2 * this.halfW),
+    };
+  }
+
   /** Pointer position as 0–1 from the canvas's top-left. */
   pointerMove(x: number, y: number) {
     const p = this.pointer;
@@ -1020,7 +1053,12 @@ export class SyncOrbit {
       H = this.canvas.height;
 
     for (let i = 0; i < COUNT; i++) {
-      this.sph.set([this.pos[i * 3], this.pos[i * 3 + 1], this.pos[i * 3 + 2], RADII[i]], i * 4);
+      this.sph.set(
+        this.departing?.index === i
+          ? [100, 100, 100, 0.0001]
+          : [this.pos[i * 3], this.pos[i * 3 + 1], this.pos[i * 3 + 2], RADII[i]],
+        i * 4,
+      );
     }
 
     // 1. scene

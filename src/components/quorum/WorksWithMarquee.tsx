@@ -10,7 +10,7 @@ export function WorksWithMarquee() {
   return (
     <section className="border-y border-border/70 py-8">
       <p className="mx-auto max-w-6xl px-5 text-center text-[13px] font-semibold tracking-[0.16em] text-balance sm:text-xs sm:tracking-[0.2em] text-muted-foreground">
-        WORKS WITH THE TOOLS &amp; PLACES YOU ALREADY USE
+        POWERED BY
       </p>
       <div className="marquee mt-5 group">
         <div className="marquee-track">
