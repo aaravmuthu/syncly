@@ -6,6 +6,7 @@ import type { WarpOrigin } from "./warp";
 export type OrbitControl = {
   /** Collapse the cluster; returns its viewport position and radius in px. */
   implode: () => WarpOrigin;
+  handoff: (take: boolean) => WarpOrigin | null;
 };
 
 /**
@@ -95,8 +96,19 @@ export function SyncOrbit({
         }
         const e = engine;
         e.setTheme(readTheme());
+        let box = { left: 0, top: 0, width: 1, height: 1 };
         if (control.current) {
           control.current.current = {
+            handoff: (take) => {
+              const p = e.handoff(take);
+              return p
+                ? {
+                    x: box.left + p.x * box.width,
+                    y: box.top + p.y * box.height,
+                    r: p.r * box.width,
+                  }
+                : null;
+            },
             implode: () => {
               e.start();
               const p = e.implode();
@@ -118,6 +130,12 @@ export function SyncOrbit({
         // Phones render at a lower density: every pixel traces eight spheres.
         const sizeTo = () => {
           const rect = canvas.getBoundingClientRect();
+          box = {
+            left: rect.left + window.scrollX,
+            top: rect.top + window.scrollY,
+            width: rect.width,
+            height: rect.height,
+          };
           const cap = coarse || rect.width < 768 ? 1.5 : 1.75;
           const reserve = foot.current?.current?.offsetHeight ?? 0;
           e.resize(rect.width, rect.height, Math.min(window.devicePixelRatio || 1, cap), reserve);
