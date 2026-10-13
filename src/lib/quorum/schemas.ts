@@ -102,7 +102,10 @@ export const constraintPayload = z.object({
   zipCode: optText(10),
   needsRide: z.boolean().optional(),
   canDrive: z.boolean().optional(),
-  seats: optAmount(50),
+  seats: z.preprocess(
+    (v) => (v === "" || (typeof v === "number" && Number.isNaN(v)) ? null : v),
+    amount(50).int().nullish(),
+  ),
   earliestStart: optTimeish,
   latestEnd: optTimeish,
   unavailableDates: tags(366, 40).optional(),

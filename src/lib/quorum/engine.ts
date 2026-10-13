@@ -175,14 +175,20 @@ function evaluateMember(option: OptionSeed, m: MemberInput): MemberEval {
 
 /** Parses "must be home by 10:00 PM" style conditions into minutes. */
 export function parseHomeBy(text: string): number | null {
-  const m = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  const m =
+    text.match(
+      /(?:\b(?:home|back|return)\s+(?:by|before|at|no later than)\s+|\bcurfew(?:\s+(?:is|at))?\s*:?\s*)(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b(?![\d:])/i,
+    ) ??
+    text.match(/(?:^|[^\d:])\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s+curfew\b/i) ??
+    text.match(/^\s*(?:by\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*$/i);
   if (!m) return null;
   let h = Number(m[1]);
   const min = Number(m[2] ?? 0);
   const ap = m[3]?.toLowerCase();
+  if (min > 59 || h > 23 || (ap && (h < 1 || h > 12))) return null;
   if (ap === "pm" && h < 12) h += 12;
   if (ap === "am" && h === 12) h = 0;
-  if (!ap && h <= 11) h += 12; // "home by 10" almost always means evening
+  if (!ap && h > 0 && h <= 11) h += 12; // "home by 10" almost always means evening
   return h * 60 + min;
 }
 
@@ -197,7 +203,7 @@ function transportFeasible(option: OptionSeed, members: MemberInput[]) {
       (m.travelMinutes ?? option.travelMinutes) > c.maxTravelMinutes
     )
       return acc;
-    return acc + Math.max(0, c.seats ?? 3);
+    return acc + Math.max(0, Math.floor(c.seats ?? 3));
   }, 0);
   if (riders === 0) return { ok: true, ratio: 1 };
   return { ok: seats >= riders, ratio: clamp01(seats / Math.max(riders, 1)) };
@@ -328,7 +334,7 @@ export function buildTransportPlan(
   const cars: { label: string; driver: string; passengers: string[] }[] = [];
   const queue = [...riders];
   drivers.forEach((d, i) => {
-    const seats = Math.max(0, d.constraints.seats ?? 3);
+    const seats = Math.max(0, Math.floor(d.constraints.seats ?? 3));
     const passengers = queue.splice(0, seats).map((p) => p.name);
     cars.push({ label: `Car ${i + 1}`, driver: d.name, passengers });
   });

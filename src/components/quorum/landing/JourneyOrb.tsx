@@ -306,10 +306,12 @@ export function JourneyOrb({
       onPointerCancel={() => {
         interaction.current.x = 0;
         interaction.current.y = 0;
+        wake.current();
       }}
       onPointerLeave={() => {
         interaction.current.x = 0;
         interaction.current.y = 0;
+        wake.current();
       }}
       onClick={(event) => {
         if (event.detail === 0) {

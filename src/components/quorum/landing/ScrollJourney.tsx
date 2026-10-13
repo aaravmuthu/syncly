@@ -196,6 +196,9 @@ export function ScrollJourney({
   useEffect(() => {
     if (option === 1 && example.otherPrice >= budget) setOption(0);
   }, [budget, example.otherPrice, option]);
+  useEffect(() => {
+    setApproved(false);
+  }, [selected, selectedPrice, example.time]);
 
   const jump = (index: number, fromKeyboard = false) => {
     const element = track.current;

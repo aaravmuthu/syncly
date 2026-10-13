@@ -26,7 +26,7 @@ export const getApproval = createServerFn({ method: "GET" })
       .select("id, status, condition_text, expires_at, plan_id, profile_id")
       .eq("token", data.token)
       .maybeSingle();
-    if (!row) return null;
+    if (!row || !(Date.parse(row.expires_at) > Date.now())) return null;
 
     const { data: plan } = await supabaseAdmin
       .from("plans")
@@ -90,7 +90,7 @@ export const respondToApproval = createServerFn({ method: "POST" })
       .eq("token", data.token)
       .maybeSingle();
     if (!row) throw new Error("This link is not valid");
-    if (new Date(row.expires_at) < new Date()) throw new Error("This link has expired");
+    if (!(Date.parse(row.expires_at) > Date.now())) throw new Error("This link has expired");
     // The linked guardian's answer in the Family hub is final; whoever holds
     // the link (possibly the teen) can't overwrite it.
     if (row.decided_via === "guardian") {

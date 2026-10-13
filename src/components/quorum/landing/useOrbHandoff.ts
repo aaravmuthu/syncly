@@ -27,19 +27,25 @@ export function useOrbHandoff(
     const trackEl = track.current;
     const anchorEl = anchor.current;
     let source: WarpOrigin | null = null;
+    let handoffOwner: OrbitControl | null = null;
     let layout = { start: 0, end: 1, x: 0, y: 0, r: 1, cx: 0, cy: 0, top: 0, header: 65 };
     const update = () => {
       const y = scrollY.get();
       const t = Math.max(0, Math.min(1, (y - layout.start) / (layout.end - layout.start)));
       arrival.set(t);
       if (t === 0) {
-        if (source) orbit.current?.handoff(false);
+        handoffOwner?.handoff(false);
+        handoffOwner = null;
         source = null;
         opacity.set(0);
         pointerEvents.set("none");
         return;
       }
-      source ??= orbit.current?.handoff(true) ?? null;
+      if (!source && orbit.current) {
+        const control = orbit.current;
+        source = control.handoff(true);
+        if (source) handoffOwner = control;
+      }
       if (!source) {
         transform.set("translate(0px, 0px) scale(1)");
         opacity.set(t);
@@ -77,7 +83,7 @@ export function useOrbHandoff(
         top,
         header,
       };
-      if (source) source = orbit.current?.handoff(true) ?? source;
+      if (source) source = handoffOwner?.handoff(true) ?? source;
       origin.set(`${cx}px ${cy}px`);
       update();
     };
@@ -91,7 +97,7 @@ export function useOrbHandoff(
       stop();
       resize.disconnect();
       window.removeEventListener("resize", measure);
-      orbit.current?.handoff(false);
+      handoffOwner?.handoff(false);
     };
   }, [
     enabled,

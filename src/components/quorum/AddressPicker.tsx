@@ -66,8 +66,18 @@ export function AddressPicker({
   // (e.g. a loaded profile). Echoes of our own onTextChange must not reset
   // state, or the suggestion dropdown closes on every keystroke.
   const lastLocal = useRef(value);
+  const requestRevision = useRef(0);
+  useEffect(
+    () => () => {
+      requestRevision.current += 1;
+    },
+    [],
+  );
   useEffect(() => {
     if (value === lastLocal.current) return;
+    requestRevision.current += 1;
+    setLocating(false);
+    setLocked(false);
     lastLocal.current = value;
     skipNextSearch.current = true;
     setText(value);
@@ -120,6 +130,8 @@ export function AddressPicker({
   }, []);
 
   const commit = (s: Suggestion) => {
+    const revision = ++requestRevision.current;
+    setLocating(false);
     setError(null);
     setOpen(false);
     setItems([]);
@@ -139,8 +151,12 @@ export function AddressPicker({
       return;
     }
     void toZip({ data: { lat: s.lat, lon: s.lon } })
-      .then((zip) => onPick({ ...base, zip: zip ?? null }))
-      .catch(() => onPick({ ...base, zip: null }));
+      .then((zip) => {
+        if (revision === requestRevision.current) onPick({ ...base, zip: zip ?? null });
+      })
+      .catch(() => {
+        if (revision === requestRevision.current) onPick({ ...base, zip: null });
+      });
   };
 
   const useMyLocation = () => {
@@ -150,11 +166,14 @@ export function AddressPicker({
     }
     setError(null);
     setLocating(true);
+    const revision = ++requestRevision.current;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (revision !== requestRevision.current) return;
         const { latitude: lat, longitude: lon } = pos.coords;
         void toZip({ data: { lat, lon } })
           .then((zip) => {
+            if (revision !== requestRevision.current) return;
             const label = zip ? `Current location · ${zip}` : "Current location";
             skipNextSearch.current = true;
             lastLocal.current = label;
@@ -164,12 +183,16 @@ export function AddressPicker({
             setLocked(true);
             onPick({ address: label, zip: zip ?? null, lat, lon });
           })
-          .catch(() =>
-            setError("Couldn't look up your location. Enter your address or ZIP code instead."),
-          )
-          .finally(() => setLocating(false));
+          .catch(() => {
+            if (revision === requestRevision.current)
+              setError("Couldn't look up your location. Enter your address or ZIP code instead.");
+          })
+          .finally(() => {
+            if (revision === requestRevision.current) setLocating(false);
+          });
       },
       (e) => {
+        if (revision !== requestRevision.current) return;
         setLocating(false);
         setError(
           e.code === 1
@@ -215,6 +238,8 @@ export function AddressPicker({
             }
           }}
           onChange={(e) => {
+            requestRevision.current += 1;
+            setLocating(false);
             setError(null);
             setOpen(false);
             setItems([]);

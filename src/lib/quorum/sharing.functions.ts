@@ -32,12 +32,16 @@ export const getSharingState = createServerFn({ method: "GET" })
 export const shareLocationWith = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    z.object({ viewerProfileId: v.id, mode: z.enum(["hour", "end_of_day", "indefinite"]) }),
+    z.object({
+      viewerProfileId: v.id,
+      mode: z.enum(["hour", "end_of_day", "indefinite"]),
+      timeZone: v.timeZone,
+    }),
   )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { setShare } = await import("./sharing.server");
-    return setShare(me, data.viewerProfileId, data.mode);
+    return setShare(me, data.viewerProfileId, data.mode, data.timeZone);
   });
 
 export const stopSharingWith = createServerFn({ method: "POST" })
@@ -60,11 +64,16 @@ export const stopWatchingFriend = createServerFn({ method: "POST" })
 
 export const setGhostMode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(z.object({ choice: z.enum(["hour", "tomorrow", "until_reenabled", "resume"]) }))
+  .inputValidator(
+    z.object({
+      choice: z.enum(["hour", "tomorrow", "until_reenabled", "resume"]),
+      timeZone: v.timeZone,
+    }),
+  )
   .handler(async ({ data, context }) => {
     const me = await resolveMyProfileId(context.supabase);
     const { setGhostMode: apply } = await import("./sharing.server");
-    return apply(me, data.choice);
+    return apply(me, data.choice, data.timeZone);
   });
 
 export const nudgeFriendPin = createServerFn({ method: "POST" })

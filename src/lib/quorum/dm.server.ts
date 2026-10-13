@@ -1,4 +1,5 @@
 /** Server-only helpers that drop safety/status cards into DM threads. */
+import { canViewFriendLocation } from "./sharing";
 
 export type DmSystemEvent = {
   /** Dedupe key: only one of each kind lands per profile every 30 minutes. */
@@ -10,7 +11,7 @@ export type DmSystemEvent = {
 };
 
 /**
- * Fans a status card out to every existing 1-on-1 thread the profile is part of.
+ * Sends status cards only to linked guardians and authorized location viewers.
  * Never throws — safety cards must not break the flow that triggered them.
  */
 export async function broadcastDmSystemEvent(profileId: string, event: DmSystemEvent) {
@@ -18,9 +19,35 @@ export async function broadcastDmSystemEvent(profileId: string, event: DmSystemE
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: threads } = await supabaseAdmin
       .from("direct_threads")
-      .select("id")
+      .select("id, a_profile_id, b_profile_id")
       .or(`a_profile_id.eq.${profileId},b_profile_id.eq.${profileId}`);
-    const ids = (threads ?? []).map((t) => t.id as string);
+    const [{ data: profile }, { data: shares }, { data: guardians }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("location_sharing_enabled, location_pause_indefinite, location_paused_until")
+        .eq("id", profileId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("location_shares")
+        .select("viewer_profile_id, expires_at, hidden")
+        .eq("owner_profile_id", profileId),
+      supabaseAdmin
+        .from("guardian_links")
+        .select("guardian_profile_id")
+        .eq("teen_profile_id", profileId),
+    ]);
+    const guardianIds = new Set((guardians ?? []).map((g) => g.guardian_profile_id));
+    const allowed = new Set(
+      (shares ?? [])
+        .filter((share) => profile && canViewFriendLocation(profile, share))
+        .map((share) => share.viewer_profile_id),
+    );
+    const ids = (threads ?? [])
+      .filter((thread) => {
+        const peer = thread.a_profile_id === profileId ? thread.b_profile_id : thread.a_profile_id;
+        return guardianIds.has(peer) || allowed.has(peer);
+      })
+      .map((t) => t.id);
     if (ids.length === 0) return;
 
     const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
