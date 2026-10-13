@@ -7,14 +7,14 @@
  */
 
 import { haversineMiles, milesToDriveMinutes } from "./location";
-import { motionEmoji, motionLabel } from "./sharing";
+import { canViewFriendLocation, motionEmoji, motionLabel } from "./sharing";
 import type { ShareMode } from "./sharing";
 import type { FriendProfile, FriendTelemetry, MutualCircle, SharedPlan } from "./friend";
 import { realName } from "./names";
 import { dbError } from "@/lib/db-error";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
 }
 
@@ -239,12 +239,14 @@ export async function buildFriendProfile(
     mutualCircles(viewerProfileId, targetProfileId),
     db
       .from("profiles")
-      .select("id, display_name, avatar_emoji, avatar_url, bio, school, grad_year")
+      .select(
+        "id, display_name, avatar_emoji, avatar_url, bio, school, grad_year, location_sharing_enabled, location_pause_indefinite, location_paused_until",
+      )
       .eq("id", targetProfileId)
       .maybeSingle(),
     db
       .from("guardian_links")
-      .select("id")
+      .select("id, guardian_profile_id, teen_profile_id")
       .or(
         `and(guardian_profile_id.eq.${viewerProfileId},teen_profile_id.eq.${targetProfileId}),and(guardian_profile_id.eq.${targetProfileId},teen_profile_id.eq.${viewerProfileId})`,
       )
@@ -273,7 +275,11 @@ export async function buildFriendProfile(
   const outgoing = (shares ?? []).find((s) => s.owner_profile_id === viewerProfileId && live(s));
   const incoming = (shares ?? []).find((s) => s.owner_profile_id === targetProfileId && live(s));
 
-  const visible = Boolean(incoming && !incoming.hidden) || guardianLinked;
+  const isGuardian = (guardianLinkRow.data ?? []).some(
+    (link) =>
+      link.guardian_profile_id === viewerProfileId && link.teen_profile_id === targetProfileId,
+  );
+  const visible = isGuardian || Boolean(incoming && canViewFriendLocation(prof, incoming));
 
   return {
     profileId: prof.id,

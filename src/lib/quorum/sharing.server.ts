@@ -7,7 +7,13 @@
  */
 
 import { haversineMiles, milesToDriveMinutes } from "./location";
-import { expiryFor, ghostUntilFor, motionEmoji, motionLabel } from "./sharing";
+import {
+  canViewFriendLocation,
+  expiryFor,
+  ghostUntilFor,
+  motionEmoji,
+  motionLabel,
+} from "./sharing";
 import type { FriendPin, GhostChoice, ShareMode, SharePeer, SharingState } from "./sharing";
 import { realName } from "./names";
 import { dbError } from "@/lib/db-error";
@@ -68,7 +74,12 @@ export async function myOutgoingShares(ownerProfileId: string): Promise<ShareRow
   return ((data ?? []) as ShareRow[]).filter(isLive);
 }
 
-export async function setShare(ownerProfileId: string, viewerProfileId: string, mode: ShareMode) {
+export async function setShare(
+  ownerProfileId: string,
+  viewerProfileId: string,
+  mode: ShareMode,
+  timeZone: string,
+) {
   if (ownerProfileId === viewerProfileId) throw new Error("You already know where you are");
   const db = await admin();
   const { error } = await db.from("location_shares").upsert(
@@ -76,7 +87,7 @@ export async function setShare(ownerProfileId: string, viewerProfileId: string, 
       owner_profile_id: ownerProfileId,
       viewer_profile_id: viewerProfileId,
       mode,
-      expires_at: expiryFor(mode),
+      expires_at: expiryFor(mode, new Date(), timeZone),
     },
     { onConflict: "owner_profile_id,viewer_profile_id" },
   );
@@ -124,12 +135,13 @@ export async function stopWatching(viewerProfileId: string, ownerProfileId: stri
   return { ok: true as const };
 }
 
-export async function setGhostMode(profileId: string, choice: GhostChoice) {
+export async function setGhostMode(profileId: string, choice: GhostChoice, timeZone: string) {
   const db = await admin();
   const { error } = await db
     .from("profiles")
     .update({
-      location_paused_until: choice === "resume" ? null : ghostUntilFor(choice),
+      location_paused_until:
+        choice === "resume" ? null : ghostUntilFor(choice, new Date(), timeZone),
       location_pause_indefinite: choice === "until_reenabled",
     })
     .eq("id", profileId);
@@ -174,6 +186,7 @@ type ProfileLite = {
   home_lon: number | null;
   location_paused_until: string | null;
   location_pause_indefinite: boolean;
+  location_sharing_enabled: boolean;
 };
 
 async function profilesById(ids: string[]): Promise<Map<string, ProfileLite>> {
@@ -182,7 +195,7 @@ async function profilesById(ids: string[]): Promise<Map<string, ProfileLite>> {
   const { data } = await db
     .from("profiles")
     .select(
-      "id, display_name, avatar_emoji, avatar_url, home_lat, home_lon, location_paused_until, location_pause_indefinite",
+      "id, display_name, avatar_emoji, avatar_url, home_lat, home_lon, location_paused_until, location_pause_indefinite, location_sharing_enabled",
     )
     .in("id", ids);
   return new Map(((data ?? []) as ProfileLite[]).map((p) => [p.id, p]));
@@ -276,9 +289,7 @@ export async function buildFriendPins(viewerProfileId: string): Promise<FriendPi
     const ping = pings.get(share.owner_profile_id);
     if (!p || !ping) continue;
     // Ghost Mode hides friend pins; guardian radar is a separate read path.
-    if (ghostActive(p)) continue;
-    // Per-contact ghosting: hidden from me specifically.
-    if (share.hidden) continue;
+    if (!canViewFriendLocation(p, share)) continue;
 
     const atHome =
       p.home_lat != null &&

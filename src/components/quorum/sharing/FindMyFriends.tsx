@@ -154,7 +154,14 @@ export function FindMyFriends() {
             icon={<Ghost aria-hidden />}
             variant={gh?.active ? "primary" : "ghost"}
             onClick={() =>
-              gh?.active ? ghost.mutate({ data: { choice: "resume" } }) : setSheet("ghost")
+              gh?.active
+                ? ghost.mutate({
+                    data: {
+                      choice: "resume",
+                      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    },
+                  })
+                : setSheet("ghost")
             }
             loading={ghost.isPending}
           >
@@ -308,7 +315,11 @@ export function FindMyFriends() {
               onClick={() =>
                 durationFor &&
                 share.mutate({
-                  data: { viewerProfileId: durationFor.profileId, mode: opt.mode as ShareMode },
+                  data: {
+                    viewerProfileId: durationFor.profileId,
+                    mode: opt.mode as ShareMode,
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  },
                 })
               }
               className="surface flex w-full items-center gap-3 rounded-2xl p-4 text-left transition active:scale-[0.98] disabled:opacity-60"
@@ -345,7 +356,14 @@ export function FindMyFriends() {
               key={opt.choice}
               type="button"
               disabled={ghost.isPending}
-              onClick={() => ghost.mutate({ data: { choice: opt.choice as GhostChoice } })}
+              onClick={() =>
+                ghost.mutate({
+                  data: {
+                    choice: opt.choice as GhostChoice,
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  },
+                })
+              }
               className="surface flex w-full items-center gap-3 rounded-2xl p-4 text-left transition active:scale-[0.98] disabled:opacity-60"
             >
               <EyeOff className="h-4 w-4 opacity-70" aria-hidden />

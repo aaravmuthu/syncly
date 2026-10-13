@@ -382,6 +382,7 @@ export function FriendProfileSheet() {
                             data: {
                               viewerProfileId: friend.profileId,
                               mode: opt.mode as ShareMode,
+                              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                             },
                           })
                         }

@@ -1809,6 +1809,15 @@ export type Database = {
         Args: { _plan_id: string; _recommendation_id: string; _transport?: Json };
         Returns: undefined;
       };
+      change_group_membership: {
+        Args: {
+          _group_id: string;
+          _actor_id: string;
+          _new_owner_id?: string | null;
+          _leave?: boolean;
+        };
+        Returns: boolean;
+      };
       retime_checked_plan: {
         Args: {
           _plan_id: string;

@@ -21,13 +21,18 @@ function configuredEnv(names: readonly string[]): string | undefined {
 }
 
 function supabaseProjectUrl(): string {
-  const url = configuredEnv(["SUPABASE_URL", "VITE_SUPABASE_URL"]);
+  const url = configuredEnv(["SB_URL", "SUPABASE_URL", "VITE_SB_URL", "VITE_SUPABASE_URL"]);
   if (!url) throw new Error("SUPABASE_URL (or VITE_SUPABASE_URL) is required");
   return url;
 }
 
 function supabasePublishableKey(): string {
-  const direct = configuredEnv(["SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_PUBLISHABLE_KEY"]);
+  const direct = configuredEnv([
+    "SB_PUBLISHABLE_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "VITE_SB_PUBLISHABLE_KEY",
+    "VITE_SUPABASE_PUBLISHABLE_KEY",
+  ]);
   if (direct) return direct;
   const keyset = runtimeEnv("SUPABASE_PUBLISHABLE_KEYS");
   if (keyset) {
