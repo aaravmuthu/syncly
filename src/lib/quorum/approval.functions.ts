@@ -100,6 +100,20 @@ export const respondToApproval = createServerFn({ method: "POST" })
     const condition =
       data.decision === "approved_with_condition" ? data.condition?.trim() || null : null;
 
+    // Replacing the selected option invalidates answers to the old plan. Do
+    // that before saving this new conditional decision, so the trigger cannot
+    // erase it and the notification describes the final saved response.
+    if (condition) {
+      const { applyParentCondition, regenerateRecommendations } =
+        await import("./recommend.server");
+      await applyParentCondition(row.plan_id, row.profile_id, condition);
+      try {
+        await regenerateRecommendations(row.plan_id);
+      } catch {
+        /* recalculation is best-effort; still save the parent's response */
+      }
+    }
+
     const { error } = await supabaseAdmin
       .from("parent_approvals")
       .update({
@@ -111,8 +125,6 @@ export const respondToApproval = createServerFn({ method: "POST" })
       .eq("id", row.id);
     if (error) throw dbError(error, "respondToApproval");
 
-    // A condition becomes a private constraint for that member, then the whole
-    // group's options are recalculated against it.
     const { notifyProfiles } = await import("./notify.server");
     await notifyProfiles([row.profile_id], {
       type: "parent_response",
@@ -125,17 +137,6 @@ export const respondToApproval = createServerFn({ method: "POST" })
       ...(condition ? { body: condition } : {}),
       planId: row.plan_id,
     });
-
-    if (condition) {
-      const { applyParentCondition, regenerateRecommendations } =
-        await import("./recommend.server");
-      await applyParentCondition(row.plan_id, row.profile_id, condition);
-      try {
-        await regenerateRecommendations(row.plan_id);
-      } catch {
-        /* recalculation is best-effort; the response itself is already saved */
-      }
-    }
 
     await supabaseAdmin.from("activity_events").insert({
       plan_id: row.plan_id,
