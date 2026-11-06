@@ -89,7 +89,7 @@ describe.sequential("conditional decisions survive the real approval-invalidatio
       expect(result.rows[0]).toMatchObject({ status: "approved_with_condition" });
     });
     await respond({ data: { token: "fixture", decision: "approved_with_condition", condition: "Home by 10pm" } });
-    const result = await db.query("select * from parent_approvals where id='parent'");
+    const result = await db.query<{ responded_at: Date | null }>("select * from parent_approvals where id='parent'");
     expect(result.rows[0]).toMatchObject({ status: "approved_with_condition", condition_text: "Home by 10pm", decided_via: "link" });
     expect(result.rows[0].responded_at).not.toBeNull();
     expect(mocks.apply).toHaveBeenCalledWith("1", "child", "Home by 10pm");
