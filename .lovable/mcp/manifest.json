@@ -113,34 +113,56 @@
             },
             "title": {
               "type": "string",
+              "maxLength": 120,
+              "minLength": 1,
               "description": "Short plan title, e.g. 'Friday dinner'."
             },
             "category": {
               "type": "string",
               "enum": [
+                "dinner",
+                "hangout",
+                "concert",
+                "trip",
+                "party",
+                "movie",
+                "shopping",
+                "sports",
+                "daytrip",
+                "roadtrip",
+                "custom",
                 "food",
                 "outdoors",
                 "entertainment",
-                "sports",
                 "study",
                 "other"
               ],
-              "description": "Plan category."
+              "description": "Plan category. Prefer the app's categories such as dinner, movie, or hangout."
+            },
+            "timeZone": {
+              "type": "string",
+              "maxLength": 64,
+              "default": "UTC",
+              "description": "Host's IANA timezone, e.g. America/Chicago."
             },
             "windowStart": {
               "type": "string",
+              "format": "date-time",
               "description": "ISO timestamp for the start of the plan window."
             },
             "windowEnd": {
               "type": "string",
+              "format": "date-time",
               "description": "ISO timestamp for the end of the plan window."
             },
             "locationArea": {
               "type": "string",
+              "maxLength": 200,
               "description": "Rough area, e.g. 'Frisco, TX'."
             },
             "notes": {
               "type": "string",
+              "maxLength": 2000,
               "description": "Anything the group should know."
             }
           },
