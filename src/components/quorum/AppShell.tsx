@@ -257,15 +257,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         data-vaul-drawer-wrapper
         className="app-shell mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
-        {/* The floating top bar: a Radar-style glass capsule with margin on
-            every side, not an edge-to-edge strip, on every screen -- this is
-            the app's one nav-chrome language now, not something special-
-            cased for the map. Blurring a `fixed` element that's always on
-            screen does cost more than the old opaque bar did (no free
-            lunch on the backdrop-filter recompositing cost), but that's the
-            deliberate tradeoff of making glass the standard look everywhere
-            instead of only where a map happened to make it free. */}
-        <header className="glass-pill fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 mx-auto max-w-3xl rounded-full">
+        <header className="liquid-bar fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] top-[calc(env(safe-area-inset-top)+0.75rem)] z-30 mx-auto max-w-3xl rounded-full">
           <div className="flex items-center justify-between px-4 py-2.5">
             <Link to="/home" className="hit-slop flex items-center gap-2">
               <Wordmark className="h-6" />
@@ -345,7 +337,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             where DesktopTabs in the header already covers navigation. */}
         <nav
           aria-label="Main navigation"
-          className="mobile-tab-bar glass-pill fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-md rounded-full md:hidden"
+          className="mobile-tab-bar liquid-bar fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-md rounded-full md:hidden"
         >
           <div className="relative flex items-stretch justify-between px-2 py-1.5">
             <div className="pointer-events-none absolute inset-x-2 top-1.5 h-0.5" aria-hidden>
@@ -376,11 +368,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   preload="intent"
                   onPointerDown={(event) => navigateOnTouch(event, n.to as TabPath)}
                   onClick={suppressTouchClick}
-                  className="flex flex-1"
+                  className="flex min-w-0 flex-1 rounded-full focus-visible:outline-2 focus-visible:outline-primary"
                 >
                   <span
                     className={cn(
-                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium transition-[transform,opacity] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
+                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-caption font-medium transition-[transform,opacity] duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
@@ -512,7 +504,11 @@ function DesktopTabs({
   }, [selectedTab]);
 
   return (
-    <nav ref={root} className="relative hidden items-center gap-1 md:flex">
+    <nav
+      aria-label="Main navigation"
+      ref={root}
+      className="relative hidden items-center gap-1 md:flex"
+    >
       <span
         aria-hidden
         className={cn(
@@ -534,7 +530,7 @@ function DesktopTabs({
             aria-current={active ? "page" : undefined}
             preload="intent"
             className={cn(
-              "tap-target inline-flex items-center justify-center rounded-xl px-3 text-sm font-medium transition-[transform,opacity,color,background-color] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
+              "tap-target inline-flex items-center justify-center rounded-full px-3 text-sm font-medium transition-[transform,opacity,color,background-color] duration-150 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 motion-reduce:transition-none",
               active
                 ? "bg-secondary text-foreground"
                 : "text-muted-foreground hover:text-foreground",

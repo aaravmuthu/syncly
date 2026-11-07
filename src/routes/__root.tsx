@@ -1,4 +1,5 @@
 import { CookieConsent } from "@/components/quorum/CookieConsent";
+import { LiquidGlassFilter } from "@/components/quorum/LiquidGlassFilter";
 import { InlineErrorLayer } from "@/components/quorum/InlineErrorLayer";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -142,6 +143,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <LiquidGlassFilter />
         {children}
         <Scripts />
       </body>

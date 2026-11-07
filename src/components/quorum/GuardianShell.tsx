@@ -44,10 +44,7 @@ export function GuardianShell({
         data-vaul-drawer-wrapper
         className="app-shell mx-auto min-h-dvh w-full bg-background md:max-w-3xl md:shadow-2xl"
       >
-        {/* No backdrop-blur: this header stays on screen through every page
-            transition, and blurring animating content behind it forces a
-            recomposite every frame regardless of network conditions. */}
-        <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 pt-[env(safe-area-inset-top)]">
+        <header className="liquid-bar liquid-bar-docked safe-top sticky top-0 z-30">
           <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-3">
             <Link to="/guardian" className="tap-target flex items-center gap-2">
               <Wordmark className="h-6" />
@@ -56,13 +53,14 @@ export function GuardianShell({
               </span>
             </Link>
             <div className="flex items-center gap-2">
-              <nav className="hidden items-center gap-1 md:flex">
+              <nav aria-label="Family navigation" className="hidden items-center gap-1 md:flex">
                 {NAV.map((n) => (
                   <Link
                     key={n.to}
                     to={n.to}
+                    aria-current={pathname.startsWith(n.to) ? "page" : undefined}
                     className={cn(
-                      "rounded-xl px-3 py-1.5 text-sm font-medium transition",
+                      "rounded-full px-3 py-1.5 text-sm font-medium transition",
                       pathname.startsWith(n.to)
                         ? "bg-secondary text-foreground"
                         : "text-muted-foreground hover:text-foreground",
@@ -104,22 +102,27 @@ export function GuardianShell({
           <PageTransition>{children}</PageTransition>
         </main>
 
-        {/* Same reasoning as the header above. */}
         <nav
           aria-label="Family navigation"
-          className="mobile-tab-bar fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] md:hidden"
+          className="mobile-tab-bar liquid-bar fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] right-[max(0.75rem,env(safe-area-inset-right,0px))] bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-md rounded-full md:hidden"
         >
           <div className="mx-auto flex max-w-xs items-stretch justify-between px-2 py-1.5">
             {NAV.map((n) => {
               const active = pathname.startsWith(n.to);
               return (
-                <Link key={n.to} to={n.to} onClick={() => haptic("select")} className="flex flex-1">
+                <Link
+                  key={n.to}
+                  to={n.to}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => haptic("select")}
+                  className="flex flex-1 rounded-full focus-visible:outline-2 focus-visible:outline-primary"
+                >
                   <motion.span
                     whileTap={{ scale: 0.9 }}
                     animate={{ scale: active ? 1.06 : 1, y: active ? -1 : 0 }}
                     transition={{ type: "spring", stiffness: 460, damping: 24 }}
                     className={cn(
-                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-caption font-medium",
+                      "tap-target relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-2 text-caption font-medium",
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   >
