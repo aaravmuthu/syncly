@@ -32,7 +32,7 @@ export function Modal({
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md" />
         <DrawerPrimitive.Content
           aria-label={title}
-          className="mobile-sheet surface fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-lg flex-col rounded-b-none rounded-t-[28px] p-5 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
+          className="mobile-sheet surface fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-lg flex-col rounded-b-none rounded-t-[var(--radius-surface)] p-5 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
         >
           <div className="mx-auto mb-4 h-1.5 w-10 shrink-0 rounded-full bg-foreground/25" />
           <div className="flex shrink-0 items-start justify-between gap-3">

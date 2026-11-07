@@ -270,7 +270,7 @@ function DemoPage() {
 
   return (
     <div className="paper-field min-h-dvh">
-      <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <header className="liquid-bar liquid-bar-docked safe-top sticky top-0 z-30">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-5">
           <Link to="/" className="tap-target inline-flex items-center">
             <Wordmark />
@@ -774,7 +774,7 @@ function DemoPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
             transition={{ type: "spring", stiffness: 420, damping: 34 }}
-            className="glass-pill fixed inset-x-3 [--glass-bg-alpha:0.86] bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 flex min-h-14 items-center gap-3 rounded-full py-2 pr-4 pl-2 text-left lg:hidden"
+            className="liquid-bar fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 flex min-h-14 items-center gap-3 rounded-full py-2 pr-4 pl-2 text-left lg:hidden"
           >
             <span
               className={cn(

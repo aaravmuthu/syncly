@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useRef, useState, type MouseEvent } from "react";
+import { useRef, type MouseEvent } from "react";
 import { ArrowRight } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { Wordmark } from "@/components/quorum/Wordmark";
@@ -50,8 +50,6 @@ const HERO_WHISPERS = [
 ];
 
 function Landing() {
-  // Without WebGL the scene can't draw the wrapped tagline, so the h1 shows.
-  const [flat, setFlat] = useState(false);
   const router = useRouter();
   const orbit = useRef<OrbitControl | null>(null);
   const hero = useRef<HTMLElement>(null);
@@ -85,7 +83,7 @@ function Landing() {
   return (
     <div className="paper-field relative min-h-dvh overflow-x-clip">
       <MouseSpotlight />
-      <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <header className="liquid-bar liquid-bar-docked safe-top sticky top-0 z-30">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-2.5">
           <Wordmark />
           <div className="flex items-center gap-2">
@@ -115,20 +113,13 @@ function Landing() {
           <SyncOrbit
             lines={["Plans that actually", "work for everyone."]}
             whispers={HERO_WHISPERS}
-            className="absolute inset-0 size-full"
-            onFallback={() => setFlat(true)}
+            className="peer absolute inset-0 size-full"
             controlRef={orbit}
             footRef={heroFoot}
           />
           <h1
             id="hero-title"
-            className={
-              flat
-                ? "relative mx-auto max-w-[980px] px-5 pt-[18svh] text-center text-[clamp(40px,6.4vw,80px)] leading-[1.05] font-semibold tracking-[-0.02em] text-balance"
-                : // The scene draws the tagline behind the spheres at every
-                  // size (wrapped on desktop, flat below lg).
-                  "sr-only"
-            }
+            className="relative mx-auto max-w-[980px] px-5 pt-[18svh] text-center text-[clamp(40px,6.4vw,80px)] font-semibold leading-[1.05] tracking-[-0.02em] text-balance peer-data-[live=true]:sr-only"
           >
             {BRAND.tagline}
           </h1>

@@ -73,10 +73,6 @@ export function Button({
     ghost: "text-foreground hover:bg-secondary",
     outline: "border border-border text-foreground hover:bg-secondary",
     danger: "bg-destructive text-destructive-foreground hover:opacity-92",
-    // The app-wide floating-glass treatment (styles.css), for a button that
-    // needs to read as a floating control rather than a filled/outlined
-    // action -- rounded-full since glass surfaces are always a capsule/pill,
-    // never the app's default rounded-2xl card corner.
     glass: "glass-pill rounded-full text-foreground",
   };
   return (
@@ -89,7 +85,7 @@ export function Button({
       disabled={rest.disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        "tap-target inline-flex max-w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-[transform,background-color,color,opacity] duration-150 ease-out disabled:opacity-55 [&_svg]:shrink-0",
+        "tap-target inline-flex max-w-full items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-[transform,background-color,color,opacity] duration-150 ease-out disabled:opacity-55 [&_svg]:shrink-0",
         // A busy button is still the thing you pressed; only real disabling dims it.
         loading && "disabled:opacity-100",
         variants[variant],

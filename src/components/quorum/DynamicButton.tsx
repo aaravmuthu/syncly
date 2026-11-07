@@ -41,12 +41,12 @@ export type DynamicButtonProps = Omit<
 // rather than a flat swatch. The glow deepens on hover.
 const variantClasses: Record<DynamicButtonVariant, string> = {
   primary:
-    "rounded-2xl bg-primary text-primary-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_10px_24px_-14px_color-mix(in_oklab,var(--primary)_80%,transparent)] hover:brightness-[1.06] hover:shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_14px_30px_-12px_color-mix(in_oklab,var(--primary)_90%,transparent)]",
+    "rounded-full bg-primary text-primary-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_10px_24px_-14px_color-mix(in_oklab,var(--primary)_80%,transparent)] hover:brightness-[1.06] hover:shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_14px_30px_-12px_color-mix(in_oklab,var(--primary)_90%,transparent)]",
   danger:
-    "rounded-2xl bg-destructive text-destructive-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_10px_24px_-14px_color-mix(in_oklab,var(--destructive)_80%,transparent)] hover:brightness-[1.06] hover:shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_14px_30px_-12px_color-mix(in_oklab,var(--destructive)_90%,transparent)]",
+    "rounded-full bg-destructive text-destructive-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_10px_24px_-14px_color-mix(in_oklab,var(--destructive)_80%,transparent)] hover:brightness-[1.06] hover:shadow-[inset_0_1px_0_0_oklch(1_0_0/0.2),inset_0_-1px_0_0_oklch(0_0_0/0.1),0_1px_2px_0_oklch(0_0_0/0.08),0_14px_30px_-12px_color-mix(in_oklab,var(--destructive)_90%,transparent)]",
   outline:
-    "rounded-2xl border border-border bg-card/60 text-foreground shadow-[inset_0_1px_0_0_color-mix(in_oklab,var(--background)_70%,transparent),0_1px_2px_0_oklch(0_0_0/0.04)] hover:border-foreground/20 hover:bg-secondary",
-  ghost: "rounded-2xl text-foreground hover:bg-secondary",
+    "rounded-full border border-border bg-card/60 text-foreground shadow-[inset_0_1px_0_0_color-mix(in_oklab,var(--background)_70%,transparent),0_1px_2px_0_oklch(0_0_0/0.04)] hover:border-foreground/20 hover:bg-secondary",
+  ghost: "rounded-full text-foreground hover:bg-secondary",
   // Floating-glass capsule (styles.css) -- always rounded-full.
   glass: "glass-pill rounded-full text-foreground",
   // No chrome: for text-link buttons that only need the label morph.

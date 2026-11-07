@@ -13,7 +13,7 @@ export type OrbitControl = {
  * The hero's WebGL scene (sync-orbit-engine.ts), sized to its container and
  * coloured from the live theme tokens. It only animates while on screen and
  * the tab is visible; with reduced motion it renders one settled frame. When
- * WebGL isn't available, `onFallback` lets the page show its plain headline.
+ * WebGL is unavailable, the page keeps its HTML headline visible.
  */
 
 // Resolve any CSS colour (the tokens are oklch) to linear-ish 0–1 sRGB by
@@ -45,22 +45,18 @@ export function SyncOrbit({
   lines,
   whispers,
   className,
-  onFallback,
   controlRef,
   footRef,
 }: {
   lines: [string, string];
   whispers: string[][];
   className?: string;
-  onFallback?: () => void;
   controlRef?: MutableRefObject<OrbitControl | null>;
   /** The copy over the bottom of the scene; the scene centres above it. */
   footRef?: RefObject<HTMLElement | null>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [live, setLive] = useState(false);
-  const fallbackRef = useRef(onFallback);
-  fallbackRef.current = onFallback;
   const control = useRef(controlRef);
   control.current = controlRef;
   const [first, second] = lines;
@@ -91,7 +87,6 @@ export function SyncOrbit({
             touch: coarse,
           });
         } catch {
-          fallbackRef.current?.();
           return;
         }
         const e = engine;
@@ -155,7 +150,7 @@ export function SyncOrbit({
         canvas.addEventListener("webglcontextlost", (ev) => {
           ev.preventDefault();
           e.stop();
-          fallbackRef.current?.();
+          if (!cancelled) setLive(false);
         });
 
         if (!still) {
@@ -210,7 +205,9 @@ export function SyncOrbit({
 
         requestAnimationFrame(() => !cancelled && setLive(true));
       })
-      .catch(() => fallbackRef.current?.());
+      .catch(() => {
+        if (!cancelled) setLive(false);
+      });
 
     return () => {
       cancelled = true;

@@ -26,7 +26,7 @@ export function LegalLayout({
 }) {
   return (
     <div className="paper-field min-h-dvh [overflow-wrap:anywhere] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
-      <header className="safe-top sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <header className="liquid-bar liquid-bar-docked safe-top sticky top-0 z-30">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-2.5">
           <Link to="/" className="tap-target inline-flex items-center">
             <Wordmark size="sm" />
